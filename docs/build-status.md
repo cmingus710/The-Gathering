@@ -17,6 +17,7 @@ Phase 1 code is complete, and the database schema is live in Supabase project `y
 | Database authorization tests: real migrations on PostgreSQL 16 with a Supabase shim | 41 pass |
 | Playwright browser tests: desktop 1280 px and Pixel 7, built app, no Supabase | 32 pass |
 | Schema applied to Supabase project; tables, policies, buckets, auth triggers inspected | Done |
+| Hosted migration history equals the five repository migrations; fresh-from-files schema matches hosted in all 17 fingerprint categories | Pass |
 | Supabase security advisor | Reviewed (see notes) |
 
 ### What the database tests prove

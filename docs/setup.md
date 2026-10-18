@@ -26,7 +26,7 @@ The Phase 1 schema is in `supabase/migrations/` and must be applied in filename 
 4. `20261018000400_storage.sql`
 5. `20261018000500_explicit_function_grants.sql`
 
-**Project `ymuiutwdnhxdqsetnwkt`:** all five migrations are applied and the history has been reconciled with the repository. See [migration-history.md](migration-history.md) for the evidence and the one remaining owner step.
+**Project `ymuiutwdnhxdqsetnwkt`:** all five migrations are applied and the history has been reconciled with the repository. The migration history matches the repository exactly (verified 2026-10-18); see [migration-history.md](migration-history.md).
 
 For a new project, run `supabase link --project-ref <ref> && supabase db push`, or paste each file into the SQL editor in order.
 
