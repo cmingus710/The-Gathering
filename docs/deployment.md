@@ -24,7 +24,7 @@ Pushes and merges to `main` create a production deployment that is immediately c
 
 **Owner decision (2026-10-18):** `gathering.church` and `www.gathering.church` stay attached as Production domains during review. Custom domains are not covered by Vercel Authentication, so these addresses are **publicly reachable** and serve the current production deployment described below.
 
-The only production deployment is `dpl_BG88jQqCsfiG4hEyAGkRgGeFonho` (commit `e0c1de3`). Vercel created it automatically when the project was first connected, before any environment variables existed. It isn't publicly reachable because of deployment protection, and it shows the "not configured" states.
+The only production deployment is `dpl_BG88jQqCsfiG4hEyAGkRgGeFonho` (commit `e0c1de3`). Vercel created it automatically when the project was first connected, before any environment variables existed. It shows the "not configured" states (sign-in unavailable). Its `*.vercel.app` URLs need a Vercel sign-in, but the custom domains above make it publicly visible.
 
 **To release to production** (after review):
 1. Add the Production environment variables.
