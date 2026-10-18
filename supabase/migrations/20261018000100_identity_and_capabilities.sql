@@ -556,5 +556,5 @@ grant execute on function
   public.admin_grant_role(uuid, text),
   public.admin_revoke_role(uuid, text)
 to authenticated;
--- Anonymous visitors need these only inside RLS policy evaluation.
-grant execute on function public.is_approved_member(), public.has_capability(text) to anon;
+-- Anonymous visitors need this only inside announcement RLS policy evaluation.
+grant execute on function public.is_approved_member() to anon;
