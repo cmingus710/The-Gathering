@@ -59,6 +59,22 @@ Preview: `https://the-gathering-git-phase-1-deployment-ver-56f120-paint-by-numbe
 | Protected responses `private, no-store`; security headers present | Pass |
 | Production builds paused (merge to `main` canceled by Ignored Build Step) | Pass |
 
+## Live authentication and email (hosted preview, 2026-10-18)
+
+Preview: `https://the-gathering-git-phase-1-auth-email-setup-paint-by-number.vercel.app`. Supabase auth uses Resend SMTP from `hello@gathering.church`.
+
+| Check | Result |
+| --- | --- |
+| Registration creates a pending profile with the supplied name; no roles granted | Pass |
+| Verification email delivered through Resend (Resend log: delivered) | Pass |
+| Verification link (token-hash template) confirms the address and lands on the pending page | Pass |
+| Pending account sent to the status page from `/home`, `/announcements`, `/admin` | Pass |
+| Initial super administrator appointed (`bootstrap_super_admin`); audit entry recorded | Pass |
+| Second bootstrap attempt refused ("already been appointed") | Pass |
+| Sign-out ends the session (one active session after sign-in; Back does not reveal signed-in pages) | Pass |
+| Super admin reaches Home and the admin dashboard | Pass |
+| Church settings persist, show on the public welcome page, and are audited by field name only | Pass |
+
 ## Requires external configuration or a device (not yet verified)
 
 This environment's network policy blocks `*.supabase.co`, so these could not be run end to end here:
