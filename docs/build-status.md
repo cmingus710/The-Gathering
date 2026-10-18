@@ -46,6 +46,18 @@ Phase 1 code is complete, and the database schema is live in Supabase project `y
 - Sign-out is POST-only and sends `Clear-Site-Data`.
 - Install guidance is shown.
 
+## Hosted preview (Vercel, verified 2026-10-18)
+
+Preview: `https://the-gathering-git-phase-1-deployment-ver-56f120-paint-by-number.vercel.app` (Vercel Authentication required to view)
+
+| Check | Result |
+| --- | --- |
+| Preview build with Supabase env vars | Pass (`dpl_FQtcZi3HfPN2tqukbFsNxvJXcUbE`) |
+| Welcome page reads church settings from the hosted database (no "unavailable" notice) | Pass |
+| Signed-out `/admin/members` → `/sign-in?next=/admin/members` | Pass |
+| Protected responses `private, no-store`; security headers present | Pass |
+| Production builds paused (merge to `main` canceled by Ignored Build Step) | Pass |
+
 ## Requires external configuration or a device (not yet verified)
 
 This environment's network policy blocks `*.supabase.co`, so these could not be run end to end here:
