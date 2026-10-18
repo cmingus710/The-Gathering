@@ -17,13 +17,14 @@ end $$;
 
 create schema if not exists auth;
 create schema if not exists storage;
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 grant usage on schema public, auth, storage to anon, authenticated, service_role;
 
 create table auth.users (
   id uuid primary key default gen_random_uuid(),
-  email text,
+  email character varying(255),
   raw_user_meta_data jsonb default '{}'::jsonb,
   email_confirmed_at timestamptz,
   created_at timestamptz default now()
@@ -55,8 +56,9 @@ alter table storage.objects enable row level security;
 grant select, insert, update, delete on storage.objects to anon, authenticated, service_role;
 grant select on storage.buckets to anon, authenticated, service_role;
 
--- Supabase grants broad table/function privileges by default and relies on RLS.
--- Reproduce that so the migrations' explicit revokes are exercised.
+-- Hosted Supabase grants broad table privileges by default and relies on RLS.
+-- Reproduce that so the migrations' explicit revokes are exercised. Function
+-- EXECUTE is left to PostgreSQL's default (PUBLIC), matching what was observed
+-- on the hosted project; the migrations grant every function explicitly.
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
