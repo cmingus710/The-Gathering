@@ -24,8 +24,9 @@ The Phase 1 schema is in `supabase/migrations/` and must be applied in filename 
 2. `20261018000200_church_settings.sql`
 3. `20261018000300_announcements.sql`
 4. `20261018000400_storage.sql`
+5. `20261018000500_explicit_function_grants.sql`
 
-**Project `ymuiutwdnhxdqsetnwkt`:** already applied on 2026-10-18 through the Supabase connector. The connector timed out on large and `DELETE`-containing statements, so it was applied as 12 smaller migrations (plus `admin_revoke_role`, added in the SQL editor). The resulting schema matches the files above, but the project's migration history doesn't. Before using `supabase db push` against this project, run `supabase migration repair` to mark the four repo versions as applied.
+**Project `ymuiutwdnhxdqsetnwkt`:** all five migrations are applied and the history has been reconciled with the repository. See [migration-history.md](migration-history.md) for the evidence and the one remaining owner step.
 
 For a new project, run `supabase link --project-ref <ref> && supabase db push`, or paste each file into the SQL editor in order.
 
