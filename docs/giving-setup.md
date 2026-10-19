@@ -32,12 +32,20 @@ No `NEXT_PUBLIC_` variable is needed. The Stripe publishable key isn't used, bec
 
 ## Webhook destination (why this design)
 
-The project's Vercel Deployment Protection is **Vercel Authentication for all deployments except custom domains** (`all_except_custom_domains`), so Stripe can't reach `*.vercel.app` preview URLs.
+Stripe has to reach the webhook without logging in to anything.
 
-The narrowly scoped, supported solution:
-- **One custom domain**, `giving-webhooks.gathering.church`, assigned to the `phase-3/giving-contributions` git branch (Settings → Domains). Custom domains are outside Vercel Authentication.
-- **Only the webhook is served there.** `src/proxy.ts` returns 404 for every path except `/api/stripe/webhook` when the request host is `GIVING_WEBHOOK_HOST`. The rest of the preview stays behind Vercel Authentication on its normal URLs.
-- **No bypass secret is needed**, so nothing sensitive appears in URLs or logs. Protection for the rest of the project is unchanged.
+- **One custom domain**, `giving-webhooks.gathering.church`, is assigned to the `phase-3/giving-contributions` git branch (Settings → Domains), so it always serves that branch's latest preview with that branch's variables.
+- **Only the webhook is served there.** `src/proxy.ts` returns 404 for every path except `/api/stripe/webhook` when the request host is `GIVING_WEBHOOK_HOST`.
+- **No bypass secret in any URL.** Requests are authenticated by Stripe's signature only.
+
+**Correction (2026-10-19):** Vercel's Standard Protection (`all_except_custom_domains`) exempts only *production* custom domains. A custom domain assigned to a preview branch is still behind Vercel Authentication, so Stripe's deliveries received **401** from Vercel before reaching the app. An earlier check reported this host as reachable, but it went through a Vercel tool that bypasses protection, so it didn't prove Stripe could reach it.
+
+**Current state:** the owner turned Vercel Authentication **off for the whole project** so Stripe can deliver. All preview URLs are now public. Members-only pages still require an approved account in the app, and `/give` can only take Stripe test payments. Options going forward:
+- Turn Standard Protection back on after hosted testing (webhooks then stop reaching previews; failed events can be resent from Stripe or recovered with Reconcile).
+- Use a Deployment Protection Exception for `giving-webhooks.gathering.church` only (Vercel Pro with Advanced Deployment Protection).
+- Use a separate webhook-only Vercel project with protection off (not built yet).
+
+A bypass token in the Stripe endpoint URL is ruled out, because it would expose an access credential in a URL.
 
 **One endpoint for all previews.** Stripe is configured with this single endpoint, so only the deployment behind it processes events. Every preview shares the Supabase project, but even if two receivers existed, events are deduplicated by id and emails by a per-gift key, so nothing could be recorded or sent twice.
 

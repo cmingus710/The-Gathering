@@ -61,9 +61,11 @@ The giving DB and processor tests cover:
 | Preview env: `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | Set |
 | Preview env: `STRIPE_SECRET_KEY` (restricted sandbox key), `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Set by the owner (2026-10-19): Sensitive, Preview only, branch `phase-3/giving-contributions`. Ingest secret created once with the create-only script (64 hex characters). Values never seen or logged by Claude |
 | Stripe sandbox webhook destination `https://giving-webhooks.gathering.church/api/stripe/webhook` with the 22 handled events | Created by the owner (2026-10-19) |
-| Webhook hostname `giving-webhooks.gathering.church` assigned to the Phase 3 branch (custom domain, outside Vercel Authentication) | Pass: `/`, `/give`, `/admin/finance` return 404; `/api/stripe/webhook` answers POST only (GET 405) |
+| Webhook hostname `giving-webhooks.gathering.church` assigned to the Phase 3 branch | Routing passes: `/`, `/give`, `/admin/finance` return 404; `/api/stripe/webhook` answers POST only (GET 405), `no-store`. **Correction:** that check used a Vercel tool that bypasses protection. Stripe's real deliveries got **401** from Vercel Authentication, because preview-branch custom domains stay protected. The owner then turned Vercel Authentication off for the project (2026-10-19); see giving-setup.md |
 | Preview `/give` without Stripe keys shows "Online giving isn't available yet" (no fake checkout) | Pass (`dpl_CnMGQZBHcSG7YPxvHpVC8WoEJwC6`) |
-| End-to-end Stripe test payments, webhooks, refunds, portal, emails | **Not yet run** (needs the credentials above) |
+| Build `04184ed` (`dpl_4niEHZ3z4wTBfEbzUbK7UZFfYyAn`) with the giving variables: `/give` shows the live checkout form (key accepted as a test key) | Pass |
+| Guest one-time card gift ($50, General Offering, `4242…`) through hosted Stripe Checkout (sandbox) | Pass: 4 webhook events (`checkout.session.completed`, `payment_intent.succeeded`, `charge.succeeded`, `charge.updated`) each processed once after redelivery (first attempts got 401, see above); exactly 1 succeeded payment, `livemode=false`, guest; fee $1.75 / net $48.25 from the balance transaction; intent completed; acknowledgment email sent via Resend on the first attempt; no card data stored |
+| Member gifts, recurring, portal, refunds, disputes, statements, finance admin on the hosted preview | **In progress** |
 
 ### Known limitations (Phase 3)
 
