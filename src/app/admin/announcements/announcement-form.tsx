@@ -84,7 +84,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
       <FormMessage state={state} />
       {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
 
-      <div className="space-y-6 rounded-card border border-border bg-surface p-5 sm:p-6">
+      <div className="space-y-6 rounded-card bg-surface p-5 sm:p-6">
         <TextField label="Title" name="title" required maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} error={fe.title} />
 
         <div className="space-y-2">
@@ -104,7 +104,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
                   onClick={() => setTab(t)}
                   className={cn(
                     "min-h-10 rounded-[0.5rem] px-4 font-semibold",
-                    tab === t ? "bg-brand-charcoal text-background" : "text-text hover:bg-surface-muted",
+                    tab === t ? "bg-text text-background" : "text-text hover:bg-surface-muted",
                   )}
                 >
                   {t === "write" ? "Write" : "Preview"}
@@ -141,14 +141,14 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
           <div id={`${tabsId}-preview-panel`} role="tabpanel" aria-labelledby={`${tabsId}-preview-tab`} hidden={tab !== "preview"} tabIndex={0}>
             <div className="rounded-control border border-border bg-background p-4 sm:p-6">
               <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Preview as members will see it</p>
-              <article className="overflow-hidden rounded-card border border-border bg-surface">
+              <article className="overflow-hidden rounded-card bg-surface">
                 {imageUrl ? <img src={imageUrl} alt={imageAlt} className="aspect-[16/9] w-full object-cover" /> : null}
                 <div className="p-5">
                   <div className="mb-2 flex flex-wrap gap-2">
                     {pinned ? <PinnedBadge /> : null}
                     <VisibilityBadge visibility={visibility} />
                   </div>
-                  <h2 className="font-serif text-2xl font-semibold">{preview.title || "Untitled announcement"}</h2>
+                  <h2 className="text-2xl font-bold">{preview.title || "Untitled announcement"}</h2>
                   {preview.body.trim() ? (
                     <MarkdownBody source={preview.body} className="mt-3" />
                   ) : (
@@ -162,8 +162,8 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <fieldset className="space-y-4 rounded-card border border-border bg-surface p-5 sm:p-6">
-          <legend className="float-left mb-2 w-full font-serif text-xl font-semibold">Image</legend>
+        <fieldset className="space-y-4 rounded-card bg-surface p-5 sm:p-6">
+          <legend className="float-left mb-2 w-full text-xl font-bold">Image</legend>
           <div className="clear-both space-y-4">
             {imageUrl ? <img src={imageUrl} alt="" className="aspect-[16/9] w-full rounded-control bg-surface-muted object-cover" /> : null}
             <div className="space-y-1.5">
@@ -210,8 +210,8 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
           </div>
         </fieldset>
 
-        <fieldset className="space-y-4 rounded-card border border-border bg-surface p-5 sm:p-6">
-          <legend className="float-left mb-2 w-full font-serif text-xl font-semibold">Audience and timing</legend>
+        <fieldset className="space-y-4 rounded-card bg-surface p-5 sm:p-6">
+          <legend className="float-left mb-2 w-full text-xl font-bold">Audience and timing</legend>
           <div className="clear-both space-y-5">
             <fieldset>
               <legend className="mb-2 font-semibold">Who can see it</legend>
@@ -263,7 +263,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
         </fieldset>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 rounded-card border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-end gap-3 rounded-card bg-surface p-4">
         <span className="mr-auto flex items-center gap-2 text-text-secondary">
           Current state: <AnnouncementStatusBadge status={initial.effective} />
         </span>

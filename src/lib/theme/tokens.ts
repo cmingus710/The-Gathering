@@ -1,26 +1,39 @@
 /**
- * Approved palette, mirrored from the @theme block in src/app/globals.css.
+ * Design tokens, mirrored from the @theme block in src/app/globals.css.
  * Unit tests verify the contrast of every text/background pairing the UI uses.
  */
+/** Approved brand palette (unchanged by the dark interface). */
+export const brand = {
+  gold: "#AD8C53",
+  charcoal: "#363430",
+  ivory: "#F7F4ED",
+  sand: "#EAE3D5",
+  deepGold: "#80642F",
+  olive: "#52664D",
+  clay: "#A14538",
+} as const;
+
+/** Semantic tokens for the dark interface. */
 export const palette = {
-  brandGold: "#AD8C53",
-  brandCharcoal: "#363430",
-  background: "#F7F4ED",
-  surface: "#FFFFFF",
-  surfaceMuted: "#EAE3D5",
-  primary: "#80642F",
-  primaryHover: "#6A5226",
-  primarySoft: "#F3ECDD",
-  onPrimary: "#FFFFFF",
-  text: "#363430",
-  textSecondary: "#716B61",
-  border: "#DDD5C6",
-  borderStrong: "#8A8275",
-  success: "#52664D",
-  successSoft: "#E9EEE6",
-  danger: "#A14538",
-  dangerHover: "#873A2F",
-  dangerSoft: "#F7E9E6",
+  background: "#121110",
+  surface: "#22201E",
+  surfaceMuted: "#2E2C29",
+  primary: "#AD8C53",
+  primaryHover: "#C4A46C",
+  primarySoft: "#2A261F",
+  onPrimary: "#1C1B19",
+  cta: "#F7F4ED",
+  ctaHover: "#EAE3D5",
+  onCta: "#1C1B19",
+  text: "#F7F4ED",
+  textSecondary: "#B3AC9F",
+  border: "#33312D",
+  borderStrong: "#7F796E",
+  success: "#9DB794",
+  successSoft: "#1D261C",
+  danger: "#E59484",
+  dangerHover: "#EEAB9E",
+  dangerSoft: "#2D1B18",
 } as const;
 
 function luminance(hex: string): number {

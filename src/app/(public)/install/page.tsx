@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IconMark } from "@/components/brand/logo";
+import { IconBadge } from "@/components/brand/logo";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { Card } from "@/components/ui/card";
 
@@ -31,9 +31,9 @@ export default function InstallPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="flex items-center gap-4">
-        <IconMark className="h-16" />
+        <IconBadge className="size-16" />
         <div>
-          <h1 className="font-serif text-3xl font-semibold">Add The Gathering to your Home Screen</h1>
+          <h1 className="text-3xl font-bold">Add The Gathering to your Home Screen</h1>
           <p className="mt-1 text-text-secondary">It opens full-screen like an app, with no app store needed.</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function InstallPage() {
       <div className="mt-8 grid gap-5">
         {STEPS.map((s) => (
           <Card key={s.title}>
-            <h2 className="font-serif text-xl font-semibold">{s.title}</h2>
+            <h2 className="text-xl font-bold">{s.title}</h2>
             <ol className="mt-3 list-decimal space-y-1.5 pl-6">
               {s.steps.map((step) => (
                 <li key={step}>{step}</li>

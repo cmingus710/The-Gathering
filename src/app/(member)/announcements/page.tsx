@@ -1,6 +1,6 @@
 import { Megaphone } from "lucide-react";
 import type { Metadata } from "next";
-import { AnnouncementCard } from "@/components/announcements/announcement-card";
+import { AnnouncementFeedItem } from "@/components/announcements/announcement-card";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { listLiveAnnouncements, type AnnouncementWithImage } from "@/lib/announcements/queries";
@@ -27,14 +27,14 @@ export default async function AnnouncementsPage() {
       {failed ? (
         <Alert tone="error" title="Announcements couldn't be loaded right now." />
       ) : announcements.length ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="divide-y divide-border">
           {announcements.map((a) => (
-            <AnnouncementCard key={a.id} announcement={a} timeZone={settings.timezone} href={`/announcements/${a.id}`} headingLevel={2} />
+            <AnnouncementFeedItem key={a.id} announcement={a} churchName={settings.churchName} iconUrl={settings.iconUrl} />
           ))}
         </div>
       ) : (
-        <EmptyState icon={<Megaphone className="size-5" aria-hidden="true" />} title="No announcements right now">
-          Check back soon.
+        <EmptyState icon={<Megaphone className="size-8" aria-hidden="true" />} title="No announcements right now">
+          New announcements from the church will appear here.
         </EmptyState>
       )}
     </>

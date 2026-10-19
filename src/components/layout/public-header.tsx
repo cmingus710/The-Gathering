@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { IconMark } from "@/components/brand/logo";
+import { IconBadge } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
 
 export function PublicHeader({ churchName, iconUrl, signedIn }: { churchName: string; iconUrl: string; signedIn: boolean }) {
   return (
-    <header className="border-b border-border bg-background">
+    <header className="bg-background">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <IconMark src={iconUrl} className="h-9" />
-          <span className="font-serif text-lg font-semibold">{churchName}</span>
+          <IconBadge src={iconUrl} />
+          <span className="text-lg font-bold">{churchName}</span>
         </Link>
         {signedIn ? (
           <Link href="/home" className={buttonClasses("secondary", "sm")}>

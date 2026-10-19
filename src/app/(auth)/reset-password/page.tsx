@@ -11,7 +11,7 @@ export default async function ResetPasswordPage() {
   const hasSession = result.state === "signed-in";
   return (
     <>
-      <h1 className="font-serif text-2xl font-semibold">Choose a new password</h1>
+      <h1 className="text-2xl font-bold">Choose a new password</h1>
       <div className="mt-6">
         {hasSession ? (
           <ResetPasswordForm />

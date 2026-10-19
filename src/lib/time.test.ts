@@ -53,3 +53,18 @@ describe("misc", () => {
     expect(formatClockTime("18:45")).toBe("6:45 PM");
   });
 });
+
+describe("formatAge and formatDayStamp", async () => {
+  const { formatAge, formatDayStamp } = await import("./time");
+  const now = new Date("2026-10-19T12:00:00Z");
+  it("formats compact ages", () => {
+    expect(formatAge("2026-10-19T11:59:30Z", now)).toBe("now");
+    expect(formatAge("2026-10-19T11:15:00Z", now)).toBe("45m");
+    expect(formatAge("2026-10-19T09:00:00Z", now)).toBe("3h");
+    expect(formatAge("2026-10-17T12:00:00Z", now)).toBe("2d");
+    expect(formatAge("2026-10-01T12:00:00Z", now, "America/Chicago")).toBe("Oct 1");
+  });
+  it("formats the day stamp in the church time zone", () => {
+    expect(formatDayStamp(new Date("2026-10-19T03:00:00Z"), "America/Chicago")).toBe("18 OCT 2026");
+  });
+});

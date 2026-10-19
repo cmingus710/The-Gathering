@@ -25,7 +25,7 @@ test("manifest and icons are served", async ({ request }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.ok()).toBe(true);
   const manifest = await res.json();
-  expect(manifest).toMatchObject({ name: "The Gathering", display: "standalone", theme_color: "#F7F4ED", background_color: "#F7F4ED" });
+  expect(manifest).toMatchObject({ name: "The Gathering", display: "standalone", theme_color: "#121110", background_color: "#121110" });
   const purposes = manifest.icons.map((i: { sizes: string; purpose: string }) => `${i.sizes}:${i.purpose}`);
   expect(purposes).toEqual(expect.arrayContaining(["192x192:any", "512x512:any", "192x192:maskable", "512x512:maskable"]));
   for (const icon of manifest.icons) {
@@ -44,7 +44,7 @@ test("head includes Apple web app metadata and icons", async ({ page }) => {
   await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute("content", "The Gathering");
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(1);
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#F7F4ED");
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#121110");
 });
 
 for (const path of ["/home", "/profile", "/announcements", "/admin", "/admin/members", "/admin/settings"]) {

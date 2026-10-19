@@ -7,22 +7,22 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "dang
 export type ButtonSize = "md" | "sm";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-control font-semibold leading-tight transition-colors " +
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold leading-tight transition-colors " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary " +
   "disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55 " +
   "select-none text-center";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-hover disabled:hover:bg-primary",
+  primary: "bg-cta text-on-cta hover:bg-cta-hover active:bg-cta-hover disabled:hover:bg-cta",
   secondary:
-    "bg-surface text-text border border-border-strong hover:bg-primary-soft hover:border-primary active:bg-primary-soft disabled:hover:bg-surface",
+    "bg-surface-muted text-text border border-border hover:border-border-strong active:bg-surface disabled:hover:border-border",
   ghost: "bg-transparent text-primary hover:bg-primary-soft active:bg-primary-soft",
-  danger: "bg-danger text-on-primary hover:bg-danger-hover active:bg-danger-hover disabled:hover:bg-danger",
-  "danger-outline": "bg-surface text-danger border border-danger hover:bg-danger-soft active:bg-danger-soft",
+  danger: "bg-danger text-on-cta hover:bg-danger-hover active:bg-danger-hover disabled:hover:bg-danger",
+  "danger-outline": "bg-transparent text-danger border border-danger hover:bg-danger-soft active:bg-danger-soft",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  md: "min-h-12 px-5 py-2.5 text-base",
+  md: "min-h-12 px-6 py-2.5 text-base",
   sm: "min-h-11 px-4 py-2 text-[0.95rem]",
 };
 

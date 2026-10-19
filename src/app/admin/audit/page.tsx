@@ -71,7 +71,7 @@ export default async function AuditPage() {
       ) : !data?.length ? (
         <EmptyState icon={<ClipboardList className="size-5" aria-hidden="true" />} title="No administrative changes yet" />
       ) : (
-        <ol className="divide-y divide-border rounded-card border border-border bg-surface">
+        <ol className="divide-y divide-border rounded-card bg-surface">
           {data.map((e) => (
             <li key={e.id} className="px-4 py-3 sm:px-5">
               <p className="font-semibold">{describe(e, names)}</p>

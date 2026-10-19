@@ -3,10 +3,10 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "./cn";
 
 const control =
-  "block w-full rounded-control border bg-surface px-3.5 py-2.5 text-base text-text min-h-12 " +
+  "block w-full rounded-control border bg-surface px-4 py-2.5 text-base text-text min-h-12 " +
   "placeholder:text-text-secondary transition-colors " +
   "focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary " +
-  "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text";
+  "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-secondary";
 
 type FieldChrome = {
   label: ReactNode;

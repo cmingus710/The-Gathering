@@ -5,7 +5,7 @@ import { cn } from "./cn";
 type Tone = "info" | "success" | "warning" | "error";
 
 const tones: Record<Tone, { box: string; icon: ReactNode; label: string }> = {
-  info: { box: "bg-surface border-border-strong text-text", icon: <Info className="size-5 text-primary" aria-hidden="true" />, label: "Note" },
+  info: { box: "bg-surface border-border text-text", icon: <Info className="size-5 text-primary" aria-hidden="true" />, label: "Note" },
   success: {
     box: "bg-success-soft border-success text-text",
     icon: <CircleCheck className="size-5 text-success" aria-hidden="true" />,
@@ -47,7 +47,7 @@ export function Alert({
   const t = tones[tone];
   const role = live ? (tone === "error" ? "alert" : "status") : undefined;
   return (
-    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex gap-3 rounded-control border-l-4 border px-4 py-3", t.box, className)}>
+    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex gap-3 rounded-card border px-4 py-3", t.box, className)}>
       <span className="mt-0.5 shrink-0">{t.icon}</span>
       <div className="min-w-0 space-y-1">
         {title ? (

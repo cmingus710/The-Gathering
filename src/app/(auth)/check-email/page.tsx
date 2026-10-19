@@ -12,7 +12,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
         <MailCheck className="size-7" aria-hidden="true" />
       </div>
-      <h1 className="font-serif text-2xl font-semibold">Check your email</h1>
+      <h1 className="text-2xl font-bold">Check your email</h1>
       {reset ? (
         <p className="mt-2 text-text-secondary">
           If an account exists for that address, we&apos;ve sent a link to choose a new password. The link expires soon, so use it
