@@ -29,7 +29,7 @@ export function OccurrenceEditForm({ id, allDay, initial }: { id: string; allDay
       <p className="text-sm text-text-secondary">
         Changes here apply to this date only and survive later edits to the series. Leave a field blank to use the series value. Changing the date, time, or place emails people registered for this date.
       </p>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4">
         <TextField label="Move to date" name="overrideDate" type="date" optional defaultValue={v("overrideDate")} />
         {!allDay ? (
           <>
