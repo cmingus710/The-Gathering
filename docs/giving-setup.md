@@ -61,27 +61,44 @@ The narrowly scoped, supported solution:
 
 ## Setup steps (owner)
 
-1. **Run the pending database script.** In the Supabase SQL editor, run `supabase/manual/2026-10-20-apply-pending.sql` once. It completes the Phase 2 households migration and the Phase 3 giving migrations, verbatim from the repository, in one transaction. The SQL connector refuses some of these statements.
-2. **Create the ingest secret in the database and copy it.** In the SQL editor:
-   ```sql
-   insert into giving.secrets (name, value) values ('ingest', encode(extensions.gen_random_bytes(32), 'hex'))
-   on conflict (name) do update set value = excluded.value, updated_at = now()
-   returning value;
-   ```
-   Copy the returned value. Don't paste it anywhere except the next step.
-3. **Vercel → the-gathering → Settings → Environment Variables:** add `GIVING_INGEST_SECRET` with that value. Use type Sensitive, environment Preview, branch `phase-3/giving-contributions`.
-4. **Stripe Dashboard (test mode on), Developers → API keys:** create a restricted key with these permissions:
-   - Write: Checkout Sessions, Customers, Products, Subscriptions, Refunds, Customer portal.
-   - Read: PaymentIntents, Charges, Balance transactions, Invoices, Disputes, Events.
+Never paste secret values into chat, issues, or commits. Copy them directly between Supabase, Stripe, and Vercel.
 
-   Add it to Vercel as `STRIPE_SECRET_KEY` with the same scope as step 3.
+1. **Run the pending database script.** Open the [SQL editor for The Gathering project (`ymuiutwdnhxdqsetnwkt`)](https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new), paste [`supabase/manual/2026-10-20-apply-pending.sql`](../supabase/manual/2026-10-20-apply-pending.sql), and run it once.
+   - It finishes Phase 2's `20261019000300` (`household_leave`) and Phase 3's `20261020000200` and `20261020000300`, verbatim from the repository (the SQL connector refuses some of these statements). It only creates functions and grants and records those three versions in the migration history. No existing rows change.
+   - A preflight check stops with "Nothing was changed" unless the database is The Gathering's at exactly the expected stage (`20261020000100` applied, these three not yet).
+   - It runs in one transaction. A failed run leaves nothing behind and can simply be rerun. A rerun after success stops at the preflight check.
+2. **Create the ingest secret.** In the same SQL editor, run [`supabase/manual/2026-10-20-create-ingest-secret.sql`](../supabase/manual/2026-10-20-create-ingest-secret.sql). It is create-only:
+   - If no secret exists, it creates one and shows it once. Copy it straight into step 3.
+   - If one already exists, it keeps it and shows `ALREADY SET`, so rerunning setup never silently rotates the secret. Use the value already in Vercel.
+   - Deliberate rotation (only if the secret leaked): update `giving.secrets` where `name = 'ingest'` with a new random value, then immediately replace `GIVING_INGEST_SECRET` in Vercel and redeploy. Until the redeploy, webhooks fail with 500 and Stripe retries them.
+3. **Vercel → the-gathering → Settings → Environment Variables:** add `GIVING_INGEST_SECRET`. Use type Sensitive, environment Preview, branch `phase-3/giving-contributions`.
+4. **Stripe Dashboard (test mode on), Developers → API keys → Create restricted key.** These permissions match the API calls the app makes (`src/lib/giving/checkout.ts`, `processor.ts`):
+
+   | Resource | Access | Used for |
+   | --- | --- | --- |
+   | Checkout Sessions | Write | create, retrieve, list (reconcile) |
+   | Prices | Write | inline `price_data` in Checkout and when changing a recurring amount |
+   | Products | Write | one Stripe product per fund, created on first use |
+   | Customers | Write | create and look up the donor's customer |
+   | Subscriptions | Write | retrieve, change amount, cancel |
+   | Customer portal | Write | billing portal sessions (update payment method) |
+   | Refunds | Write | create, retrieve, list |
+   | PaymentIntents | Read | payment status |
+   | Charges | Read | card details and fee lookup |
+   | Balance (balance transactions) | Read | Stripe fees |
+   | Invoices | Read | recurring payments |
+   | Disputes | Read | dispute status |
+
+   Leave everything else at None. Events access isn't needed: webhook signatures are verified locally. Add the key to Vercel as `STRIPE_SECRET_KEY` with the same scope as step 3.
 5. **Stripe → Developers → Webhooks → Add destination (test mode):**
    - URL: `https://giving-webhooks.gathering.church/api/stripe/webhook`
-   - Events: the list above
-   - Then copy the signing secret into Vercel as `STRIPE_WEBHOOK_SECRET` (same scope).
+   - Events: the 22 listed above
+   - Copy the signing secret into Vercel as `STRIPE_WEBHOOK_SECRET` (same scope).
 6. **Stripe → Settings → Billing → Customer portal (test mode):** activate the portal. Enable "Update payment methods". You may leave subscription cancellation enabled, though the app also cancels directly. Don't enable plan switching or pause: they aren't supported by the app.
 7. **Stripe → Settings → Payment methods (test mode):** keep Cards. Turn on Apple Pay and Google Pay. Stripe-hosted Checkout shows them on supported devices with no domain setup.
 8. **Redeploy the branch** (or push a commit) so the new variables take effect. Then I verify the webhook host and run the hosted tests.
+
+**The webhook gets the same secrets as the app.** `giving-webhooks.gathering.church` is assigned to the `phase-3/giving-contributions` branch. It serves that branch's latest Preview deployment, the same deployment as the branch's preview URL, so it uses the branch's Preview variables. Variables only apply to deployments built after they're added, so step 8 is required.
 
 ## Test and live separation (release requirements)
 

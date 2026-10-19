@@ -68,7 +68,7 @@ The giving DB and processor tests cover:
 - **Statements stay drafts** (watermarked, not downloadable by members) until the church enters and approves its legal name, address, tax ID, and wording.
 - **Recurring gifts can't be paused or resumed.** Cancellation is immediate.
 - **One fund per gift.** USD only.
-- **Statement PDFs use the standard Helvetica font.** Characters outside Western European scripts are shown as "?".
+- **Statement PDF scripts:** names and other entered text render in Latin (including Vietnamese), Greek, Cyrillic, Devanagari, Arabic, Hebrew, Thai, Chinese, Japanese, and Korean using bundled Noto fonts (`assets/fonts`, OFL). Characters no bundled font covers (for example emoji) print as "?" in the page, but the PDF metadata keeps the donor name unchanged. Bold Chinese, Japanese, and Korean text prints in Regular. The fonts add about 18 MB to the statement routes' server bundle.
 - **Rate limits are fixed windows:** 10 checkout attempts per 15 minutes per hashed IP for guests (20 for signed-in accounts), and 5 gift-claim attempts per hour.
 - **PayPal and Venmo aren't implemented.** The extension point is documented; no buttons are shown.
 

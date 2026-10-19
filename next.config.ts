@@ -17,8 +17,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // The statement PDF reads the logo from disk.
   outputFileTracingIncludes: {
-    "/giving/statement/**": ["./public/brand/the-gathering-logo.png"],
-    "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png"],
+    "/giving/statement/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
+    "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
   },
   experimental: {
     // Uploads go through Server Actions; Vercel caps request bodies at 4.5 MB.

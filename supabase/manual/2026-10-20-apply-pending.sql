@@ -6,10 +6,45 @@
 --   2. 20261020000200_giving_ingest.sql: from op_sync_subscription to the end
 --      (everything before it, plus find_payment and op_sync_charge, already applied)
 --   3. 20261020000300_giving_access.sql: whole file
--- It also records the three migration versions. Safe to inspect first; it
--- runs in one transaction, so it either applies completely or not at all.
+-- It also records the three migration versions.
+--
+-- Where to run it: https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
+--
+-- Data: it creates functions and grants and inserts three rows into
+-- supabase_migrations.schema_migrations. It does not change or delete any
+-- existing rows in any table.
+--
+-- Safety: everything runs in one transaction, so it applies completely or
+-- not at all. A preflight check first confirms this is The Gathering's
+-- database in the expected state; if not (wrong project, already applied,
+-- or partly applied by other means) it stops with a message and changes
+-- nothing. Rerunning after a failed run is safe; rerunning after a
+-- successful run stops at the preflight check.
 
 begin;
+
+-- 0. Preflight -------------------------------------------------------------
+do $preflight$
+begin
+  if to_regclass('public.church_settings') is null or to_regclass('public.member_profile_details') is null
+     or to_regclass('giving.payments') is null then
+    raise exception 'Preflight: this is not The Gathering database at the expected stage. Nothing was changed.';
+  end if;
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261020000100') then
+    raise exception 'Preflight: migration 20261020000100 is not recorded. Nothing was changed.';
+  end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version in ('20261019000300', '20261020000200', '20261020000300'))
+     or to_regprocedure('public.household_leave()') is not null
+     or to_regprocedure('giving.op_sync_subscription(jsonb)') is not null
+     or to_regprocedure('public.giving_ingest(text,text,bigint,text)') is not null then
+    raise exception 'Preflight: already applied (fully or partly). Nothing was changed.';
+  end if;
+  if to_regprocedure('giving.op_sync_payment(jsonb)') is null or to_regprocedure('giving.op_sync_charge(jsonb)') is null
+     or to_regprocedure('giving.find_payment(text,text)') is null then
+    raise exception 'Preflight: expected earlier Phase 3 functions are missing. Nothing was changed.';
+  end if;
+end
+$preflight$;
 
 -- 1 ------------------------------------------------------------------------
 create function public.household_leave()
