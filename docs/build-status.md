@@ -55,7 +55,9 @@ The giving DB and processor tests cover:
 | Check | Result |
 | --- | --- |
 | `20261020000100_giving_schema` applied with repo version | Applied |
-| `20261020000200` partly applied; remainder, plus `000300` and Phase 2 `household_leave()`, in `supabase/manual/2026-10-20-apply-pending.sql` | **Owner to run** |
+| Remainder of `20261020000200`, all of `000300`, and Phase 2 `household_leave()` applied by the owner via `supabase/manual/2026-10-20-apply-pending.sql` (2026-10-19) | Applied: history has 12 versions ending `20261020000300`; hosted matches fresh-from-files in all 17 fingerprint categories plus the `giving` schema (functions, columns, constraints, RLS, fund seed); no existing rows changed |
+| Security advisor after Phase 3 | Reviewed: only expected notices (`giving` tables have RLS and no policies because they're never exposed; definer functions check capability, ownership, or HMAC; leaked-password protection notice predates Phase 3) |
+| Phase 2 hosted UI walkthrough | Pass (see the Phase 2 section) |
 | Preview env: `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | Set |
 | Preview env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | **Owner to set** (see giving-setup.md) |
 | Webhook hostname `giving-webhooks.gathering.church` assigned to the Phase 3 branch (custom domain, outside Vercel Authentication) | Pass: `/`, `/give`, `/admin/finance` return 404; `/api/stripe/webhook` answers POST only (GET 405) |
