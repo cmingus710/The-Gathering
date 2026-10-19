@@ -35,8 +35,8 @@ All against a real PostgreSQL 16 database built from every migration (`tests/db/
 
 | Check | Result |
 | --- | --- |
-| Events migrations on project `ymuiutwdnhxdqsetnwkt` | **Not yet applied** (see migration-history.md) |
-| `EVENTS_JOB_SECRET`, allowlist, scheduler | **Not yet set up** (see events-guide.md) |
+| Events migrations on project `ymuiutwdnhxdqsetnwkt` | **Applied 2026-10-19** with the manual script (one transaction). History has 15 rows including the three Phase 4 versions; a fingerprint of the `events` schema (columns, constraints, functions, grants, indexes, policies, schema ACL, seeds, triggers) matches the local build exactly |
+| `EVENTS_JOB_SECRET`, allowlist, scheduler | **Set up 2026-10-19.** Job secret created in the database (64 hex characters) and copied into Vercel by the owner (Sensitive, Preview, branch `phase-4/events-calendar`; the value was never displayed). Allowlist falls back to `GIVING_EMAIL_ALLOWLIST`. `pg_cron` 1.6.4 and `pg_net` 0.20.4 enabled; one job, `events-worker`, every 5 minutes, targeting the branch's stable URL; `events.call_worker()` not executable by `anon` or `authenticated`. That the two secret copies match is confirmed by the first signed delivery (walkthrough) |
 | Hosted walkthrough with synthetic events | **Not yet run** |
 
 ### Not verified (calendar clients and devices)
