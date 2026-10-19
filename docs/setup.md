@@ -40,6 +40,7 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 13. `20261021000100_events_schema.sql` (Phase 4)
 14. `20261021000200_events_jobs.sql` (Phase 4)
 15. `20261021000300_events_access.sql` (Phase 4)
+16. `20261021000400_settings_safeupdate.sql` (Phase 4 fix: settings saves on hosted Supabase)
 
 Giving also needs the ingest secret stored in `giving.secrets`, plus Stripe test keys and the webhook. See [giving-setup.md](giving-setup.md).
 

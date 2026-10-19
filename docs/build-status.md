@@ -12,7 +12,7 @@ Operating guidance: [events-guide.md](events-guide.md). Design: [architecture.md
 
 ### Verified locally (no hosted services)
 
-All against a real PostgreSQL 16 database built from every migration (`tests/db/events.test.ts`, 25 tests), plus unit tests (`src/lib/events/*.test.ts`, 16 tests). Full suite: lint, typecheck, production build, 292 Vitest tests, and 64 Playwright tests pass.
+All against a real PostgreSQL 16 database built from every migration (`tests/db/events.test.ts`, 25 tests), plus unit tests (`src/lib/events/*.test.ts`, 16 tests). Full suite: lint, typecheck, production build, 294 Vitest tests (including `tests/db/safeupdate.test.ts`, which checks every app function against hosted Supabase's pg-safeupdate rule), and 64 Playwright tests pass.
 
 | Area | Proven by tests |
 | --- | --- |
