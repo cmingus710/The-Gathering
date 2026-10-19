@@ -19,8 +19,11 @@ export async function proxy(request: NextRequest) {
   if (hookHost && host === hookHost && pathname !== WEBHOOK_PATH) {
     return new NextResponse("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
   }
-  // The webhook carries no session; skip session handling for it.
-  if (pathname === WEBHOOK_PATH) return NextResponse.next();
+  // The webhook, the signed events job, and calendar feeds carry no session;
+  // skip session handling (and its cookies) for them.
+  if (pathname === WEBHOOK_PATH || pathname === "/api/jobs/events" || pathname.startsWith("/api/calendar/")) {
+    return NextResponse.next();
+  }
 
   const { response, signedIn } = await updateSession(request);
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

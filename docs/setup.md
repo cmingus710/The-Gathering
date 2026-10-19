@@ -14,6 +14,9 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Vercel Preview (server, sensitive) | For giving | Stripe **test** key, webhook signing secret, and the shared ingest secret. See [giving-setup.md](giving-setup.md). Live keys are refused. |
 | `GIVING_EMAIL_ALLOWLIST`, `GIVING_WEBHOOK_HOST` | Vercel Preview | For giving | Test-email allowlist; dedicated webhook hostname |
+| `EVENTS_JOB_SECRET` | Vercel Preview, branch-scoped (server, sensitive) | For event email | Shared with `events.secrets('job')`; signs the scheduler and email delivery. Without it, events and RSVPs work but email stays queued. See [events-guide.md](events-guide.md#scheduler-reminders-and-retries). |
+| `EVENTS_EMAIL_ALLOWLIST` | Vercel Preview | Recommended | Test addresses that may receive event email outside production (falls back to `GIVING_EMAIL_ALLOWLIST`; with neither, nothing is sent) |
+| `CRON_SECRET` | Vercel Production (later) | Optional | Only if a Vercel cron should also call `GET /api/jobs/events` after release |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
 ## 2. Supabase
@@ -34,8 +37,13 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 10. `20261020000100_giving_schema.sql` (Phase 3)
 11. `20261020000200_giving_ingest.sql` (Phase 3)
 12. `20261020000300_giving_access.sql` (Phase 3)
+13. `20261021000100_events_schema.sql` (Phase 4)
+14. `20261021000200_events_jobs.sql` (Phase 4)
+15. `20261021000300_events_access.sql` (Phase 4)
 
 Giving also needs the ingest secret stored in `giving.secrets`, plus Stripe test keys and the webhook. See [giving-setup.md](giving-setup.md).
+
+Events need the job secret in `events.secrets` and the database scheduler (`pg_cron` + `pg_net`) for reminders. The three Phase 4 migrations can be applied in one transaction with `supabase/manual/2026-10-21-apply-events.sql`. See [events-guide.md](events-guide.md).
 
 **Project `ymuiutwdnhxdqsetnwkt`:** all nine migrations are applied, and the history matches the repository versions; see [migration-history.md](migration-history.md). Phase 2 was applied through the SQL connector with the repository version numbers recorded, plus one snippet (the `household_leave` function, which contains `delete from`) run in the SQL editor.
 

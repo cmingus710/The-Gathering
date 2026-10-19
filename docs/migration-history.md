@@ -104,3 +104,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Preflight:** the script first checks that the database is The Gathering's at exactly this stage (`20261020000100` recorded; the three versions above, `household_leave`, `op_sync_subscription`, and `giving_ingest` absent; the already-applied functions present). Otherwise it stops with "Nothing was changed".
 - **Rehearsal:** the script was run locally against a database rebuilt to the hosted project's exact partial state. The result matched a fresh build from the migration files in all 17 schema fingerprint categories. A rerun stopped at the preflight. A run with an injected failure before `commit` left the schema and history unchanged, and a rerun then applied cleanly.
 - The ingest secret is created separately by `supabase/manual/2026-10-20-create-ingest-secret.sql`, which never overwrites an existing secret.
+
+## Phase 4 (2026-10-21)
+
+- `20261021000100_events_schema`, `20261021000200_events_jobs`, and `20261021000300_events_access` are new; no applied migration was edited.
+- **`supabase/manual/2026-10-21-apply-events.sql`** contains all three verbatim, each followed by its history row under the repository version, inside one transaction with a preflight check (Phase 3 recorded, no `20261021…` versions and no `events` schema yet). A rerun after success stops with "Nothing was changed".
+- **Rehearsal:** run locally on a database built from the twelve earlier migrations (the hosted project's stage): applied cleanly and recorded `20261021000100:events_schema`, `20261021000200:events_jobs`, `20261021000300:events_access`; the rerun stopped at the preflight.
+- The scheduler (`pg_cron`, `pg_net`, `events.call_worker()`, job URL) and the job secret are hosted-only setup in `supabase/manual/2026-10-21-events-scheduler.sql` and `2026-10-21-create-events-job-secret.sql`, kept out of the migrations because the test database has no `pg_cron`/`pg_net` and the job URL is environment-specific.

@@ -33,7 +33,7 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "directory", label: "Directory", icon: "directory", status: "available", href: "/directory" },
   { key: "profile", label: "Profile", icon: "profile", status: "available", href: "/profile" },
   { key: "give", label: "Give", icon: "give", status: "available", href: "/give" },
-  { key: "events", label: "Events", icon: "events", status: "upcoming", phase: 4 },
+  { key: "events", label: "Events", icon: "events", status: "available", href: "/events" },
   { key: "community", label: "Community", icon: "community", status: "upcoming", phase: 5 },
   { key: "prayer", label: "Prayer", icon: "prayer", status: "upcoming", phase: 6 },
   { key: "media", label: "Media", icon: "media", status: "upcoming", phase: 7 },
@@ -67,6 +67,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: "/admin/announcements",
     icon: "announcements",
     requires: [CAPABILITIES.announcementsManage],
+  },
+  {
+    key: "events",
+    label: "Events",
+    href: "/admin/events",
+    icon: "events",
+    requires: [CAPABILITIES.eventsManage],
   },
   {
     key: "finance",

@@ -418,6 +418,16 @@ begin
 end;
 $$;
 
+create function public.events_public_feed_enabled()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select public_feed_enabled from events.settings), false);
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Signed job entry point (scheduler and email delivery). Same HMAC scheme as
 -- giving_ingest: hex HMAC-SHA256 of "op.ts.payload" with events.secrets('job').
@@ -1162,7 +1172,7 @@ revoke execute on function
   public.events_categories(), public.events_list(timestamptz, timestamptz, uuid, integer), public.events_occurrence(uuid),
   public.events_rsvp(uuid), public.events_cancel_rsvp(uuid), public.events_my_registrations(), public.events_my_prefs(),
   public.events_set_reminders(boolean), public.events_feed_token_rotate(), public.events_feed_token_revoke(),
-  public.events_feed_private(text), public.events_feed_public(), public.events_job(text, text, bigint, text),
+  public.events_feed_private(text), public.events_feed_public(), public.events_public_feed_enabled(), public.events_job(text, text, bigint, text),
   public.events_admin_list(text), public.events_admin_get(uuid), public.events_admin_occurrence(uuid),
   public.events_admin_save(jsonb), public.events_admin_status(uuid, text, timestamptz, text),
   public.events_admin_occurrence_save(uuid, jsonb), public.events_admin_occurrence_cancel(uuid, text),
@@ -1177,8 +1187,8 @@ from public;
 -- Visitors (public events only) and members.
 grant execute on function
   public.events_categories(), public.events_list(timestamptz, timestamptz, uuid, integer), public.events_occurrence(uuid),
-  public.events_feed_private(text), public.events_feed_public(), public.events_job(text, text, bigint, text),
-  public.can_view_event_image(text)
+  public.events_feed_private(text), public.events_feed_public(), public.events_public_feed_enabled(),
+  public.events_job(text, text, bigint, text), public.can_view_event_image(text)
 to anon, authenticated;
 
 -- Signed-in only (each function re-checks membership or events.manage).

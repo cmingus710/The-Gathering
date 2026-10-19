@@ -1,6 +1,77 @@
 # Build status
 
-Last updated: 2026-10-20 · Phase 3 branch `phase-3/giving-contributions` (stacked on Phase 2, PR #5)
+Last updated: 2026-10-21 · Phase 4 branch `phase-4/events-calendar` (stacked on Phase 3, PR #6, which includes Phase 2, PR #5)
+
+## Phase 4: events and calendars
+
+### Summary
+
+Phase 4 code is complete on `phase-4/events-calendar`, branched from the head of Phase 3 (`49abbaa`), which already contains Phase 2. Neither earlier PR is merged, so the Phase 4 PR into `main` also shows their commits; merge #5, then #6, then this one (or retarget) to avoid duplicating anything. Production builds stay paused; giving stays in Stripe test mode.
+
+Operating guidance: [events-guide.md](events-guide.md). Design: [architecture.md](architecture.md#events-and-calendars-phase-4).
+
+### Verified locally (no hosted services)
+
+All against a real PostgreSQL 16 database built from every migration (`tests/db/events.test.ts`, 25 tests), plus unit tests (`src/lib/events/*.test.ts`, 16 tests). Full suite: lint, typecheck, production build, 292 Vitest tests, and 64 Playwright tests pass.
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `events` schema unreadable directly; public events visible to visitors, pending and suspended accounts; members-only events only to approved members; drafts, unpublished-scheduled, and archived events hidden; managers can preview drafts only through admin functions; group audience blocked |
+| Separation of duties | Event coordinator holds `events.manage` and nothing else; members and finance admins are refused event administration |
+| Images | Storage rule serves a members-only cover to members only, a public cover to visitors, and nothing after archiving |
+| Recurrence and time zones | Weekly 9:00 AM stays 9:00 local across the Nov 1 DST change (14:00Z → 15:00Z); nonexistent 2:30 AM → 3:30 AM CDT; ambiguous 1:30 AM → CST; daily every 2 days; monthly on the 31st skips short months; last Sunday and second Tuesday; 200-date cap; unbounded and >2-year rules rejected; all-day events span local midnights |
+| RSVP and capacity | Confirm to capacity, then waitlist in order; duplicate request returns the existing registration; **8 simultaneous requests for 3 places: exactly 3 confirmed**; deadline, disabled registration, canceled event, pending member, and anonymous caller refused; a member can't cancel someone else's registration |
+| Waitlist | Deterministic order and positions; automatic promotion on cancellation and on capacity increase; capacity reduction keeps confirmed people and holds new ones on the waitlist |
+| Permission changes | Suspension cancels registrations and waitlist places, drops queued email, and promotes the next eligible person; eligibility rechecked at promotion |
+| Admin registration | Over-capacity only when chosen; ineligible people refused; registration, cancellation, and export audited with reason and row count, no email addresses in the audit log |
+| Editing | Series edits keep occurrence ids and registrations; wording-only edits send no email; time edits notify affected registrants; shortening a series keeps registered dates as canceled (notified) and removes empty ones; single-date overrides survive series edits; single-date cancellation blocks RSVP |
+| Lifecycle | Unpublish and archive blocked while people are registered; cancel keeps the record, shows "canceled" to registrants, queues cancellation email, and blocks edits |
+| Scheduler and email | Reminders queued once across repeated ticks, honoring opt-out; forged job signatures refused; failed sends retried; non-allowlisted addresses suppressed; recipients who lost access skipped; each message sent once with an idempotency key; claimed data contains no attendee information |
+| Feeds | Private token shown once and stored hashed; feed lists only confirmed registrations; rotation invalidates the old token; revocation and suspension return "not found"; no email addresses in feed data; public feed off by default and public-events-only when on |
+| ICS | RFC 5545 escaping, 75-octet folding without splitting UTF-8, stable UID, SEQUENCE, LAST-MODIFIED, UTC times, all-day dates with exclusive end, STATUS:CANCELLED; Google Calendar link with the event's zone |
+| Forms and email | Meeting links must be https with a real host (no credentials, IPs, local hosts, or ports); field-level validation; email subjects marked [TEST], content escaped, no organizer contact details; promotion email states the place is confirmed |
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Events migrations on project `ymuiutwdnhxdqsetnwkt` | **Not yet applied** (see migration-history.md) |
+| `EVENTS_JOB_SECRET`, allowlist, scheduler | **Not yet set up** (see events-guide.md) |
+| Hosted walkthrough with synthetic events | **Not yet run** |
+
+### Not verified (calendar clients and devices)
+
+- [ ] Importing a downloaded .ics into Apple Calendar, Outlook, and Google Calendar
+- [ ] Subscribing to the private feed in Apple Calendar, Google Calendar, and Outlook, and seeing an update and a cancellation arrive after their refresh
+- [ ] Month grid and agenda on a physical phone; screen reader pass (VoiceOver, TalkBack)
+
+### Known limitations (Phase 4)
+
+- **One place per member account.** No guest registration, household guest counts, or registering children (deferred until consent and permission flows exist).
+- **Group-restricted events** wait for Phase 5's group model; the integration point exists but the option is hidden.
+- **Calendar refresh** is controlled by each calendar app (Google can take up to a day). Downloads and "Add to Google Calendar" are snapshots.
+- **Reminders** run every 5 minutes, so they can arrive up to about 5 minutes late; reminders more than 6 hours overdue (e.g. after an outage) are skipped. Registrations made after a reminder's time don't get that reminder.
+- **Timed events longer than a day** use a wall-clock length; across a DST change night the end time shifts by an hour.
+- **Monthly "5th weekday"** isn't offered; "last" covers the common case.
+- **Private feed URLs** can appear in hosting request logs like any URL (the app never logs them); members can rotate them at any time.
+- **Scheduler reachability:** with Vercel Deployment Protection on, the scheduler's request to the designated preview gets 401. Reminders still queue and are sent by the next request that reaches the app.
+
+### Still open from earlier phases
+
+- **Phase 3:**
+  - Hosted dispute closure ("lost") not exercised.
+  - Final (approved) statements not produced on hosted; they wait for the church's approved details.
+  - Apple Pay and Google Pay not tried on a device.
+  - Vercel Deployment Protection is **off** for the whole project (owner's choice, 2026-10-19), pending a decision to re-enable or adopt a narrower option (giving-setup.md).
+  - Test leftovers: Account B's $30 monthly test subscription is active and an open $20 test dispute exists in the Stripe sandbox.
+- **Phase 2:**
+  - Hosted walkthrough complete (owner-confirmed).
+  - A device and screen-reader pass of the directory is still outstanding (with Phase 1's list below).
+- **Phase 1:** see "Still not verified" in the Phase 1 section.
+
+---
+
+# Phase 3 build status
 
 ## Phase 3: giving and contributions (Stripe test mode)
 

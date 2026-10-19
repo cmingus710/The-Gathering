@@ -21,6 +21,8 @@ src/
     (auth)/          sign-in, sign-up, forgot/reset password, check-email (+ actions.ts)
     (member)/        home, announcements, directory, profile (edit, photo, privacy,
                      preview, household): approved members only
+    (events)/        events list, month, detail, ICS download, calendar & reminders
+                     (public events open to visitors)
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -55,6 +57,7 @@ Two independent axes:
 | Content editor | `announcements.manage` | yes |
 | Finance administrator | `finance.view`, `.record`, `.export`, `.manage`, `.refund` | yes (explicit only) |
 | Finance viewer | `finance.view` | yes (explicit only) |
+| Event coordinator | `events.manage` | yes |
 | Group leader | `groups.lead` (reserved) | Phase 5 |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
@@ -171,6 +174,57 @@ Full details: [giving-setup.md](giving-setup.md) (configuration, webhook, and re
   - Test emails are marked [TEST] and limited to an allowlist.
   - Checkout creation is rate-limited by hashed IP or account.
   - Return URLs come only from configuration.
+
+## Events and calendars (Phase 4)
+
+Operating guidance: [events-guide.md](events-guide.md).
+
+### Data model (private `events` schema)
+
+The `events` schema isn't exposed by the Data API, and `anon`/`authenticated` have no privileges on it. Everything goes through `SECURITY DEFINER` functions in `public` that check membership, audience, and capability on every call.
+
+| Table | Holds |
+| --- | --- |
+| `series` | One event (a one-off is a series of one): title, Markdown description, cover image, category, audience, IANA time zone, local start date and time, length (or day count for all-day), place, online link, organizer name, registration settings, reminder times, recurrence rule, status (`draft`/`published`/`canceled`/`archived`), `publish_at`, `sequence` |
+| `occurrences` | Materialized dates. Stable `id` (calendar UID) plus `occurrence_key` (the date the rule generated). Per-date overrides (date, time, length, place, note), `detached`, `orphaned`, status, `sequence` |
+| `registrations` | One per member per occurrence: `confirmed`/`waitlisted`/`canceled`, waitlist order `(queued_at, id)`, cancel reason (`member`/`admin`/`ineligible`), source |
+| `categories`, `settings` | Configurable categories (seeded: Worship, Fellowship, Bible Study, Youth, Outreach, Serving); public-feed switch, default reminders, scheduler URL |
+| `member_prefs`, `feed_tokens` | Optional reminders on/off; SHA-256 of each member's private feed token |
+| `outbox`, `secrets` | Email delivery records (dedupe key, status, attempts, backoff); the job HMAC secret |
+
+### Visibility
+
+`events.visible_to(series, profile)` is the single rule: the series is **live** (published or canceled, and `publish_at` has passed) **and** its audience includes the person (`public`: everyone; `members`: approved members; `group`: reserved for Phase 5, blocked by constraint, `events.group_member()` returns false). Drafts and archived events are never visible to members, even to event managers through member functions; managers use the `events_admin_*` functions. The rule is applied in lists, the month view, details, filters, RSVP, image storage (`can_view_event_image`), ICS downloads, both feeds, and email (rechecked at send time).
+
+Member-facing JSON contains the caller's own registration and, with a capacity, the number of places left. It never contains attendee identities, emails, or counts of who is registered.
+
+### Time zones and recurrence
+
+- Each occurrence's instant is `(local date + local time) at time zone tz`, computed in PostgreSQL, so wall-clock times hold across DST. Nonexistent local times move forward by the gap; ambiguous ones resolve to the later (standard-time) instant. All-day events span local midnights.
+- `events.rule_dates()` expands daily, weekly (weekday set), monthly by date (skipping months without it), and monthly by ordinal weekday (1st–4th, last), every 1–12 periods, bounded to 731 days and 200 dates. Unbounded rules are rejected by constraint.
+- `events.sync_occurrences()` reconciles a series with its rule: existing occurrences keep their ids; new dates are inserted; dates no longer generated are deleted only when nobody is registered, otherwise kept as canceled (`orphaned`) with registrants notified; detached occurrences keep their overrides. Changes to date, time, or place on a published event bump the occurrence `sequence` and queue a `changed` notice for its registrants.
+
+### Registration (transactional)
+
+`events_rsvp` locks the occurrence row (`for update`), checks approved membership, visibility, status, deadline, and capacity, then confirms or waitlists. A new registrant never jumps an existing waitlist. `events.promote()` fills open places from the waitlist in order, rechecking each person's eligibility, and confirms them automatically. Unique `(occurrence_id, profile_id)` prevents duplicates; concurrency is covered by a test that fires simultaneous requests from separate connections. A trigger on `profiles.membership_status` cancels a suspended or un-approved member's current and future registrations, drops their queued emails, and promotes the waitlist.
+
+### Notifications and scheduling
+
+- Actions queue messages in `events.outbox` (unique dedupe keys) and the server sends them immediately through Resend with an idempotency key. `email_claim` uses `for update skip locked`, so concurrent senders never claim the same message; it rechecks access before releasing event details.
+- `public.events_job(op, payload, ts, sig)` is the only privileged entry point for the app server: HMAC-SHA256 with `EVENTS_JOB_SECRET` (shared with `events.secrets`), requests older than 5 minutes refused. Ops: `tick`, `email_claim`, `email_result`.
+- Scheduling is owned by the database: a `pg_cron` job runs `events.call_worker()` every 5 minutes, which queues reminders under an advisory lock and, when email is waiting, sends one signed `pg_net` request to the designated deployment's `/api/jobs/events`. See [events-guide.md](events-guide.md#scheduler-reminders-and-retries).
+
+### Calendar output
+
+ICS (`src/lib/events/ics.ts`) writes one VEVENT per occurrence with UID `occurrence-<id>@gathering.church`, `SEQUENCE` (series + occurrence), `LAST-MODIFIED`, UTC `DTSTART`/`DTEND` (all-day: `VALUE=DATE` with exclusive end), `STATUS:CANCELLED` for cancellations, RFC 5545 escaping, and 75-octet folding. No RRULE is emitted; recurrence is always expanded and bounded (feeds: 60 days back to 400 days ahead, at most 500 events). Feeds: `/api/calendar/feed/<token>` (private) and `/api/calendar/public`, both `private, no-store`, no referrer, no session handling.
+
+### Images
+
+Covers are validated (signature, 8 MB, 320–8000 px), re-encoded by `sharp` to a WebP of at most 1600×1000 without metadata, and stored in the private `event-images` bucket under random names. Storage RLS serves an image only to people who can see its event (or event managers); pages use 5-minute signed URLs.
+
+### Audit
+
+Series creation, edits (field names), and status changes; occurrence edits, cancellations, and restores; organizer registrations and cancellations (with the reason, never contact details); attendee exports (row count); category and settings changes; feed link creation and revocation.
 
 ## Announcements
 

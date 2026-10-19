@@ -1,5 +1,5 @@
 /**
- * Capability keys (Phase 1 plus Phase 3 finance). The database (public.capabilities,
+ * Capability keys (Phase 1, Phase 3 finance, Phase 4 events). The database (public.capabilities,
  * public.has_capability) is the source of truth; these constants keep the app
  * code typed. Add a key here only after adding it in a migration.
  */
@@ -16,6 +16,8 @@ export const CAPABILITIES = {
   financeExport: "finance.export",
   financeManage: "finance.manage",
   financeRefund: "finance.refund",
+  // Events: create, publish, cancel, attendee lists (Event coordinator role).
+  eventsManage: "events.manage",
 } as const;
 
 export type Capability = (typeof CAPABILITIES)[keyof typeof CAPABILITIES];
@@ -35,6 +37,7 @@ export const ADMIN_AREA_CAPABILITIES: readonly Capability[] = [
   CAPABILITIES.announcementsManage,
   CAPABILITIES.auditView,
   CAPABILITIES.financeView,
+  CAPABILITIES.eventsManage,
 ];
 
 export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {
