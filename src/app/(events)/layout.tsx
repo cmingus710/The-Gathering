@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { MemberShell } from "@/components/layout/member-shell";
 import { PublicHeader } from "@/components/layout/public-header";
 import { getViewer } from "@/lib/auth/viewer";
+import { getUnreadCounts } from "@/lib/community/queries";
 import { getChurchSettings } from "@/lib/settings/queries";
 
 /**
@@ -13,8 +14,9 @@ import { getChurchSettings } from "@/lib/settings/queries";
 export default async function EventsLayout({ children }: { children: ReactNode }) {
   const [{ settings }, result] = await Promise.all([getChurchSettings(), getViewer()]);
   if (result.state === "signed-in" && result.viewer.status === "approved") {
+    const counts = await getUnreadCounts();
     return (
-      <MemberShell viewer={result.viewer} settings={settings}>
+      <MemberShell viewer={result.viewer} settings={settings} counts={counts}>
         {children}
       </MemberShell>
     );

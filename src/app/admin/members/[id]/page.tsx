@@ -15,6 +15,7 @@ import { signPhotoUrls } from "@/lib/profile/photos";
 import { getProfileDetails, splitFullName } from "@/lib/profile/queries";
 import { DirectoryBadge } from "../directory-badge";
 import { RoleControls, StatusControls } from "../member-controls";
+import { EligibilityForm } from "../../community/community-forms";
 import { AdminProfileForm } from "./admin-profile-form";
 
 export const metadata: Metadata = { title: "Member" };
@@ -46,6 +47,14 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
   const isSelf = member.id === viewer.id;
   const canManage = viewer.capabilities.has(CAPABILITIES.membersManage);
   const canRoles = viewer.capabilities.has(CAPABILITIES.rolesManage);
+  const eligibility = canManage
+    ? ((await supabase.rpc("community_admin_dm_eligibility", { p_profile: id })).data as {
+        eligible: boolean;
+        decided_at: string | null;
+        decided_by: string | null;
+        note: string | null;
+      } | null)
+    : null;
 
   return (
     <>
@@ -109,6 +118,32 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
           </Card>
         ) : null}
       </div>
+
+      {canManage && eligibility ? (
+        <Card className="mt-6">
+          <SectionHeading>Direct messaging</SectionHeading>
+          <p className="mb-2">
+            {eligibility.eligible ? "On." : "Off."}{" "}
+            {eligibility.decided_at ? (
+              <span className="text-text-secondary">
+                Last changed {formatDateTime(eligibility.decided_at, settings.timezone)} by {eligibility.decided_by ?? "a former administrator"}
+                {eligibility.note ? ` (${eligibility.note})` : ""}.
+              </span>
+            ) : (
+              <span className="text-text-secondary">No decision recorded, so messaging is off.</span>
+            )}
+          </p>
+          <p className="mb-4 text-[0.95rem] text-text-secondary">
+            Messaging is for adults only and stays off until a membership administrator confirms it here. Every change is recorded in the audit log. You can&apos;t
+            change your own.
+          </p>
+          {isSelf ? null : member.membership_status !== "approved" && !eligibility.eligible ? (
+            <Alert tone="info" title="Messaging can be turned on after the member is approved." live={false} />
+          ) : (
+            <EligibilityForm profileId={member.id} eligible={eligibility.eligible} />
+          )}
+        </Card>
+      ) : null}
 
       {canManageProfile ? (
         <Card className="mt-6">

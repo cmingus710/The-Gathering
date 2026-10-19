@@ -6,6 +6,10 @@ export type IconName =
   | "announcements"
   | "profile"
   | "community"
+  | "groups"
+  | "messages"
+  | "notifications"
+  | "moderation"
   | "prayer"
   | "events"
   | "grow"
@@ -21,6 +25,8 @@ export type NavItem = {
   key: string;
   label: string;
   icon: IconName;
+  /** Live unread count shown beside the link. */
+  count?: "messages" | "notifications";
 } & ({ status: "available"; href: string } | { status: "upcoming"; phase: number });
 
 /**
@@ -34,14 +40,17 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "profile", label: "Profile", icon: "profile", status: "available", href: "/profile" },
   { key: "give", label: "Give", icon: "give", status: "available", href: "/give" },
   { key: "events", label: "Events", icon: "events", status: "available", href: "/events" },
-  { key: "community", label: "Community", icon: "community", status: "upcoming", phase: 5 },
+  { key: "community", label: "Community", icon: "community", status: "available", href: "/community" },
+  { key: "groups", label: "Groups", icon: "groups", status: "available", href: "/groups" },
+  { key: "messages", label: "Messages", icon: "messages", status: "available", href: "/messages", count: "messages" },
+  { key: "notifications", label: "Notifications", icon: "notifications", status: "available", href: "/notifications", count: "notifications" },
   { key: "prayer", label: "Prayer", icon: "prayer", status: "upcoming", phase: 6 },
   { key: "media", label: "Media", icon: "media", status: "upcoming", phase: 7 },
   { key: "grow", label: "Grow", icon: "grow", status: "upcoming", phase: 8 },
 ];
 
 /** The small set shown in the phone tab bar; everything else lives under More. */
-export const MOBILE_PRIMARY_KEYS = ["home", "announcements", "directory", "profile"] as const;
+export const MOBILE_PRIMARY_KEYS = ["home", "community", "messages", "profile"] as const;
 
 export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[] };
 
@@ -74,6 +83,20 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: "/admin/events",
     icon: "events",
     requires: [CAPABILITIES.eventsManage],
+  },
+  {
+    key: "community",
+    label: "Community",
+    href: "/admin/community",
+    icon: "community",
+    requires: [CAPABILITIES.communityManage],
+  },
+  {
+    key: "moderation",
+    label: "Moderation",
+    href: "/admin/moderation",
+    icon: "moderation",
+    requires: [CAPABILITIES.communityModerate],
   },
   {
     key: "finance",

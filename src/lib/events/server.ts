@@ -42,7 +42,7 @@ export function getEventsJob(): EventsJob | null {
   });
 }
 
-function getMailer(): Mailer | null {
+export function getMailer(): Mailer | null {
   const email = getEmailConfig();
   if (!email) return null;
   return {

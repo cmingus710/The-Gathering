@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/components/ui/cn";
 import { SoonPill } from "@/components/ui/badge";
 import { MEMBER_NAV, MOBILE_PRIMARY_KEYS, isActivePath, type NavItem } from "@/lib/navigation";
+import { NavCount } from "@/components/community/notification-bell";
 import { NavIcon } from "./nav-icon";
 
 const available = MEMBER_NAV.filter((i): i is Extract<NavItem, { status: "available" }> => i.status === "available");
@@ -32,6 +33,7 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
               <Link href={item.href} className={linkClass(active)} aria-current={active ? "page" : undefined}>
                 <NavIcon name={item.icon} />
                 {item.label}
+                {item.count ? <NavCount kind={item.count} /> : null}
               </Link>
             </li>
           );
@@ -100,9 +102,14 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
             const active = isActivePath(pathname, item.href);
             return (
               <li key={item.key} className="flex flex-1">
-                <Link href={item.href} className={tab(active)} aria-current={active ? "page" : undefined}>
+                <Link href={item.href} className={cn(tab(active), "relative")} aria-current={active ? "page" : undefined}>
                   <NavIcon name={item.icon} className={cn("size-[22px]", active && "text-primary")} />
                   {item.label === "Announcements" ? "News" : item.label}
+                  {item.count ? (
+                    <span className="absolute right-[18%] top-1.5">
+                      <NavCount kind={item.count} />
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             );
@@ -144,6 +151,7 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
                 <Link href={item.href} className={linkClass(isActivePath(pathname, item.href))}>
                   <NavIcon name={item.icon} />
                   {item.label}
+                  {item.count ? <NavCount kind={item.count} /> : null}
                 </Link>
               </li>
             ))}

@@ -15,7 +15,8 @@ export type EventFormValues = {
   title: string;
   description: string;
   categoryId: string;
-  audience: "public" | "members";
+  audience: "public" | "members" | "group";
+  groupId: string;
   timezone: string;
   allDay: boolean;
   startDate: string;
@@ -50,6 +51,8 @@ const legend = "mb-1 text-[0.95rem] font-bold uppercase tracking-[0.08em]";
 type Props = {
   initial: EventFormValues;
   categories: Array<{ id: string; name: string; active: boolean }>;
+  /** Groups this coordinator may target (discoverable, or ones they lead or administer). */
+  groups: Array<{ id: string; name: string; visibility: "discoverable" | "hidden" }>;
   timezones: string[];
   published: boolean;
 };
@@ -72,7 +75,7 @@ export function EventForm(props: Props) {
   return <EventFormFields key={state.attempt ?? 0} {...props} state={state} action={action} />;
 }
 
-function EventFormFields({ initial, categories, timezones, published, state, action }: Props & { state: SaveState; action: (formData: FormData) => void }) {
+function EventFormFields({ initial, categories, groups, timezones, published, state, action }: Props & { state: SaveState; action: (formData: FormData) => void }) {
   const sv = state.values;
   const str = (k: keyof EventFormValues) => (sv?.[k] !== undefined ? String(sv[k]) : String(initial[k] ?? ""));
   const bool = (k: keyof EventFormValues) => (sv ? sv[k] === "on" : Boolean(initial[k]));
@@ -81,6 +84,7 @@ function EventFormFields({ initial, categories, timezones, published, state, act
   const [allDay, setAllDay] = useState(bool("allDay"));
   const [rsvp, setRsvp] = useState(bool("rsvpEnabled"));
   const [recurrence, setRecurrence] = useState(str("recurrence") || "none");
+  const [audience, setAudience] = useState<EventFormValues["audience"]>((str("audience") || "members") as EventFormValues["audience"]);
   const [monthlyMode, setMonthlyMode] = useState(str("monthlyMode") || "day");
   const [endMode, setEndMode] = useState(str("endMode") || "until");
   const [preview, setPreview] = useState<string | null>(null);
@@ -126,14 +130,29 @@ function EventFormFields({ initial, categories, timezones, published, state, act
           <SelectField
             label="Who can see it"
             name="audience"
-            defaultValue={str("audience")}
+            value={audience}
+            onChange={(e) => setAudience(e.target.value as EventFormValues["audience"])}
             error={fe.audience}
-            hint="Group-only events become available when groups arrive in a later phase."
+            hint={audience === "group" ? "Only the group's active members see it, its image, and its calendar entries." : undefined}
           >
             <option value="members">Approved members only</option>
             <option value="public">Everyone (public)</option>
+            <option value="group" disabled={!groups.length && initial.audience !== "group"}>
+              One group&apos;s members only{groups.length ? "" : " (no groups yet)"}
+            </option>
           </SelectField>
         </div>
+        {audience === "group" ? (
+          <SelectField label="Group" name="groupId" defaultValue={str("groupId")} error={fe.groupId} hint="Changing the group cancels registrations of people who aren't in the new group.">
+            <option value="">Choose a group</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+                {g.visibility === "hidden" ? " (hidden group)" : ""}
+              </option>
+            ))}
+          </SelectField>
+        ) : null}
         <TextField label="Organizer" name="organizerName" optional maxLength={120} defaultValue={str("organizerName")} error={fe.organizerName} hint="A name or team. Don't add phone numbers or personal email." />
       </fieldset>
 

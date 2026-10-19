@@ -1,7 +1,10 @@
-import { Download } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { IconBadge } from "@/components/brand/logo";
+import { NotificationBell } from "@/components/community/notification-bell";
+import { CommunityRealtimeProvider } from "@/components/community/realtime-provider";
+import type { UnreadCounts } from "@/lib/community/types";
+import { getSupabasePublicConfig } from "@/lib/env";
 import { displayName, type Viewer } from "@/lib/auth/viewer";
 import type { ChurchSettings } from "@/lib/settings/queries";
 import { MobileTabBar, SidebarNav } from "./member-nav";
@@ -21,8 +24,20 @@ function Avatar({ viewer, className = "size-10" }: { viewer: Viewer; className?:
   );
 }
 
-export function MemberShell({ viewer, settings, children }: { viewer: Viewer; settings: ChurchSettings; children: ReactNode }) {
+export function MemberShell({
+  viewer,
+  settings,
+  counts,
+  children,
+}: {
+  viewer: Viewer;
+  settings: ChurchSettings;
+  counts: UnreadCounts;
+  children: ReactNode;
+}) {
+  const supabase = getSupabasePublicConfig();
   return (
+    <CommunityRealtimeProvider memberId={viewer.id} supabaseUrl={supabase?.url ?? null} supabaseKey={supabase?.publishableKey ?? null} initialCounts={counts}>
     <div className="min-h-dvh lg:flex">
       <a href="#main" className="skip-link">
         Skip to content
@@ -54,13 +69,7 @@ export function MemberShell({ viewer, settings, children }: { viewer: Viewer; se
             <Link href="/home" className="truncate text-center text-lg font-bold">
               {settings.churchName}
             </Link>
-            <Link
-              href="/install"
-              className="flex size-11 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-muted"
-            >
-              <Download className="size-5" aria-hidden="true" />
-              <span className="sr-only">Add to Home Screen</span>
-            </Link>
+            <NotificationBell />
           </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 pb-32 pt-4 outline-none sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">
@@ -70,5 +79,6 @@ export function MemberShell({ viewer, settings, children }: { viewer: Viewer; se
 
       <MobileTabBar showAdmin={viewer.isAdmin} signOut={<SignOutButton />} />
     </div>
+    </CommunityRealtimeProvider>
   );
 }

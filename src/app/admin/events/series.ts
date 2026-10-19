@@ -10,7 +10,8 @@ export type AdminSeries = {
   cover_path: string | null;
   cover_alt: string | null;
   category_id: string | null;
-  audience: "public" | "members";
+  audience: "public" | "members" | "group";
+  group_id: string | null;
   timezone: string;
   all_day: boolean;
   start_date: string;
@@ -71,6 +72,7 @@ export function seriesToForm(s: AdminSeries, coverUrl: string | null): EventForm
     description: s.description,
     categoryId: s.category_id ?? "",
     audience: s.audience,
+    groupId: s.group_id ?? "",
     timezone: s.timezone,
     allDay: s.all_day,
     startDate: s.start_date,

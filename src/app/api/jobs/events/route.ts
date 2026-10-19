@@ -1,4 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
+import { deliverCommunityEmails } from "@/lib/community/jobs";
+import { getCommunityDeliveryDeps } from "@/lib/community/server";
 import { deliverEventEmails, verifyJobSignature } from "@/lib/events/jobs";
 import { getDeliveryDeps, getEventsConfig } from "@/lib/events/server";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -16,7 +18,9 @@ function bearerOk(header: string | null, secret: string | undefined): boolean {
 }
 
 /**
- * Scheduled work: queue due reminders, then send queued event email.
+ * Scheduled work: queue due reminders, then send queued event email; then
+ * the community tick (digests, invitation expiry, retention) and queued
+ * community email and push (Phase 5 shares this scheduler and secret).
  * Called every few minutes by the database scheduler (pg_cron + pg_net,
  * signed with EVENTS_JOB_SECRET over "tick.<ts>."). A Vercel cron (GET with
  * CRON_SECRET) can drive it too after a production release. Safe to call
@@ -30,7 +34,19 @@ async function run() {
   try {
     const tick = await deps.job<{ queued?: number; pending?: number; skipped?: boolean }>("tick", {});
     const sent = await deliverEventEmails(deps, { rounds: 5, limit: 20 });
-    return json({ tick, sent });
+    const community = getCommunityDeliveryDeps(settings.churchName);
+    let communityResult: unknown = null;
+    if (community) {
+      try {
+        const communityTick = await community.job("tick", {});
+        const delivered = await deliverCommunityEmails(community, { rounds: 5, limit: 20 });
+        communityResult = { tick: communityTick, delivered };
+      } catch (err) {
+        console.error("[community] job failed", { error: (err as Error)?.name });
+        communityResult = { error: "failed" };
+      }
+    }
+    return json({ tick, sent, community: communityResult });
   } catch (err) {
     console.error("[events] job failed", { error: (err as Error)?.name });
     return json({ error: "failed" }, 500);

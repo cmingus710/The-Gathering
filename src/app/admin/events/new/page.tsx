@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "New event" };
 export default async function NewEventPage() {
   await requireCapability(CAPABILITIES.eventsManage, "/admin/events/new");
   const [supabase, { settings }] = await Promise.all([requireClient(), getChurchSettings()]);
-  const { data } = await supabase.rpc("events_admin_categories");
+  const [{ data }, { data: groups }] = await Promise.all([supabase.rpc("events_admin_categories"), supabase.rpc("events_admin_groups")]);
   const { data: config } = await supabase.rpc("events_admin_settings");
   const defaults = ((config as { default_reminder_minutes?: number[] } | null)?.default_reminder_minutes ?? [1440]) as number[];
   const tz = settings.timezone;
@@ -28,12 +28,14 @@ export default async function NewEventPage() {
       <EventForm
         published={false}
         categories={(data ?? []) as Array<{ id: string; name: string; active: boolean }>}
+        groups={(groups ?? []) as Array<{ id: string; name: string; visibility: "discoverable" | "hidden" }>}
         timezones={allTimeZones([tz])}
         initial={{
           title: "",
           description: "",
           categoryId: "",
           audience: "members",
+          groupId: "",
           timezone: tz,
           allDay: false,
           startDate: addDays(localDate(new Date(), tz), 7),

@@ -67,6 +67,21 @@ for (const path of [
   "/giving",
   "/admin/finance",
   "/admin/finance/contributions",
+  // Phase 5
+  "/community",
+  "/community/new",
+  "/community/guidelines",
+  "/community/t/00000000-0000-0000-0000-000000000000",
+  "/groups",
+  "/groups/invitations",
+  "/groups/00000000-0000-0000-0000-000000000000/manage",
+  "/messages",
+  "/messages/new",
+  "/messages/00000000-0000-0000-0000-000000000000",
+  "/notifications",
+  "/notifications/settings",
+  "/admin/community",
+  "/admin/moderation",
 ]) {
   test(`signed-out visitors are sent to sign-in from ${path}`, async ({ page }) => {
     const response = await page.goto(path);
@@ -88,6 +103,29 @@ test("protected directory responses are never publicly cacheable", async ({ requ
   const res = await request.get("/directory", { maxRedirects: 0 });
   expect(res.headers()["cache-control"]).toContain("private");
   expect(res.headers()["cache-control"]).toContain("no-store");
+});
+
+test("community API answers signed-out visitors with 401 and is never cacheable", async ({ request }) => {
+  for (const path of ["/api/community/unread", "/api/community/conversations/00000000-0000-0000-0000-000000000000"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect([401, 503]).toContain(res.status());
+    expect(res.headers()["cache-control"]).toContain("no-store");
+  }
+});
+
+test("protected community responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/community", "/messages", "/groups", "/notifications"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"]).toContain("private");
+    expect(res.headers()["cache-control"]).toContain("no-store");
+  }
+});
+
+test("the service worker handles push without caching private pages", async ({ request }) => {
+  const sw = await (await request.get("/sw.js")).text();
+  expect(sw).toContain('addEventListener("push"');
+  expect(sw).toContain("/notifications/open/");
+  expect(sw).not.toMatch(/cache\.put\([^)]*navigate/);
 });
 
 test("guest giving page is public and honest when giving isn't configured", async ({ page }) => {

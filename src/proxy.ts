@@ -7,7 +7,19 @@ import { updateSession } from "@/lib/supabase/proxy";
  * they reach a protected page. This is a convenience layer only: every page,
  * Server Action, and database query re-checks authorization itself.
  */
-const PROTECTED_PREFIXES = ["/home", "/announcements", "/directory", "/profile", "/giving", "/admin", "/account-status"];
+const PROTECTED_PREFIXES = [
+  "/home",
+  "/announcements",
+  "/directory",
+  "/profile",
+  "/giving",
+  "/admin",
+  "/account-status",
+  "/community",
+  "/groups",
+  "/messages",
+  "/notifications",
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -27,6 +39,9 @@ export async function proxy(request: NextRequest) {
 
   const { response, signedIn } = await updateSession(request);
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  // Community API responses are per-member and must never be cached publicly.
+  if (pathname.startsWith("/api/community/")) response.headers.set("Cache-Control", "private, no-store");
 
   if (isProtected) {
     response.headers.set("Cache-Control", "private, no-store");

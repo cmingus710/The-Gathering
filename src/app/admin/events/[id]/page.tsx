@@ -26,7 +26,11 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
   if (!UUID.test(id)) notFound();
   const sp = await searchParams;
   const supabase = await requireClient();
-  const [{ data }, { data: cats }] = await Promise.all([supabase.rpc("events_admin_get", { p_series: id }), supabase.rpc("events_admin_categories")]);
+  const [{ data }, { data: cats }, { data: groups }] = await Promise.all([
+    supabase.rpc("events_admin_get", { p_series: id }),
+    supabase.rpc("events_admin_categories"),
+    supabase.rpc("events_admin_groups"),
+  ]);
   const s = data as AdminSeries | null;
   if (!s) notFound();
   const covers = await signCoverUrls(supabase, [s.cover_path]);
@@ -113,6 +117,7 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
             <EventForm
               initial={seriesToForm(s, s.cover_path ? (covers.get(s.cover_path) ?? null) : null)}
               categories={(cats ?? []) as Array<{ id: string; name: string; active: boolean }>}
+              groups={(groups ?? []) as Array<{ id: string; name: string; visibility: "discoverable" | "hidden" }>}
               timezones={allTimeZones([s.timezone])}
               published={s.status === "published"}
             />

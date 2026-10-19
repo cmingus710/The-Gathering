@@ -50,7 +50,8 @@ export const eventFormSchema = z
     title: z.string().trim().min(1, "Enter a title.").max(160, "Keep the title to 160 characters."),
     description: z.string().max(10000, "Keep the description to 10,000 characters.").default(""),
     categoryId: z.union([z.uuid(), z.literal("")]).transform((v) => v || null),
-    audience: z.enum(["public", "members"], { message: "Choose who can see this event." }),
+    audience: z.enum(["public", "members", "group"], { message: "Choose who can see this event." }),
+    groupId: z.union([z.uuid(), z.literal("")]).default("").transform((v) => v || null),
     timezone: z.string().min(1, "Choose a time zone."),
     allDay: z.boolean(),
     startDate: z.string().regex(DATE, "Enter the start date."),
@@ -80,6 +81,7 @@ export const eventFormSchema = z
   })
   .superRefine((v, ctx) => {
     const issue = (path: string, message: string) => ctx.addIssue({ code: "custom", path: [path], message });
+    if (v.audience === "group" && !v.groupId) issue("groupId", "Choose the group that can see this event.");
     if (v.onlineUrl && !validMeetingUrl(v.onlineUrl)) {
       issue("onlineUrl", "Enter a full https:// meeting link (for example https://zoom.us/j/…).");
     }
@@ -139,7 +141,8 @@ export function eventFormFromData(formData: FormData): EventFormInput {
     title: s("title"),
     description: s("description"),
     categoryId: s("categoryId"),
-    audience: s("audience") as "public" | "members",
+    audience: s("audience") as "public" | "members" | "group",
+    groupId: s("groupId"),
     timezone: s("timezone"),
     allDay: formData.get("allDay") === "on",
     startDate: s("startDate"),
@@ -178,6 +181,7 @@ export function toSeriesPayload(v: z.output<typeof eventFormSchema>) {
     description: v.description,
     category_id: v.categoryId,
     audience: v.audience,
+    group_id: v.audience === "group" ? v.groupId : null,
     timezone: v.timezone,
     all_day: v.allDay,
     start_date: v.startDate,

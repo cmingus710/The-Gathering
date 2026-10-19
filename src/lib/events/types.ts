@@ -40,6 +40,8 @@ export type EventOccurrence = {
   updated_at: string;
   my_status: RegistrationStatus | null;
   my_position: number | null;
+  /** Group events: the group, for its members (event detail only). */
+  group?: { id: string; name: string } | null;
   more?: Array<{ id: string; starts_at: string; ends_at: string; status: OccurrenceStatus }>;
 };
 
