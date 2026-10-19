@@ -58,7 +58,8 @@ The giving DB and processor tests cover:
 | `20261020000200` partly applied; remainder, plus `000300` and Phase 2 `household_leave()`, in `supabase/manual/2026-10-20-apply-pending.sql` | **Owner to run** |
 | Preview env: `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | Set |
 | Preview env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | **Owner to set** (see giving-setup.md) |
-| Webhook hostname `giving-webhooks.gathering.church` serving only the webhook | See below |
+| Webhook hostname `giving-webhooks.gathering.church` assigned to the Phase 3 branch (custom domain, outside Vercel Authentication) | Pass: `/`, `/give`, `/admin/finance` return 404; `/api/stripe/webhook` answers POST only (GET 405) |
+| Preview `/give` without Stripe keys shows "Online giving isn't available yet" (no fake checkout) | Pass (`dpl_CnMGQZBHcSG7YPxvHpVC8WoEJwC6`) |
 | End-to-end Stripe test payments, webhooks, refunds, portal, emails | **Not yet run** (needs the credentials above) |
 
 ### Known limitations (Phase 3)
