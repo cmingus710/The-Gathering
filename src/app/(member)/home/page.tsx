@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronRight, Megaphone, ShieldCheck } from "lucide-react";
+import { CalendarClock, ChevronRight, Home as HomeIcon, Megaphone, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AnnouncementTile } from "@/components/announcements/announcement-card";
@@ -9,6 +9,7 @@ import { EmptyState, ListRow, SectionHeading, SectionLink } from "@/components/u
 import { listLiveAnnouncements, type AnnouncementWithImage } from "@/lib/announcements/queries";
 import { displayName, requireApprovedMember } from "@/lib/auth/viewer";
 import { MEMBER_NAV } from "@/lib/navigation";
+import { getMyHouseholdInvitations } from "@/lib/profile/queries";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { WEEKDAY_LABEL } from "@/lib/settings/schema";
 import { requireClient } from "@/lib/supabase/server";
@@ -33,6 +34,7 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
   } catch {
     failed = true;
   }
+  const invitations = await getMyHouseholdInvitations(supabase).catch(() => []);
   const notice = typeof params.notice === "string" ? NOTICES[params.notice] : undefined;
   const now = new Date();
   const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: settings.timezone }).format(now));
@@ -56,6 +58,24 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
           {greeting}, {firstName}
         </h1>
       </header>
+
+      {invitations.length ? (
+        <ListRow
+          href="/profile/household"
+          icon={<HomeIcon className="size-6 text-primary" aria-hidden="true" />}
+          label={invitations.length === 1 ? "You have a household invitation" : `You have ${invitations.length} household invitations`}
+          description="Review and accept or decline"
+          trailing={<ChevronRight className="size-5" aria-hidden="true" />}
+        />
+      ) : null}
+
+      <ListRow
+        href="/directory"
+        icon={<NavIcon name="directory" className="size-6" />}
+        label="Member directory"
+        description="Find and connect with your church family"
+        trailing={<ChevronRight className="size-5" aria-hidden="true" />}
+      />
 
       {viewer.isAdmin ? (
         <ListRow

@@ -47,7 +47,23 @@ test("head includes Apple web app metadata and icons", async ({ page }) => {
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#121110");
 });
 
-for (const path of ["/home", "/profile", "/announcements", "/admin", "/admin/members", "/admin/settings"]) {
+for (const path of [
+  "/home",
+  "/profile",
+  "/announcements",
+  "/admin",
+  "/admin/members",
+  "/admin/settings",
+  // Phase 2
+  "/directory",
+  "/directory/00000000-0000-0000-0000-000000000000",
+  "/profile/edit",
+  "/profile/privacy",
+  "/profile/photo",
+  "/profile/preview",
+  "/profile/household",
+  "/admin/ministry-interests",
+]) {
   test(`signed-out visitors are sent to sign-in from ${path}`, async ({ page }) => {
     const response = await page.goto(path);
     await expect(page).toHaveURL(new RegExp(`/sign-in\\?next=${encodeURIComponent(path).replace(/%2F/g, "(%2F|/)")}`));
@@ -55,6 +71,20 @@ for (const path of ["/home", "/profile", "/announcements", "/admin", "/admin/mem
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 }
+
+test("registration explains the members-only directory and how to hide", async ({ page }) => {
+  await page.goto("/sign-up");
+  const note = page.getByText("About the member directory");
+  await expect(note).toBeVisible();
+  await expect(page.getByText(/only signed-in approved members/)).toBeVisible();
+  await expect(page.getByText(/hide your whole listing/)).toBeVisible();
+});
+
+test("protected directory responses are never publicly cacheable", async ({ request }) => {
+  const res = await request.get("/directory", { maxRedirects: 0 });
+  expect(res.headers()["cache-control"]).toContain("private");
+  expect(res.headers()["cache-control"]).toContain("no-store");
+});
 
 test("sign-in shows accessible field errors", async ({ page }) => {
   await page.goto("/sign-in");

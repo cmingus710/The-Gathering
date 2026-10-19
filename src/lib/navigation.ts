@@ -30,8 +30,8 @@ export type NavItem = {
 export const MEMBER_NAV: NavItem[] = [
   { key: "home", label: "Home", icon: "home", status: "available", href: "/home" },
   { key: "announcements", label: "Announcements", icon: "announcements", status: "available", href: "/announcements" },
+  { key: "directory", label: "Directory", icon: "directory", status: "available", href: "/directory" },
   { key: "profile", label: "Profile", icon: "profile", status: "available", href: "/profile" },
-  { key: "directory", label: "Directory", icon: "directory", status: "upcoming", phase: 2 },
   { key: "give", label: "Give", icon: "give", status: "upcoming", phase: 3 },
   { key: "events", label: "Events", icon: "events", status: "upcoming", phase: 4 },
   { key: "community", label: "Community", icon: "community", status: "upcoming", phase: 5 },
@@ -41,7 +41,7 @@ export const MEMBER_NAV: NavItem[] = [
 ];
 
 /** The small set shown in the phone tab bar; everything else lives under More. */
-export const MOBILE_PRIMARY_KEYS = ["home", "announcements", "profile"] as const;
+export const MOBILE_PRIMARY_KEYS = ["home", "announcements", "directory", "profile"] as const;
 
 export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[] };
 
@@ -53,6 +53,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: "/admin/members",
     icon: "members",
     requires: [CAPABILITIES.membersView],
+  },
+  {
+    key: "interests",
+    label: "Ministry interests",
+    href: "/admin/ministry-interests",
+    icon: "grow",
+    requires: [CAPABILITIES.membersManage],
   },
   {
     key: "announcements",

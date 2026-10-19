@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|profile|admin|account-status)/:path*",
+        source: "/(home|announcements|directory|profile|admin|account-status)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

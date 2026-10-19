@@ -6,7 +6,7 @@ import { updateSession } from "@/lib/supabase/proxy";
  * they reach a protected page. This is a convenience layer only: every page,
  * Server Action, and database query re-checks authorization itself.
  */
-const PROTECTED_PREFIXES = ["/home", "/announcements", "/profile", "/admin", "/account-status"];
+const PROTECTED_PREFIXES = ["/home", "/announcements", "/directory", "/profile", "/admin", "/account-status"];
 
 export async function proxy(request: NextRequest) {
   const { response, signedIn } = await updateSession(request);

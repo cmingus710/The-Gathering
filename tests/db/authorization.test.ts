@@ -390,8 +390,9 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
       await db.query(as(superAdmin), "insert into storage.objects (bucket_id, name) values ('branding', 'logo/x.png')");
     });
 
-    it("restricts both buckets to raster image types", async () => {
-      const buckets = await db.raw("select id, allowed_mime_types from storage.buckets order by id");
+    it("restricts the Phase 1 buckets to raster image types", async () => {
+      const buckets = await db.raw("select id, allowed_mime_types from storage.buckets where id in ('branding', 'announcement-images')");
+      expect(buckets).toHaveLength(2);
       for (const b of buckets) expect(b.allowed_mime_types).toEqual(["image/png", "image/jpeg", "image/webp"]);
     });
   });

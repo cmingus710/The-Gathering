@@ -62,3 +62,15 @@ grant select on storage.buckets to anon, authenticated, service_role;
 -- on the hosted project; the migrations grant every function explicitly.
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+
+-- Same contract as Supabase's storage.foldername(): the folder parts of an object name.
+create function storage.foldername(name text) returns text[]
+language plpgsql immutable as $$
+declare
+  _parts text[];
+begin
+  select string_to_array(name, '/') into _parts;
+  return _parts[1:array_length(_parts, 1) - 1];
+end
+$$;
+grant execute on function storage.foldername(text) to anon, authenticated, service_role;

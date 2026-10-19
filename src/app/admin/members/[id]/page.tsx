@@ -10,7 +10,12 @@ import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDate, formatDateTime } from "@/lib/time";
+import { MemberAvatar } from "@/components/profile/member-avatar";
+import { signPhotoUrls } from "@/lib/profile/photos";
+import { getProfileDetails, splitFullName } from "@/lib/profile/queries";
+import { DirectoryBadge } from "../directory-badge";
 import { RoleControls, StatusControls } from "../member-controls";
+import { AdminProfileForm } from "./admin-profile-form";
 
 export const metadata: Metadata = { title: "Member" };
 
@@ -24,13 +29,18 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
   const [{ data: member }, { data: assigned }, { data: roles }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, preferred_name, phone, membership_status, created_at, status_changed_at")
+      .select("id, email, full_name, first_name, last_name, preferred_name, phone, membership_status, created_at, status_changed_at")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("user_roles").select("role_key").eq("user_id", id),
     supabase.from("roles").select("key, name, description, assignable, sort_order").eq("assignable", true).order("sort_order"),
   ]);
   if (!member) notFound();
+  const canManageProfile = viewer.capabilities.has(CAPABILITIES.membersManage);
+  // Private details: only for membership managers (RLS enforces the same).
+  const details = canManageProfile ? await getProfileDetails(supabase, member.id).catch(() => null) : null;
+  const photoUrl = details?.photo_path ? ((await signPhotoUrls(supabase, [details.photo_path])).get(details.photo_path) ?? null) : null;
+  const split = splitFullName(member.full_name ?? "");
 
   const name = member.preferred_name || member.full_name || member.email;
   const isSelf = member.id === viewer.id;
@@ -99,6 +109,62 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
           </Card>
         ) : null}
       </div>
+
+      {canManageProfile ? (
+        <Card className="mt-6">
+          <SectionHeading>Profile details</SectionHeading>
+          {!details ? (
+            <Alert tone="error" title="Profile details couldn't be loaded." />
+          ) : (
+            <>
+              <div className="mb-5 flex flex-wrap items-center gap-4">
+                <MemberAvatar name={name} photoUrl={photoUrl} size="md" />
+                <div className="space-y-1">
+                  <DirectoryBadge status={member.membership_status} listed={details.directory_listed} />
+                  {member.membership_status !== "approved" ? (
+                    <p className="text-[0.95rem] text-text-secondary">Not shown in the directory until approved.</p>
+                  ) : null}
+                  <p className="text-[0.95rem] text-text-secondary">
+                    Shares:{" "}
+                    {[
+                      details.show_photo && "photo",
+                      details.show_city_state && "city/state",
+                      details.show_ministry_interests && "interests",
+                      details.show_household && "household",
+                      details.show_phone && "phone",
+                      details.show_contact_email && "directory email",
+                      details.show_street_address && "street address",
+                      details.show_birthday && "birthday",
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "nothing beyond their name"}
+                    . Privacy choices belong to the member and can&apos;t be changed here.
+                  </p>
+                </div>
+              </div>
+              <AdminProfileForm
+                userId={member.id}
+                isSelf={isSelf}
+                hasPhoto={!!details.photo_path}
+                initial={{
+                  firstName: member.first_name ?? split.first,
+                  lastName: member.last_name ?? (member.first_name ? "" : split.last),
+                  preferredName: member.preferred_name ?? "",
+                  phone: member.phone ?? "",
+                  contactEmail: details.contact_email ?? "",
+                  streetAddress: details.street_address ?? "",
+                  city: details.city ?? "",
+                  stateRegion: details.state_region ?? "",
+                  postalCode: details.postal_code ?? "",
+                  bio: details.bio ?? "",
+                  birthdayMonth: details.birthday_month ? String(details.birthday_month) : "",
+                  birthdayDay: details.birthday_day ? String(details.birthday_day) : "",
+                }}
+              />
+            </>
+          )}
+        </Card>
+      ) : null}
     </>
   );
 }

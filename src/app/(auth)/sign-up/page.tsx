@@ -20,6 +20,11 @@ export default function SignUpPage() {
           </Alert>
         ) : null}
         <SignUpForm />
+        <Alert tone="info" title="About the member directory" live={false}>
+          Once you&apos;re approved, your name appears in the members-only directory, which only signed-in approved members
+          can see. Your phone, email, address, and birthday stay hidden unless you choose to share them, and you can hide
+          your whole listing at any time from your profile.
+        </Alert>
       </div>
       <p className="mt-6 border-t border-border pt-5 text-center">
         Already have an account?{" "}
