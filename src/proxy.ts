@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { WEBHOOK_PATH, webhookHost } from "@/lib/giving/config";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /**
@@ -6,11 +7,22 @@ import { updateSession } from "@/lib/supabase/proxy";
  * they reach a protected page. This is a convenience layer only: every page,
  * Server Action, and database query re-checks authorization itself.
  */
-const PROTECTED_PREFIXES = ["/home", "/announcements", "/directory", "/profile", "/admin", "/account-status"];
+const PROTECTED_PREFIXES = ["/home", "/announcements", "/directory", "/profile", "/giving", "/admin", "/account-status"];
 
 export async function proxy(request: NextRequest) {
-  const { response, signedIn } = await updateSession(request);
   const { pathname, search } = request.nextUrl;
+
+  // The dedicated webhook hostname (publicly reachable so Stripe can deliver
+  // events) serves the Stripe webhook and nothing else.
+  const host = request.headers.get("host")?.split(":")[0].toLowerCase();
+  const hookHost = webhookHost();
+  if (hookHost && host === hookHost && pathname !== WEBHOOK_PATH) {
+    return new NextResponse("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
+  }
+  // The webhook carries no session; skip session handling for it.
+  if (pathname === WEBHOOK_PATH) return NextResponse.next();
+
+  const { response, signedIn } = await updateSession(request);
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (isProtected) {

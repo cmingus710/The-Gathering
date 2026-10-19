@@ -15,6 +15,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: false,
   poweredByHeader: false,
+  // The statement PDF reads the logo from disk.
+  outputFileTracingIncludes: {
+    "/giving/statement/**": ["./public/brand/the-gathering-logo.png"],
+    "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png"],
+  },
   experimental: {
     // Uploads go through Server Actions; Vercel caps request bodies at 4.5 MB.
     serverActions: { bodySizeLimit: "4.5mb" },
@@ -38,7 +43,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|directory|profile|admin|account-status)/:path*",
+        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

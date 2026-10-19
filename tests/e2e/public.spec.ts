@@ -63,6 +63,10 @@ for (const path of [
   "/profile/preview",
   "/profile/household",
   "/admin/ministry-interests",
+  // Phase 3
+  "/giving",
+  "/admin/finance",
+  "/admin/finance/contributions",
 ]) {
   test(`signed-out visitors are sent to sign-in from ${path}`, async ({ page }) => {
     const response = await page.goto(path);
@@ -84,6 +88,24 @@ test("protected directory responses are never publicly cacheable", async ({ requ
   const res = await request.get("/directory", { maxRedirects: 0 });
   expect(res.headers()["cache-control"]).toContain("private");
   expect(res.headers()["cache-control"]).toContain("no-store");
+});
+
+test("guest giving page is public and honest when giving isn't configured", async ({ page }) => {
+  await page.goto("/give");
+  await expect(page.getByRole("heading", { name: "Thank you for giving" })).toBeVisible();
+  await expect(page.getByText("Online giving isn't available yet.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /checkout/i })).toHaveCount(0);
+});
+
+test("thank-you page never claims success without confirmation", async ({ page }) => {
+  await page.goto("/give/thanks?session_id=cs_test_aaaaaaaaaaaaaaaa");
+  await expect(page.getByText("We couldn't find that checkout.")).toBeVisible();
+  await expect(page.getByText("Thank you for your gift")).toHaveCount(0);
+});
+
+test("Stripe webhook refuses requests when not configured", async ({ request }) => {
+  const res = await request.post("/api/stripe/webhook", { data: "{}", headers: { "stripe-signature": "t=1,v1=x" } });
+  expect(res.status()).toBe(503);
 });
 
 test("sign-in shows accessible field errors", async ({ page }) => {

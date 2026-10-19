@@ -77,6 +77,7 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const primary = available.filter((i) => (MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
+  const secondary = available.filter((i) => !(MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
 
   useEffect(() => {
     dialogRef.current?.close();
@@ -138,6 +139,14 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
             </button>
           </div>
           <ul className="space-y-1">
+            {secondary.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href} className={linkClass(isActivePath(pathname, item.href))}>
+                  <NavIcon name={item.icon} />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
             {showAdmin ? (
               <li>
                 <Link href="/admin" className={linkClass(false)}>

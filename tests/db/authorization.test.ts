@@ -96,7 +96,7 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
     });
 
     it("refuses to assign roles reserved for later phases", async () => {
-      await expect(db.query(as(superAdmin), "select public.admin_grant_role($1, 'finance_admin')", [member])).rejects.toThrow(
+      await expect(db.query(as(superAdmin), "select public.admin_grant_role($1, 'group_leader')", [member])).rejects.toThrow(
         /cannot be assigned/,
       );
     });
