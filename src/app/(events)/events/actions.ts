@@ -50,7 +50,12 @@ export async function cancelRsvpAction(_prev: FormState, formData: FormData): Pr
 }
 
 /** Creates (or replaces) the private feed and returns its URL once. */
-export async function rotateFeedAction(_prev: FormState): Promise<FormState> {
+/** One action for both feed buttons, so the panel always reflects the latest click. */
+export async function feedAction(prev: FormState, formData: FormData): Promise<FormState> {
+  return formData.get("op") === "revoke" ? revokeFeedAction(prev) : rotateFeedAction(prev);
+}
+
+async function rotateFeedAction(_prev: FormState): Promise<FormState> {
   void _prev;
   await requireApprovedMember("/events/calendar");
   const supabase = await createClient();
@@ -62,7 +67,7 @@ export async function rotateFeedAction(_prev: FormState): Promise<FormState> {
   return { status: "success", message: "Your private calendar link is ready. Copy it now: it won't be shown again.", values: { token: data } };
 }
 
-export async function revokeFeedAction(_prev: FormState): Promise<FormState> {
+async function revokeFeedAction(_prev: FormState): Promise<FormState> {
   void _prev;
   await requireSignedIn("/events/calendar");
   const supabase = await createClient();

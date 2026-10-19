@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
-import { revokeFeedAction, rotateFeedAction, setRemindersAction } from "../actions";
+import { feedAction, setRemindersAction } from "../actions";
 
 function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -35,10 +35,8 @@ function CopyField({ label, value }: { label: string; value: string }) {
 }
 
 export function FeedControls({ active, siteUrl }: { active: boolean; siteUrl: string }) {
-  const [rotate, rotateForm] = useActionState(rotateFeedAction, initialFormState);
-  const [revoke, revokeForm] = useActionState(revokeFeedAction, initialFormState);
-  const state = [rotate, revoke].find((s) => s.status !== "idle") ?? initialFormState;
-  const token = rotate.status === "success" && revoke.status === "idle" ? rotate.values?.token : undefined;
+  const [state, formAction] = useActionState(feedAction, initialFormState);
+  const token = state.status === "success" ? state.values?.token : undefined;
   const https = token ? `${siteUrl}/api/calendar/feed/${token}` : "";
   const webcal = https.replace(/^https?:/, "webcal:");
 
@@ -54,13 +52,14 @@ export function FeedControls({ active, siteUrl }: { active: boolean; siteUrl: st
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <form action={rotateForm}>
+        <form action={formAction}>
+          <input type="hidden" name="op" value="rotate" />
           <SubmitButton variant={active ? "secondary" : "primary"} pendingText="Creating…" icon={active ? <RefreshCw className="size-4" aria-hidden="true" /> : <KeyRound className="size-4" aria-hidden="true" />}>
             {active ? "Create a new link" : "Create my calendar link"}
           </SubmitButton>
         </form>
         {active || token ? (
-          <ConfirmDialog trigger="Turn off my link" title="Turn off your calendar link?" confirmLabel="Turn off" formAction={revokeForm}>
+          <ConfirmDialog trigger="Turn off my link" title="Turn off your calendar link?" confirmLabel="Turn off" formAction={formAction} hidden={{ op: "revoke" }}>
             Calendars subscribed with your current link will stop updating. You can create a new link at any time.
           </ConfirmDialog>
         ) : null}
