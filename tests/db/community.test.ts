@@ -817,6 +817,57 @@ describeDb("community: forum, groups, messages, moderation, notifications", () =
       expect(await db.raw("select * from community.push_subscriptions where profile_id = $1", [m2])).toEqual([]);
     });
 
+    it("purges cleared conversations, old messages, and closed report evidence on schedule", async () => {
+      const conv = await rpc<string>(as(m1), "community_dm_start", [m3]);
+      await rpc(as(m1), "community_dm_send", [conv, "Synthetic purge me", randomUUID()]);
+      await rpc(as(m1), "community_dm_clear", [conv]);
+      await job()("tick", {});
+      expect((await db.raw<Json>("select count(*)::int n from community.messages where conversation_id = $1", [conv]))[0].n).toBe(1); // m3 still has it
+      await rpc(as(m3), "community_dm_clear", [conv]);
+      expect(await rpc<Json>(as(m3), "community_dm_messages", [conv, null, null, 40])).toMatchObject({ messages: [] });
+      await job()("tick", {});
+      expect((await db.raw<Json>("select count(*)::int n from community.messages where conversation_id = $1", [conv]))[0].n).toBe(0);
+
+      const old = await rpc<Json>(as(m1), "community_dm_send", [conv, "Synthetic ancient message", randomUUID()]);
+      await db.raw("update community.messages set created_at = now() - interval '800 days' where id = $1", [old.id]);
+      await job()("tick", {});
+      expect(await db.raw("select 1 from community.messages where id = $1", [old.id])).toEqual([]);
+
+      const closed = await db.raw<{ id: string }>("select id from community.reports where status in ('actioned','dismissed') and evidence is not null limit 1");
+      await db.raw("update community.reports set resolved_at = now() - interval '400 days' where id = $1", [closed[0].id]);
+      await job()("tick", {});
+      const r = (await db.raw<Json>("select evidence, evidence_cleared_at is not null as cleared from community.reports where id = $1", [closed[0].id]))[0];
+      expect(r).toEqual({ evidence: null, cleared: true });
+    });
+
+    it("rate-limits direct messages on the server", async () => {
+      const conv = await rpc<string>(as(m1), "community_dm_start", [m2]);
+      await db.raw(
+        "insert into community.rate_events (profile_id, action) select $1, 'dm_send' from generate_series(1, 60)",
+        [m1],
+      );
+      await fails(as(m1), "community_dm_send", [conv, "One too many", randomUUID()], /too often/);
+    });
+
+    it("hides a blocked sender's messages from unread counts", async () => {
+      const conv = await rpc<string>(as(m3), "community_dm_start", [m2]);
+      await rpc(as(m2), "community_dm_mark_read", [conv]);
+      await rpc(as(m3), "community_dm_send", [conv, "Unread synthetic", randomUUID()]);
+      const before = (await unread(m2)).messages;
+      expect(before).toBeGreaterThan(0);
+      await rpc(as(m2), "community_block", [m3, true]);
+      expect((await unread(m2)).messages).toBe(before - 1);
+      await rpc(as(m2), "community_block", [m3, false]);
+    });
+
+    it("withdraws a group-invitation notification when the invitation is revoked", async () => {
+      await rpc(as(leader), "community_group_invite", [openGroup, m1]);
+      expect((await notifs(m1)).some((n) => n.kind === "group_invitation")).toBe(true);
+      const inv = ((await rpc<Json>(as(m1), "community_groups")).invitations as Json[]).find((i) => (i.group as Json).id === openGroup)!;
+      await rpc(as(leader), "community_group_revoke_invitation", [inv.id]);
+      expect((await notifs(m1)).some((n) => n.kind === "group_invitation")).toBe(false);
+    });
+
     it("keeps household members out of each other's notification settings", async () => {
       await rpc(as(m1), "community_set_pref", ["groups", false, "off", false]);
       const m3view = await rpc<Json>(as(m3), "community_my_settings");

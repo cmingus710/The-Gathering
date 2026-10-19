@@ -2,7 +2,7 @@
 --
 -- Everything lives in a private `community` schema that the Data API does
 -- not expose and that anon/authenticated cannot read. Members reach it only
--- through SECURITY DEFINER functions (20261022000200…000400) that check, on
+-- through SECURITY DEFINER functions (20261022000200…000500) that check, on
 -- every call: approved membership, adult account, current group membership,
 -- guideline acknowledgment, community restrictions, blocks, and rate limits.
 --
