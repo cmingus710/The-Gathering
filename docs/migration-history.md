@@ -63,7 +63,7 @@ The 41 database authorization tests pass against (B).
 The equivalent of `supabase migration repair` was done in two steps. Only rows in `supabase_migrations.schema_migrations` change; no schema or application data is touched.
 
 1. **Done:** the five repository versions were marked applied (`20261018000100`–`20261018000500`, `created_by = 'migration-repair'`).
-2. **Owner action:** mark the ten connector versions as reverted. Run in the SQL editor:
+2. **Done (owner, SQL editor):** the ten connector versions were marked reverted (rows removed):
 
    ```sql
    delete from supabase_migrations.schema_migrations
@@ -71,9 +71,17 @@ The equivalent of `supabase migration repair` was done in two steps. Only rows i
                      '20261018204755','20261018204811','20261018204824','20261018204829','20261018204842');
    ```
 
-   Equivalent CLI command: `supabase migration repair --status reverted 20261018204248 20261018204304 …`
+**Verified 2026-10-18:** `list_migrations` on the hosted project returns exactly the five repository versions:
 
-After step 2, the remote history lists exactly the five repository files, and `supabase db push` / `supabase migration list` agree with the repository.
+```
+20261018000100 identity_and_capabilities
+20261018000200 church_settings
+20261018000300 announcements
+20261018000400 storage
+20261018000500 explicit_function_grants
+```
+
+The remote history and `supabase/migrations/` now agree, so `supabase db push` and `supabase migration list` can be used normally.
 
 ## Going forward
 

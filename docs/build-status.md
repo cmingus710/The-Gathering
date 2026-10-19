@@ -17,6 +17,7 @@ Phase 1 code is complete, and the database schema is live in Supabase project `y
 | Database authorization tests: real migrations on PostgreSQL 16 with a Supabase shim | 41 pass |
 | Playwright browser tests: desktop 1280 px and Pixel 7, built app, no Supabase | 32 pass |
 | Schema applied to Supabase project; tables, policies, buckets, auth triggers inspected | Done |
+| Hosted migration history equals the five repository migrations; fresh-from-files schema matches hosted in all 17 fingerprint categories | Pass |
 | Supabase security advisor | Reviewed (see notes) |
 
 ### What the database tests prove
@@ -58,19 +59,42 @@ Preview: `https://the-gathering-git-phase-1-deployment-ver-56f120-paint-by-numbe
 | Protected responses `private, no-store`; security headers present | Pass |
 | Production builds paused (merge to `main` canceled by Ignored Build Step) | Pass |
 
-## Requires external configuration or a device (not yet verified)
+## Live authentication and email (hosted preview, 2026-10-18)
 
-This environment's network policy blocks `*.supabase.co`, so these could not be run end to end here:
+Preview: `https://the-gathering-git-phase-1-auth-email-setup-paint-by-number.vercel.app`. Supabase auth uses Resend SMTP from `hello@gathering.church`.
 
-- [ ] Live registration → verification email → pending page (needs Resend SMTP and the email templates)
-- [ ] Password reset email round trip
-- [ ] Admin approval email via Resend (needs `RESEND_API_KEY` and `EMAIL_FROM`)
-- [ ] Approve, suspend, and reinstate; role assignment; settings save; logo/icon upload; and announcement publish/schedule/expire/archive through the UI against the live project (covered at the database level above)
-- [ ] Vercel preview deployment (needs a Vercel project and environment variables)
+| Check | Result |
+| --- | --- |
+| Registration creates a pending profile with the supplied name; no roles granted | Pass |
+| Verification email delivered through Resend (Resend log: delivered) | Pass |
+| Verification link (token-hash template) confirms the address and lands on the pending page | Pass |
+| Pending account sent to the status page from `/home`, `/announcements`, `/admin` | Pass |
+| Initial super administrator appointed (`bootstrap_super_admin`); audit entry recorded | Pass |
+| Second bootstrap attempt refused ("already been appointed") | Pass |
+| Sign-out ends the session (one active session after sign-in; Back does not reveal signed-in pages) | Pass |
+| Super admin reaches Home and the admin dashboard | Pass |
+| Church settings persist, show on the public welcome page, and are audited by field name only | Pass |
+| Second account: verification email delivered; pending until approved | Pass |
+| Admin approval (`pending → approved`, audited) sends the app's "Welcome to The Gathering" email via Resend | Pass (delivered) |
+| Approved member without roles is denied `/admin` | Pass |
+| Public vs members-only announcements: signed-out visitors see public only; members see both | Pass |
+| Scheduled announcement appears at its publish time with no admin action | Pass |
+| Expiring announcement disappears at its expiry time (checked against the database clock) | Pass |
+| Announcement image upload saved and audited | Pass |
+| Password reset email delivered; reset link sets a new password; old password refused | Pass |
+| Suspension blocks member areas immediately; reinstatement restores access (both audited) | Pass |
+| Admin cannot change their own membership status | Pass |
+| Archive hides announcements; audit records status changes only, never content | Pass |
+
+Test accounts kept: `robtwebb@me.com` (initial super administrator) and `breaktwomusic@gmail.com` (approved member, no roles). All TEST announcements are archived, and the church settings test values were cleared.
+
+## Still not verified (manual or device testing)
+
+- [ ] Role assignment through the UI (for example, granting content editor); the database rules are covered by the authorization tests
+- [ ] Logo/icon replacement upload in church settings (announcement image upload was verified)
 - [ ] Installed-app appearance on a physical iPhone (Add to Home Screen) and Android device
 - [ ] Screen reader pass (VoiceOver and TalkBack)
-
-Suggested manual script once configured: register → verify → appoint super admin → register a second account → approve it → assign content editor → publish, schedule (5 minutes ahead), and expire announcements → confirm what the second account sees → suspend it → confirm it lands on the status page.
+- [ ] Production: environment variables, unpausing builds, and a production deploy (deliberately not done; see deployment.md)
 
 ## Known limitations and notes
 
