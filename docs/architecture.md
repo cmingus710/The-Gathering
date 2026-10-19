@@ -23,6 +23,8 @@ src/
                      preview, household): approved members only
     (events)/        events list, month, detail, ICS download, calendar & reminders
                      (public events open to visitors)
+    (member)/community, groups, messages, notifications   Phase 5 (approved members)
+    admin/community, admin/moderation                     Phase 5 administration
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -58,7 +60,9 @@ Two independent axes:
 | Finance administrator | `finance.view`, `.record`, `.export`, `.manage`, `.refund` | yes (explicit only) |
 | Finance viewer | `finance.view` | yes (explicit only) |
 | Event coordinator | `events.manage` | yes |
-| Group leader | `groups.lead` (reserved) | Phase 5 |
+| Community administrator | `community.manage` | yes (Phase 5) |
+| Community moderator | `community.moderate` | yes (Phase 5) |
+| Group leader | `groups.lead` (reserved; leadership is per group, see Phase 5) | no |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
 `settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*` implicitly: finance access is granted only through a finance role (which a super administrator can assign, audited).
@@ -225,6 +229,57 @@ Covers are validated (signature, 4 MB, which keeps the Server Action under Verce
 ### Audit
 
 Series creation, edits (field names), and status changes; occurrence edits, cancellations, and restores; organizer registrations and cancellations (with the reason, never contact details); attendee exports (row count); category and settings changes; feed link creation and revocation.
+
+## Community, groups, messaging, and notifications (Phase 5)
+
+Guides: [community-moderation-guide.md](community-moderation-guide.md), [messaging-privacy-guide.md](messaging-privacy-guide.md), [notifications.md](notifications.md).
+
+### Storage and access
+
+Everything lives in a private `community` schema (no Data API exposure, no privileges for `anon`/`authenticated`), reached only through `SECURITY DEFINER` functions in `public` named `community_*`. Every function rechecks, on each call: approved membership and adult account (`community.is_member`), active group membership (`community.group_member`), guideline acknowledgment and community restrictions (`community.require_poster`), DM eligibility, blocks, and recipient settings (`community.can_message`), and server-side rate limits (`community.rate_limit`, a sliding window over `community.rate_events`).
+
+| Area | Tables |
+| --- | --- |
+| Forum | `categories`, `threads` (one place: a category or a group), `posts`, `reactions`, `follows`, `mutes` |
+| Groups | `groups` (discoverable/hidden, active/archived), `group_members` (member/leader; active/left/removed), `group_requests`, `group_invitations` (14-day expiry, single use) |
+| Messages | `conversations` (one per pair), `conversation_state` (read and "deleted for me" marks), `messages` (idempotency key), `dm_prefs`, `blocks`, `dm_eligibility` |
+| Moderation | `reports` (selected items only, evidence snapshot), `moderation_log`, `restrictions`, `guideline_acks`, `settings` |
+| Notifications | `notifications`, `notification_prefs`, `member_settings` (time zone, quiet hours), `email_outbox`, `push_outbox`, `push_subscriptions`, `rate_events` |
+
+### Permissions model
+
+| Who | Church-wide discussions | Group discussions, roster, details | Direct messages | Administration |
+| --- | --- | --- | --- | --- |
+| Visitor, pending, suspended | No | No | No | No |
+| Approved member | Read; post after accepting guidelines | Only groups they actively belong to | Their own conversations; send if eligible | No |
+| Group leader | As member | Their groups: manage requests, invitations, members, details, and moderation (not of fellow leaders) | As member | None (no capability) |
+| Community administrator | As member | Group metadata and rosters (incl. hidden groups), never discussions | As member | Categories, guidelines, settings, groups, leaders |
+| Community moderator | Moderate | Moderate content they're pointed to by reports | Only reported messages (evidence) | Reports, restrictions, log |
+| Membership administrator | As member | As member | As member | DM eligibility (audited), membership suspension |
+
+Hidden groups are invisible to non-members (same "not found" as nonexistent). A discoverable group's public card shows name, summary, and image only. Group membership is never inferred from households or ministry interests. The last active leader can't be removed or demoted unless the group is archived (trigger with an advisory lock).
+
+### Messaging eligibility
+
+`profiles.account_kind` defaults to `adult` for every account and was never verified, so it isn't treated as a trusted age classification. Direct messaging requires an explicit `community.dm_eligibility` record set by a `members.manage` holder (audited, can't be self-set), plus approved status and no messaging restriction. No record means no messaging. Youth accounts remain blocked by the Phase 2 constraint.
+
+### Content and deletion
+
+Posts use a smaller Markdown subset (`src/lib/community/format.ts`): raw HTML escaped, headings flattened, images shown as alt text, links only http(s)/mailto/same-site with no credentials, `rel="nofollow ugc noopener noreferrer"`. Messages are plain text. Author deletion erases text (a constraint enforces it); a thread with replies remains as a placeholder. Moderator hiding keeps text for restore, visible only to moderators in scope. Attachments and images in discussions and messages are deferred.
+
+### Group-restricted events
+
+`events.group_member` now checks `community.group_member`, and the Phase 4 constraint blocking group audiences is replaced by `(audience = 'group') = (group_id is not null)` with a foreign key. Because every events path already used `events.visible_to`/`audience_allows`, group restriction applies to lists, details, RSVP, waitlist promotion, cover images, ICS downloads, private feeds, reminders, and email rechecks. Event coordinators may target discoverable groups, or hidden groups they lead or administer. Leaving or removal cancels the member's current and future group-event registrations ("ineligible", no email), drops their queued event email for that group, and promotes the waitlist.
+
+### Notifications, delivery, and Realtime
+
+See [notifications.md](notifications.md). Notifications store references only; wording is computed at read time after an access recheck, and email/push claims recheck again. Delivery reuses the Phase 4 scheduler and job secret.
+
+Realtime uses one **private** Broadcast topic per member, `member:<id>`. The RLS policy on `realtime.messages` allows `authenticated` to receive only their own topic and only while approved; there is no insert policy, so clients can't broadcast. The database sends content-free `refresh` signals (`community.ping`); clients refetch through the normal functions. The client (`src/components/community/realtime-provider.tsx`) refetches badge counts on every signal, reconnect, focus, and every 60 seconds, reloads the page when the session expired or membership ended (401/403), and the conversation view merges messages by id, so duplicate or missed signals are harmless across tabs and devices.
+
+### Caching and drafts
+
+Community pages and `/api/community/*` are `private, no-store`, and listed in the proxy's protected prefixes. The service worker never caches them. Drafts live only in component state (controlled inputs), so they survive failed saves but are never written to browser storage. Composers send an idempotency key so retries can't duplicate posts or messages.
 
 ## Announcements
 

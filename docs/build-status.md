@@ -1,6 +1,97 @@
 # Build status
 
-Last updated: 2026-10-21 · Phase 4 branch `phase-4/events-calendar` (stacked on Phase 3, PR #6, which includes Phase 2, PR #5)
+Last updated: 2026-10-22 · Phase 5 branch `phase-5/community-messaging` (stacked on Phase 4, PR #7, which includes Phases 2 and 3, PRs #5 and #6)
+
+## Phase 5: community, groups, messaging, and notifications
+
+### Summary
+
+Phase 5 code is complete on `phase-5/community-messaging`, branched from the head of Phase 4 (`0f5e54a`). None of PRs #5, #6, #7 is merged, so the Phase 5 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused; giving stays in Stripe test mode.
+
+Preview: `https://the-gathering-git-phase-5-community-messaging-paint-by-number.vercel.app` (deployment `dpl_ACmcScwVYkDXLvDfrBncxpVgr2UZ`, Ready).
+
+**The hosted database is only partly migrated** (step 1 of 5; see below). Until the owner runs steps 2–5, community pages on the preview show "couldn't be loaded" states, and the hosted walkthrough has not been done.
+
+Guides: [community-moderation-guide.md](community-moderation-guide.md), [messaging-privacy-guide.md](messaging-privacy-guide.md), [notifications.md](notifications.md). Design: [architecture.md](architecture.md#community-groups-messaging-and-notifications-phase-5).
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build, **359 Vitest tests** (30 files; 53 in `tests/db/community.test.ts` against PostgreSQL 16 built from every migration plus a Realtime shim), and **98 Playwright tests** (desktop and Pixel 7) pass. `tests/db/safeupdate.test.ts` covers every Phase 5 function for hosted pg-safeupdate.
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `community` schema unreadable; functions closed to visitors; pending and suspended accounts refused everywhere (counts return 0) |
+| Guidelines | Posting refused until the current version is accepted; a new version requires accepting again |
+| Discussions | Create/list/detail; client-key retries don't duplicate threads or replies; only the author edits; reactions toggle; moderators (not members or leaders outside their group) pin and lock; locked threads refuse replies and edits; author deletion erases text (placeholder with replies, removed without); cursor paging; 7th thread in an hour refused |
+| Church-wide vs group | Group threads unreadable, unrepliable, unreactable, and unreportable by non-members and by moderators/administrators outside the group; absent from recent activity |
+| Hidden groups | Not listed and "not found" for non-members; discoverable card shows summary only (no details, leaders, count, roster, discussions); community administrators see hidden groups but not their discussions |
+| Requests and invitations | Request idempotent; leader notified; decision once; invitations accepted once, replay/revoked/expired refused; one generic refusal for pending, suspended, and unknown invitees |
+| Leader scope | Leaders hold no capability; can't edit other groups, appoint leaders, change visibility, see the report queue, set DM eligibility, or create groups |
+| Last leader | Leaving or demotion of the last leader refused; allowed after appointing another or archiving; restore needs a leader |
+| Households | Household membership grants no group, conversation, or settings access |
+| Group images | Upload only by the group's managers; readable only by people who may see the group |
+| Group events | Coordinators can target discoverable groups only (hidden ones need group admin/leadership); list, detail, RSVP, image, and group-events list limited to members; group name shown only to members; removal cancels the registration ("ineligible"), promotes the waitlist, empties the private feed, hides the event notification, drops queued event email |
+| DM eligibility | Fails closed with no record; only `members.manage` sets it; can't set your own; pending accounts refused; audit has no details |
+| DMs | Search returns only listed, eligible, reachable members (opted-out and pending excluded, 2+ characters); retries return the original message; unread counts and mark-read; non-participants, administrators, and moderators can't read or send; settings (none / shared groups) enforced on every send with the same refusal as a block; blocking stops both directions, hides unread counts and notifications, keeps history, doesn't hide discussion posts; roster messaging to directory opt-outs follows their setting; revoked eligibility and suspension stop sending; 61st message in 10 minutes refused |
+| Realtime | Pings go only to participants' private topics, contain no text; RLS lets a member read only their own topic and only while approved; clients can't broadcast |
+| Reports | Message reports capture only the selected messages; leaders and members can't open them; every view logged; moderators still can't open the conversation; reports about a leader hidden from that group's leaders and their hide attempts refused; leaders hide/restore ordinary members' posts in their group |
+| Restrictions | Moderators only; posting restriction blocks posting but not reading; church membership unchanged; moderators can't suspend membership |
+| Notifications and email | Forged job signatures refused; one email per notification (merged replies don't re-email); queued email for a group thread skipped after removal and the title never sent; message emails contain neither text nor sender; failed sends retried; digests once per local day with only digest categories; hidden content disappears from notifications; click-through returns nothing when content is gone or not yours; mute stops notifications; withdrawn invitation's notification disappears |
+| Quiet hours | 22:30 and 06:59 CST deferred to 07:00 CST; 07:00 not deferred (end exclusive); 20:59 not deferred; church time zone fallback; invalid zones refused |
+| Push | Claims carry generic text only; gone subscriptions removed |
+| Retention | Messages purged when both participants delete a conversation and after the retention period; closed report evidence cleared after its period |
+| Formatting | Scripts, raw HTML, javascript:/data:/vbscript:/tel:/protocol-relative/credentialed links neutralized; external links nofollow ugc; headings flattened; images as alt text |
+| Browser | Signed-out redirects for 14 Phase 5 routes; community pages and APIs `private, no-store`; community API 401 when signed out; service worker push handler present and caches no pages |
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Preview build `711d9c7` (`dpl_ACmcScwVYkDXLvDfrBncxpVgr2UZ`) | Ready |
+| Signed-out `/community` → sign-in, `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
+| Migration step 1 (`20261022000100_community_schema`) via connector | **Applied 2026-10-19**: history row recorded under the repository version, 28 community tables, 24 helpers |
+| Migration steps 2–5 | **Not applied.** Step 2 timed out in the connector without reaching the database (verified nothing changed). Owner runs `supabase/manual/2026-10-22-apply-community-2.sql` … `-5.sql` in the SQL editor |
+| Scheduler extension (`2026-10-22-community-scheduler.sql`, designated URL = Phase 5 branch) | Not run (needs steps 2–5) |
+| `EVENTS_JOB_SECRET` for branch `phase-5/community-messaging` | Not set (it exists only for `phase-4/events-calendar`); community email/push delivery from this preview waits on it |
+| VAPID keys for web push | Not set; push is off on the preview (in-app and email unaffected) |
+| Fingerprint after the owner's run | Expect `supabase/tests/community-fingerprint.sql` to match the rehearsal: bucket 1 b30312be · column 233 4907293b · constraint 170 84cd4267 · function 124 976aac81 · function_grant 119 4244a591 · index 98 312126a7 · policy 4 0af60a8f · rls 28 1d13c1ca · schema_acl 1 2b42cc9d · seed_capability 2 be6ee9da · seed_category 4 454934f6 · seed_role 3 2b62cb2d · seed_role_capability 2 080caec3 · seed_settings 1 fcb0122a · trigger 3 5e7129c1 |
+| Hosted walkthrough with test accounts | **Not done** (blocked on steps 2–5) |
+| Web push on a device | Not done |
+
+### Hosted walkthrough plan (after steps 2–5)
+
+With the two authorized test accounts (A: super administrator; B: approved member) and only synthetic content titled `[TEST] Synthetic …`:
+
+1. A grants B messaging eligibility (Administration → Members → B). Nobody can set their own, so A temporarily gives B the Membership administrator role, B grants A eligibility, and A removes B's role again (all audited).
+2. Both accept the guidelines; B posts in General Discussion; A replies; B sees the notification and badge update live; A pins, locks, unlocks.
+3. A creates a hidden group with B as leader and a discoverable group; check B's directory views; B invites A to the hidden group; A accepts; replay the invitation link (refused).
+4. A (as event coordinator) creates a `[TEST]` group event for the discoverable group; B (member) sees it and RSVPs; A removes B from the group; B loses the event, its feed entry, and the notification.
+5. DM A↔B; mark read; block and unblock; report one message; open it in Moderation; confirm only that message is shown and the view is logged.
+6. Notification settings: email right away for discussions; quiet hours; confirm Resend shows only allowlisted `[TEST]` emails without message text.
+7. Clean up: archive the test groups, delete the test discussions and conversations, close the reports, lift restrictions, revoke the test eligibility and roles granted for the walkthrough.
+
+### Known limitations (Phase 5)
+
+- **No attachments or images** in discussions or messages; group chat deferred.
+- **Messaging needs an administrator's adult confirmation** per member; there is no self-service age check. Youth accounts remain disabled.
+- **Group leaders can't create group events**; event coordinators do (any discoverable group, or hidden groups they lead/administer).
+- **One reply level** (no nested replies). Edits keep no history. Hidden content keeps its text until restored or deleted.
+- **Realtime is a refresh signal**; if it's unavailable, pages update within 60 seconds or on focus.
+- **Search** for messaging and invitations matches names only, and only directory-listed members.
+- **Report evidence and messages** have fixed retention windows (configurable); deleted posts can't be recovered.
+- **Reaching the scheduler**: with Vercel Authentication on previews, the database scheduler's request gets 401 (as in Phase 4); delivery then happens only right after member actions.
+- **Push** depends on browser support and, on iPhone/iPad, a Home Screen install; never guaranteed.
+
+### Still open from earlier phases
+
+- **Phase 4:** importing .ics into Apple/Google/Outlook, subscribing to the private feed, month grid on a phone, screen reader pass; scheduler-driven reminder on hosted (see Phase 4 section).
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute remain in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical iPhone/Android, VoiceOver/TalkBack, production configuration (deliberately not done).
+
+---
+
+# Phase 4 build status
 
 ## Phase 4: events and calendars
 

@@ -14,8 +14,9 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Vercel Preview (server, sensitive) | For giving | Stripe **test** key, webhook signing secret, and the shared ingest secret. See [giving-setup.md](giving-setup.md). Live keys are refused. |
 | `GIVING_EMAIL_ALLOWLIST`, `GIVING_WEBHOOK_HOST` | Vercel Preview | For giving | Test-email allowlist; dedicated webhook hostname |
-| `EVENTS_JOB_SECRET` | Vercel Preview, branch-scoped (server, sensitive) | For event email | Shared with `events.secrets('job')`; signs the scheduler and email delivery. Without it, events and RSVPs work but email stays queued. See [events-guide.md](events-guide.md#scheduler-reminders-and-retries). |
+| `EVENTS_JOB_SECRET` | Vercel Preview, branch-scoped (server, sensitive) | For event and community email/push | Shared with `events.secrets('job')`; signs the scheduler and email delivery. Without it, events and RSVPs work but email stays queued. See [events-guide.md](events-guide.md#scheduler-reminders-and-retries). |
 | `EVENTS_EMAIL_ALLOWLIST` | Vercel Preview | Recommended | Test addresses that may receive event email outside production (falls back to `GIVING_EMAIL_ALLOWLIST`; with neither, nothing is sent) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Vercel Preview (private key sensitive, server only) | Optional (web push) | VAPID key pair for web push and a contact (`mailto:…` or `https://…`). Without all three, push is off and in-app/email still work. See [notifications.md](notifications.md#web-push-optional). |
 | `CRON_SECRET` | Vercel Production (later) | Optional | Only if a Vercel cron should also call `GET /api/jobs/events` after release |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
@@ -41,6 +42,13 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 14. `20261021000200_events_jobs.sql` (Phase 4)
 15. `20261021000300_events_access.sql` (Phase 4)
 16. `20261021000400_settings_safeupdate.sql` (Phase 4 fix: settings saves on hosted Supabase)
+17. `20261022000100_community_schema.sql` (Phase 5)
+18. `20261022000200_community_notifications.sql` (Phase 5)
+19. `20261022000300_community_forum.sql` (Phase 5)
+20. `20261022000400_community_groups.sql` (Phase 5)
+21. `20261022000500_community_messaging_moderation.sql` (Phase 5)
+
+Phase 5 (community) migrations each have a one-transaction operator script, `supabase/manual/2026-10-22-apply-community-<1-5>.sql`, kept under the SQL editor's request limit. Run them in order; each refuses to run out of order or twice. Then run `supabase/manual/2026-10-22-community-scheduler.sql` (after filling in the designated branch URL) so the existing scheduler also handles community digests, retention, and delivery. Status on the hosted project: [build-status.md](build-status.md#phase-5-community-groups-messaging-and-notifications).
 
 Giving also needs the ingest secret stored in `giving.secrets`, plus Stripe test keys and the webhook. See [giving-setup.md](giving-setup.md).
 
@@ -71,12 +79,18 @@ For a new project, run `supabase link --project-ref <ref> && supabase db push`, 
 4. **Password policy (recommended):** minimum length 10. The app also enforces 10 characters with a letter and a digit.
 5. **Rate limits:** keep the defaults. The app shows a friendly "too many attempts" message.
 
+### Realtime (Phase 5)
+
+Community live updates use **private** Broadcast channels (`member:<id>`), authorized by an RLS policy on `realtime.messages` that the Phase 5 migrations create. Nothing to configure in the dashboard: private channels work with the default setting. If you ever turn on **Realtime → Settings → "Allow public access: off"**, community updates keep working, because they never use public channels. The app falls back to polling every 60 seconds if Realtime is unavailable.
+
 ### Storage
 
 The migrations create both buckets with type and size limits:
 - `branding` (public, 2 MB, PNG/JPEG/WebP)
 - `announcement-images` (private, 4 MB, PNG/JPEG/WebP)
 - `profile-photos` (private, 1 MB, WebP only; the app re-encodes every upload with `sharp`)
+- `event-images` (private, 2 MB, WebP; Phase 4)
+- `group-images` (private, 2 MB, WebP; Phase 5; readable only by people who may see the group)
 
 No dashboard work is needed. Phase 2 adds no environment variables. Photo processing uses `sharp`, a normal runtime dependency that Vercel supports.
 

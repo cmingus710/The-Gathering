@@ -22,7 +22,7 @@ end
 $preflight$;
 
 update events.settings
-   set job_url = 'https://REPLACE-WITH-PHASE-5-BRANCH-URL/api/jobs/events',
+   set job_url = 'https://the-gathering-git-phase-5-community-messaging-paint-by-number.vercel.app/api/jobs/events',
        updated_at = now()
  where id;
 
