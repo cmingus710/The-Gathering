@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     x.check_reference ?? "", x.stripe_payment_intent_id ?? x.stripe_invoice_id ?? "",
   ]);
   const csv = toCsv(
-    ["id", "date", "donor", "email", "fund", "method", "frequency", "status", "amount_usd", "refunded_usd", "disputed", "fee_usd", "net_usd", "check_reference", "stripe_reference"],
+    ["id", "date", "donor", "email", "fund", "method", "frequency", "status", "amount_usd", "refunded_usd", "disputed", "fee_usd", "net_before_refunds_usd", "check_reference", "stripe_reference"],
     rows,
   );
   return new Response(csv, {
