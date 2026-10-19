@@ -222,7 +222,11 @@ export async function issueRefund(
     },
     { idempotencyKey: `gathering-refund-${paymentId}-${token}` },
   );
-  await syncRefund(server, refund.id, actorId);
+  // Stripe has accepted the refund. If recording it here fails, the
+  // refund.created webhook (or Reconcile) records it, so don't report failure.
+  await syncRefund(server, refund.id, actorId).catch((err) =>
+    console.error("[giving] refund recorded later", { error: (err as { type?: string })?.type ?? (err as Error)?.name }),
+  );
   await deliverEmails(server).catch(() => undefined);
   return refund.status;
 }
