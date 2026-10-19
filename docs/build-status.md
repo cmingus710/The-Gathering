@@ -37,7 +37,41 @@ All against a real PostgreSQL 16 database built from every migration (`tests/db/
 | --- | --- |
 | Events migrations on project `ymuiutwdnhxdqsetnwkt` | **Applied 2026-10-19** with the manual script (one transaction). History has 15 rows including the three Phase 4 versions; a fingerprint of the `events` schema (columns, constraints, functions, grants, indexes, policies, schema ACL, seeds, triggers) matches the local build exactly |
 | `EVENTS_JOB_SECRET`, allowlist, scheduler | **Set up 2026-10-19.** Job secret created in the database (64 hex characters) and copied into Vercel by the owner (Sensitive, Preview, branch `phase-4/events-calendar`; the value was never displayed). Allowlist falls back to `GIVING_EMAIL_ALLOWLIST`. `pg_cron` 1.6.4 and `pg_net` 0.20.4 enabled; one job, `events-worker`, every 5 minutes, targeting the branch's stable URL; `events.call_worker()` not executable by `anon` or `authenticated`. That the two secret copies match is confirmed by the first signed delivery (walkthrough) |
-| Hosted walkthrough with synthetic events | **Not yet run** |
+| Migration `20261021000400_settings_safeupdate` | **Applied 2026-10-19** with `supabase/manual/2026-10-21-apply-settings-fix.sql` (preflight matched both hosted function bodies by checksum). Fixes settings saves rejected by pg-safeupdate (found in the walkthrough; also fixes Phase 3's giving settings save) |
+| Hosted walkthrough with synthetic events | **Run 2026-10-19** on the branch preview with the owner's two authorized test accounts (A: super administrator, B: approved member). Only events titled `[TEST] Synthetic …` were used; results below |
+
+#### Walkthrough results (hosted preview, 2026-10-19)
+
+How each item was confirmed: **UI** = the owner did it in the browser and reported the outcome; **DB** = I checked the hosted database rows and audit log; **HTTP** = I fetched the preview signed out; **Resend** = I checked the Resend log.
+
+| Check | Result |
+| --- | --- |
+| Create drafts; drafts hidden | Pass (UI, DB, HTTP: a draft public event returned "not found" signed out) |
+| DST and all-day storage | Pass (DB: weekly 9:00 AM = 14:00Z through Oct 29 and 15:00Z from Nov 5; 3-day all-day event ends at local midnight Nov 1 = 05:00Z) |
+| Preview, publish now, scheduled publication | Pass (UI, DB: the scheduled event became visible at its 12:00 PM CDT publish time, not before) |
+| Visibility | Pass (UI, DB, HTTP: signed-out visitors saw only the public event; members-only event and its .ics returned "not found" signed out; B saw members-only events) |
+| Capacity 1, waitlist, automatic promotion | Pass (UI, DB: B confirmed; A waitlisted #1; B canceled; A promoted to confirmed) |
+| Registration emails | Pass (Resend: "You're registered", "on the waitlist", "Registration canceled", "A place opened up", each delivered once, subjects marked [TEST], only to the two allowlisted test addresses) |
+| Change notifications | Pass (DB: description-only edit sent nothing; location change sent one "changed: place" email to the confirmed registrant only) |
+| Admin registration with reason; export | Pass (DB: B added to the waitlist with reason, audited with `over_capacity: false`; export audited with row count) |
+| Single-date edit and cancel | Pass (DB, HTTP: Oct 29 moved to 10:00 (SEQUENCE 1); Nov 12 canceled and published as `STATUS:CANCELLED`) |
+| ICS download | Pass (HTTP: UTC times, SEQUENCE, 75-octet folding, `Cache-Control: private, no-store`) |
+| Public feed | Pass (HTTP: "not found" while off; when on, only the public event's 7 dates, the canceled one marked CANCELLED, `REFRESH-INTERVAL` 60 min) |
+| Private feed: create, rotate, turn off | Pass (UI: links opened, old links "not found"; DB audit: created, created again (rotation), revoked; no token left) |
+| Cover image | Pass (DB: stored as a 39 KB WebP in the private bucket; HTTP: signed-out visitor gets a 5-minute signed URL with the alt text) |
+| Archive | Pass (UI, DB: archived event hidden from B) |
+| Cancel event | Pass (DB, Resend: canceled; both registrants emailed once) |
+| Registration deadline | Not exercised on hosted (it would have meant waiting until the day of the event); covered by the database tests |
+| Scheduled reminder via the database scheduler | See below |
+
+Bugs found in the walkthrough and fixed on this branch (each with lint, typecheck, full tests, and build passing before push):
+
+1. Settings saves failed on hosted Supabase (pg-safeupdate): new migration `20261021000400` plus a test over every app function. Phase 3's `finance_settings_save` had the same bug.
+2. After a rejected image upload, Safari submitted "Does not repeat" for a weekly event on the next save, removing its future dates (none had registrations). The form now remounts from the submitted values after every attempt (`68f0db4`); the schedule was restored and re-verified.
+3. The cover limit said 8 MB but Vercel caps Server Action bodies at 4.5 MB: now 4 MB, checked before upload.
+4. The private-feed panel could hide a new link after a turn-off: one action state now drives both buttons (`2d5fc40`).
+5. Cancel was one click with an easy-to-miss reason field: event and date cancellation now confirm in a dialog that holds the reason (`defbbe4`).
+6. Narrow screens put "Dates and registrations" below the whole edit form; the single-date form clipped its date field. Both layouts fixed.
 
 ### Not verified (calendar clients and devices)
 
@@ -64,6 +98,7 @@ All against a real PostgreSQL 16 database built from every migration (`tests/db/
   - Apple Pay and Google Pay not tried on a device.
   - Vercel Deployment Protection is **off** for the whole project (owner's choice, 2026-10-19), pending a decision to re-enable or adopt a narrower option (giving-setup.md).
   - Test leftovers: Account B's $30 monthly test subscription is active and an open $20 test dispute exists in the Stripe sandbox.
+  - Admin → Giving → Settings could not save on hosted Supabase (pg-safeupdate). Fixed by Phase 4 migration `20261021000400` (applied to the hosted project); PR #6 on its own still has the bug, so merge it together with this PR.
 - **Phase 2:**
   - Hosted walkthrough complete (owner-confirmed).
   - A device and screen-reader pass of the directory is still outstanding (with Phase 1's list below).
