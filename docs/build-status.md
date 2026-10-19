@@ -74,20 +74,27 @@ Preview: `https://the-gathering-git-phase-1-auth-email-setup-paint-by-number.ver
 | Sign-out ends the session (one active session after sign-in; Back does not reveal signed-in pages) | Pass |
 | Super admin reaches Home and the admin dashboard | Pass |
 | Church settings persist, show on the public welcome page, and are audited by field name only | Pass |
+| Second account: verification email delivered; pending until approved | Pass |
+| Admin approval (`pending → approved`, audited) sends the app's "Welcome to The Gathering" email via Resend | Pass (delivered) |
+| Approved member without roles is denied `/admin` | Pass |
+| Public vs members-only announcements: signed-out visitors see public only; members see both | Pass |
+| Scheduled announcement appears at its publish time with no admin action | Pass |
+| Expiring announcement disappears at its expiry time (checked against the database clock) | Pass |
+| Announcement image upload saved and audited | Pass |
+| Password reset email delivered; reset link sets a new password; old password refused | Pass |
+| Suspension blocks member areas immediately; reinstatement restores access (both audited) | Pass |
+| Admin cannot change their own membership status | Pass |
+| Archive hides announcements; audit records status changes only, never content | Pass |
 
-## Requires external configuration or a device (not yet verified)
+Test accounts kept: `robtwebb@me.com` (initial super administrator) and `breaktwomusic@gmail.com` (approved member, no roles). All TEST announcements are archived, and the church settings test values were cleared.
 
-This environment's network policy blocks `*.supabase.co`, so these could not be run end to end here:
+## Still not verified (manual or device testing)
 
-- [ ] Live registration → verification email → pending page (needs Resend SMTP and the email templates)
-- [ ] Password reset email round trip
-- [ ] Admin approval email via Resend (needs `RESEND_API_KEY` and `EMAIL_FROM`)
-- [ ] Approve, suspend, and reinstate; role assignment; settings save; logo/icon upload; and announcement publish/schedule/expire/archive through the UI against the live project (covered at the database level above)
-- [ ] Vercel preview deployment (needs a Vercel project and environment variables)
+- [ ] Role assignment through the UI (for example, granting content editor); the database rules are covered by the authorization tests
+- [ ] Logo/icon replacement upload in church settings (announcement image upload was verified)
 - [ ] Installed-app appearance on a physical iPhone (Add to Home Screen) and Android device
 - [ ] Screen reader pass (VoiceOver and TalkBack)
-
-Suggested manual script once configured: register → verify → appoint super admin → register a second account → approve it → assign content editor → publish, schedule (5 minutes ahead), and expire announcements → confirm what the second account sees → suspend it → confirm it lands on the status page.
+- [ ] Production: environment variables, unpausing builds, and a production deploy (deliberately not done; see deployment.md)
 
 ## Known limitations and notes
 
