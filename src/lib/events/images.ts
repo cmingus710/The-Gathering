@@ -3,9 +3,10 @@ import { randomBytes } from "node:crypto";
 import sharp from "sharp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { validateImageFile } from "@/lib/uploads";
+import { MAX_COVER_BYTES } from "./limits";
 
 export const EVENT_IMAGE_BUCKET = "event-images";
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = MAX_COVER_BYTES;
 const URL_TTL_SECONDS = 300;
 
 export type ProcessedCover = { ok: true; bytes: Buffer; path: string } | { ok: false; message: string };

@@ -220,7 +220,7 @@ ICS (`src/lib/events/ics.ts`) writes one VEVENT per occurrence with UID `occurre
 
 ### Images
 
-Covers are validated (signature, 8 MB, 320–8000 px), re-encoded by `sharp` to a WebP of at most 1600×1000 without metadata, and stored in the private `event-images` bucket under random names. Storage RLS serves an image only to people who can see its event (or event managers); pages use 5-minute signed URLs.
+Covers are validated (signature, 4 MB, which keeps the Server Action under Vercel's 4.5 MB request cap; 320–8000 px), re-encoded by `sharp` to a WebP of at most 1600×1000 without metadata, and stored in the private `event-images` bucket under random names. Storage RLS serves an image only to people who can see its event (or event managers); pages use 5-minute signed URLs.
 
 ### Audit
 

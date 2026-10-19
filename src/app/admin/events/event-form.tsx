@@ -6,7 +6,8 @@ import { CheckboxField, SelectField, TextAreaField, TextField } from "@/componen
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ORDINALS, REMINDER_CHOICES, WEEKDAYS } from "@/lib/events/format";
-import { initialFormState } from "@/lib/forms";
+import { MAX_COVER_BYTES } from "@/lib/events/limits";
+import { initialFormState, type FormState } from "@/lib/forms";
 import { saveEventAction } from "./actions";
 
 export type EventFormValues = {
@@ -46,18 +47,32 @@ export type EventFormValues = {
 const fieldset = "space-y-4 rounded-card bg-surface p-5 sm:p-6";
 const legend = "mb-1 text-[0.95rem] font-bold uppercase tracking-[0.08em]";
 
-export function EventForm({
-  initial,
-  categories,
-  timezones,
-  published,
-}: {
+type Props = {
   initial: EventFormValues;
   categories: Array<{ id: string; name: string; active: boolean }>;
   timezones: string[];
   published: boolean;
-}) {
-  const [state, action] = useActionState(saveEventAction, initialFormState);
+};
+
+type SaveState = FormState & { attempt?: number };
+
+async function save(prev: SaveState, formData: FormData): Promise<SaveState> {
+  return { ...(await saveEventAction(prev, formData)), attempt: (prev.attempt ?? 0) + 1 };
+}
+
+/**
+ * React resets a form after its action runs. Controlled fields (the repeat
+ * menu, end-mode radios) can then show a different value than the component
+ * holds, and Safari submitted "Does not repeat" for a weekly event after a
+ * failed save. Remounting the fields from the server's echo of what was
+ * submitted keeps the screen and the next submission in agreement.
+ */
+export function EventForm(props: Props) {
+  const [state, action] = useActionState<SaveState, FormData>(save, initialFormState);
+  return <EventFormFields key={state.attempt ?? 0} {...props} state={state} action={action} />;
+}
+
+function EventFormFields({ initial, categories, timezones, published, state, action }: Props & { state: SaveState; action: (formData: FormData) => void }) {
   const sv = state.values;
   const str = (k: keyof EventFormValues) => (sv?.[k] !== undefined ? String(sv[k]) : String(initial[k] ?? ""));
   const bool = (k: keyof EventFormValues) => (sv ? sv[k] === "on" : Boolean(initial[k]));
@@ -70,6 +85,7 @@ export function EventForm({
   const [endMode, setEndMode] = useState(str("endMode") || "until");
   const [preview, setPreview] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
+  const [tooLarge, setTooLarge] = useState(false);
   const fe = state.fieldErrors ?? {};
   useEffect(() => () => (preview ? URL.revokeObjectURL(preview) : undefined), [preview]);
   const coverUrl = preview ?? (removeCover ? null : initial.coverUrl);
@@ -282,11 +298,15 @@ export function EventForm({
           type="file"
           optional
           accept="image/png,image/jpeg,image/webp"
-          error={fe.cover}
-          hint="PNG, JPEG, or WebP up to 8 MB. It's resized and its metadata (such as location) removed."
+          error={tooLarge ? "That image is larger than 4 MB. Choose a smaller one." : fe.cover}
+          hint="PNG, JPEG, or WebP up to 4 MB. It's resized and its metadata (such as location) removed."
           onChange={(e) => {
             const f = e.currentTarget.files?.[0];
-            setPreview(f ? URL.createObjectURL(f) : null);
+            // Larger uploads are refused by the host before the app sees them.
+            const big = Boolean(f && f.size > MAX_COVER_BYTES);
+            setTooLarge(big);
+            if (big) e.currentTarget.value = "";
+            setPreview(f && !big ? URL.createObjectURL(f) : null);
           }}
         />
         {initial.coverUrl ? <CheckboxField name="removeCover" label="Remove the image" checked={removeCover} onChange={(e) => setRemoveCover(e.currentTarget.checked)} /> : null}
