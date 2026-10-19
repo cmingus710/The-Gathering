@@ -488,7 +488,7 @@ create index notifications_request_idx on community.notifications (request_id);
 create index notifications_occurrence_idx on community.notifications (occurrence_id);
 
 -- Per category: in-app on/off (moderation is always on), email mode, push.
--- Missing rows use community.default_pref().
+-- Missing rows use the defaults in community.pref().
 create table community.notification_prefs (
   profile_id uuid not null references public.profiles (id) on delete cascade,
   category text not null check (category in ('forum', 'groups', 'messages', 'moderation', 'events')),
