@@ -7,15 +7,20 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { initialFormState } from "@/lib/forms";
+import { initialFormState, type FormState } from "@/lib/forms";
 import { formatCents } from "@/lib/giving/money";
 import { cancelRecurringAction, changeAmountAction, claimGiftAction, updatePaymentMethodAction } from "../actions";
 
 export function RecurringControls({ commitmentId, amountCents, formToken }: { commitmentId: string; amountCents: number; formToken: string }) {
-  const [amountState, amountAction] = useActionState(changeAmountAction, initialFormState);
+  const [editing, setEditing] = useState(false);
+  // Close the editor once the new amount is saved, so the other controls come back.
+  const [amountState, amountAction] = useActionState(async (prev: FormState, formData: FormData) => {
+    const result = await changeAmountAction(prev, formData);
+    if (result.status === "success") setEditing(false);
+    return result;
+  }, initialFormState);
   const [cancelState, cancelAction] = useActionState(cancelRecurringAction, initialFormState);
   const [pmState, pmAction] = useActionState(updatePaymentMethodAction, initialFormState);
-  const [editing, setEditing] = useState(false);
   const state = [amountState, cancelState, pmState].find((s) => s.status !== "idle") ?? initialFormState;
 
   return (
@@ -30,7 +35,7 @@ export function RecurringControls({ commitmentId, amountCents, formToken }: { co
             Save amount
           </SubmitButton>
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-            Cancel
+            Keep current amount
           </Button>
           <p className="w-full text-sm text-text-secondary">Applies to future gifts only. Past gifts keep their amounts.</p>
         </form>
