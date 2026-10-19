@@ -59,7 +59,8 @@ The giving DB and processor tests cover:
 | Security advisor after Phase 3 | Reviewed: only expected notices (`giving` tables have RLS and no policies because they're never exposed; definer functions check capability, ownership, or HMAC; leaked-password protection notice predates Phase 3) |
 | Phase 2 hosted UI walkthrough | Pass (see the Phase 2 section) |
 | Preview env: `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | Set |
-| Preview env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | **Owner to set** (see giving-setup.md) |
+| Preview env: `STRIPE_SECRET_KEY` (restricted sandbox key), `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Set by the owner (2026-10-19): Sensitive, Preview only, branch `phase-3/giving-contributions`. Ingest secret created once with the create-only script (64 hex characters). Values never seen or logged by Claude |
+| Stripe sandbox webhook destination `https://giving-webhooks.gathering.church/api/stripe/webhook` with the 22 handled events | Created by the owner (2026-10-19) |
 | Webhook hostname `giving-webhooks.gathering.church` assigned to the Phase 3 branch (custom domain, outside Vercel Authentication) | Pass: `/`, `/give`, `/admin/finance` return 404; `/api/stripe/webhook` answers POST only (GET 405) |
 | Preview `/give` without Stripe keys shows "Online giving isn't available yet" (no fake checkout) | Pass (`dpl_CnMGQZBHcSG7YPxvHpVC8WoEJwC6`) |
 | End-to-end Stripe test payments, webhooks, refunds, portal, emails | **Not yet run** (needs the credentials above) |
