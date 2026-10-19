@@ -1,4 +1,4 @@
-import { ChevronRight, Eye, Home, ImageIcon, KeyRound, ShieldCheck, UserPen } from "lucide-react";
+import { ChevronRight, Eye, HandCoins, Home, ImageIcon, KeyRound, ShieldCheck, UserPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignOutButton } from "@/components/layout/sign-out-button";
@@ -58,6 +58,7 @@ export default async function ProfilePage() {
           <ListRow href="/profile/privacy" icon={<ShieldCheck className="size-6" aria-hidden="true" />} label="Directory privacy" description="Choose what other members can see" trailing={chevron} />
           <ListRow href="/profile/preview" icon={<Eye className="size-6" aria-hidden="true" />} label="Preview my directory profile" description="See exactly what other members see" trailing={chevron} />
           <ListRow href="/profile/household" icon={<Home className="size-6" aria-hidden="true" />} label="Household" description="Connect with adults you live with" trailing={chevron} />
+          <ListRow href="/giving" icon={<HandCoins className="size-6" aria-hidden="true" />} label="My giving" description="Gift history, recurring gifts, and statements" trailing={chevron} />
         </section>
 
         <div className="space-y-6">
