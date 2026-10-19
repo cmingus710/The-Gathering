@@ -78,21 +78,7 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
       ) : null}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_22rem]">
-        <div className="space-y-6">
-          {editable ? (
-            <EventForm
-              initial={seriesToForm(s, s.cover_path ? (covers.get(s.cover_path) ?? null) : null)}
-              categories={(cats ?? []) as Array<{ id: string; name: string; active: boolean }>}
-              timezones={allTimeZones([s.timezone])}
-              published={s.status === "published"}
-            />
-          ) : (
-            <Card>
-              <p className="text-text-secondary">Canceled and archived events can&apos;t be edited. {s.status === "archived" ? "Restore it as a draft to make changes." : ""}</p>
-            </Card>
-          )}
-        </div>
-        <div className="space-y-6">
+        <div className="space-y-6 xl:col-start-2 xl:row-start-1">
           <Card>
             <SectionHeading as="h2">Status</SectionHeading>
             <StatusControls id={s.id} status={s.status} timezone={s.timezone} hasRegistrations={hasRegistrations} />
@@ -121,6 +107,20 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
               <p className="text-text-secondary">No dates. Check the schedule settings.</p>
             )}
           </Card>
+        </div>
+        <div className="space-y-6 xl:col-start-1 xl:row-start-1">
+          {editable ? (
+            <EventForm
+              initial={seriesToForm(s, s.cover_path ? (covers.get(s.cover_path) ?? null) : null)}
+              categories={(cats ?? []) as Array<{ id: string; name: string; active: boolean }>}
+              timezones={allTimeZones([s.timezone])}
+              published={s.status === "published"}
+            />
+          ) : (
+            <Card>
+              <p className="text-text-secondary">Canceled and archived events can&apos;t be edited. {s.status === "archived" ? "Restore it as a draft to make changes." : ""}</p>
+            </Card>
+          )}
         </div>
       </div>
     </>
