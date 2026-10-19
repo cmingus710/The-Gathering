@@ -60,7 +60,7 @@ items(kind, detail) as (
   where c.relnamespace = 'public'::regnamespace
   union all
   select 'bucket', id || ' public=' || public || ' limit=' || file_size_limit || ' types=' || array_to_string(allowed_mime_types, ',')
-  from storage.buckets where id in ('branding', 'announcement-images')
+  from storage.buckets where id in ('branding', 'announcement-images', 'profile-photos')
   union all
   select 'seed_role', key || ' assignable=' || assignable || ' ' || name from public.roles
   union all

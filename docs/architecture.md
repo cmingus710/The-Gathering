@@ -19,14 +19,16 @@ src/
   app/
     (public)/        welcome page, install guidance
     (auth)/          sign-in, sign-up, forgot/reset password, check-email (+ actions.ts)
-    (member)/        home, announcements, profile: approved members only
-    admin/           dashboard, members, settings, announcements, audit
+    (member)/        home, announcements, directory, profile (edit, photo, privacy,
+                     preview, household): approved members only
+    admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
     account-status   pending / suspended messaging
     manifest.ts, favicon.ico, icon.png, apple-icon.png
   components/        ui/ (buttons, fields, alerts, badges…), layout/, brand/, announcements/, pwa/
-  lib/               auth/, announcements/, settings/, email/, supabase/, theme/, time, uploads, navigation
+  lib/               auth/, announcements/, directory/, profile/, settings/, email/, supabase/, theme/,
+                     time, uploads, navigation
   proxy.ts           session refresh + signed-out redirect (convenience only)
 supabase/
   migrations/        versioned schema (source of truth)
@@ -59,7 +61,7 @@ Two independent axes:
 
 ### Enforcement layers (deny by default)
 
-1. **Database:** RLS on every table. Column-level grants mean members can update only `full_name`, `preferred_name`, and `phone`. `user_roles`, `audit_log`, and membership status have no client write path. Privileged changes go through `SECURITY DEFINER` functions (`admin_set_membership_status`, `admin_grant_role`, `admin_revoke_role`) that re-check `has_capability()` and write audit entries.
+1. **Database:** RLS on every table. Column-level grants mean members can update only their name fields and `phone` on `profiles`, and only their own details and privacy choices on `member_profile_details`. `user_roles`, `audit_log`, and membership status have no client write path. Privileged changes go through `SECURITY DEFINER` functions (`admin_set_membership_status`, `admin_grant_role`, `admin_revoke_role`) that re-check `has_capability()` and write audit entries.
 2. **Server:** layouts and every Server Action call `requireApprovedMember()` / `requireCapability()` (`src/lib/auth/viewer.ts`). The user is verified with `auth.getUser()` on each request.
 3. **Proxy:** sends signed-out visitors to sign-in and marks protected responses `private, no-store`. It's not relied on for authorization.
 
@@ -70,6 +72,66 @@ Two independent axes:
 - **Last super administrator:** triggers on `user_roles` and `profiles` (serialized with an advisory lock) block removing, suspending, or deleting the last active super admin.
 - **Initial super administrator:** `bootstrap_super_admin(email)` is executable only by the service role, requires a verified email, and refuses to run once a super admin has ever been appointed (`system_state`).
 - **Audit log:** status changes, role changes, settings changes (field names only), and announcement lifecycle (state and field names, never content).
+
+## Member directory and privacy (Phase 2)
+
+### Data model
+
+| Table | Holds | Who can read it directly |
+| --- | --- | --- |
+| `profiles` (+ `first_name`, `last_name`, `account_kind`) | Names, sign-in email, phone, status | The member; `members.view` holders |
+| `member_profile_details` | Directory email, address, bio, birthday (month/day), photo path, nine privacy flags | The member; `members.manage` holders |
+| `ministry_interests` / `member_ministry_interests` | Catalog and each member's choices | Approved members (active catalog); own choices; `members.manage` |
+| `households`, `household_members`, `household_invitations` | Connected adults and in-app invitations | Members of that household; the invitee |
+| `guardianships` | Reserved for guardian-managed youth accounts | Nobody (no grants, no policies) |
+
+The private fields sit in their own table because Phase 1 grants table-level `SELECT` on `profiles`, and a table-level grant would automatically cover new columns. A details row with the privacy defaults is created by trigger for every profile.
+
+### Secure directory projection
+
+Members never read another member's rows. The directory is served only by `SECURITY DEFINER` functions:
+
+- `directory_search(query, limit, offset)` returns id, display name, full name, and (when shared) photo path and city/state, plus a total for paging (max 50 per page).
+- `directory_member(id)` returns one profile with every hidden field as `null`, active ministry interests when shared, and household members when both adults share their household.
+
+Both functions:
+- check `is_approved_member()` on every call, so pending, suspended, and signed-out callers are refused;
+- include only approved, adult, listed profiles;
+- search only names and, when the member shares it, city (LIKE wildcards are escaped);
+- never return the sign-in email, membership status, roles, or privacy flags.
+
+Hidden, pending, suspended, and unknown members all produce the same "not found" page.
+
+**Defaults:** a member is listed after approval with photo, city/state, ministry interests, and household shown. Directory email, phone, street address (with postal code), and birthday stay hidden until the member shares them. Opting out of the directory hides everything from other members but not from membership administrators.
+
+### Photos
+
+- Private `profile-photos` bucket: 1 MB, WebP only. Objects are named `<member id>/<random>.webp`, and a check constraint keeps `photo_path` inside the member's own folder.
+- The browser crops (zoom and position sliders) and uploads a 768 px JPEG, so the original never leaves the device. Without JavaScript, the original is uploaded and centre-cropped on the server.
+- The server checks the file signature, size (4 MB), and dimensions (128 to 8000 px), then re-encodes with `sharp` to a 512 px WebP with metadata (EXIF/GPS) removed. Only that copy is stored.
+- Replacing or removing a photo deletes the old object. There is no storage update policy, so a URL can never start serving a different image.
+- Storage RLS (`can_view_profile_photo`) lets approved members read an object only while it is the owner's current photo, the owner is listed, and the owner shares it. The owner and `members.manage` holders can always read it.
+- Pages use 5-minute signed URLs and plain `<img>`, so nothing goes through the Next.js image cache.
+- **Revocation delay:** hiding or removing a photo stops new URLs immediately, but a URL already on someone's screen keeps working for up to 5 minutes. Removed objects return 404 at once.
+
+### Households
+
+- All writes go through functions: `household_create`, `household_rename`, `household_invite`, `household_revoke_invitation`, `household_respond`, and `household_leave`. Reads go through `my_household()` and `my_household_invitations()`.
+- Invitations:
+  - are sent in the app to a member chosen from the directory, never by email address;
+  - get one refusal message for hidden, pending, suspended, and unknown accounts, so membership can't be probed;
+  - expire after 14 days, with lazy expiry and no job;
+  - can be revoked, are limited to 10 open per household, and can be answered only once by the invitee (row lock plus status check).
+- One household per adult. The last adult to leave closes it.
+- A household grants no account access and reveals no hidden fields. Belonging to one does not establish guardianship. Youth accounts are blocked by a constraint (`profiles_youth_accounts_not_enabled`) until a later phase.
+
+### Administration
+
+- Only `members.manage` holders can see directory visibility, read private details, and correct profiles. `admin_update_member_profile()` changes names, contact details, address, bio, birthday, or removes the photo, and audits `profile.admin_updated` with field names only.
+- Privacy choices can't be changed by admins; they belong to the member.
+- A super administrator's profile can be edited only by a super administrator.
+- Ministry-interest options are managed at **Admin → Ministry interests** and are archived rather than deleted. Catalog changes are audited.
+- Content editors still have no access to other members' profiles or details.
 
 ## Announcements
 

@@ -86,3 +86,12 @@ The remote history and `supabase/migrations/` now agree, so `supabase db push` a
 ## Going forward
 
 Apply new migrations with `supabase db push` (or the SQL editor followed by `supabase migration repair --status applied <version>`). Don't apply schema through the connector's `apply_migration`, because it records its own version numbers.
+
+## Phase 2 (2026-10-19)
+
+The four Phase 2 migrations were applied through the connector's `execute_sql`, each in a single statement batch ending with `insert into supabase_migrations.schema_migrations (version, name, created_by) values (<repo version>, <name>, 'phase-2')`. This keeps the repository version numbers. `apply_migration` was not used.
+
+- `20261019000100_member_profiles`, `20261019000200_directory`, `20261019000400_profile_photos`: applied whole.
+- `20261019000300_households`: everything except `household_leave()` was applied through the connector, which still refuses statements containing `delete from`. The owner ran the remaining function, its grants, and the history row in the SQL editor.
+
+**Check:** the schema fingerprint (`supabase/tests/schema-fingerprint.sql`, which now also covers the `profile-photos` bucket) matched a fresh build from the files in all 17 categories.

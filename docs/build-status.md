@@ -1,6 +1,72 @@
-# Build status: Phase 1
+# Build status
 
-Last updated: 2026-10-18 · Branch `claude/sweet-lamport-fsrqcc`
+Last updated: 2026-10-19 · Phase 2 branch `phase-2/member-directory`
+
+## Phase 2: member directory, profiles, privacy, households
+
+### Summary
+
+Phase 2 code is complete on `phase-2/member-directory`, and its migrations are applied to Supabase project `ymuiutwdnhxdqsetnwkt`. Preview: `https://the-gathering-git-phase-2-member-directory-paint-by-number.vercel.app` (Vercel Authentication required). Production stays paused.
+
+### Verified locally (no hosted services involved)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` (zero warnings) / `npm run typecheck` | Pass |
+| `npm run build` (all routes dynamic, including 7 new member routes and 1 admin route) | Pass |
+| Unit tests: Phase 1 suites plus directory formatting, profile/privacy schemas, and photo processing (synthetic images; output checked for metadata removal) | Pass |
+| DB tests on PostgreSQL 16 + shim: 41 Phase 1 + 42 Phase 2 (`tests/db/directory.test.ts`) | 83 pass |
+| Playwright: desktop + Pixel 7, signed-out redirects for every new route, `private, no-store`, registration directory notice | 52 pass |
+
+The Phase 2 database tests use only synthetic `example.test` accounts. They cover:
+- **Profiles:** created automatically with privacy defaults; the directory email is separate from the sign-in email; month/day birthday and email validation; youth accounts blocked.
+- **Directory access:** pending and suspended accounts are denied, and anonymous visitors have no access at all.
+- **What the directory returns:** only approved, listed adults appear. Hidden values never appear in any response, and search can't match a hidden city, email, phone, or address. Suspension and opt-out take effect immediately, and paging works.
+- **Cross-account protection:**
+  - No direct reads or edits of other members' rows, and a photo path can't point at another member's folder.
+  - Pending and suspended members can't edit details.
+- **Roles:**
+  - Content editors get no private data and no correction RPC.
+  - Membership admins can correct profiles, audited by field name only (no values), and can see opted-out members.
+  - Membership admins can't change privacy choices or edit a super admin.
+  - Members still can't change their own status or roles.
+- **Ministry interests:** only managers edit the catalog (audited). Members can pick only active options for themselves, and the directory shows interests only when shared.
+- **Photos:**
+  - Uploads only into your own folder and only while approved; the bucket is private, WebP-only, and limited to 1 MB.
+  - Visibility follows show-photo, the listing, and membership status.
+  - A replaced photo stops being served, there is no update path, and owners can delete their own files.
+- **Households:**
+  - No direct writes, and only listed members can be invited, with one refusal message for every case.
+  - Invitations are private and idempotent. Decline, revoke, expiry, accept, and replay of any of them are all handled.
+  - Membership grants no access and reveals no hidden fields.
+  - Directory display requires every adult's consent, a second household is refused, and the last adult leaving closes the household.
+
+### Hosted (Supabase project + Vercel preview)
+
+| Check | Result |
+| --- | --- |
+| Migrations `20261019000100`–`000400` applied with repository version numbers | Applied (see migration-history.md) |
+| Fresh-from-files schema matches hosted in all 17 fingerprint categories (excluding the pending `household_leave`) | Pass |
+| Preview build of `6249997` (`dpl_EzB5sFq2ZqvbbKCfVdf8ecJpRmQq`) | Ready |
+| Signed-out `/directory` → `/sign-in?next=/directory`, `private, no-store` | Pass |
+| Preview alias matches the Supabase redirect pattern `https://the-gathering-*-paint-by-number.vercel.app/**` | Pass (pattern match; Site URL unchanged) |
+| As the approved test member (DB role and JWT claims): no other profiles or details readable, own details row present, directory lists 2 members, hidden-by-default fields null for members who didn't share them | Pass |
+| Anonymous role: no execute on directory functions, no select on details; internal helpers not executable by clients; `profile-photos` private | Pass |
+| Security advisor: only expected notices (definer functions that re-check capabilities; `guardianships` and `system_state` deliberately have no policies) | Reviewed |
+| Photo upload on the preview stored a processed WebP (38 KB) in the private bucket | Pass |
+
+Hosted UI walkthroughs with the two existing accounts are recorded in the next section once completed.
+
+### Known limitations (Phase 2)
+
+- Signed photo URLs stay valid for up to 5 minutes after a photo is hidden or the owner leaves the directory. Deleted photos stop at once.
+- One household per adult. Children and guardian-managed accounts are not enabled (`guardianships` is reserved).
+- There is no notification beyond the in-app badge on Home and Profile when an invitation arrives. No email is sent, by design.
+- Ministry-interest options start empty; administrators add them.
+
+---
+
+# Phase 1 build status (historical)
 
 ## Summary
 
@@ -107,4 +173,4 @@ Test accounts kept: `robtwebb@me.com` (initial super administrator) and `breaktw
   - "Signed-in users can execute SECURITY DEFINER functions" covers the helpers and admin functions. Each re-checks the caller's capability internally and is covered by tests.
   - "RLS enabled, no policy" on `system_state` is deliberate: there is no client access.
 - **Migration history:** the Supabase project's migration history differs from the repo files (see setup.md §2).
-- **Not in Phase 1:** directory, households, and advanced profile fields (Phase 2); Stripe (Phase 3); realtime features.
+- **Not in Phase 1:** directory, households, and advanced profile fields (added in Phase 2); Stripe (Phase 3); realtime features.

@@ -18,15 +18,19 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 
 ### Database
 
-The Phase 1 schema is in `supabase/migrations/` and must be applied in filename order:
+The schema is in `supabase/migrations/` and must be applied in filename order:
 
 1. `20261018000100_identity_and_capabilities.sql`
 2. `20261018000200_church_settings.sql`
 3. `20261018000300_announcements.sql`
 4. `20261018000400_storage.sql`
 5. `20261018000500_explicit_function_grants.sql`
+6. `20261019000100_member_profiles.sql` (Phase 2)
+7. `20261019000200_directory.sql` (Phase 2)
+8. `20261019000300_households.sql` (Phase 2)
+9. `20261019000400_profile_photos.sql` (Phase 2)
 
-**Project `ymuiutwdnhxdqsetnwkt`:** all five migrations are applied and the history has been reconciled with the repository. The migration history matches the repository exactly (verified 2026-10-18); see [migration-history.md](migration-history.md).
+**Project `ymuiutwdnhxdqsetnwkt`:** all nine migrations are applied, and the history matches the repository versions; see [migration-history.md](migration-history.md). Phase 2 was applied through the SQL connector with the repository version numbers recorded, plus one snippet (the `household_leave` function, which contains `delete from`) run in the SQL editor.
 
 For a new project, run `supabase link --project-ref <ref> && supabase db push`, or paste each file into the SQL editor in order.
 
@@ -56,8 +60,9 @@ For a new project, run `supabase link --project-ref <ref> && supabase db push`, 
 The migrations create both buckets with type and size limits:
 - `branding` (public, 2 MB, PNG/JPEG/WebP)
 - `announcement-images` (private, 4 MB, PNG/JPEG/WebP)
+- `profile-photos` (private, 1 MB, WebP only; the app re-encodes every upload with `sharp`)
 
-No dashboard work is needed.
+No dashboard work is needed. Phase 2 adds no environment variables. Photo processing uses `sharp`, a normal runtime dependency that Vercel supports.
 
 ## 3. Resend
 
