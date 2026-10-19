@@ -74,3 +74,29 @@ begin
 end
 $$;
 grant execute on function storage.foldername(text) to anon, authenticated, service_role;
+
+-- Same contract as Supabase Realtime's authorization table and helpers:
+-- realtime.send() records a broadcast in realtime.messages, and RLS on that
+-- table (with realtime.topic() = the channel being joined) decides who may
+-- receive it on a private channel.
+create schema if not exists realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+create table realtime.messages (
+  id uuid primary key default gen_random_uuid(),
+  topic text not null,
+  extension text not null,
+  payload jsonb,
+  event text,
+  private boolean default false,
+  inserted_at timestamp default now(),
+  updated_at timestamp default now()
+);
+alter table realtime.messages enable row level security;
+grant select, insert on realtime.messages to anon, authenticated, service_role;
+create function realtime.topic() returns text
+language sql stable as $$ select nullif(current_setting('realtime.topic', true), '') $$;
+grant execute on function realtime.topic() to anon, authenticated, service_role;
+create function realtime.send(payload jsonb, event text, topic text, private boolean default true) returns void
+language sql as $$
+  insert into realtime.messages (topic, extension, payload, event, private) values (topic, 'broadcast', payload, event, private)
+$$;

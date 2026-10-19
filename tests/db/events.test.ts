@@ -143,8 +143,13 @@ describeDb("events: visibility, recurrence, RSVP, notifications, feeds", () => {
       expect(await rpc(anon, "events_occurrence", [later.occurrences[0].id])).toBeNull();
     });
 
-    it("keeps group audiences unavailable until groups exist", async () => {
-      await expect(rpc(as(admin), "events_admin_save", [JSON.stringify(baseEvent({ audience: "group" }))])).rejects.toThrow(/series_groups_unavailable/);
+    // Phase 5 enables group audiences; a group event still needs a real group
+    // (tests/db/community.test.ts covers group-restricted access).
+    it("refuses a group audience without a group", async () => {
+      await expect(rpc(as(admin), "events_admin_save", [JSON.stringify(baseEvent({ audience: "group" }))])).rejects.toThrow(/Choose a group/);
+      await expect(
+        rpc(as(admin), "events_admin_save", [JSON.stringify(baseEvent({ audience: "group", group_id: "00000000-0000-4000-8000-000000000000" }))]),
+      ).rejects.toThrow(/Choose a group/);
     });
 
     it("serves event images only to people who can see the event", async () => {
