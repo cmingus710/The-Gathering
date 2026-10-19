@@ -7,6 +7,7 @@ import { requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, type FormState } from "@/lib/forms";
 import { CheckoutError, issueRefund, reconcile } from "@/lib/giving/checkout";
 import { localDateToUtc, addDays } from "@/lib/giving/finance";
+import { manualInput } from "@/lib/giving/manual";
 import { formatCents, parseDollarsToCents } from "@/lib/giving/money";
 import { deliverEmails } from "@/lib/giving/processor";
 import { getGivingServer } from "@/lib/giving/server";
@@ -20,18 +21,6 @@ import { createClient } from "@/lib/supabase/server";
  */
 const UNAVAILABLE = "The finance service is unavailable. Nothing was changed.";
 const optionalUuid = z.union([z.uuid(), z.literal("")]).transform((v) => v || null);
-
-const manualInput = z.object({
-  formToken: z.uuid(),
-  donorProfileId: optionalUuid,
-  donorName: z.string().trim().max(200),
-  receivedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter the date received."),
-  amount: z.string(),
-  fundId: z.uuid({ message: "Choose a fund." }),
-  method: z.enum(["cash", "check"], { message: "Choose cash or check." }),
-  checkReference: z.string().trim().max(60),
-  note: z.string().trim().max(500),
-});
 
 function manualArgs(formData: FormData) {
   const values = formValues(formData);

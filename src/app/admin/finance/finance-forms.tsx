@@ -50,7 +50,8 @@ function ManualFields({ state, funds, donor, defaults, today }: { state: FormSta
         <TextField label="Date received" name="receivedOn" type="date" max={today} required defaultValue={v.receivedOn} error={err.receivedOn} />
         <TextField label="Amount (USD)" name="amount" inputMode="decimal" required defaultValue={v.amount} error={err.amount} />
       </div>
-      <SelectField label="Fund" name="fundId" defaultValue={v.fundId ?? funds.find((f) => f.active)?.id} error={err.fundId}>
+      {/* Keyed so a submitted choice survives an error (a select reads defaultValue only when mounted). */}
+      <SelectField key={v.fundId ?? "default"} label="Fund" name="fundId" defaultValue={v.fundId ?? funds.find((f) => f.active)?.id} error={err.fundId}>
         {funds.filter((f) => f.active || f.id === v.fundId).map((f) => (
           <option key={f.id} value={f.id}>
             {f.name}
