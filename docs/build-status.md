@@ -64,6 +64,8 @@ How each item was confirmed: **UI** = the owner did it in the browser and report
 | Registration deadline | Not exercised on hosted (it would have meant waiting until the day of the event); covered by the database tests |
 | Scheduled reminder via the database scheduler | Pass (DB, Resend). A members-only test event at 6:00 PM CDT with a 1-hour reminder and A registered: the `events-worker` run at 22:00:00Z queued the reminder; `events.call_worker()` made its only outbound request of the day, a signed POST that the preview answered **200** (`sent: 1, failed: 0, suppressed: 0`), which also proves the database and Vercel copies of the job secret match; Resend delivered "[TEST] Reminder: [TEST] Synthetic reminder check" to A's allowlisted test address at 22:00:04Z; outbox shows one attempt, sent. Every 5-minute run since setup succeeded, and runs with no email due made no request |
 
+**Cleanup (2026-10-19, DB):** all four `[TEST] Synthetic …` events are archived (none visible to visitors or members), the public feed is back off, no private feed links exist, and no email is pending or failed (11 sent in total, all to the two allowlisted test addresses). One synthetic cover image remains in the private bucket, served to nobody because its event is archived. The `events-worker` schedule stays active (it is the designated scheduler and does nothing when no email is due).
+
 Bugs found in the walkthrough and fixed on this branch (each with lint, typecheck, full tests, and build passing before push):
 
 1. Settings saves failed on hosted Supabase (pg-safeupdate): new migration `20261021000400` plus a test over every app function. Phase 3's `finance_settings_save` had the same bug.
