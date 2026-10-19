@@ -65,7 +65,23 @@ The giving DB and processor tests cover:
 | Preview `/give` without Stripe keys shows "Online giving isn't available yet" (no fake checkout) | Pass (`dpl_CnMGQZBHcSG7YPxvHpVC8WoEJwC6`) |
 | Build `04184ed` (`dpl_4niEHZ3z4wTBfEbzUbK7UZFfYyAn`) with the giving variables: `/give` shows the live checkout form (key accepted as a test key) | Pass |
 | Guest one-time card gift ($50, General Offering, `4242…`) through hosted Stripe Checkout (sandbox) | Pass: 4 webhook events (`checkout.session.completed`, `payment_intent.succeeded`, `charge.succeeded`, `charge.updated`) each processed once after redelivery (first attempts got 401, see above); exactly 1 succeeded payment, `livemode=false`, guest; fee $1.75 / net $48.25 from the balance transaction; intent completed; acknowledgment email sent via Resend on the first attempt; no card data stored |
-| Member gifts, recurring, portal, refunds, disputes, statements, finance admin on the hosted preview | **In progress** |
+| Signed-in member monthly gift (Account B, $25 Missions) | Pass: subscription + first invoice payment linked to B; Stripe customer stored for B only; `invoice.paid` recorded the payment, and the parallel `charge.succeeded`/`payment_intent.succeeded` were deliberately ignored (no double count) |
+| Change recurring amount ($25 → $30) | Pass: one `customer.subscription.updated`, no proration charge, next date unchanged. Found and fixed: the amount editor stayed open and hid the other controls (`d4e75c8`) |
+| Update payment method via the Stripe billing portal | Pass (owner); app stores no card details |
+| Guest gift claimed by B with the emailed claim code | Pass: payment and its recurring gift moved to B (`giving.gift_claimed` audited); the other guest gift untouched |
+| Cancel recurring gift | Pass: `customer.subscription.deleted` processed once; the other gift stays active; cancellation email sent |
+| "My giving" discoverable | Found and fixed: only linked from Give and thank-you pages; added to Profile (`411c841`) |
+| Finance admin role granted (super admin alone has no finance access) | Pass: `role.granted` audited |
+| Refund from Giving admin | First attempt refused by Stripe (`StripePermissionError`: the restricted key lacked Refunds: Write; nothing refunded). After the owner fixed the key: $50 refund recorded once from `refund.created`/`charge.refunded`, refund email sent, `finance.refund_requested` audited. Hardened: an accepted refund is never reported as failed (`bc37e86`) |
+| Record cash/check gift, link donor, correct entry | Found and fixed: entries for a linked member were rejected because the hidden donor-name field was required; fund choice reset after errors (`35f5879`). After the fix: original kept as reversed, correction linked to it, `finance.donor_associated` / `finance.manual_recorded` / `finance.manual_corrected` audited |
+| CSV export | Pass: rows match the database, `finance.exported` audited (row count only). Net column renamed `net_before_refunds_usd` (`4e06ba2`) |
+| Draft statement PDF for B (2026) | Pass: DRAFT watermark, $25 + $25 + $40 = $90.00, matching the database; members can't download until church details are approved |
+| Declined card (`4000…0002`) | Pass: recorded as failed (`generic_decline`), never counted, no acknowledgment |
+| Dispute (`4000…0259`, $20) | Pass: `charge.dispute.created` processed once, dispute `needs_response`; left open (closing as lost not exercised on hosted) |
+| Reconcile today, run twice | Pass: checked 5 checkouts, 2 invoices, 1 refund, 1 dispute; 0 added, 0 updated, 0 emails |
+| Webhook totals | Every Stripe event processed or deliberately ignored exactly once; 0 failed |
+| Finance summary via a non-finance database role | Refused ("You do not have permission to do that") |
+| Approving church details to produce a final statement | **Not run on hosted** by design: needs the church's approved legal details and wording. Covered by automated tests |
 
 ### Known limitations (Phase 3)
 
