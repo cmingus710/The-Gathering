@@ -98,3 +98,21 @@ export function timeZoneLabel(tz: string, at: Date = new Date()): string {
     .find((p) => p.type === "timeZoneName");
   return part?.value ?? tz;
 }
+
+/** Compact age like "now", "5m", "3h", "2d", or a short date after a week. */
+export function formatAge(instant: Date | string, now: Date = new Date(), tz = DEFAULT_TIMEZONE): string {
+  const date = typeof instant === "string" ? new Date(instant) : instant;
+  const seconds = Math.max(0, Math.round((now.getTime() - date.getTime()) / 1000));
+  if (seconds < 60) return "now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+  if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)}d`;
+  return new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "short", day: "numeric" }).format(date);
+}
+
+/** Upper-case day stamp like "19 OCT 2026" in the church time zone. */
+export function formatDayStamp(instant: Date, tz: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: tz, day: "2-digit", month: "short", year: "numeric" }).formatToParts(instant);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("day")} ${get("month").toUpperCase()} ${get("year")}`;
+}

@@ -1,7 +1,7 @@
 import { Hourglass, ShieldOff } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { FullLogo } from "@/components/brand/logo";
+import { LogoPlaque } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { Alert } from "@/components/ui/alert";
 import { MembershipBadge } from "@/components/ui/badge";
@@ -19,16 +19,16 @@ export default async function AccountStatusPage({ searchParams }: PageProps<"/ac
 
   return (
     <div className="flex min-h-dvh flex-col items-center px-4 py-8 sm:py-12">
-      <FullLogo src={settings.logoUrl} alt={settings.churchName} className="mb-8 w-44 sm:w-52" priority />
+      <LogoPlaque src={settings.logoUrl} alt={settings.churchName} className="mb-8" logoClassName="w-32 sm:w-40" priority />
       <main id="main" className="w-full max-w-lg">
-        <div className="rounded-card border border-border bg-surface p-6 sm:p-8">
+        <div className="rounded-card bg-surface p-6 sm:p-8">
           {params.verified && !suspended ? (
             <Alert tone="success" title="Your email address is verified." className="mb-6" />
           ) : null}
           <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
             {suspended ? <ShieldOff className="size-7" aria-hidden="true" /> : <Hourglass className="size-7" aria-hidden="true" />}
           </div>
-          <h1 className="font-serif text-2xl font-semibold">
+          <h1 className="text-2xl font-bold">
             {suspended ? "Your access is paused" : "Thanks for registering"}
           </h1>
           <p className="mt-2">

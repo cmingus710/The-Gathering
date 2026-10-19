@@ -62,7 +62,7 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
                 aria-current={filter === f.key ? "page" : undefined}
                 className={cn(
                   "flex min-h-11 items-center whitespace-nowrap rounded-full border px-4 font-semibold",
-                  filter === f.key ? "border-brand-charcoal bg-brand-charcoal text-background" : "border-border-strong bg-surface hover:bg-surface-muted",
+                  filter === f.key ? "border-text bg-text text-background" : "border-border-strong bg-surface hover:bg-surface-muted",
                 )}
               >
                 {f.label}
@@ -88,13 +88,13 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
         <ul className="space-y-3">
           {shown.map((a) => (
             <li key={a.id}>
-              <Link href={`/admin/announcements/${a.id}`} className="block rounded-card border border-border bg-surface p-4 hover:border-primary sm:p-5">
+              <Link href={`/admin/announcements/${a.id}`} className="block rounded-card bg-surface p-4 hover:border-primary sm:p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <AnnouncementStatusBadge status={a.effective} />
                   <VisibilityBadge visibility={a.visibility} />
                   {a.pinned ? <PinnedBadge /> : null}
                 </div>
-                <p className="mt-2 font-serif text-lg font-semibold">{a.title}</p>
+                <p className="mt-2 text-lg font-bold">{a.title}</p>
                 <p className="text-[0.95rem] text-text-secondary">
                   {a.effective === "scheduled" && a.publish_at
                     ? `Publishes ${formatDateTime(a.publish_at, settings.timezone)}`

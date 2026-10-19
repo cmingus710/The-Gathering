@@ -1,27 +1,35 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { contrastRatio, palette as p } from "./tokens";
+import { brand, contrastRatio, palette as p } from "./tokens";
 
-describe("approved palette", () => {
-  it("matches the brief and the CSS tokens", () => {
-    const css = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8").toLowerCase();
-    const brief = {
+const css = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8").toLowerCase();
+
+describe("design tokens", () => {
+  it("keep the approved brand palette unchanged", () => {
+    const approved = {
       "brand-gold": "#ad8c53",
       "brand-charcoal": "#363430",
-      background: "#f7f4ed",
-      surface: "#ffffff",
-      "surface-muted": "#eae3d5",
-      primary: "#80642f",
-      text: "#363430",
-      "text-secondary": "#716b61",
-      success: "#52664d",
-      danger: "#a14538",
+      ivory: "#f7f4ed",
+      sand: "#eae3d5",
+      "deep-gold": "#80642f",
+      olive: "#52664d",
+      clay: "#a14538",
     };
-    for (const [name, hex] of Object.entries(brief)) {
-      expect(css).toContain(`--color-${name}: ${hex};`);
+    for (const [name, hex] of Object.entries(approved)) expect(css).toContain(`--color-${name}: ${hex};`);
+    expect(brand.gold).toBe("#AD8C53");
+  });
+
+  it("mirror the CSS semantic tokens exactly", () => {
+    const toCss = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+    for (const [key, hex] of Object.entries(p)) {
+      expect(css, key).toContain(`--color-${toCss(key)}: ${hex.toLowerCase()};`);
     }
-    expect(p.primary.toLowerCase()).toBe("#80642f");
+  });
+
+  it("use the brand gold as the accent colour", () => {
+    expect(p.primary).toBe(brand.gold);
+    expect(p.cta).toBe(brand.ivory);
   });
 
   // Normal-size text needs 4.5:1 (WCAG AA).
@@ -31,19 +39,23 @@ describe("approved palette", () => {
     ["text on surface-muted", p.text, p.surfaceMuted],
     ["secondary text on background", p.textSecondary, p.background],
     ["secondary text on surface", p.textSecondary, p.surface],
-    ["white on primary button", p.onPrimary, p.primary],
-    ["white on primary hover", p.onPrimary, p.primaryHover],
-    ["primary link on surface", p.primary, p.surface],
-    ["primary link on background", p.primary, p.background],
-    ["primary text on primary-soft", p.primary, p.primarySoft],
+    ["secondary text on surface-muted", p.textSecondary, p.surfaceMuted],
+    ["gold accent on background", p.primary, p.background],
+    ["gold accent on surface", p.primary, p.surface],
+    ["gold accent on primary-soft", p.primary, p.primarySoft],
+    ["CTA button text", p.onCta, p.cta],
+    ["CTA button hover text", p.onCta, p.ctaHover],
+    ["text on gold fill", p.onPrimary, p.primary],
+    ["selected chip (background on text)", p.background, p.text],
+    ["success on background", p.success, p.background],
     ["success on surface", p.success, p.surface],
     ["success on success-soft", p.success, p.successSoft],
+    ["danger on background", p.danger, p.background],
     ["danger on surface", p.danger, p.surface],
     ["danger on danger-soft", p.danger, p.dangerSoft],
-    ["danger on background", p.danger, p.background],
-    ["white on danger button", p.onPrimary, p.danger],
-    ["white on danger hover", p.onPrimary, p.dangerHover],
-    ["ivory on charcoal", p.background, p.brandCharcoal],
+    ["danger button text", p.onCta, p.danger],
+    ["danger button hover text", p.onCta, p.dangerHover],
+    ["logo plaque: charcoal on ivory", brand.charcoal, brand.ivory],
   ];
   it.each(textPairs)("%s meets 4.5:1", (_label, fg, bg) => {
     expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
@@ -55,13 +67,13 @@ describe("approved palette", () => {
     ["input border on background", p.borderStrong, p.background],
     ["focus ring on background", p.primary, p.background],
     ["focus ring on surface", p.primary, p.surface],
+    ["CTA button against background", p.cta, p.background],
   ];
   it.each(uiPairs)("%s meets 3:1", (_label, fg, bg) => {
     expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(3);
   });
 
-  it("documents why logo gold is decorative only", () => {
-    expect(contrastRatio(p.brandGold, p.background)).toBeLessThan(3);
-    expect(contrastRatio(p.onPrimary, p.brandGold)).toBeLessThan(4.5);
+  it("documents why gold text is not used on surface-muted", () => {
+    expect(contrastRatio(p.primary, p.surfaceMuted)).toBeLessThan(4.5);
   });
 });

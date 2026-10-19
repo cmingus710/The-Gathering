@@ -88,21 +88,29 @@ Two independent axes:
 
 ## Design system
 
+Dark, card-based interface: near-black background, charcoal cards, ivory text, and the brand gold as the single accent. The approved palette is unchanged and kept as brand tokens; the semantic tokens map it onto the dark interface.
+
 | Token | Value | Use |
 | --- | --- | --- |
-| brand-gold | #AD8C53 | Decorative accents only (2.9:1 on ivory) |
-| brand-charcoal | #363430 | Selected chips, overlays |
-| background | #F7F4ED | Page background |
-| surface / surface-muted | #FFFFFF / #EAE3D5 | Cards / selected nav, chips |
-| primary (Deep Gold) | #80642F | Buttons (white text 5.55:1), links, focus ring |
-| text / text-secondary | #363430 / #716B61 | Body / secondary (≥ 4.8:1 on ivory and white) |
-| success / danger | #52664D / #A14538 | Status, always paired with an icon and text |
+| background | #121110 | Page background |
+| surface / surface-muted | #22201E / #2E2C29 | Cards and list rows / selected states, chips |
+| primary (brand gold) | #AD8C53 | Links, section actions, active icons, focus ring (6.0:1 on background, 5.1:1 on cards) |
+| cta (ivory) / on-cta | #F7F4ED / #1C1B19 | Pill-shaped main buttons |
+| text / text-secondary | #F7F4ED / #B3AC9F | Body / secondary (at least 6.2:1 everywhere they are used) |
+| success / danger | #9DB794 / #E59484 | Status, always paired with an icon and text |
 
-Fonts: Source Serif 4 (headings) and Source Sans 3 (interface), self-hosted via Fontsource. Touch targets are at least 44 px, focus outlines are visible, motion respects `prefers-reduced-motion`, and errors are linked through `aria-describedby` with focus moved to the form message.
+Patterns:
+- **Floating pill tab bar** (Home, News, Profile, More) on phones; sidebar on desktop.
+- **Header:** initial avatar (links to Profile), centered church name, round install button.
+- **Sections:** uppercase labels with gold "View all" links.
+- **Content:** rounded list rows (icon, label, trailing detail), a horizontal announcement rail, and an author-style announcement feed.
+- **Later-phase modules:** shown as list rows with a "Soon" tag, never as links.
+
+The logo and icon keep their original colours on an ivory plaque or circle, because the charcoal artwork would disappear on dark backgrounds. Fonts are Source Sans 3 throughout the interface; Source Serif 4 remains available but is no longer used for headings. Touch targets are at least 44 px, focus outlines are visible, motion respects `prefers-reduced-motion`, and contrast for every pairing is enforced by `src/lib/theme/tokens.test.ts`.
 
 ## PWA and caching
 
-- `manifest.webmanifest`: name "The Gathering", standalone, ivory theme and background, `any` and `maskable` icons at 192 and 512.
+- `manifest.webmanifest`: name "The Gathering", standalone, dark (#121110) theme and background, `any` and `maskable` icons at 192 and 512.
 - Icons are generated from the supplied icon artwork by `scripts/generate-brand-assets.mjs`. They're square and not pre-rounded, and the maskable versions are verified to stay inside the 80% safe zone.
 - `public/sw.js` caches only `/_next/static/*`, `/brand/*`, `/icons/*`, and `offline.html`. Navigations are network-only, with a generic offline page, and nothing private is ever stored.
 - Sign-out is a POST that clears Supabase cookies and sends `Clear-Site-Data: "cache"`.

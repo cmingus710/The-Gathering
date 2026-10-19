@@ -21,7 +21,7 @@ export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[0.95rem] font-semibold",
-                    active ? "border-brand-charcoal bg-brand-charcoal text-background" : "border-border-strong bg-surface text-text hover:bg-surface-muted",
+                    active ? "border-text bg-text text-background" : "border-border bg-surface text-text hover:bg-surface-muted",
                   )}
                 >
                   <NavIcon name={item.icon} className="size-4" />
@@ -45,8 +45,8 @@ export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-3 rounded-control px-3 py-2 font-semibold",
-                  active ? "bg-surface-muted text-text shadow-[inset_3px_0_0_var(--color-brand-gold)]" : "text-text hover:bg-surface-muted",
+                  "flex min-h-11 items-center gap-3 rounded-full px-4 py-2 font-semibold",
+                  active ? "bg-surface-muted text-text" : "text-text-secondary hover:bg-surface hover:text-text",
                 )}
               >
                 <NavIcon name={item.icon} />

@@ -3,50 +3,65 @@
 @import "@fontsource-variable/source-serif-4/index.css";
 
 /*
- * The Gathering · shared semantic design tokens.
- * Source of truth for the approved palette (mirrored in src/lib/theme/tokens.ts,
- * where contrast is verified by unit tests). Do not add a theme editor.
+ * The Gathering · shared design tokens (dark interface).
+ * Source of truth, mirrored in src/lib/theme/tokens.ts where contrast is
+ * verified by unit tests. Do not add a theme editor.
  *
- * Usage rules
- * - brand-gold (#AD8C53) is decorative: rules, dividers, icon accents. It is
- *   never used for small text or behind white text (contrast 2.9–3.2:1).
- * - primary (Deep Gold #80642F) is for buttons with white text and links.
- * - text-secondary is not used on surface-muted (4.1:1); use text there.
+ * Brand palette (approved; unchanged): gold #AD8C53, charcoal #363430,
+ * ivory #F7F4ED, sand #EAE3D5, deep gold #80642F, olive #52664D, clay #A14538.
+ *
+ * Usage rules on the dark interface
+ * - primary (brand gold) is the accent: links, active states, focus rings,
+ *   section actions. Never put gold text on surface-muted (4.4:1).
+ * - cta (ivory) is the main button fill, with charcoal text.
+ * - The logo and icon keep their original colours on an ivory plaque, because
+ *   the charcoal artwork would disappear on dark backgrounds.
  */
 @theme {
+  /* Approved brand palette */
   --color-brand-gold: #ad8c53;
   --color-brand-charcoal: #363430;
+  --color-ivory: #f7f4ed;
+  --color-sand: #eae3d5;
+  --color-deep-gold: #80642f;
+  --color-olive: #52664d;
+  --color-clay: #a14538;
 
-  --color-background: #f7f4ed;
-  --color-surface: #ffffff;
-  --color-surface-muted: #eae3d5;
+  /* Semantic tokens for the dark interface */
+  --color-background: #121110;
+  --color-surface: #22201e;
+  --color-surface-muted: #2e2c29;
 
-  --color-primary: #80642f;
-  --color-primary-hover: #6a5226;
-  --color-primary-soft: #f3ecdd;
-  --color-on-primary: #ffffff;
+  --color-primary: #ad8c53;
+  --color-primary-hover: #c4a46c;
+  --color-primary-soft: #2a261f;
+  --color-on-primary: #1c1b19;
 
-  --color-text: #363430;
-  --color-text-secondary: #716b61;
+  --color-cta: #f7f4ed;
+  --color-cta-hover: #eae3d5;
+  --color-on-cta: #1c1b19;
 
-  --color-border: #ddd5c6;
-  --color-border-strong: #8a8275;
+  --color-text: #f7f4ed;
+  --color-text-secondary: #b3ac9f;
 
-  --color-success: #52664d;
-  --color-success-soft: #e9eee6;
-  --color-danger: #a14538;
-  --color-danger-hover: #873a2f;
-  --color-danger-soft: #f7e9e6;
+  --color-border: #33312d;
+  --color-border-strong: #7f796e;
+
+  --color-success: #9db794;
+  --color-success-soft: #1d261c;
+  --color-danger: #e59484;
+  --color-danger-hover: #eeab9e;
+  --color-danger-soft: #2d1b18;
 
   --font-sans: "Source Sans 3 Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, "Times New Roman", serif;
 
-  --radius-control: 0.625rem;
-  --radius-card: 1rem;
+  --radius-control: 0.875rem;
+  --radius-card: 1.25rem;
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
@@ -81,8 +96,8 @@ h3 {
   top: -4rem;
   z-index: 100;
   padding: 0.75rem 1rem;
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--color-cta);
+  color: var(--color-on-cta);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-control);
   font-weight: 600;
@@ -101,8 +116,7 @@ h3 {
 }
 .prose-gathering h2,
 .prose-gathering h3 {
-  font-family: var(--font-serif);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
   margin-top: 1.4em;
 }
@@ -148,4 +162,16 @@ h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Horizontal card rails (announcements on Home). */
+.rail {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
 }

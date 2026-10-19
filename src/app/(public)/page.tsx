@@ -1,7 +1,7 @@
 import { CalendarClock, Mail, MapPin, Megaphone, Phone } from "lucide-react";
 import Link from "next/link";
 import { AnnouncementCard } from "@/components/announcements/announcement-card";
-import { FullLogo } from "@/components/brand/logo";
+import { LogoPlaque } from "@/components/brand/logo";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, SectionHeading } from "@/components/ui/card";
@@ -31,7 +31,7 @@ export default async function WelcomePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <section className="flex flex-col items-center py-10 text-center sm:py-14" aria-labelledby="welcome-heading">
-        <FullLogo src={settings.logoUrl} alt={settings.churchName} className="w-56 sm:w-72" priority />
+        <LogoPlaque src={settings.logoUrl} alt={settings.churchName} logoClassName="w-44 sm:w-56" priority />
         <h1 id="welcome-heading" className="sr-only">
           Welcome to {settings.churchName}
         </h1>

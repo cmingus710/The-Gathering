@@ -66,7 +66,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
                   aria-current={filter === f.key ? "page" : undefined}
                   className={cn(
                     "flex min-h-11 items-center rounded-full border px-4 font-semibold",
-                    filter === f.key ? "border-brand-charcoal bg-brand-charcoal text-background" : "border-border-strong bg-surface hover:bg-surface-muted",
+                    filter === f.key ? "border-text bg-text text-background" : "border-border-strong bg-surface hover:bg-surface-muted",
                   )}
                 >
                   {f.label}
@@ -106,7 +106,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
             const name = m.preferred_name || m.full_name || m.email;
             const isSelf = m.id === viewer.id;
             return (
-              <li key={m.id} className="rounded-card border border-border bg-surface p-4 sm:p-5">
+              <li key={m.id} className="rounded-card bg-surface p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link href={`/admin/members/${m.id}`} className="group inline-flex items-center gap-1 font-semibold hover:underline">

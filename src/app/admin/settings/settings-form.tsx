@@ -15,8 +15,8 @@ type Row = { key: number; label: string; day: string; time: string; location: st
 
 function Fieldset({ legend, children, description }: { legend: string; children: React.ReactNode; description?: string }) {
   return (
-    <fieldset className="space-y-5 rounded-card border border-border bg-surface p-5 sm:p-6">
-      <legend className="float-left mb-1 w-full font-serif text-xl font-semibold">{legend}</legend>
+    <fieldset className="space-y-5 rounded-card bg-surface p-5 sm:p-6">
+      <legend className="float-left mb-1 w-full text-xl font-bold">{legend}</legend>
       {description ? <p className="clear-both text-[0.95rem] text-text-secondary">{description}</p> : null}
       <div className="clear-both space-y-5">{children}</div>
     </fieldset>

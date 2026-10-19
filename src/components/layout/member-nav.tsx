@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { cn } from "@/components/ui/cn";
-import { UpcomingBadge } from "@/components/ui/badge";
+import { SoonPill } from "@/components/ui/badge";
 import { MEMBER_NAV, MOBILE_PRIMARY_KEYS, isActivePath, type NavItem } from "@/lib/navigation";
 import { NavIcon } from "./nav-icon";
 
@@ -14,8 +14,8 @@ const upcoming = MEMBER_NAV.filter((i): i is Extract<NavItem, { status: "upcomin
 
 function linkClass(active: boolean) {
   return cn(
-    "flex min-h-11 items-center gap-3 rounded-control px-3 py-2 font-semibold transition-colors",
-    active ? "bg-surface-muted text-text shadow-[inset_3px_0_0_var(--color-brand-gold)]" : "text-text hover:bg-surface-muted",
+    "flex min-h-11 items-center gap-3 rounded-full px-4 py-2 font-semibold transition-colors",
+    active ? "bg-surface-muted text-text" : "text-text-secondary hover:bg-surface hover:text-text",
   );
 }
 
@@ -53,16 +53,17 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
 function UpcomingList() {
   return (
     <section aria-labelledby="upcoming-heading">
-      <h2 id="upcoming-heading" className="px-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">
+      <h2 id="upcoming-heading" className="px-4 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">
         Coming later
       </h2>
       <ul className="mt-2 space-y-0.5">
         {upcoming.map((item) => (
-          <li key={item.key} className="flex min-h-10 items-center justify-between gap-2 px-3 text-text-secondary">
+          <li key={item.key} className="flex min-h-10 items-center justify-between gap-2 px-4 text-text-secondary">
             <span className="flex items-center gap-3">
               <NavIcon name={item.icon} />
               {item.label}
             </span>
+            <SoonPill />
             <span className="sr-only">(coming soon)</span>
           </li>
         ))}
@@ -83,22 +84,23 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
 
   const tab = (active: boolean) =>
     cn(
-      "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[0.8rem] font-semibold",
-      active ? "text-text" : "text-text-secondary hover:text-text",
+      "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[0.75rem] font-semibold transition-colors",
+      active ? "bg-surface-muted text-text" : "text-text-secondary hover:text-text",
     );
 
   return (
     <>
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <ul className="mx-auto flex max-w-lg">
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-full border border-border bg-surface/95 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur lg:hidden"
+      >
+        <ul className="flex gap-1">
           {primary.map((item) => {
             const active = isActivePath(pathname, item.href);
             return (
               <li key={item.key} className="flex flex-1">
                 <Link href={item.href} className={tab(active)} aria-current={active ? "page" : undefined}>
-                  <span className={cn("flex h-7 w-12 items-center justify-center rounded-full", active && "bg-surface-muted")}>
-                    <NavIcon name={item.icon} />
-                  </span>
+                  <NavIcon name={item.icon} className={cn("size-[22px]", active && "text-primary")} />
                   {item.label === "Announcements" ? "News" : item.label}
                 </Link>
               </li>
@@ -106,9 +108,7 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
           })}
           <li className="flex flex-1">
             <button type="button" className={tab(false)} aria-haspopup="dialog" onClick={() => dialogRef.current?.showModal()}>
-              <span className="flex h-7 w-12 items-center justify-center rounded-full">
-                <Ellipsis className="size-5" aria-hidden="true" />
-              </span>
+              <Ellipsis className="size-[22px]" aria-hidden="true" />
               More
             </button>
           </li>
@@ -118,14 +118,14 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
       <dialog
         ref={dialogRef}
         aria-labelledby="more-menu-title"
-        className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl bg-surface p-0 text-text backdrop:bg-brand-charcoal/50 lg:hidden"
+        className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-[1.75rem] border-t border-border bg-surface p-0 text-text backdrop:bg-black/60 lg:hidden"
         onClick={(e) => {
           if (e.target === dialogRef.current) dialogRef.current?.close();
         }}
       >
         <div className="px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 id="more-menu-title" className="font-serif text-xl font-semibold">
+            <h2 id="more-menu-title" className="text-xl font-bold">
               More
             </h2>
             <button
@@ -155,19 +155,17 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
             <li>{signOut}</li>
           </ul>
           <div className="mt-5 border-t border-border pt-4">
-            <h3 className="px-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Coming later</h3>
-            <ul className="mt-2 grid grid-cols-2 gap-1">
+            <h3 className="px-4 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">Coming later</h3>
+            <ul className="mt-2 space-y-2">
               {upcoming.map((item) => (
-                <li key={item.key} className="flex min-h-11 items-center gap-2 px-3 text-text-secondary">
-                  <NavIcon name={item.icon} className="size-[18px]" />
-                  {item.label}
+                <li key={item.key} className="flex min-h-12 items-center gap-3 rounded-card bg-surface-muted px-4 text-text">
+                  <NavIcon name={item.icon} className="size-5" />
+                  <span className="flex-1 font-semibold">{item.label}</span>
+                  <span className="rounded-md bg-background px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">Soon</span>
                   <span className="sr-only">(coming soon)</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-3 px-3">
-              <UpcomingBadge>These areas arrive in later phases</UpcomingBadge>
-            </div>
           </div>
         </div>
       </dialog>
