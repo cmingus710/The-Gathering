@@ -129,7 +129,27 @@ The Phase 2 database tests use only synthetic `example.test` accounts. They cove
 | Security advisor: only expected notices (definer functions that re-check capabilities; `guardianships` and `system_state` deliberately have no policies) | Reviewed |
 | Photo upload on the preview stored a processed WebP (38 KB) in the private bucket | Pass |
 
-Hosted UI walkthroughs with the two existing accounts are recorded in the next section once completed.
+After the owner ran `supabase/manual/2026-10-20-apply-pending.sql`, `household_leave()` is applied and the fresh-from-files schema matches hosted in all categories with nothing excluded (2026-10-19).
+
+### Hosted UI walkthrough (2026-10-19)
+
+Done by the owner in the preview (`dpl_6drS4hTuucx4jt6iPEyszt48J7Zg`, commit `4c62aca`) with the two existing accounts: A (super admin) and B (approved member, test data only). After each part, Claude checked the result in the database (flags and counts only, no personal values).
+
+| Check | Owner observed | Database check |
+| --- | --- | --- |
+| Ministry interests created by an admin, then selected by B | Pass | 2 interests created (audited `ministry_interest.created`); B has 2 selected |
+| B edits profile details | Pass | Details saved |
+| Directory search by name and by city; B's entry shows only the shared fields | Pass | Privacy flags saved |
+| Photo hidden by its owner: other member sees initials | Pass (A's photo, viewed by B) | A `show_photo` false, then restored |
+| Photo upload | Pass (tested 2026-10-18) | Processed WebP in the private bucket |
+| Household: invite, accept, both listed, shown on the directory entry, then B leaves | Pass | End state: B in no household, A's household has 1 member, no open invitations (joins and leaves aren't audited, so only the end state is visible) |
+| B opts out of the directory; A can't find B or open the old entry | Pass | B `directory_listed` false |
+| Admin correction of B's city | Pass | One `profile.admin_updated` entry by A on B, recording only `["city"]` |
+| Admin audit page shows the correction by field name | Pass | Same entry |
+
+During the first privacy pass, B's saved flags didn't match the intended clicks (first all off, later all on). The privacy form is the only writer of these flags. The owner retested and confirmed the form saves what is ticked.
+
+**Restored afterwards:** A has its original privacy choices. B is listed again and, by the owner's choice, shares all of its test details. The two test ministry interests stay active.
 
 ### Known limitations (Phase 2)
 
