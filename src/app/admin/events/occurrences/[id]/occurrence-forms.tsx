@@ -2,6 +2,7 @@
 
 import { UserPlus } from "lucide-react";
 import { useActionState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CheckboxField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -51,16 +52,33 @@ export function OccurrenceEditForm({ id, allDay, initial }: { id: string; allDay
 
 export function OccurrenceStatusForm({ id, canceled }: { id: string; canceled: boolean }) {
   const [state, action] = useActionState(occurrenceStatusAction, initialFormState);
+  if (canceled) {
+    return (
+      <form action={action} className="space-y-3">
+        <FormMessage state={state} />
+        <input type="hidden" name="occurrenceId" value={id} />
+        <input type="hidden" name="op" value="restore" />
+        <SubmitButton size="sm" variant="secondary" pendingText="Saving…">
+          Restore this date
+        </SubmitButton>
+      </form>
+    );
+  }
   return (
-    <form action={action} className="space-y-3">
+    <div className="space-y-3">
       <FormMessage state={state} />
-      <input type="hidden" name="occurrenceId" value={id} />
-      <input type="hidden" name="op" value={canceled ? "restore" : "cancel"} />
-      {!canceled ? <TextField label="Reason (shown to members)" name="reason" optional maxLength={500} /> : null}
-      <SubmitButton size="sm" variant={canceled ? "secondary" : "danger-outline"} pendingText="Saving…">
-        {canceled ? "Restore this date" : "Cancel this date only"}
-      </SubmitButton>
-    </form>
+      <ConfirmDialog
+        trigger="Cancel this date only"
+        title="Cancel this date?"
+        confirmLabel="Cancel date"
+        formAction={action}
+        hidden={{ occurrenceId: id, op: "cancel" }}
+        fields={<TextField label="Reason (shown to members)" name="reason" optional maxLength={500} />}
+        dismissLabel="Keep this date"
+      >
+        Other dates are unaffected. Everyone registered or waitlisted for this date is emailed, and calendar feeds show the cancellation.
+      </ConfirmDialog>
+    </div>
   );
 }
 

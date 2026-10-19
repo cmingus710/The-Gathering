@@ -58,18 +58,17 @@ export function StatusControls({ id, status, timezone, hasRegistrations }: { id:
 
 function CancelDialog({ action, hidden, hasRegistrations }: { action: (fd: FormData) => void; hidden: Record<string, string>; hasRegistrations: boolean }) {
   return (
-    <form action={action} className="w-full space-y-2 rounded-card border border-danger/40 p-4">
-      <input type="hidden" name="id" value={hidden.id} />
-      <input type="hidden" name="timezone" value={hidden.timezone} />
-      <input type="hidden" name="action" value="cancel" />
-      <TextField label="Reason for canceling (shown to members)" name="reason" optional maxLength={500} />
-      <p className="text-sm text-text-secondary">
-        The event stays on the calendar marked canceled, and calendar feeds show the cancellation.
-        {hasRegistrations ? " Everyone registered or waitlisted for upcoming dates is emailed." : ""}
-      </p>
-      <SubmitButton variant="danger-outline" pendingText="Canceling…">
-        Cancel this event
-      </SubmitButton>
-    </form>
+    <ConfirmDialog
+      trigger="Cancel this event"
+      title="Cancel this event?"
+      confirmLabel="Cancel event"
+      formAction={action}
+      hidden={{ ...hidden, action: "cancel" }}
+      fields={<TextField label="Reason (shown to members)" name="reason" optional maxLength={500} />}
+      dismissLabel="Keep the event"
+    >
+      The event stays on the calendar marked canceled, and calendar feeds show the cancellation.
+      {hasRegistrations ? " Everyone registered or waitlisted for upcoming dates is emailed." : ""} This can&apos;t be undone.
+    </ConfirmDialog>
   );
 }

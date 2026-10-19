@@ -16,6 +16,8 @@ export function ConfirmDialog({
   confirmLabel,
   formAction,
   hidden,
+  fields,
+  dismissLabel = "Cancel",
 }: {
   trigger: ReactNode;
   triggerVariant?: ButtonVariant;
@@ -24,6 +26,10 @@ export function ConfirmDialog({
   confirmLabel: string;
   formAction: (formData: FormData) => void;
   hidden?: Record<string, string>;
+  /** Inputs submitted with the confirmation (e.g. a reason). */
+  fields?: ReactNode;
+  /** Label for the button that closes the dialog without acting. */
+  dismissLabel?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -57,8 +63,9 @@ export function ConfirmDialog({
           {Object.entries(hidden ?? {}).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
+          {fields ? <div className="w-full">{fields}</div> : null}
           <Button variant="secondary" size="sm" onClick={() => ref.current?.close()} autoFocus>
-            Cancel
+            {dismissLabel}
           </Button>
           <Button type="submit" variant="danger" size="sm">
             {confirmLabel}
