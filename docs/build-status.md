@@ -1,6 +1,79 @@
 # Build status
 
-Last updated: 2026-10-19 · Phase 2 branch `phase-2/member-directory`
+Last updated: 2026-10-20 · Phase 3 branch `phase-3/giving-contributions` (stacked on Phase 2, PR #5)
+
+## Phase 3: giving and contributions (Stripe test mode)
+
+### Summary
+
+Phase 3 code is complete on `phase-3/giving-contributions`. It depends on Phase 2 (PR #5, not yet merged), which this branch includes. Production builds stay paused, and Stripe is test mode only.
+
+**Hosted end-to-end payment testing has not been done yet.** It needs the owner's Stripe test credentials and the database script described below. Everything under "Verified locally" uses the real database functions with an in-memory Stripe stand-in, not live Stripe.
+
+### Verified locally (no hosted services)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` / `npm run typecheck` (including Stripe SDK 23 types, API `2026-09-30.endive`) | Pass |
+| `npm run build` (17 new routes) | Pass |
+| Unit tests: money parsing, CSV formula-injection protection, live-key refusal, email wording ([TEST] marking, no tax claims, claim code only for guests), statement PDF (draft watermark, multi-page, font fallback), webhook signature rejection | Pass |
+| DB + processor tests (`tests/db/giving.test.ts`): 31 scenarios against real migrations on PostgreSQL 16 through the signed ingest RPC | Pass |
+| All tests | 243 pass |
+| Playwright: 64 tests, including `/give` honest when unconfigured, thank-you page never claims success, webhook 503 when unconfigured, new routes protected | Pass |
+| Operator SQL script rehearsed against a copy of the hosted state; fingerprint equals fresh-from-files (17/17) | Pass |
+
+The giving DB and processor tests cover:
+- **Ingest security:** the ingest path refuses calls when unconfigured, unsigned, mis-signed, stale, or signed for another operation. The API roles have no access to `giving.*`.
+- **Checkout preparation:** amount and fund validation, and per-form idempotency.
+- **One-time gifts:**
+  - Recorded only from provider-confirmed state; reaching the thank-you page alone stays "processing".
+  - Delayed confirmation, failed payments (no acknowledgment), and abandoned checkouts (expired, no gift).
+  - Out-of-order events (charge before checkout), duplicates, and live-mode events (ignored).
+- **Fees:** pending, then known; never estimated.
+- **Recurring gifts:**
+  - Commitments are separate from payments.
+  - Invoices arriving before the subscription, renewals, and duplicate renewals.
+  - A failed renewal sends one notice, then recovers.
+  - An amount change affects future gifts only, and a fund rename doesn't rewrite history.
+  - Cancellation sends one email; weekly guest gifts carry a claim reference.
+- **Refunds and disputes:**
+  - Partial and full refunds, including ones made outside the app; the original payment and its fee stay intact.
+  - Disputes through to lost.
+- **Email:** a failed send is retried without duplicating, and test mode suppresses recipients not on the allowlist.
+- **Members:** see only their own records, without fees or emails.
+- **Guest claims:** a guest gift is never attached by email alone. It needs the emailed reference plus a matching verified email, and attempts are rate-limited.
+- **Finance access:**
+  - Denied to members, content editors, membership admins, and super admins without a finance role.
+  - A finance viewer can't export or record; grant and revoke are audited, and revocation and suspension take effect immediately.
+- **Manual gifts:** idempotent; corrections and reversals keep history; the audit has no amounts or notes.
+- **Refund checks:** capability and remaining balance are verified before Stripe is called.
+- **Totals and statements:** totals are consistent; statement year boundaries follow the church time zone, and reversed gifts are excluded.
+- **Reconciliation:** repairs a missed renewal without duplicates.
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| `20261020000100_giving_schema` applied with repo version | Applied |
+| `20261020000200` partly applied; remainder, plus `000300` and Phase 2 `household_leave()`, in `supabase/manual/2026-10-20-apply-pending.sql` | **Owner to run** |
+| Preview env: `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | Set |
+| Preview env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | **Owner to set** (see giving-setup.md) |
+| Webhook hostname `giving-webhooks.gathering.church` serving only the webhook | See below |
+| End-to-end Stripe test payments, webhooks, refunds, portal, emails | **Not yet run** (needs the credentials above) |
+
+### Known limitations (Phase 3)
+
+- **Test mode only.** Finance views show test-mode records. Release needs a reviewed migration plus live credentials (giving-setup.md).
+- **Statements stay drafts** (watermarked, not downloadable by members) until the church enters and approves its legal name, address, tax ID, and wording.
+- **Recurring gifts can't be paused or resumed.** Cancellation is immediate.
+- **One fund per gift.** USD only.
+- **Statement PDFs use the standard Helvetica font.** Characters outside Western European scripts are shown as "?".
+- **Rate limits are fixed windows:** 10 checkout attempts per 15 minutes per hashed IP for guests (20 for signed-in accounts), and 5 gift-claim attempts per hour.
+- **PayPal and Venmo aren't implemented.** The extension point is documented; no buttons are shown.
+
+---
+
+# Phase 2 build status (historical)
 
 ## Phase 2: member directory, profiles, privacy, households
 

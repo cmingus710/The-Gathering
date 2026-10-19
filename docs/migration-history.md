@@ -92,6 +92,13 @@ Apply new migrations with `supabase db push` (or the SQL editor followed by `sup
 The four Phase 2 migrations were applied through the connector's `execute_sql`, each in a single statement batch ending with `insert into supabase_migrations.schema_migrations (version, name, created_by) values (<repo version>, <name>, 'phase-2')`. This keeps the repository version numbers. `apply_migration` was not used.
 
 - `20261019000100_member_profiles`, `20261019000200_directory`, `20261019000400_profile_photos`: applied whole.
-- `20261019000300_households`: everything except `household_leave()` was applied through the connector, which still refuses statements containing `delete from`. The owner ran the remaining function, its grants, and the history row in the SQL editor.
+- `20261019000300_households`: everything except `household_leave()` was applied through the connector, which still refuses statements containing `delete from`. The remaining function and its history row are in `supabase/manual/2026-10-20-apply-pending.sql`, which the owner runs in the SQL editor.
 
 **Check:** the schema fingerprint (`supabase/tests/schema-fingerprint.sql`, which now also covers the `profile-photos` bucket) matched a fresh build from the files in all 17 categories.
+
+## Phase 3 (2026-10-20)
+
+- `20261020000100_giving_schema` was applied through `execute_sql` with its history row.
+- `20261020000200_giving_ingest` was partly applied: everything before `op_sync_subscription`, plus `find_payment` and `op_sync_charge`. The connector's request filter refused several of the remaining function bodies; nothing partial was committed, because each batch is one transaction.
+- The rest of `000200`, all of `000300`, and the pending Phase 2 `household_leave()` are in **`supabase/manual/2026-10-20-apply-pending.sql`**. The owner runs it once in the SQL editor. It copies the migration files verbatim and records all three history rows in one transaction.
+- **Rehearsal:** the script was run locally against a database rebuilt to the hosted project's exact partial state. The result matched a fresh build from the migration files in all 17 schema fingerprint categories.

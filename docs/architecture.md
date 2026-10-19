@@ -53,11 +53,12 @@ Two independent axes:
 | Super administrator | all (implicit) | yes |
 | Membership administrator | `members.view`, `members.manage` | yes |
 | Content editor | `announcements.manage` | yes |
-| Finance administrator | `finance.view`, `finance.manage` (reserved) | Phase 3 |
+| Finance administrator | `finance.view`, `.record`, `.export`, `.manage`, `.refund` | yes (explicit only) |
+| Finance viewer | `finance.view` | yes (explicit only) |
 | Group leader | `groups.lead` (reserved) | Phase 5 |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
-`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only.
+`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*` implicitly: finance access is granted only through a finance role (which a super administrator can assign, audited).
 
 ### Enforcement layers (deny by default)
 
@@ -132,6 +133,44 @@ Hidden, pending, suspended, and unknown members all produce the same "not found"
 - A super administrator's profile can be edited only by a super administrator.
 - Ministry-interest options are managed at **Admin → Ministry interests** and are archived rather than deleted. Catalog changes are audited.
 - Content editors still have no access to other members' profiles or details.
+
+## Giving (Phase 3)
+
+Full details: [giving-setup.md](giving-setup.md) (configuration, webhook, and release) and [finance-guide.md](finance-guide.md) (operations).
+
+- **Payments:**
+  - Stripe-hosted Checkout handles one-time, weekly, and monthly gifts, in USD integer cents.
+  - Cards plus Apple Pay and Google Pay are offered through Stripe's dynamic payment methods.
+  - Each fund has a Stripe Product, and prices are created inline.
+- **Private storage:** all records live in the `giving` schema, which the Data API doesn't expose and the API roles can't use. Access goes through functions:
+  - `giving_public_config()` (active funds and limits);
+  - `my_giving*()` (own records, any membership state);
+  - `finance_*()` (explicit finance capabilities);
+  - `giving_ingest()` (server only, HMAC-signed with `GIVING_INGEST_SECRET`; no service-role key in the app).
+- **Records:**
+  - `intents`: what the donor chose before checkout.
+  - `commitments`: recurring subscriptions.
+  - `payments`: each actual payment or cash/check gift; only `succeeded` counts. The fund name is snapshotted, so history never changes.
+  - `refunds` and `disputes` reference the original payment, which is never altered.
+  - `stripe_events` is the webhook ledger, and `email_outbox` tracks delivery separately from payment state.
+- **Webhook:**
+  - Signature verified on the raw body.
+  - Deduplicated by event id.
+  - Objects are re-read from Stripe before each write, so delivery order and duplicates don't matter.
+  - Status is monotonic (a confirmed payment never moves back).
+  - Fees come from the balance transaction or show as pending.
+  - It's served on a dedicated public hostname that answers only that path.
+- **Trusted mappings:** the Stripe customer ↔ account mapping is written only by the server. User-supplied customer ids are never accepted. Guest gifts attach to an account only through a reference code emailed to the guest plus a matching verified sign-in email, or through a finance user's audited link.
+- **Finance access:**
+  - `finance.view`, `.record`, `.export`, `.manage`, and `.refund` come only from explicit roles: `finance_admin` or `finance_viewer`.
+  - `has_capability()` excludes `finance.*` from the implicit super-admin grant.
+  - Capabilities are checked on every call, so revocation is immediate.
+- **Statements:** PDFs (pdf-lib, with the church logo) use church-time-zone year boundaries. They stay watermarked drafts, and members can't download them, until finance enters and approves the organization identity and wording.
+- **Safety rails:**
+  - Live Stripe keys are refused by the app, and live events by the database.
+  - Test emails are marked [TEST] and limited to an allowlist.
+  - Checkout creation is rate-limited by hashed IP or account.
+  - Return URLs come only from configuration.
 
 ## Announcements
 

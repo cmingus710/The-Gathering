@@ -12,6 +12,8 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `RESEND_API_KEY` | Vercel (server) | Optional | App notifications (membership approved). Without it, approvals still work and admins are told no email was sent. |
 | `EMAIL_FROM` | Vercel (server) | With Resend | e.g. `The Gathering <hello@your-domain.org>`, on a domain verified in Resend |
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Vercel Preview (server, sensitive) | For giving | Stripe **test** key, webhook signing secret, and the shared ingest secret. See [giving-setup.md](giving-setup.md). Live keys are refused. |
+| `GIVING_EMAIL_ALLOWLIST`, `GIVING_WEBHOOK_HOST` | Vercel Preview | For giving | Test-email allowlist; dedicated webhook hostname |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
 ## 2. Supabase
@@ -29,6 +31,11 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 7. `20261019000200_directory.sql` (Phase 2)
 8. `20261019000300_households.sql` (Phase 2)
 9. `20261019000400_profile_photos.sql` (Phase 2)
+10. `20261020000100_giving_schema.sql` (Phase 3)
+11. `20261020000200_giving_ingest.sql` (Phase 3)
+12. `20261020000300_giving_access.sql` (Phase 3)
+
+Giving also needs the ingest secret stored in `giving.secrets`, plus Stripe test keys and the webhook. See [giving-setup.md](giving-setup.md).
 
 **Project `ymuiutwdnhxdqsetnwkt`:** all nine migrations are applied, and the history matches the repository versions; see [migration-history.md](migration-history.md). Phase 2 was applied through the SQL connector with the repository version numbers recorded, plus one snippet (the `household_leave` function, which contains `delete from`) run in the SQL editor.
 
