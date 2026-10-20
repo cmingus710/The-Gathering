@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { brand, contrastRatio, palettes, type ThemeName } from "./tokens";
+import { authBrand, authPalette as a, brand, contrastRatio, palettes, type ThemeName } from "./tokens";
 
 const css = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8").toLowerCase();
 const toCss = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
@@ -106,5 +106,53 @@ describe("design tokens", () => {
 
   it("keeps the logo plaque legible: charcoal artwork on ivory", () => {
     expect(contrastRatio(brand.charcoal, brand.ivory)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  describe("sign-in panel (.auth-theme)", () => {
+    const block = css.slice(css.indexOf(".auth-theme {"), css.indexOf("}", css.indexOf(".auth-theme {")));
+
+    it("mirrors the CSS block exactly and uses the approved mockup colours", () => {
+      for (const [key, hex] of Object.entries(a)) expect(block, key).toContain(`--color-${toCss(key)}: ${hex.toLowerCase()};`);
+      expect(css).toContain("--color-warm-ivory: #f6f1e6;");
+      expect(css).toContain("--color-plum: #352936;");
+      expect(css).toContain("--color-antique-gold: #b89a60;");
+      expect(a.background).toBe(authBrand.warmIvory);
+      expect(a.cta).toBe(authBrand.plum);
+    });
+
+    const authText: Array<[string, string, string]> = [
+      ["text on ivory", a.text, a.background],
+      ["text on input surface", a.text, a.surface],
+      ["plum headings and links on ivory", a.primary, a.background],
+      ["plum links on surface-muted", a.primary, a.surfaceMuted],
+      ["secondary text on ivory", a.textSecondary, a.background],
+      ["placeholder on input surface", a.textSecondary, a.surface],
+      ["secondary text on surface-muted", a.textSecondary, a.surfaceMuted],
+      ["Sign In button text", a.onCta, a.cta],
+      ["Sign In button hover text", a.onCta, a.ctaHover],
+      ["plum on primary-soft", a.primary, a.primarySoft],
+      ["success on success-soft", a.success, a.successSoft],
+      ["danger on ivory", a.danger, a.background],
+      ["danger on danger-soft", a.danger, a.dangerSoft],
+      ["danger button text", a.onDanger, a.danger],
+      ["hero text on plum scrim", authBrand.warmIvory, authBrand.plum],
+    ];
+    it.each(authText)("%s meets 4.5:1", (_label, fg, bg) => {
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    const authUi: Array<[string, string, string]> = [
+      ["input border on surface", a.borderStrong, a.surface],
+      ["input border on ivory", a.borderStrong, a.background],
+      ["focus ring on ivory", a.primary, a.background],
+      ["password toggle icon on surface", a.textSecondary, a.surface],
+    ];
+    it.each(authUi)("%s meets 3:1", (_label, fg, bg) => {
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(3);
+    });
+
+    it("documents why antique gold is decorative only on ivory", () => {
+      expect(contrastRatio(authBrand.antiqueGold, a.background)).toBeLessThan(3);
+    });
   });
 });

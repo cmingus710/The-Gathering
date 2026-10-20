@@ -69,20 +69,32 @@ export function TextField({
   error,
   optional,
   className,
+  trailing,
   ...input
-}: FieldChrome & Omit<ComponentProps<"input">, "name" | "id">) {
+}: FieldChrome & { trailing?: ReactNode } & Omit<ComponentProps<"input">, "name" | "id">) {
   const fieldId = id ?? `field-${name}`;
   const message = firstError(error);
+  const field = (
+    <input
+      id={fieldId}
+      name={name}
+      aria-invalid={message ? true : undefined}
+      aria-describedby={describedBy(fieldId, hint, message)}
+      className={cn(control, message ? "border-danger" : "border-border-strong", trailing ? "pr-14" : null)}
+      {...input}
+    />
+  );
   return (
     <Chrome id={fieldId} label={label} hint={hint} error={error} optional={optional} className={className}>
-      <input
-        id={fieldId}
-        name={name}
-        aria-invalid={message ? true : undefined}
-        aria-describedby={describedBy(fieldId, hint, message)}
-        className={cn(control, message ? "border-danger" : "border-border-strong")}
-        {...input}
-      />
+      {/* A trailing control (e.g. a show-password button) sits inside the input's right edge. */}
+      {trailing ? (
+        <div className="relative">
+          {field}
+          {trailing}
+        </div>
+      ) : (
+        field
+      )}
     </Chrome>
   );
 }

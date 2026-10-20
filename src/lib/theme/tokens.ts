@@ -73,6 +73,38 @@ export const palettes = {
 /** Browser chrome colour (theme-color) per theme. */
 export const THEME_COLOR: Record<ThemeName, string> = { light: palettes.light.background, dark: palettes.dark.background };
 
+/** Sign-in pages: the light panel scoped by `.auth-theme` in globals.css. */
+export const authBrand = {
+  warmIvory: "#F6F1E6",
+  plum: "#352936",
+  antiqueGold: "#B89A60",
+} as const;
+
+export const authPalette = {
+  background: "#F6F1E6",
+  surface: "#FCFAF5",
+  surfaceMuted: "#EDE6D8",
+  surfaceRaised: "#FCFAF5",
+  primary: "#352936",
+  primaryHover: "#4A3A4B",
+  primarySoft: "#ECE3E3",
+  onPrimary: "#F6F1E6",
+  accent: "#B89A60",
+  cta: "#352936",
+  ctaHover: "#4A3A4B",
+  onCta: "#F6F1E6",
+  text: "#2B2230",
+  textSecondary: "#5E5361",
+  border: "#E0D6C4",
+  borderStrong: "#8A7E86",
+  success: "#3F5A3A",
+  successSoft: "#E5ECDF",
+  danger: "#9A3324",
+  dangerHover: "#7F2A1E",
+  dangerSoft: "#F6E3DD",
+  onDanger: "#F6F1E6",
+} as const;
+
 function luminance(hex: string): number {
   const channels = [0, 2, 4].map((i) => parseInt(hex.replace("#", "").slice(i, i + 2), 16) / 255);
   const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
