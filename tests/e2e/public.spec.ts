@@ -206,7 +206,7 @@ for (const path of [
     const response = await page.goto(path);
     await expect(page).toHaveURL(new RegExp(`/sign-in\\?next=${encodeURIComponent(path).replace(/%2F/g, "(%2F|/)")}`));
     expect(response?.headers()["cache-control"] ?? "").not.toContain("public");
-    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to The Gathering" })).toBeVisible();
   });
 }
 
@@ -307,7 +307,7 @@ test("Stripe webhook refuses requests when not configured", async ({ request }) 
 test("sign-in shows accessible field errors", async ({ page }) => {
   await page.goto("/sign-in");
   await page.getByRole("button", { name: "Sign in" }).click();
-  const email = page.getByLabel("Email");
+  const email = page.getByLabel("Email address");
   await expect(email).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByText("Enter your email address.")).toBeVisible();
   const describedBy = await email.getAttribute("aria-describedby");
@@ -333,10 +333,55 @@ test("without a configured service, sign-in reports it honestly", async ({ page 
   await page.goto("/sign-in");
   await expect(page.getByText("Sign-in isn't available yet")).toBeVisible();
   await page.getByLabel("Email").fill("person@example.test");
-  await page.getByLabel("Password").fill("whatever-123");
+  await page.getByLabel("Password", { exact: true }).fill("whatever-123");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "temporarily unavailable" })).toBeVisible();
   await expect(page).toHaveURL(/\/sign-in/);
+});
+
+test("sign-in page matches the approved layout and stays usable", async ({ page }, info) => {
+  await page.goto("/sign-in");
+  await expect(page.getByRole("heading", { level: 1, name: "Welcome to The Gathering" })).toBeVisible();
+  await expect(page.getByText("A place to belong.")).toBeVisible();
+  await expect(page.getByText("Faith. Fellowship. Life together.")).toBeVisible();
+  const email = page.getByLabel("Email address");
+  const password = page.getByLabel("Password", { exact: true });
+  await expect(email).toHaveAttribute("autocomplete", "email");
+  await expect(password).toHaveAttribute("autocomplete", "current-password");
+  await expect(page.getByRole("link", { name: "Forgot password?" })).toHaveAttribute("href", "/forgot-password");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", "/sign-up");
+
+  // The logo is never stretched.
+  const logo = page.getByRole("img", { name: "The Gathering" }).first();
+  const ratio = await logo.evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.getBoundingClientRect().height);
+  expect(ratio).toBeCloseTo(1200 / 1116, 1);
+
+  // Inputs are at least 16px (no iOS zoom) and the form is near the top on phones.
+  expect(await email.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+  if (info.project.name === "mobile") {
+    const box = await email.boundingBox();
+    expect(box!.y).toBeLessThan(page.viewportSize()!.height * 0.75);
+  }
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(overflow).toBe(false);
+});
+
+test("password visibility toggle is an accessible button", async ({ page }) => {
+  await page.goto("/sign-in");
+  const password = page.getByLabel("Password", { exact: true });
+  const toggle = page.getByRole("button", { name: "Show password" });
+  await password.fill("secret-value-1");
+  await expect(password).toHaveAttribute("type", "password");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(password).toHaveAttribute("type", "text");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(password).toHaveValue("secret-value-1");
+  // Toggling never submits the form.
+  await expect(page.getByText("Please correct the highlighted fields.")).toHaveCount(0);
+  await toggle.click();
+  await expect(password).toHaveAttribute("type", "password");
 });
 
 test("keyboard users can skip to content and see focus", async ({ page }) => {
