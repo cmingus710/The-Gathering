@@ -25,6 +25,8 @@ src/
                      (public events open to visitors)
     (member)/community, groups, messages, notifications   Phase 5 (approved members)
     admin/community, admin/moderation                     Phase 5 administration
+    (member)/prayer        prayer requests, care requests, ways to help, team workspace (Phase 6)
+    admin/prayer           prayer reports, settings, sensitive-access log (Phase 6)
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -62,10 +64,15 @@ Two independent axes:
 | Event coordinator | `events.manage` | yes |
 | Community administrator | `community.manage` | yes (Phase 5) |
 | Community moderator | `community.moderate` | yes (Phase 5) |
+| Prayer team member | `prayer.confidential` | yes, explicit only (Phase 6) |
+| Prayer moderator | `prayer.moderate` | yes, explicit only (Phase 6) |
+| Prayer and care lead | `prayer.confidential`, `.moderate`, `.identity` | yes, explicit only (Phase 6) |
+| Care coordinator | `care.coordinate` | yes, explicit only (Phase 6) |
+| Care team lead | `care.coordinate`, `care.assign` | yes, explicit only (Phase 6) |
 | Group leader | `groups.lead` (reserved; leadership is per group, see Phase 5) | no |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
-`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*` implicitly: finance access is granted only through a finance role (which a super administrator can assign, audited).
+`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, or `care.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
 
 ### Enforcement layers (deny by default)
 
@@ -280,6 +287,55 @@ Realtime uses one **private** Broadcast topic per member, `member:<id>`. The RLS
 ### Caching and drafts
 
 Community pages and `/api/community/*` are `private, no-store`, and listed in the proxy's protected prefixes. The service worker never caches them. Drafts live only in component state (controlled inputs), so they survive failed saves but are never written to browser storage. Composers send an idempotency key so retries can't duplicate posts or messages.
+
+## Prayer and care (Phase 6)
+
+Guides: [prayer-care-guide.md](prayer-care-guide.md) (administration and permission matrix), [prayer-privacy-guide.md](prayer-privacy-guide.md) (members), [prayer-retention.md](prayer-retention.md).
+
+### Storage and access
+
+A private `prayer` schema (no Data API exposure, no privileges for `anon`/`authenticated`) reached only through `SECURITY DEFINER` functions named `prayer_*` and `care_*`. Every one rechecks the caller on each call.
+
+| Area | Tables |
+| --- | --- |
+| Requests | `requests` (audience `church`/`group`/`team`/`private`, status `open`/`answered`/`closed`/`archived`, `anonymous`, author comment switch, moderator lock, hidden marker), `updates`, `comments`, `prayers` (one per member), `follows` |
+| Moderation | `reports` (reported item only, evidence snapshot), `moderation_log`, `access_log` (identity lookups and sensitive views, references and reasons only) |
+| Care | `care_requests`, `care_messages` (requester ↔ team), `care_notes` (internal), `care_activity` (actions only), `care_opportunities`, `care_signups` |
+| Settings | `settings` (member guidance, retention policy; retention off by default) |
+
+**The read rule** (`prayer.can_read`): the author while approved; anyone else only if the request isn't archived or hidden and they are in its current audience (`church`: approved adult; `group`: `community.group_member`; `team`: holds `prayer.confidential`; `private`: nobody). Lists, counts, filters, search, details, comments, updates, notifications (in app, email, push), and reports all apply it. Nothing hidden is sent to the browser.
+
+**Capabilities** `prayer.confidential`, `prayer.moderate`, `prayer.identity`, `care.coordinate`, `care.assign` come only from five explicit roles. `has_capability()` now excludes `prayer.%` and `care.%` from the implicit super-administrator grant (as it excludes `finance.%`); a super administrator can assign the roles, audited. `prayer.holds(profile, capability)` checks someone else's capability (for notifications and assignment). Matrix: [prayer-care-guide.md](prayer-care-guide.md#permission-matrix).
+
+### Audience changes
+
+`prayer.is_narrowing(old, new)` decides: a change to `private`, from `church`, or to the same audience narrows and applies at once; anything else (including publishing a draft and restoring from the archive) needs `p_confirm` equal to the new audience, which the composer's confirmation dialog supplies. After any change the function removes follows by people who can no longer read and drops their unread notices and queued email/push (`prayer.after_access_change`, `prayer.purge_notices`).
+
+**Earlier comments and updates** record the audience they were written for (`posted_audience`, `posted_group`). `prayer.sees_item` shows one only if the reader can read the request now **and** is the request's author, the item's author, or in that original audience. Narrowing therefore applies immediately, and widening never exposes earlier items; readers who can't see some are told only that earlier items exist.
+
+### Anonymous display
+
+Responses never include profile ids except the caller's own "mine" flags. Anonymous requests show "Anonymous"; the requester's updates and anonymous comments show "The requester". A named comment by the requester of an anonymous request shows the name without the "Requester" label (after a warning in the composer). Prayer and care notifications store no actor, so lists, email, push, and Realtime can't reveal who acted; Realtime carries only `{kind}`. No avatars, photos, or profile links appear anywhere in prayer. Report evidence labels anonymous authors "Anonymous". `prayer_identity_lookup` (holders of `prayer.identity`, scoped to requests they can read or have an open report about, reason required) returns the display name and is recorded in `access_log` and `audit_log`.
+
+### Moderation
+
+Prayer reports are separate from community reports, so community moderators never see them. `prayer.can_review`: `prayer.moderate`, not the reporter or reported person, and team-audience reports also need `prayer.confidential`. Actions (hide/restore request or comment, lock/unlock comments) need a reviewable open report about that request, or a request the moderator is in the audience of; a report never opens other requests or groups. Group leaders have no prayer moderation.
+
+### Care
+
+Care requests are private to the requester and `care.coordinate` holders. Coordinators act on unassigned requests and their own; `care.assign` holders assign and read all internal notes; others see notes only when assigned. The team view shows the requester's phone or sign-in email only when they chose that contact method. Activity rows hold actions and state changes, never text. Opportunities have a generic listing (shown to the chosen audience: church, one group, or coordinators), plus logistics and the requester's first name shown only to accepted volunteers and only while `care_requests.share_consent` holds (checked at read time). Publishing is refused when the opportunity carries those details without consent, and requires an explicit confirmation after the preview.
+
+### Notifications and scheduling
+
+Phase 6 extends the Phase 5 notification table and delivery (new nullable references and categories `prayer` and `care`; `prayer_moderation` joins `moderation`). See [notifications.md](notifications.md). Email and push for prayer and care use generic text and link to `/notifications/open/<id>`. Follow-up reminders are queued by `prayer.tick()`, which `community.tick()` calls under its advisory lock, so the existing `pg_cron` job and single designated deployment remain the only scheduler; a per-request "notified on" date keeps reminders to one per date.
+
+### Losing access
+
+Reads are always rechecked. Triggers on group membership end, membership status change, and role removal also remove stale follows and unassign care coordinators who lost `care.coordinate` (`prayer.reconcile_access`).
+
+### Caching, logging, and drafts
+
+`/prayer` is a protected prefix (`private, no-store`), pages use a generic document title (never a request title), and the service worker caches no pages. Search is a POST Server Action, so search words never appear in URLs or request logs. Composers keep drafts in component state only; failures keep the text. Server errors shown to members are generic; actions log no request content. Youth participation stays disabled (approved adult accounts only).
 
 ## Announcements
 

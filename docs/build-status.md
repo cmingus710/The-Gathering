@@ -1,6 +1,92 @@
 # Build status
 
-Last updated: 2026-10-22 · Phase 5 branch `phase-5/community-messaging` (stacked on Phase 4, PR #7, which includes Phases 2 and 3, PRs #5 and #6)
+Last updated: 2026-10-24 · Phase 6 branch `phase-6/prayer-care` (also pushed as `claude/phase-6-prayer-care-fxuuce`), stacked on the unmerged home redesign (`claude/brave-knuth-s19gty`, no PR yet), design PR #9, and Phases 2–5 (PRs #5–#8)
+
+## Phase 6: prayer requests and care coordination
+
+### Summary
+
+Phase 6 code is complete. It starts from the newest integrated work: the home redesign branch `claude/brave-knuth-s19gty` (homepage redesign, "Coming up" banners, and the uploaded custom icons from `main`), which already contains design PR #9 and Phases 2–5. The two later Phase 4 documentation commits (`8baa825`, `0c5e0d6`) that Phase 5 had missed were merged in, so nothing is duplicated or lost. Because none of those PRs is merged, the Phase 6 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused (the `main` deploys show Canceled); giving stays in Stripe test mode.
+
+Preview: `https://the-gathering-d3cgv8af1-paint-by-number.vercel.app` (deployment `dpl_7ZVvAkGTE4eqE2d5XoZ8TjGPFNUM`, commit `b5aee08`, Ready); branch alias `https://the-gathering-git-phase-6-prayer-care-paint-by-number.vercel.app` once the branch builds.
+
+**The hosted database is not yet migrated for Phase 6.** Run `supabase/manual/2026-10-24-apply-prayer-1.sql` … `-4.sql` in the SQL editor (see [migration-history.md](migration-history.md#phase-6-2026-10-24)). Until then the preview is safe: Prayer pages say they can't load, the notification settings show only the Phase 5 categories, and nothing else changes.
+
+Guides: [prayer-care-guide.md](prayer-care-guide.md) (administration and permission matrix), [prayer-privacy-guide.md](prayer-privacy-guide.md) (members), [prayer-retention.md](prayer-retention.md). Design: [architecture.md](architecture.md#prayer-and-care-phase-6).
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build (all `/prayer` and `/admin/prayer` routes dynamic), **461 Vitest tests** (37 files, run serially; 25 new in `tests/db/prayer.test.ts` against PostgreSQL 16 built from every migration, 5 new unit tests), and **134 Playwright tests** (desktop and Pixel 7; `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium`) pass. `tests/db/safeupdate.test.ts` covers every Phase 6 function. The earlier-phase suites (authorization, directory, giving, events, community, home banner) all still pass.
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `prayer` schema and helpers unreadable; functions closed to visitors; pending and suspended accounts refused (including suspended authors' own requests, restored on reinstatement); super administrators hold no `prayer.*`/`care.*` capability without a prayer role |
+| Creating and editing | Sharing requires confirming the audience; private drafts visible only to the author and only under My requests; publishing a draft needs confirmation; retried submissions don't duplicate; only the author edits, deletes, or changes status |
+| Isolation | Church requests for approved members; group requests only for the group's active members (not the community moderator, super admin, prayer team, prayer moderator, or care coordinator); team requests only for `prayer.confidential` holders; lists, filters, and search return only readable requests; LIKE wildcards are literal; members can share only with active groups they belong to |
+| Audience changes | Widening needs confirmation; earlier comments and updates stay with their original audience (outsiders see neither, counts exclude them, `withheld` flagged), insiders still see them, new comments reach the wider audience; narrowing to private is immediate and removes others' follows; audit records the change without content |
+| Losing access | Removal from a group ends access and removes the follow; restored membership restores access; removing the prayer team role ends confidential access and removes follows; removing the care coordinator role unassigns their care requests |
+| Anonymous display | Detail, lists, notifications, and Realtime payloads carry no author name or id (Realtime payloads contain only `kind`); requester comments and updates show "The requester"; a named requester comment shows the name without the requester label; report evidence and the moderator view say "Anonymous" |
+| Identity lookup | Refused for prayer moderators, prayer team, and super administrators; reason of 10+ characters required; returns the name only; recorded in the access log (with reason) and the audit log (without content); refused for named requests and for requests outside the lead's scope |
+| Prayers | One per member (repeat is a no-op), removable, count only, no names |
+| Comments | Only the author edits or deletes; author can turn comments off; deletion leaves a placeholder with the text erased; 21st comment in 15 minutes refused |
+| Moderation | Prayer moderators see church/group reports, never team ones without confidential access; community moderators and super admins can't open prayer reports; evidence holds only the reported item; hide/lock need a reason; hidden content disappears for readers but stays for its author; a report about one group request never opens another; the author is notified |
+| Status and deletion | Answered appears under Answered; archive makes it author-only; restoring needs confirmation; deletion removes comments, follows, and notifications and clears evidence in closed reports |
+| Retention | Off by default (a 400-day-old closed request is untouched by the tick); only settings managers change it; when enabled, closed requests are archived |
+| Notifications | Comment notices merge; in-app shows the title; email has no title, comment, or names and links to `/notifications/open/<id>`; losing access before delivery skips the queued email and hides the notice; narrowing drops queued email and unread notices |
+| Care | Requests visible only to the requester and coordinators (not prayer team, leads, super admin, community moderator); not in the prayer feed; contact shown only for the chosen method; assignment needs `care.assign`; internal notes only for the assigned coordinator and care leads, never the requester; non-assigned coordinators can't change the request; activity has no text; follow-up reminder sent once across two ticks with a generic email |
+| Volunteers | Preview blocks publishing logistics/name without consent; publishing needs confirmation; listings contain no request text, notes, phone, address, or requester name; volunteers can't accept themselves; accepted volunteers see logistics and first name only while consent holds; withdrawing consent hides them at once; other members never see them |
+| Logs | Audit, access, moderation, and care activity logs contain no request, comment, care, or note text |
+| Browser | Signed-out redirects for 13 Phase 6 routes; prayer pages `private, no-store`; service worker caches no prayer pages |
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Preview build `b5aee08` (`dpl_7ZVvAkGTE4eqE2d5XoZ8TjGPFNUM`) | Ready |
+| Signed-out `/prayer/team` → sign-in with `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
+| Production deploys from `main` | Canceled (production stays paused) |
+| Hosted migration history | 22 versions through `20261023000100`; Phase 6 steps **not applied yet** (owner, SQL editor) |
+| Fingerprint after applying | Not run yet |
+| Hosted walkthrough with authorized accounts | **Not done** (needs the migrations first) |
+| Notification email delivery for prayer/care | **Not verified** on hosted; the local tests prove only what the claim returns (mocked delivery), not that email arrives |
+
+### Hosted walkthrough plan (after the four scripts)
+
+With the authorized test accounts (A: super administrator; B: approved member) and only synthetic content titled `[TEST] Synthetic …`:
+
+1. Confirm A sees no Prayer reports, workspace, or confidential requests. A grants B `prayer_lead` and A `care_lead` temporarily (both audited).
+2. B shares a church request (confirm dialog), an anonymous group request in a test group, and a team request; A (member, not in the group, no prayer team role) sees only the church request; search for a word from the team request returns nothing for A.
+3. A prays (count 1, no names), comments, follows; B adds an update and marks it answered; A sees the in-app notice; check Resend shows a generic `[TEST]` email only to allowlisted addresses (if A's prayer email is set to right away).
+4. B widens the group request to church: A sees it, the "earlier items aren't shown" note, and no earlier comments. B narrows it back: A loses it immediately.
+5. B reports a comment A wrote; A can't review a report about themselves, so B (prayer lead) opens it, hides and restores the comment with a reason, and closes the report. A temporarily also holds `prayer_lead`, looks up the anonymous author of B's group request only if A is in that group (otherwise refused), and B checks the sensitive-access log.
+6. B requests help (meal, consent off); A (care lead) assigns themselves, replies, adds an internal note, sets a follow-up date for today, drafts an opportunity with logistics, sees publishing blocked; B allows sharing; A publishes; B can't volunteer for their own request (a third account would volunteer); A closes the request.
+7. Clean up: delete the test prayer requests, withdraw/close the care request, close reports, and remove the temporary roles (all audited).
+
+### Known limitations (Phase 6)
+
+- **No attachments** on requests, comments, or care requests (deferred).
+- **Search** matches words in titles and bodies of requests you can read; it doesn't search comments or names.
+- **Answered-prayer** and other emails are generic by design and default off for prayer.
+- **The requester of a care request can't edit it** after sending; they add details by message.
+- **Volunteers are contacted through the coordinator**: there is no volunteer-to-requester messaging, and contact details are never filled in from the directory.
+- **Care leads assign coordinators**; coordinators can't claim requests themselves.
+- **Retention is off** until the church adopts a policy ([prayer-retention.md](prayer-retention.md)).
+- **Super administrators and hosting operators:** a super administrator can grant themselves prayer/care roles (audited); people with direct database access can read everything.
+- **Youth** remain unable to use the app (Phase 10).
+- **Test runs:** run Vitest with `--no-file-parallelism` when `TEST_DATABASE_URL` is set; parallel files race creating the shim's cluster-wide roles (pre-existing).
+
+### Still open from earlier phases
+
+- **Home redesign:** no PR exists for `claude/brave-knuth-s19gty`; its banner migration is applied on hosted.
+- **Phase 5:** hosted walkthrough not done; `EVENTS_JOB_SECRET` not set for the Phase 5 branch (and not for Phase 6), so scheduled community/prayer email from previews waits on it; VAPID keys not set (push off); push not tested on a device. The scheduler's `job_url` still points at the Phase 5 branch.
+- **Phase 4:** importing .ics into Apple/Google/Outlook, subscribing to the private feed, month grid on a phone, screen reader pass.
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute remain in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical iPhone/Android, VoiceOver/TalkBack, production configuration (deliberately not done).
+
+---
+
+# Phase 5 build status
 
 ## Phase 5: community, groups, messaging, and notifications
 

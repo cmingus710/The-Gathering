@@ -9,7 +9,7 @@ Each phase is built, verified, and reviewed before the next begins.
 | 3 | Giving and contributions | **Built**, Stripe test mode (PR #6, awaiting review) |
 | 4 | Events and calendars | **Built** (PR into `main`, stacked on #5 and #6, awaiting review) |
 | 5 | Community, groups, messaging, and notifications | **Built** (draft PR #8, stacked on #7); hosted database applied; walkthrough pending |
-| 6 | Prayer and care | Planned |
+| 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted migrations and walkthrough pending |
 | 7 | Teaching and media | Planned |
 | 8 | Bible reading and journals | Planned |
 | 9 | Memory verses | Planned |
@@ -19,7 +19,7 @@ Each phase is built, verified, and reviewed before the next begins.
 
 ## Hooks already in place for later phases
 
-- **Navigation:** Community, Prayer, Media, and Grow are listed as "Coming later" (not links) in `src/lib/navigation.ts`. A module becomes a link by switching its `status` to `available` and adding its route.
+- **Navigation:** Media and Grow are listed as "Coming later" (not links) in `src/lib/navigation.ts`. A module becomes a link by switching its `status` to `available` and adding its route.
 - **Roles:** `youth_leader` (`youth.lead`) stays reserved for Phase 10. `group_leader` stays reserved and unused: Phase 5 assigns group leadership per group instead.
 - **Profiles:** directory, household, and advanced profile fields were added in Phase 2 (see build-status.md).
 - **Groups (Phase 5, done):** `events.group_member()` now checks real group membership, the `series_groups_unavailable` constraint is replaced, and the event form has a group selector.

@@ -47,6 +47,13 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 19. `20261022000300_community_forum.sql` (Phase 5)
 20. `20261022000400_community_groups.sql` (Phase 5)
 21. `20261022000500_community_messaging_moderation.sql` (Phase 5)
+22. `20261023000100_home_coming_up_banner.sql` (home redesign)
+23. `20261024000100_prayer_schema.sql` (Phase 6)
+24. `20261024000200_prayer_notifications.sql` (Phase 6)
+25. `20261024000300_prayer_requests.sql` (Phase 6)
+26. `20261024000400_prayer_care.sql` (Phase 6)
+
+Phase 6 (prayer and care) migrations each have a one-transaction operator script, `supabase/manual/2026-10-24-apply-prayer-<1-4>.sql`, with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor. No scheduler change is needed: follow-up reminders run inside the existing `community.tick()`. After applying, assign prayer/care roles at Administration → Members (explicit only; see [prayer-care-guide.md](prayer-care-guide.md)). Retention stays off until the church adopts a policy ([prayer-retention.md](prayer-retention.md)).
 
 Phase 5 (community) migrations each have a one-transaction operator script, `supabase/manual/2026-10-22-apply-community-<1-5>.sql`, kept under the SQL editor's request limit. Run them in order; each refuses to run out of order or twice. Then run `supabase/manual/2026-10-22-community-scheduler.sql` (after filling in the designated branch URL) so the existing scheduler also handles community digests, retention, and delivery. Status on the hosted project: [build-status.md](build-status.md#phase-5-community-groups-messaging-and-notifications).
 

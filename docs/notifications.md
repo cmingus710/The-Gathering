@@ -11,6 +11,10 @@ Design: [architecture.md](architecture.md#community-groups-messaging-and-notific
 | Direct messages (`messages`) | New message (one per conversation while unread) | On | Right away (generic text) |
 | Moderator actions (`moderation`) | Your post hidden or restored; discussion locked; restriction applied or lifted; new report in your group (leaders) | Always on | Right away |
 | Event updates (`events`) | Waitlist promotion, time/place change, cancellation for events you're registered for | On | — (event emails are sent by Phase 4's own outbox) |
+| Prayer (`prayer`, Phase 6) | New comment on a request you wrote or follow; new update; answered prayer | On | Off (generic text only) |
+| Care (`care`, Phase 6) | Coordinator response or status change on your care request; care assignment and follow-up reminder (coordinators); requester reply (assigned coordinator); accepted volunteer assignment | On | Right away (generic text only; never digested) |
+
+Prayer moderator actions on your request or comment appear under Moderator actions.
 
 Giving never creates a community notification.
 
@@ -22,6 +26,7 @@ Members change these at **Notifications → Settings**: in-app on/off (moderatio
 - **Access is rechecked at every read and every send.** The list, the badge counts, the click-through, each email, each digest, and each push recheck that the reader is still an approved member and can still see the thing (group membership, thread not hidden, invitation still open, event still visible, sender not blocked). If not, the item disappears; a queued email or push is marked `skipped` and never sent.
 - **Merging and deduplication.** Unread notifications about the same thing merge (`merge_key`, count, latest time), so a busy discussion creates one item, one email, and a counted title. Delivery records have unique dedupe keys (`n:<notification>` for email, `n:<notification>:<count>` for push, `digest:<member>:<local date>` for digests).
 - **Generic outside the app.** Email names church-wide discussion titles but group discussions only by group; direct messages only say "You have a new message" (no text, no sender). Push says only that something is new and links to `/notifications/open/<id>`, which rechecks access before redirecting.
+- **Prayer and care are always generic outside the app.** Email and push never include request titles, bodies, care details, names, or anonymous identities ("New activity on a prayer request", "An update about a care request"), and link to `/notifications/open/<id>`. The in-app list shows the request title only after rechecking that the reader can still read it. No actor is stored on prayer or care notifications.
 - **Muting and blocking** suppress new notifications at creation. Blocking also hides the blocked person's unread message notifications and unread counts.
 
 ## Delivery
@@ -40,7 +45,7 @@ Outside production, email goes only to `EVENTS_EMAIL_ALLOWLIST` (falling back to
 Phase 5 reuses the Phase 4 scheduler instead of adding another:
 
 - **Owner of the schedule:** the database. The `pg_cron` job `events-worker` runs `events.call_worker()` every 5 minutes.
-- **What it does now:** `events.tick()` (reminders) and `community.tick()` (digests, invitation expiry, retention), each under its own advisory lock; then, only if event or community email/push is due, one signed `pg_net` request to the designated deployment's `/api/jobs/events`.
+- **What it does now:** `events.tick()` (reminders) and `community.tick()` (digests, invitation expiry, retention; since Phase 6 it also calls `prayer.tick()` for care follow-up reminders and, only when the church enables it, prayer retention), each under its own advisory lock; then, only if event or community email/push is due, one signed `pg_net` request to the designated deployment's `/api/jobs/events`.
 - **The app route** sends event email, then runs the community tick and sends community email and push. It is signed with `EVENTS_JOB_SECRET`; the community database entry point (`public.community_job`) uses the same secret with a `community.` prefix in the signed string, so an events signature can't be replayed against it.
 - **No duplicates across previews:** only one deployment URL is designated, every message is claimed under a row lock (`for update skip locked`), and every send carries an idempotency key. Other previews may send immediately after an action (best effort), which is safe for the same reasons.
 - **Retention run by the tick:** rate-limit records after 2 days; direct messages after `dm_retention_days` (default 730), and as soon as both participants have deleted a conversation; report evidence `report_evidence_days` (default 180) after a report is closed; read notifications after 180 days; sent/skipped delivery records after 60 days (push 14).
