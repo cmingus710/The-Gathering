@@ -48,6 +48,7 @@ Lint (zero warnings), typecheck, production build (all `/prayer` and `/admin/pra
 | Hosted migration history | **Applied 2026-10-20** by the owner in the SQL editor (choosing "Run without RLS" at Supabase's warning: the scripts enable RLS on every table in a loop the checker doesn't detect). History: `20261024000100`…`000400`, all `created_by = phase-6` |
 | Prayer fingerprint (`supabase/tests/prayer-fingerprint.sql`) | **Pass: hosted equals the rehearsal and a fresh build in all 13 categories**: column 156 1f938e2d · constraint 118 9f6c7b9a · function 94 34f5e989 · function_grant 83 9b289f9b · index 59 57ef6211 · rls 15 2486b42d · schema_acl 1 12e169ef · seed_capability 5 f2349438 · seed_role 5 356ebd04 · seed_role_capability 8 5c79805d · seed_settings 1 8d831b0e · trigger 3 e83f479b · type 6 2439f248 |
 | Community fingerprint after Phase 6 | **Pass: all 15 categories equal a fresh build** (column 236 4fe6d646 · constraint 174 e69c9854 · function 124 b2103420 · index 101 1741e785 · trigger 4 a02edcd5; the rest unchanged from Phase 5) |
+| Scheduler (`supabase/manual/2026-10-24-prayer-scheduler.sql`, applied via the connector 2026-10-20) | `events.settings.job_url` moved from the Phase 5 preview to `https://the-gathering-git-phase-6-prayer-care-paint-by-number.vercel.app/api/jobs/events` (the only designated deployment; the Phase 5 preview no longer receives scheduler requests). `events-worker` cron active every 5 minutes. A database-signed test request returned **200** and ran events tick, community tick, and `prayer.tick()`; so the preview's `EVENTS_JOB_SECRET` (set for all preview branches) matches `events.secrets` |
 | Direct checks | RLS on 15 of 15 `prayer` tables; `anon` and `authenticated` have no usage on the `prayer` schema; no prayer or care rows yet; retention off |
 | Hosted walkthrough with authorized accounts | **Not done** |
 | Notification email delivery for prayer/care | **Not verified** on hosted; the local tests prove only what the claim returns (mocked delivery), not that email arrives |
@@ -80,7 +81,8 @@ With the authorized test accounts (A: super administrator; B: approved member) a
 ### Still open from earlier phases
 
 - **Home redesign:** no PR exists for `claude/brave-knuth-s19gty`; its banner migration is applied on hosted.
-- **Phase 5:** hosted walkthrough not done; `EVENTS_JOB_SECRET` not set for the Phase 5 branch (and not for Phase 6), so scheduled community/prayer email from previews waits on it; VAPID keys not set (push off); push not tested on a device. The scheduler's `job_url` still points at the Phase 5 branch.
+- **Phase 5:** hosted walkthrough not done; VAPID keys not set (push off); push not tested on a device. (The scheduler and job secret now serve the Phase 6 preview, which includes all Phase 5 features.)
+- **Giving on the Phase 6 preview:** the Stripe variables are scoped to the Phase 3 branch only, so Give shows as not configured on this preview (by design until they're added for this branch).
 - **Phase 4:** importing .ics into Apple/Google/Outlook, subscribing to the private feed, month grid on a phone, screen reader pass.
 - **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute remain in the Stripe sandbox.
 - **Phase 2:** device and screen-reader pass of the directory.

@@ -50,6 +50,8 @@ Phase 5 reuses the Phase 4 scheduler instead of adding another:
 - **No duplicates across previews:** only one deployment URL is designated, every message is claimed under a row lock (`for update skip locked`), and every send carries an idempotency key. Other previews may send immediately after an action (best effort), which is safe for the same reasons.
 - **Retention run by the tick:** rate-limit records after 2 days; direct messages after `dm_retention_days` (default 730), and as soon as both participants have deleted a conversation; report evidence `report_evidence_days` (default 180) after a report is closed; read notifications after 180 days; sent/skipped delivery records after 60 days (push 14).
 
+Since Phase 6 the designated deployment is the Phase 6 preview (`supabase/manual/2026-10-24-prayer-scheduler.sql`).
+
 ### Setup (owner)
 
 1. Apply the Phase 5 migrations (`supabase/manual/2026-10-22-apply-community-1.sql` … `-5.sql`).
