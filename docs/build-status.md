@@ -128,7 +128,7 @@ All against a real PostgreSQL 16 database built from every migration (`tests/db/
 | Check | Result |
 | --- | --- |
 | Events migrations on project `ymuiutwdnhxdqsetnwkt` | **Applied 2026-10-19** with the manual script (one transaction). History has 15 rows including the three Phase 4 versions; a fingerprint of the `events` schema (columns, constraints, functions, grants, indexes, policies, schema ACL, seeds, triggers) matches the local build exactly |
-| `EVENTS_JOB_SECRET`, allowlist, scheduler | **Set up 2026-10-19.** Job secret created in the database (64 hex characters) and copied into Vercel by the owner (Sensitive, Preview, branch `phase-4/events-calendar`; the value was never displayed). Allowlist falls back to `GIVING_EMAIL_ALLOWLIST`. `pg_cron` 1.6.4 and `pg_net` 0.20.4 enabled; one job, `events-worker`, every 5 minutes, targeting the branch's stable URL; `events.call_worker()` not executable by `anon` or `authenticated`. That the two secret copies match is confirmed by the first signed delivery (walkthrough) |
+| `EVENTS_JOB_SECRET`, allowlist, scheduler | **Set up 2026-10-19.** Job secret created in the database (64 hex characters) and copied into Vercel by the owner (Sensitive, Preview, branch `phase-4/events-calendar`; the value was never displayed). Allowlist falls back to `GIVING_EMAIL_ALLOWLIST`. `pg_cron` 1.6.4 and `pg_net` 0.20.4 enabled; one job, `events-worker`, every 5 minutes, targeting the branch's stable URL; `events.call_worker()` not executable by `anon` or `authenticated`. The two secret copies match: the first signed delivery was accepted (walkthrough, reminder row) |
 | Migration `20261021000400_settings_safeupdate` | **Applied 2026-10-19** with `supabase/manual/2026-10-21-apply-settings-fix.sql` (preflight matched both hosted function bodies by checksum). Fixes settings saves rejected by pg-safeupdate (found in the walkthrough; also fixes Phase 3's giving settings save) |
 | Hosted walkthrough with synthetic events | **Run 2026-10-19** on the branch preview with the owner's two authorized test accounts (A: super administrator, B: approved member). Only events titled `[TEST] Synthetic …` were used; results below |
 
@@ -154,7 +154,9 @@ How each item was confirmed: **UI** = the owner did it in the browser and report
 | Archive | Pass (UI, DB: archived event hidden from B) |
 | Cancel event | Pass (DB, Resend: canceled; both registrants emailed once) |
 | Registration deadline | Not exercised on hosted (it would have meant waiting until the day of the event); covered by the database tests |
-| Scheduled reminder via the database scheduler | See below |
+| Scheduled reminder via the database scheduler | Pass (DB, Resend). A members-only test event at 6:00 PM CDT with a 1-hour reminder and A registered: the `events-worker` run at 22:00:00Z queued the reminder; `events.call_worker()` made its only outbound request of the day, a signed POST that the preview answered **200** (`sent: 1, failed: 0, suppressed: 0`), which also proves the database and Vercel copies of the job secret match; Resend delivered "[TEST] Reminder: [TEST] Synthetic reminder check" to A's allowlisted test address at 22:00:04Z; outbox shows one attempt, sent. Every 5-minute run since setup succeeded, and runs with no email due made no request |
+
+**Cleanup (2026-10-19, DB):** all four `[TEST] Synthetic …` events are archived (none visible to visitors or members), the public feed is back off, no private feed links exist, and no email is pending or failed (11 sent in total, all to the two allowlisted test addresses). One synthetic cover image remains in the private bucket, served to nobody because its event is archived. The `events-worker` schedule stays active (it is the designated scheduler and does nothing when no email is due).
 
 Bugs found in the walkthrough and fixed on this branch (each with lint, typecheck, full tests, and build passing before push):
 
