@@ -125,6 +125,20 @@ for (const path of [
   "/notifications",
   "/notifications/settings",
   "/admin/community",
+  // Phase 6
+  "/prayer",
+  "/prayer/new",
+  "/prayer/00000000-0000-0000-0000-000000000000",
+  "/prayer/00000000-0000-0000-0000-000000000000/edit",
+  "/prayer/care",
+  "/prayer/care/new",
+  "/prayer/care/00000000-0000-0000-0000-000000000000",
+  "/prayer/serve",
+  "/prayer/team",
+  "/prayer/team/care/00000000-0000-0000-0000-000000000000",
+  "/admin/prayer",
+  "/admin/prayer/settings",
+  "/admin/prayer/access",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -165,6 +179,19 @@ test("protected community responses are never publicly cacheable", async ({ requ
     expect(res.headers()["cache-control"]).toContain("private");
     expect(res.headers()["cache-control"]).toContain("no-store");
   }
+});
+
+test("protected prayer and care responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/prayer", "/prayer/care", "/prayer/team", "/prayer/serve"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"]).toContain("private");
+    expect(res.headers()["cache-control"]).toContain("no-store");
+  }
+});
+
+test("the service worker never caches prayer pages", async ({ request }) => {
+  const sw = await (await request.get("/sw.js")).text();
+  expect(sw).not.toContain("/prayer");
 });
 
 test("the service worker handles push without caching private pages", async ({ request }) => {
