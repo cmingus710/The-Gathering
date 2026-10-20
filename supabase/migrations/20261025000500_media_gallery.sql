@@ -512,6 +512,28 @@ begin
 end;
 $$;
 
+-- Choices for the album form: events it can be linked to (titles and dates
+-- only; linking never changes who can see the album) and active groups.
+create function public.media_admin_album_options()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform media.require_album_admin();
+  return jsonb_build_object(
+    'events', coalesce((select jsonb_agg(jsonb_build_object('id', s.id, 'title', s.title, 'start_date', s.start_date) order by s.start_date desc)
+                          from (select * from events.series s
+                                 where s.status in ('published', 'canceled')
+                                   and s.start_date between current_date - 400 and current_date + 120
+                                 order by s.start_date desc limit 200) s), '[]'::jsonb),
+    'groups', coalesce((select jsonb_agg(jsonb_build_object('id', g.id, 'name', g.name) order by g.name)
+                          from community.groups g where g.status = 'active'), '[]'::jsonb));
+end;
+$$;
+
 create function public.media_admin_album_status(p_id uuid, p_action text)
 returns void
 language plpgsql
@@ -727,7 +749,7 @@ revoke execute on function
   public.media_photo_ready(uuid, text, text, integer, integer, bigint, text, text, text), public.media_photo_fail(uuid, text),
   public.media_photo_update(uuid, text, text), public.media_photo_remove(uuid), public.media_photo_report(uuid, text, text),
   public.media_admin_albums(), public.media_admin_album(uuid, text), public.media_admin_album_save(uuid, jsonb),
-  public.media_admin_album_status(uuid, text), public.media_admin_photo_review(uuid, text, text, text, text, text),
+  public.media_admin_album_options(), public.media_admin_album_status(uuid, text), public.media_admin_photo_review(uuid, text, text, text, text, text),
   public.media_admin_photo_order(uuid, uuid[]), public.media_admin_album_cover(uuid, uuid),
   public.media_admin_photo_reports(text), public.media_admin_photo_report_resolve(uuid, text, text)
 from public;
@@ -738,7 +760,7 @@ grant execute on function
   public.media_photo_ready(uuid, text, text, integer, integer, bigint, text, text, text), public.media_photo_fail(uuid, text),
   public.media_photo_update(uuid, text, text), public.media_photo_remove(uuid), public.media_photo_report(uuid, text, text),
   public.media_admin_albums(), public.media_admin_album(uuid, text), public.media_admin_album_save(uuid, jsonb),
-  public.media_admin_album_status(uuid, text), public.media_admin_photo_review(uuid, text, text, text, text, text),
+  public.media_admin_album_options(), public.media_admin_album_status(uuid, text), public.media_admin_photo_review(uuid, text, text, text, text, text),
   public.media_admin_photo_order(uuid, uuid[]), public.media_admin_album_cover(uuid, uuid),
   public.media_admin_photo_reports(text), public.media_admin_photo_report_resolve(uuid, text, text)
 to authenticated;

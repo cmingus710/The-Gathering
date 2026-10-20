@@ -186,6 +186,48 @@ const GLYPHS: Record<IconName, Glyph> = {
       </>
     ),
   },
+  reading: {
+    fill: <path d="M6.5 3.75h11.25v11.75H6.5a2.25 2.25 0 0 0-2.25 2.25V6A2.25 2.25 0 0 1 6.5 3.75Z" />,
+    base: (
+      <>
+        <path d="M6.5 3.75h11.25a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-.75.75H6.5a2.25 2.25 0 0 1-2.25-2.25V6A2.25 2.25 0 0 1 6.5 3.75Z" />
+        <path d="M4.25 17.75a2.25 2.25 0 0 1 2.25-2.25h12" />
+      </>
+    ),
+    accent: <path d="M12.5 3.75v6.75l1.75-1.25 1.75 1.25V3.75" />,
+  },
+  music: {
+    fill: (
+      <>
+        <circle cx="6.75" cy="17.5" r="2.25" />
+        <circle cx="16.75" cy="15.5" r="2.25" />
+      </>
+    ),
+    base: (
+      <>
+        <circle cx="6.75" cy="17.5" r="2.25" />
+        <circle cx="16.75" cy="15.5" r="2.25" />
+        <path d="M9 17.5V6.25l10-2V15.5" />
+      </>
+    ),
+    accent: <path d="M9 9.75l10-2" />,
+  },
+  gallery: {
+    fill: <rect x="7.25" y="4.5" width="13" height="11.5" rx="2" />,
+    base: (
+      <>
+        <rect x="7.25" y="4.5" width="13" height="11.5" rx="2" />
+        <path d="M4.25 8.25v9.5a2 2 0 0 0 2 2h10.5" />
+        <path d="m7.75 14 3.25-3.25 2.5 2.5 1.75-1.75 4.5 4.25" />
+      </>
+    ),
+    accent: <circle cx="16.25" cy="8.25" r="1.25" {...solid} />,
+  },
+  media: {
+    fill: <rect x="3.75" y="4.75" width="16.5" height="14.5" rx="2.75" />,
+    base: <rect x="3.75" y="4.75" width="16.5" height="14.5" rx="2.75" />,
+    accent: <path d="M10.25 9.25v5.5l4.5-2.75Z" {...solid} />,
+  },
   youth: {
     fill: (
       <>

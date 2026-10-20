@@ -49,7 +49,8 @@ export const MEMBER_NAV: NavItem[] = [
  */
 export const MOBILE_PRIMARY_KEYS = ["home", "events", "community", "messages"] as const;
 
-export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[] };
+/** requires: all of these; anyOf: at least one of these (when given). */
+export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[]; anyOf?: Capability[] };
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { key: "dashboard", label: "Dashboard", href: "/admin", icon: "admin", requires: [] },
@@ -96,6 +97,37 @@ export const ADMIN_NAV: AdminNavItem[] = [
     requires: [CAPABILITIES.communityModerate],
   },
   {
+    key: "content",
+    label: "Teaching content",
+    href: "/admin/content",
+    icon: "lessons",
+    requires: [],
+    anyOf: [CAPABILITIES.contentEdit, CAPABILITIES.contentPublish],
+  },
+  {
+    key: "media",
+    label: "Media library",
+    href: "/admin/media",
+    icon: "media",
+    requires: [],
+    anyOf: [CAPABILITIES.mediaManage, CAPABILITIES.contentEdit, CAPABILITIES.contentPublish, CAPABILITIES.podcastsManage],
+  },
+  {
+    key: "podcasts",
+    label: "Podcasts",
+    href: "/admin/podcasts",
+    icon: "podcasts",
+    requires: [CAPABILITIES.podcastsManage],
+  },
+  {
+    key: "gallery",
+    label: "Gallery",
+    href: "/admin/gallery",
+    icon: "gallery",
+    requires: [],
+    anyOf: [CAPABILITIES.galleryModerate, CAPABILITIES.eventsManage],
+  },
+  {
     key: "prayer",
     label: "Prayer reports",
     href: "/admin/prayer",
@@ -121,7 +153,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 ];
 
 export function adminNavFor(capabilities: ReadonlySet<Capability>): AdminNavItem[] {
-  return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)));
+  return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)) && (!item.anyOf || item.anyOf.some((c) => capabilities.has(c))));
 }
 
 export function isActivePath(pathname: string, href: string): boolean {

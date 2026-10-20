@@ -93,6 +93,13 @@ export async function requireCapability(capability: Capability, next = "/admin")
   return viewer;
 }
 
+/** Approved members holding at least one of these capabilities. */
+export async function requireAnyCapability(capabilities: Capability[], next = "/admin"): Promise<Viewer> {
+  const viewer = await requireApprovedMember(next);
+  if (!capabilities.some((c) => viewer.capabilities.has(c))) redirect("/admin/not-authorized");
+  return viewer;
+}
+
 export async function requireAdminArea(next = "/admin"): Promise<Viewer> {
   const viewer = await requireApprovedMember(next);
   if (!viewer.isAdmin) redirect("/home?notice=not-authorized");

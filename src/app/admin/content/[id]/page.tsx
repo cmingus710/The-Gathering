@@ -1,0 +1,96 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Alert } from "@/components/ui/alert";
+import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { CAPABILITIES } from "@/lib/auth/capabilities";
+import { requireAnyCapability } from "@/lib/auth/viewer";
+import { isUuid, KIND_LABEL } from "@/lib/media/format";
+import type { ItemAdmin } from "@/lib/media/types";
+import { getChurchSettings } from "@/lib/settings/queries";
+import { requireClient } from "@/lib/supabase/server";
+import { formatDateTime, timeZoneLabel, utcToZonedLocal } from "@/lib/time";
+import { deleteDraftAction } from "../actions";
+import { ContentForm } from "../content-form";
+import { loadEditorData } from "../editor-data";
+import { PublishPanel } from "../publish-panel";
+
+export const metadata: Metadata = { title: "Edit content" };
+
+const SAVED: Record<string, string> = {
+  created: "Draft saved. Preview it, then publish when it's ready.",
+  saved: "Changes saved.",
+  publish: "Published (or scheduled).",
+  unpublish: "Unpublished. It's a draft again.",
+  archive: "Archived. It's hidden everywhere.",
+  restore: "Restored as a draft.",
+  expiry: "Expiry saved.",
+};
+
+export default async function EditContentPage({ params, searchParams }: PageProps<"/admin/content/[id]">) {
+  const viewer = await requireAnyCapability([CAPABILITIES.contentEdit, CAPABILITIES.contentPublish], "/admin/content");
+  const { id } = await params;
+  if (!isUuid(id)) notFound();
+  const sp = await searchParams;
+  const supabase = await requireClient();
+  const [{ settings }, itemRes, data] = await Promise.all([getChurchSettings(), supabase.rpc("media_admin_item", { p_id: id }), loadEditorData(supabase)]);
+  if (itemRes.error || !itemRes.data) notFound();
+  const item = itemRes.data as ItemAdmin;
+  const tz = settings.timezone;
+  const now = new Date();
+  const inAnHour = new Date(now.getTime() + 3600_000);
+  const canPublish = viewer.capabilities.has(CAPABILITIES.contentPublish);
+  const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
+  const error = typeof sp.error === "string" ? (sp.error === "unavailable" ? "The content service is unavailable." : sp.error.slice(0, 300)) : undefined;
+  const publishedLabel =
+    item.publish_at && item.state !== "draft"
+      ? `${item.state === "scheduled" ? "Goes live" : "Published"} ${formatDateTime(item.publish_at, tz)}${item.expires_at ? ` · hides ${formatDateTime(item.expires_at, tz)}` : ""}`
+      : null;
+
+  return (
+    <div className="layout-wide">
+      <PageHeader
+        eyebrow={
+          <Link href="/admin/content" className="hover:underline">
+            Teaching content · {KIND_LABEL[item.kind]}
+          </Link>
+        }
+        title={item.title}
+        description={`Last saved ${formatDateTime(item.updated_at, tz)}${item.updated_by_name ? ` by ${item.updated_by_name}` : ""}.`}
+      />
+      {saved ? <Alert tone="success" title={saved} className="mb-6" /> : null}
+      {error ? <Alert tone="error" title={error} className="mb-6" /> : null}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
+        <div className="min-w-0">
+          {data ? (
+            <ContentForm kind={item.kind} item={item} data={data} timeZoneLabel={timeZoneLabel(tz)} />
+          ) : (
+            <Alert tone="error" title="The editor couldn't be loaded." />
+          )}
+        </div>
+        <aside className="space-y-6 xl:sticky xl:top-6">
+          <Card>
+            <SectionHeading>Publishing</SectionHeading>
+            <PublishPanel
+              item={item}
+              canPublish={canPublish}
+              timeZoneLabel={timeZoneLabel(tz)}
+              localPublish={utcToZonedLocal(item.publish_at ?? inAnHour, tz)}
+              localExpiry={utcToZonedLocal(item.expires_at, tz)}
+              publishedLabel={publishedLabel}
+            />
+          </Card>
+          {item.status === "draft" && !item.first_published_at ? (
+            <Card>
+              <SectionHeading>Delete draft</SectionHeading>
+              <ConfirmDialog trigger="Delete draft" title="Delete this draft?" confirmLabel="Delete" formAction={deleteDraftAction} hidden={{ id: item.id }}>
+                The draft is removed. Files in the media library are kept.
+              </ConfirmDialog>
+            </Card>
+          ) : null}
+        </aside>
+      </div>
+    </div>
+  );
+}
