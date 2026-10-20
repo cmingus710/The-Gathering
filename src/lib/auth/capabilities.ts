@@ -1,5 +1,5 @@
 /**
- * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community, Phase 6 prayer and care, Phase 7 teaching and media). The database (public.capabilities,
+ * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community, Phase 6 prayer and care, Phase 7 teaching and media, Phase 8 Bible reading). The database (public.capabilities,
  * public.has_capability) is the source of truth; these constants keep the app
  * code typed. Add a key here only after adding it in a migration.
  */
@@ -36,6 +36,11 @@ export const CAPABILITIES = {
   mediaManage: "media.manage",
   podcastsManage: "podcasts.manage",
   galleryModerate: "gallery.moderate",
+  // Bible reading (Phase 8): draft and publish reading plans, and manage
+  // translations and scripture sources. None opens journals or progress.
+  readingEdit: "reading.edit",
+  readingPublish: "reading.publish",
+  bibleManage: "bible.manage",
 } as const;
 
 export type Capability = (typeof CAPABILITIES)[keyof typeof CAPABILITIES];
@@ -64,6 +69,9 @@ export const ADMIN_AREA_CAPABILITIES: readonly Capability[] = [
   CAPABILITIES.mediaManage,
   CAPABILITIES.podcastsManage,
   CAPABILITIES.galleryModerate,
+  CAPABILITIES.readingEdit,
+  CAPABILITIES.readingPublish,
+  CAPABILITIES.bibleManage,
 ];
 
 export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {

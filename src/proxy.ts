@@ -27,6 +27,9 @@ const PROTECTED_PREFIXES = [
   "/music",
   "/gallery",
   "/saved",
+  // Phase 8: Bible reading (progress, bookmarks, highlights) and journals.
+  "/bible",
+  "/journal",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -56,7 +59,9 @@ export async function proxy(request: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   // Community and media API responses are per-viewer and must never be cached publicly.
-  if (pathname.startsWith("/api/community/") || pathname.startsWith("/api/media/")) response.headers.set("Cache-Control", "private, no-store");
+  if (["/api/community/", "/api/media/", "/api/journal/", "/api/bible/"].some((p) => pathname.startsWith(p))) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
 
   // Teaching pages show members more than visitors: never cache them publicly.
   if (["/devotionals", "/lessons", "/podcasts", "/media"].some((p) => pathname === p || pathname.startsWith(`${p}/`))) {

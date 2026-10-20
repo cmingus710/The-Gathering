@@ -48,7 +48,9 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "gallery", label: "Gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
   { key: "media", label: "Search teaching & media", icon: "media", section: "learn", status: "available", href: "/media" },
   { key: "saved", label: "Saved", icon: "media", section: "you", status: "available", href: "/saved" },
-  { key: "grow", label: "Bible reading", icon: "bible", section: "church", status: "upcoming", phase: 8 },
+  // Phase 8: Bible reading plans and the reader; journals are private to each member.
+  { key: "bible", label: "Bible reading", icon: "bible", section: "learn", status: "available", href: "/bible" },
+  { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },
 ];
 
 /**
@@ -134,6 +136,21 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: "gallery",
     requires: [],
     anyOf: [CAPABILITIES.galleryModerate, CAPABILITIES.eventsManage],
+  },
+  {
+    key: "bible-plans",
+    label: "Reading plans",
+    href: "/admin/bible",
+    icon: "bible",
+    requires: [],
+    anyOf: [CAPABILITIES.readingEdit, CAPABILITIES.readingPublish],
+  },
+  {
+    key: "bible-sources",
+    label: "Bible sources",
+    href: "/admin/bible/sources",
+    icon: "reading",
+    requires: [CAPABILITIES.bibleManage],
   },
   {
     key: "prayer",

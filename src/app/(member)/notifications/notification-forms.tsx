@@ -40,6 +40,7 @@ const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string 
   care: { label: "Care", hint: "Responses to your care requests, volunteer confirmations, and (for coordinators) assignments and follow-ups. Email and push are generic." },
   teaching: { label: "Teaching and media", hint: "New devotionals, Sunday lessons, podcast episodes, reading assignments, and playlists you can see. Email and push only name the section." },
   gallery: { label: "Photo galleries", hint: "New photos in albums you can see (grouped, a few times a day) and decisions about photos you shared." },
+  reading: { label: "Bible reading", hint: "Daily reminders you switch on for a reading plan, and changes to upcoming readings. Email and push only say your reading is ready, never the plan, passage, or your journal." },
 };
 
 export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]; pushAvailable: boolean }) {
@@ -59,7 +60,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
               <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
-                {c === "messages" || c === "care" ? null : (
+                {c === "messages" || c === "care" || c === "reading" ? null : (
                   <>
                     <option value="daily">Daily summary</option>
                     <option value="weekly">Weekly summary</option>

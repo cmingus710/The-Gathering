@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
-import { BookOpen, Download, ExternalLink, FileText, MessagesSquare } from "lucide-react";
+import { BookOpen, Download, ExternalLink, FileText, MessagesSquare, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { Alert } from "@/components/ui/alert";
@@ -101,6 +101,13 @@ export function ContentDetail({
           ) : null}
           {item.group_name ? <span className="rounded-full bg-surface-muted px-3 py-1 text-meta">For {item.group_name}</span> : null}
           {member && !preview ? <BookmarkButton type="item" id={item.id} saved={item.bookmarked} label={item.title} /> : null}
+          {/* Phase 8: a private journal note about this devotional or lesson (never posted anywhere). */}
+          {member && !preview && (item.kind === "devotional" || item.kind === "lesson") ? (
+            <Link href={`/journal/new?item=${item.id}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-meta font-semibold hover:bg-surface-muted">
+              <NotebookPen className="size-4" aria-hidden="true" />
+              Write privately
+            </Link>
+          ) : null}
         </div>
         {item.scripture_refs.length ? (
           <ul aria-label="Scripture" className="flex flex-wrap gap-1.5">

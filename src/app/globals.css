@@ -743,3 +743,81 @@ html[data-player] {
   font-size: 1.125rem;
   line-height: 1.75;
 }
+
+/*
+ * Scripture reader (Phase 8). Presentation only: the member's text size and
+ * line spacing arrive as --reader-size / --reader-leading on the reader, and
+ * highlights are soft washes that keep body text at AA contrast in both
+ * themes (checked in src/lib/bible/reader-colors.test.ts).
+ */
+:root,
+[data-theme="light"] {
+  --hl-yellow: #f7e9ad;
+  --hl-green: #dcecd5;
+  --hl-blue: #d9e6f3;
+  --hl-pink: #f5dde2;
+}
+[data-theme="dark"] {
+  --hl-yellow: #4a3f17;
+  --hl-green: #243b27;
+  --hl-blue: #213547;
+  --hl-pink: #47262f;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --hl-yellow: #4a3f17;
+    --hl-green: #243b27;
+    --hl-blue: #213547;
+    --hl-pink: #47262f;
+  }
+}
+.scripture {
+  font-family: var(--font-serif);
+  font-size: calc(1.1875rem * var(--reader-size, 1));
+  line-height: var(--reader-leading, 1.7);
+}
+.scripture .verse-num {
+  font-family: var(--font-sans);
+  font-size: 0.68em;
+  font-weight: 700;
+  color: var(--color-primary);
+  vertical-align: 0.42em;
+  margin-inline: 0.15em 0.2em;
+}
+.scripture[data-verse-numbers="off"] .verse-num {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.scripture .poetry {
+  white-space: pre-line;
+  padding-left: 1.25em;
+  text-indent: -0.75em;
+}
+.scripture mark {
+  color: inherit;
+  border-radius: 0.2em;
+  padding-block: 0.05em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.scripture mark[data-color="yellow"] { background: var(--hl-yellow); }
+.scripture mark[data-color="green"] { background: var(--hl-green); }
+.scripture mark[data-color="blue"] { background: var(--hl-blue); }
+.scripture mark[data-color="pink"] { background: var(--hl-pink); }
+.scripture [data-selected="true"] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.2em;
+}
+.scripture[data-no-copy="true"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+@media print {
+  .scripture[data-no-print="true"] { display: none; }
+  .print-notice { display: block !important; }
+}

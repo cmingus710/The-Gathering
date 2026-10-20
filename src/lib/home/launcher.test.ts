@@ -17,11 +17,11 @@ describe("launcher config", () => {
   it("shows only implemented sections, in order", () => {
     const ids = launcherItemsFor(none).map((i) => i.id);
     expect(ids).toEqual([
-      "directory", "events", "community", "messages", "groups", "prayer",
+      "directory", "events", "community", "messages", "groups", "bible", "prayer",
       "devotionals", "lessons", "podcasts", "reading", "music", "gallery",
       "announcements", "notifications", "profile",
     ]);
-    for (const upcoming of ["bible", "memory-verses", "youth"]) expect(ids).not.toContain(upcoming);
+    for (const upcoming of ["memory-verses", "youth"]) expect(ids).not.toContain(upcoming);
   });
 
   it("shows Give only when online giving is configured", () => {

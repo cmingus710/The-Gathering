@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { Launcher, type LauncherTile } from "@/components/home/launcher";
 import { TeachingSection, type HomeTeaching } from "@/components/home/teaching";
+import { TodayReading, type HomeReading } from "@/components/home/today-reading";
 import { ComingUpBanner, ComingUpEmpty, GatheringPanel, GreetingBanner, HeadingLink, HomeSectionHeading, LifeAtGathering } from "@/components/home/sections";
 import { Icon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
@@ -42,7 +43,7 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
   const now = new Date();
   const tz = settings.timezone;
 
-  const [announcementsResult, eventsResult, invitations, defaultBanner, teaching] = await Promise.all([
+  const [announcementsResult, eventsResult, invitations, defaultBanner, teaching, reading] = await Promise.all([
     listLiveAnnouncements(supabase, { limit: 3 }).then(
       (data): { ok: true; data: AnnouncementWithImage[] } => ({ ok: true, data }),
       () => ({ ok: false as const }),
@@ -57,6 +58,11 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
     // Today's devotional, latest lesson, featured podcast, current reading; skipped on any error.
     Promise.resolve(supabase.rpc("media_home")).then(
       ({ data, error }) => (error || !data ? null : (data as HomeTeaching)),
+      () => null,
+    ),
+    // Today's reading from the member's main plan (Phase 8); nothing without a plan or on any error.
+    Promise.resolve(supabase.rpc("bible_today")).then(
+      ({ data, error }) => (error || !data ? null : (data as HomeReading)),
       () => null,
     ),
   ]);
@@ -97,6 +103,8 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
         </h2>
         <Launcher tiles={tiles} labelledBy="home-menu" />
       </section>
+
+      {reading ? <TodayReading data={reading} /> : null}
 
       {invitations.length ? (
         <ListRow

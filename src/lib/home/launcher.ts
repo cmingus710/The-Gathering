@@ -53,8 +53,9 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "reading", label: "Church Reading", art: "church-reading", glyph: "reading", order: 59, status: "available", href: "/reading" },
   { id: "music", label: "Music", art: "music", glyph: "music", order: 62, status: "available", href: "/music" },
   { id: "gallery", label: "Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
+  // Bible reading plans and the reader (Phase 8), with the supplied Bible art.
+  { id: "bible", label: "Bible Reading", art: "bible", glyph: "bible", order: 54, status: "available", href: "/bible" },
   // Later phases (see docs/roadmap.md). Not links until they ship.
-  { id: "bible", label: "Bible", art: "bible", glyph: "bible", order: 130, status: "upcoming", phase: 8 },
   { id: "memory-verses", label: "Memory verses", art: "memory-verses", glyph: "memory", order: 150, status: "upcoming", phase: 9 },
   { id: "youth", label: "Youth", art: "youth", glyph: "youth", order: 160, status: "upcoming", phase: 10 },
 ];

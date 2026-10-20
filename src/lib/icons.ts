@@ -11,6 +11,7 @@ export const GLYPHS = {
   prayer: { label: "Prayer", concept: "Hands joined with a subtle rising light" },
   events: { label: "Events", concept: "Calendar with a gold date marker" },
   bible: { label: "Bible Reading", concept: "Open book with a restrained ribbon" },
+  journal: { label: "My Journal", concept: "A bound notebook with a gold pen" },
   memory: { label: "Memory Verses", concept: "Scripture card with a small spark" },
   devotionals: { label: "Devotionals", concept: "Sunrise above an open page" },
   podcasts: { label: "Podcasts", concept: "Microphone with sound arcs" },
