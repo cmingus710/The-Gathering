@@ -5,7 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader, SectionHeading } from "@/components/ui/card";
 import { segmentClass, SegmentedTrack } from "@/components/ui/segmented";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
 import type { JournalListItem } from "./actions";
 import { DeleteAllForm } from "./delete-all";
@@ -15,7 +15,7 @@ import { JournalList } from "./search";
 export const metadata: Metadata = { title: "My Journal" };
 
 export default async function JournalPage({ searchParams }: PageProps<"/journal">) {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const params = await searchParams;
   const status = params.view === "archived" ? "archived" : "active";
   const supabase = await requireClient();

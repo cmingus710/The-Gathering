@@ -19,7 +19,7 @@ type Row = {
   title: string;
   status: SeriesStatus;
   publish_at: string | null;
-  audience: "public" | "members" | "group";
+  audience: "public" | "members" | "group" | "youth";
   category: string | null;
   recurrence: string;
   timezone: string;

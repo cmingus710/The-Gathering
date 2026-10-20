@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, SectionHeading } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatYmd } from "@/lib/bible/dates";
 import { formatTime, kindLabel, scheduleLabel } from "@/lib/bible/format";
 import { signBiblePaths } from "@/lib/bible/storage";
@@ -57,7 +57,7 @@ function groups(days: PlanDay[], mode: "calendar" | "personal") {
 export default async function PlanPage({ params }: PageProps<"/bible/plans/[id]">) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  await requireApprovedMember(`/bible/plans/${id}`);
+  await requireLearner(`/bible/plans/${id}`);
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("bible_plan", { p_id: id });
   if (error?.code === "P0002") notFound();

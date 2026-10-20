@@ -30,7 +30,7 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
   const [{ data: member }, { data: assigned }, { data: roles }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, first_name, last_name, preferred_name, phone, membership_status, created_at, status_changed_at")
+      .select("id, email, full_name, first_name, last_name, preferred_name, phone, membership_status, account_kind, created_at, status_changed_at")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("user_roles").select("role_key").eq("user_id", id),
@@ -70,6 +70,9 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
               <dt className="text-sm font-semibold text-text-secondary">Status</dt>
               <dd className="mt-1">
                 <MembershipBadge status={member.membership_status} />
+                {member.account_kind === "youth" ? (
+                  <span className="ml-2 text-meta text-text-secondary">Youth account: activated and reinstated only under Youth &amp; families. Roles can&apos;t be assigned.</span>
+                ) : null}
               </dd>
             </div>
             <div>

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { isValidTimeZone, isValidYmd } from "@/lib/bible/dates";
 import { errorState, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
@@ -23,7 +23,7 @@ function idFrom(formData: FormData, key = "id"): string | null {
 }
 
 export async function joinPlanAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const plan = idFrom(formData, "plan_id");
   if (!plan) return errorState("That plan isn't available.");
   const start = String(formData.get("start_date") ?? "");
@@ -43,7 +43,7 @@ export async function joinPlanAction(_prev: FormState, formData: FormData): Prom
 }
 
 export async function updateEnrollmentAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const id = idFrom(formData);
   if (!id) return errorState("That plan isn't available.");
   const payload: Record<string, unknown> = {};
@@ -74,7 +74,7 @@ export async function updateEnrollmentAction(_prev: FormState, formData: FormDat
 }
 
 export async function leavePlanAction(formData: FormData) {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const id = idFrom(formData);
   if (id) await rpc("bible_plan_leave", { p_id: id });
   revalidatePath("/bible", "layout");
@@ -82,7 +82,7 @@ export async function leavePlanAction(formData: FormData) {
 }
 
 export async function deleteHistoryAction(formData: FormData) {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const id = idFrom(formData);
   if (id) await rpc("bible_enrollment_delete", { p_id: id, p_confirm: "delete" });
   revalidatePath("/bible", "layout");
@@ -91,7 +91,7 @@ export async function deleteHistoryAction(formData: FormData) {
 
 /** Mark read or not read (idempotent). Returns the new state for the toggle. */
 export async function completeDayAction(dayId: string, done: boolean): Promise<{ ok: true; completed: boolean } | { ok: false; message: string }> {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   if (!uuid.safeParse(dayId).success) return { ok: false, message: "That reading isn't available." };
   const { data, error } = await rpc("bible_day_complete", { p_day: dayId, p_done: done });
   if (error) return { ok: false, message: dbErrorMessage(error, "That couldn't be saved. Please try again.") };
@@ -105,7 +105,7 @@ export type BookmarkInput =
   | { kind: "assignment"; day_id: string; label?: string };
 
 export async function toggleBookmarkAction(input: BookmarkInput): Promise<{ ok: true; bookmarked: boolean } | { ok: false; message: string }> {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const { data, error } = await rpc("bible_bookmark_toggle", { p: input });
   if (error) return { ok: false, message: dbErrorMessage(error, "The bookmark couldn't be saved.") };
   revalidatePath("/bible/bookmarks");
@@ -113,7 +113,7 @@ export async function toggleBookmarkAction(input: BookmarkInput): Promise<{ ok: 
 }
 
 export async function removeBookmarkAction(formData: FormData) {
-  await requireApprovedMember("/bible/bookmarks");
+  await requireLearner("/bible/bookmarks");
   const id = idFrom(formData);
   if (id) await rpc("bible_bookmark_remove", { p_id: id });
   revalidatePath("/bible/bookmarks");
@@ -126,7 +126,7 @@ export async function highlightAction(input: {
   verses: number[];
   color: string | null;
 }): Promise<{ ok: true; highlights: Array<{ verse: number; color: string }> } | { ok: false; message: string }> {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   if (!uuid.safeParse(input.translationId).success || !/^[1-3A-Z][A-Z0-9]{2}$/.test(input.book)) return { ok: false, message: "Choose verses first." };
   if (input.color !== null && !["yellow", "green", "blue", "pink"].includes(input.color)) return { ok: false, message: "Choose a highlight color." };
   const { data, error } = await rpc("bible_highlight_set", {
@@ -141,7 +141,7 @@ export async function highlightAction(input: {
 }
 
 export async function readerPrefsAction(input: { text_size?: number; line_spacing?: number; verse_numbers?: boolean; translation_id?: string }) {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const p: Record<string, unknown> = {};
   if (input.text_size !== undefined) p.text_size = Math.round(Math.min(200, Math.max(85, input.text_size)));
   if (input.line_spacing !== undefined) p.line_spacing = Math.min(2.2, Math.max(1.3, Math.round(input.line_spacing * 100) / 100));
@@ -152,7 +152,7 @@ export async function readerPrefsAction(input: { text_size?: number; line_spacin
 }
 
 export async function clearAnnotationsAction(formData: FormData) {
-  await requireApprovedMember("/bible/bookmarks");
+  await requireLearner("/bible/bookmarks");
   const kind = String(formData.get("kind"));
   if (kind === "bookmarks" || kind === "highlights") await rpc("bible_annotations_clear", { p_kind: kind, p_confirm: kind });
   revalidatePath("/bible/bookmarks");
@@ -160,7 +160,7 @@ export async function clearAnnotationsAction(formData: FormData) {
 
 /** The member's preferred Bible version (empty = the church's default). */
 export async function preferredVersionAction(formData: FormData) {
-  await requireApprovedMember("/bible");
+  await requireLearner("/bible");
   const value = String(formData.get("translation_id") ?? "");
   if (value && !uuid.safeParse(value).success) return;
   await rpc("bible_reader_prefs_save", { p: { translation_id: value } });

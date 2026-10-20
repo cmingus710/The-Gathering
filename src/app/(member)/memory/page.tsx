@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import type { MemoryHome } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ import { requireClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Memory verses" };
 
 export default async function MemoryHomePage() {
-  const viewer = await requireApprovedMember("/memory");
+  const viewer = await requireLearner("/memory");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_home");
   const home = data as MemoryHome | null;

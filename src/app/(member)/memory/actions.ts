@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { isValidTimeZone } from "@/lib/bible/dates";
 import { errorState, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
@@ -29,7 +29,7 @@ function refresh() {
 
 /** Adds a collection verse (item_id) or a passage chosen from the approved source. */
 export async function addVerseAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/memory");
+  await requireLearner("/memory");
   const item = idFrom(formData, "item_id");
   let payload: Record<string, unknown>;
   if (item) {
@@ -52,7 +52,7 @@ export async function addVerseAction(_prev: FormState, formData: FormData): Prom
 }
 
 export async function removeVerseAction(formData: FormData) {
-  await requireApprovedMember("/memory/verses");
+  await requireLearner("/memory/verses");
   const id = idFrom(formData);
   const mode = String(formData.get("mode"));
   if (!id || !["remove", "restore", "delete"].includes(mode)) return;
@@ -63,7 +63,7 @@ export async function removeVerseAction(formData: FormData) {
 
 /** The member's explicit choice to practice the updated text of a verse. */
 export async function switchVersionAction(formData: FormData) {
-  await requireApprovedMember("/memory/verses");
+  await requireLearner("/memory/verses");
   const id = idFrom(formData);
   if (!id) return;
   const { data, error } = await rpc("memory_card_switch_version", { p_id: id });
@@ -80,7 +80,7 @@ const Settings = z.object({
 });
 
 export async function saveSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/memory/settings");
+  await requireLearner("/memory/settings");
   const parsed = Settings.safeParse({
     difficulty: formData.get("difficulty"),
     presentation: formData.get("presentation"),
@@ -114,7 +114,7 @@ export async function saveSettingsAction(_prev: FormState, formData: FormData): 
 }
 
 export async function deleteHistoryAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/memory/settings");
+  await requireLearner("/memory/settings");
   const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
   if (confirm !== "delete my practice history") return errorState("Type the confirmation exactly to delete your practice history.");
   const { error } = await rpc("memory_history_delete", { p_confirm: confirm, p_collections: formData.get("collections") === "on" });
@@ -124,7 +124,7 @@ export async function deleteHistoryAction(_prev: FormState, formData: FormData):
 }
 
 export async function saveMyCollectionAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/memory/collections");
+  await requireLearner("/memory/collections");
   const id = idFrom(formData);
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return errorState("Give the collection a title.", { fieldErrors: { title: ["Give the collection a title."] } });
@@ -139,7 +139,7 @@ export async function saveMyCollectionAction(_prev: FormState, formData: FormDat
 }
 
 export async function myCollectionItemAction(formData: FormData) {
-  await requireApprovedMember("/memory/collections");
+  await requireLearner("/memory/collections");
   const collection = idFrom(formData, "collection_id");
   const card = idFrom(formData, "card_id");
   const item = idFrom(formData, "item_id");
@@ -149,7 +149,7 @@ export async function myCollectionItemAction(formData: FormData) {
 }
 
 export async function deleteMyCollectionAction(formData: FormData) {
-  await requireApprovedMember("/memory/collections");
+  await requireLearner("/memory/collections");
   const id = idFrom(formData);
   if (id) await rpc("memory_my_collection_delete", { p_id: id });
   refresh();
@@ -157,7 +157,7 @@ export async function deleteMyCollectionAction(formData: FormData) {
 }
 
 export async function challengeAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/memory");
+  await requireLearner("/memory");
   const id = idFrom(formData);
   const op = String(formData.get("op"));
   if (!id) return errorState("That challenge isn't available.");

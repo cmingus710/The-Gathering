@@ -6,7 +6,7 @@ import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import type { Collection } from "@/lib/memory/types";
 import { signMemoryPaths } from "@/lib/memory/storage";
 import { requireClient } from "@/lib/supabase/server";
@@ -14,7 +14,7 @@ import { requireClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Verse collections" };
 
 export default async function CollectionsPage() {
-  await requireApprovedMember("/memory/collections");
+  await requireLearner("/memory/collections");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_collections");
   const cols = (data ?? { church: [], personal: [] }) as { church: Collection[]; personal: Collection[] };

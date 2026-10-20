@@ -5,7 +5,7 @@ import { allTimeZones } from "@/app/admin/events/series";
 import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import type { PracticeSettings } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
 import { DeleteHistoryForm, SettingsForm } from "./forms";
@@ -13,7 +13,7 @@ import { DeleteHistoryForm, SettingsForm } from "./forms";
 export const metadata: Metadata = { title: "Practice settings" };
 
 export default async function SettingsPage() {
-  await requireApprovedMember("/memory/settings");
+  await requireLearner("/memory/settings");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_settings");
   const s = data as (PracticeSettings & { notifications: { in_app: boolean; email: string; push: boolean } | null }) | null;

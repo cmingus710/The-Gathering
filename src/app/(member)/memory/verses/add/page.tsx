@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { BOOK_LIST, chapterCount, isBookCode } from "@/lib/bible/books";
 import type { Translation, Verse } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -26,7 +26,7 @@ type Preview = { ok: boolean; problem?: string; label?: string; translation?: Tr
  * exact wording on the server).
  */
 export default async function AddVersePage({ searchParams }: PageProps<"/memory/verses/add">) {
-  await requireApprovedMember("/memory/verses/add");
+  await requireLearner("/memory/verses/add");
   const sp = await searchParams;
   const supabase = await requireClient();
   const { data: tData } = await supabase.rpc("bible_translations");

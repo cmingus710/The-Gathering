@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { errorState, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -33,7 +33,7 @@ export type JournalListItem = {
 export async function searchJournalAction(input: { query: string; status: "active" | "archived"; offset: number }): Promise<
   { ok: true; total: number; items: JournalListItem[] } | { ok: false; message: string }
 > {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const { data, error } = await rpc("journal_entries", {
     p_query: input.query.slice(0, 200) || null,
     p_status: input.status === "archived" ? "archived" : "active",
@@ -46,7 +46,7 @@ export async function searchJournalAction(input: { query: string; status: "activ
 }
 
 export async function entryStatusAction(formData: FormData) {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const id = uuid.safeParse(formData.get("id")).data;
   const action = formData.get("action") === "restore" ? "restore" : "archive";
   if (id) await rpc("journal_entry_status", { p_id: id, p_action: action });
@@ -54,14 +54,14 @@ export async function entryStatusAction(formData: FormData) {
 }
 
 export async function unlinkEntryAction(formData: FormData) {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const id = uuid.safeParse(formData.get("id")).data;
   if (id) await rpc("journal_entry_unlink", { p_id: id });
   revalidatePath("/journal", "layout");
 }
 
 export async function deleteEntryAction(formData: FormData) {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const id = uuid.safeParse(formData.get("id")).data;
   if (id) await rpc("journal_entry_delete", { p_id: id });
   revalidatePath("/journal", "layout");
@@ -69,7 +69,7 @@ export async function deleteEntryAction(formData: FormData) {
 }
 
 export async function deleteAllAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireApprovedMember("/journal");
+  await requireLearner("/journal");
   const confirm = String(formData.get("confirm") ?? "");
   const { data, error } = await rpc("journal_delete_all", { p_confirm: confirm });
   if (error) return errorState(dbErrorMessage(error));

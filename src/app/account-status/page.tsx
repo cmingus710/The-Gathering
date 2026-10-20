@@ -39,6 +39,16 @@ export default async function AccountStatusPage({ searchParams }: PageProps<"/ac
             <p className="mt-4 text-text-secondary">
               Your member access has been suspended. If you think this is a mistake, please reach out to the church office.
             </p>
+          ) : viewer.accountKind === "youth" ? (
+            <>
+              <p className="mt-4">This account was set up for a youth invitation.</p>
+              <p className="mt-3">
+                <a className="font-semibold text-primary underline-offset-2 hover:underline" href="/youth-activate">
+                  Enter your invitation code
+                </a>{" "}
+                to finish. Your parent or guardian, or the church office, has the code.
+              </p>
+            </>
           ) : (
             <>
               <p className="mt-4">

@@ -152,7 +152,10 @@ export default async function AlbumAdminPage({ params, searchParams }: PageProps
                       </label>
                       <label className="flex items-start gap-2">
                         <input type="radio" name="minors" value="permission_confirmed" className="mt-1 size-5 accent-primary" />
-                        <span>Shows someone under 18, and I confirmed a parent or guardian&apos;s permission to share it here</span>
+                        <span>
+                          Shows someone under 18, and they&apos;re linked to their photo consent under Youth &amp; families → Photo consent (approval is refused
+                          until every linked child has member-gallery consent)
+                        </span>
                       </label>
                     </fieldset>
                     <SubmitButton size="sm" pendingText="Approving…">

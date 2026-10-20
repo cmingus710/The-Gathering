@@ -57,8 +57,8 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "bible", label: "Bible Reading", art: "bible", glyph: "bible", order: 54, status: "available", href: "/bible" },
   // Scripture memory (Phase 9), with the supplied Memory Verses art.
   { id: "memory-verses", label: "Memory Verses", art: "memory-verses", glyph: "memory", order: 54.5, status: "available", href: "/memory" },
-  // Later phases (see docs/roadmap.md). Not links until they ship.
-  { id: "youth", label: "Youth", art: "youth", glyph: "youth", order: 160, status: "upcoming", phase: 10 },
+  // Youth ministry and families (Phase 10), with the supplied Youth art.
+  { id: "youth", label: "Youth", art: "youth", glyph: "youth", order: 66, status: "available", href: "/youth" },
 ];
 
 export type AvailableLauncherItem = Extract<LauncherItem, { status: "available" }>;
