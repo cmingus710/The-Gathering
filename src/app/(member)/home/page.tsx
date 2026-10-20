@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { Launcher, type LauncherTile } from "@/components/home/launcher";
 import { TeachingSection, type HomeTeaching } from "@/components/home/teaching";
+import { MemoryCard, type HomeMemory } from "@/components/home/memory-card";
 import { TodayReading, type HomeReading } from "@/components/home/today-reading";
 import { ComingUpBanner, ComingUpEmpty, GatheringPanel, GreetingBanner, HeadingLink, HomeSectionHeading, LifeAtGathering } from "@/components/home/sections";
 import { Icon } from "@/components/icons/icon";
@@ -43,7 +44,7 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
   const now = new Date();
   const tz = settings.timezone;
 
-  const [announcementsResult, eventsResult, invitations, defaultBanner, teaching, reading] = await Promise.all([
+  const [announcementsResult, eventsResult, invitations, defaultBanner, teaching, reading, memory] = await Promise.all([
     listLiveAnnouncements(supabase, { limit: 3 }).then(
       (data): { ok: true; data: AnnouncementWithImage[] } => ({ ok: true, data }),
       () => ({ ok: false as const }),
@@ -63,6 +64,11 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
     // Today's reading from the member's main plan (Phase 8); nothing without a plan or on any error.
     Promise.resolve(supabase.rpc("bible_today")).then(
       ({ data, error }) => (error || !data ? null : (data as HomeReading)),
+      () => null,
+    ),
+    // The current memory verse (Phase 9); nothing without an active assignment or on any error.
+    Promise.resolve(supabase.rpc("memory_home_card")).then(
+      ({ data, error }) => (error || !data ? null : (data as HomeMemory)),
       () => null,
     ),
   ]);
@@ -105,6 +111,8 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
       </section>
 
       {reading ? <TodayReading data={reading} /> : null}
+
+      {memory ? <MemoryCard data={memory} /> : null}
 
       {invitations.length ? (
         <ListRow

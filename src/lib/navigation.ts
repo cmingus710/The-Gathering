@@ -51,6 +51,8 @@ export const MEMBER_NAV: NavItem[] = [
   // Phase 8: Bible reading plans and the reader; journals are private to each member.
   { key: "bible", label: "Bible reading", icon: "bible", section: "learn", status: "available", href: "/bible" },
   { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },
+  // Phase 9: scripture memory; practice results are private to each member.
+  { key: "memory", label: "Memory verses", icon: "memory", section: "learn", status: "available", href: "/memory" },
 ];
 
 /**
@@ -151,6 +153,14 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: "/admin/bible/sources",
     icon: "reading",
     requires: [CAPABILITIES.bibleManage],
+  },
+  {
+    key: "memory",
+    label: "Memory verses",
+    href: "/admin/memory",
+    icon: "memory",
+    requires: [],
+    anyOf: [CAPABILITIES.memoryManage, CAPABILITIES.memoryPublish],
   },
   {
     key: "prayer",

@@ -821,3 +821,43 @@ html[data-player] {
   .scripture[data-no-print="true"] { display: none; }
   .print-notice { display: block !important; }
 }
+
+/* Scripture memory practice (Phase 9). Readable measure, generous line
+   height, larger type and controls in the kids presentation, and gentle
+   celebrations that disappear with reduced motion. */
+.memory-text {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.75;
+  max-width: 38rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+[data-presentation="kids"] .memory-text {
+  font-size: 1.5rem;
+  line-height: 1.85;
+}
+[data-presentation="kids"] .memory-control {
+  min-height: 3.5rem;
+  font-size: 1.125rem;
+}
+/* A hidden word is an empty box sized to the word: its text isn't in the
+   page at all, so screen readers can't announce it either. */
+.memory-word-hidden {
+  display: inline-block;
+  height: 1.1em;
+  vertical-align: -0.15em;
+  background: var(--color-surface-muted);
+  border-bottom: 2px solid var(--color-border-strong);
+  border-radius: 0.2em;
+}
+.memory-celebrate {
+  animation: memory-rise 600ms ease-out both;
+}
+@keyframes memory-rise {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-celebrate { animation: none; }
+}

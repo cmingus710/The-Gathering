@@ -455,6 +455,8 @@ begin
   return jsonb_build_object(
     'today', v_today,
     'settings', memory.settings_json(s),
+    -- Whether to offer the group leader's tools (a group they lead is authorized).
+    'leads', exists (select 1 from memory.group_authorizations a where community.group_leader(a.group_id, v_uid)),
     'assignments', coalesce((select jsonb_agg(memory.member_item_json(i, v_uid, true) || jsonb_build_object(
                                      'collection', jsonb_build_object('id', c.id, 'title', c.title, 'kind', c.kind, 'goal_note', c.goal_note,
                                                                       'goal_sessions_per_week', c.goal_sessions_per_week)))
