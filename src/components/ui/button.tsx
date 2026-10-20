@@ -4,10 +4,10 @@ import { cn } from "./cn";
 import { Spinner } from "./spinner";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "danger-outline";
-export type ButtonSize = "md" | "sm";
+export type ButtonSize = "lg" | "md" | "sm";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold leading-tight " +
+  "inline-flex items-center justify-center gap-2 rounded-button font-semibold leading-tight " +
   "transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary " +
   "disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55 " +
@@ -23,6 +23,7 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
+  lg: "min-h-13 px-7 py-3 text-[1.125rem]",
   md: "min-h-12 px-5 py-2.5 text-base",
   sm: "min-h-11 px-4 py-2 text-meta",
 };
