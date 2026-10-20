@@ -1,0 +1,64 @@
+# Teaching, media, and publishing: administration guide (Phase 7)
+
+This guide covers the media library and the teaching sections: Devotionals, Sunday lessons, church podcast episodes, Church reading, and Music & playlists. Podcast shows and feeds are covered in [podcast-guide.md](podcast-guide.md), photo galleries in [gallery-guide.md](gallery-guide.md), and what members see and what outside services can and can't do in [media-limitations.md](media-limitations.md).
+
+## Where things are
+
+| Task | Location | Needs |
+| --- | --- | --- |
+| Write and edit drafts | **Admin → Teaching content** (`/admin/content`, `/admin/content/new`) | `content.edit` |
+| Publish, schedule, unpublish, archive, set expiry | The **Publishing** panel on each item (`/admin/content/<id>`) | `content.publish` |
+| Preview as members will see it | **Preview as members will see it** on the item (`/admin/content/<id>/preview`) | `content.edit` or `content.publish` |
+| Calendar of scheduled and published items | `/admin/content/calendar` | `content.edit` or `content.publish` |
+| Series, people (speakers, authors, hosts), topics | `/admin/content/library` | `content.edit` |
+| Upload files, rights, captions, transcripts, replace, remove | **Admin → Media library** (`/admin/media`, `/admin/media/<id>`) | `media.manage` |
+| Storage usage and cleanup | `/admin/media/cleanup` | `media.manage` |
+| Upload limits, quota, feed refresh interval, gallery limits | `/admin/media/settings` | `media.manage` (gallery limits: `gallery.moderate`; feed interval: `podcasts.manage`) |
+
+## Roles and permissions
+
+Super administrators hold all five Phase 7 capabilities. Everyone else gets them through these roles (assigned under **Admin → Members → Roles**; every grant is audited):
+
+| Role | Capabilities | Can | Can't |
+| --- | --- | --- | --- |
+| Content editor (Phase 1 role, extended) | `announcements.manage`, `content.edit` | Draft and edit teaching content; preview; manage series, people, topics | Publish, schedule, or make anything public; change a published item |
+| Content publisher | `content.edit`, `content.publish` | Everything above plus publish, schedule, unpublish, archive, expiry, featured; choose **Public** (with confirmation) | Upload files (needs media manager), manage podcasts or galleries |
+| Media manager | `media.manage` | Upload, describe, set rights, add captions and transcripts, replace, remove unused files, review storage and cleanup | Publish content |
+| Podcast manager | `podcasts.manage` | Shows, external feeds, the public RSS feed | Publish episodes (needs `content.publish`) |
+| Gallery moderator | `gallery.moderate` | Albums, photo review, reports | Anything outside galleries |
+| Event coordinator (Phase 4) | `events.manage` | Create albums linked to events | Approve photos |
+
+None of these capabilities opens private messages, prayer, care, journals, giving, or member records. Listening history and bookmarks are private to each member; there is no admin view of who watched or listened to what.
+
+## Publishing workflow
+
+1. **Draft.** An editor creates the item and fills in title, summary, body (Markdown), cover image and alt text, people, topics, series, tags, and scripture references (normalized, e.g. "John 3:16–18"). Kind-specific fields: devotional date, lesson date, episode and season numbers, book author and Audible link, assignment start and end dates and instructions, Spotify playlist link.
+2. **Attach files** from the library. Each attachment has a role (audio, video, handout, slides, resource). Attachments are **members-only by default**; only files with confirmed rights and **Allowed for public use** reach visitors on a public item.
+3. **Preview.** The preview renders exactly the member page (without bookmarks or progress).
+4. **Publish or schedule** (publisher). With a future publish time the item becomes **Scheduled** and goes live at that time without anyone opening the app: the database scheduler (`events-worker`, every 5 minutes) runs `media.tick()`, and every page applies the publish and expiry times on each read. Optional **expiry** hides the item afterwards.
+5. **Audience.** **Approved members** is the default. **One group** limits it to that group's active members. **Public** is for devotionals, lessons, and church episodes only, needs a publisher, and requires typing the confirmation. Books, assignments, and playlists can't be public; galleries are never public.
+6. **Notify.** "Notify people when it goes live" sends one notice, once, at publish time, to people who can see it and haven't muted that kind. Items that went live more than 3 days earlier (back-catalog) never notify.
+7. **Unpublish / archive / restore.** Unpublishing returns the item to draft. Archiving hides it everywhere (lists, search, bookmarks, history, related links, notifications, files, RSS).
+
+Access is rechecked on every read: if an item's audience narrows, or a member leaves a group or loses approval, the item and its files, captions, transcripts, covers, playback links, bookmarks, history entries, related links, and unread notifications stop being visible to them at once.
+
+## Media library
+
+- **Uploads go straight from the browser to private Supabase Storage** with a one-time signed token, never through the app server. Files over 6 MB use resumable (TUS) uploads; each file shows progress and can be cancelled or retried without creating duplicates.
+- **Server-side checks after upload:** the stored bytes are sniffed (the declared type and extension aren't trusted), sizes are checked against the limits, images are re-encoded (removing location and camera data), and audio/video duration and dimensions are recorded. Status moves uploading → processing → ready, or failed with a reason.
+- **Accepted:** audio MP3/M4A (AAC); video MP4 (H.264/AAC); images JPEG/PNG/WebP/HEIC; documents PDF and PPTX (no macros); captions WebVTT (sanitized). YouTube and Vimeo videos are added as **external references** (no file is stored).
+- **Transcripts** are added on the file's page (paste or generate from a caption file).
+- **Usage before removal:** each file lists every item, show, or series using it. A file in use can't be removed; **Replace** swaps it everywhere at once and keeps the old file until you remove it.
+- **Rights:** source, attribution, rights type (church owned, licensed, used with permission, public domain), and notes. Rights must be confirmed before a file can be marked for public use, and before an item using church-hosted media can be published.
+
+## Storage, delivery, and costs
+
+- **Buckets:** `media` (private; published files) and `media-uploads` (private quarantine for gallery originals). Neither is public. **No member media is stored in GitHub.**
+- **Delivery:** the app checks access, then redirects to a short-lived signed URL: images 5 minutes, audio/video/documents 30 minutes. Signed URLs work for anyone holding them until they expire, so a member could share a link for up to that long; responses are `private, no-store` and the URLs are never logged by the app.
+- **Video:** progressive MP4 served from Supabase Storage. There is **no transcoding and no adaptive streaming**, and no paid video provider was added. On the **Free plan** the per-file limit is **50 MB** (roughly 10–15 minutes of 720p), total storage **1 GB**, and egress **5 GB/month**. Long sermon video belongs on **YouTube or Vimeo** (added as external references), with church-hosted audio for listening.
+- **Costs if the church upgrades:** Supabase Pro ($25/month) includes 100 GB storage and 250 GB egress, then about **$0.021 per GB-month** of storage and **$0.09 per GB** of egress. Example: 50 one-hour audio sermons at 64 kbps mono ≈ 1.4 GB stored; 500 full listens ≈ 14 GB egress. A dedicated video service (Mux, Cloudflare Stream, Bunny Stream) would add transcoding and adaptive streaming at extra cost; it is **not configured**.
+- **Usage report:** `/admin/media/cleanup` shows total bytes by kind against the soft quota in settings.
+
+## Cleanup and retention
+
+Cleanup is **manual and reviewed**: `/admin/media/cleanup` lists candidates (failed uploads, uploads abandoned longer than the setting, removed or replaced files no longer in use), and a media manager deletes them with their own session after review. Nothing is deleted automatically, and no destructive cleanup has been run on existing data. Before automating any retention, the church should adopt a written retention policy.

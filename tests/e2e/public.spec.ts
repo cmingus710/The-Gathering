@@ -139,6 +139,27 @@ for (const path of [
   "/admin/prayer",
   "/admin/prayer/settings",
   "/admin/prayer/access",
+  // Phase 7 (members-only sections and administration)
+  "/reading",
+  "/reading/books/00000000-0000-0000-0000-000000000000",
+  "/reading/assignments/00000000-0000-0000-0000-000000000000",
+  "/music",
+  "/music/00000000-0000-0000-0000-000000000000",
+  "/gallery",
+  "/gallery/mine",
+  "/gallery/00000000-0000-0000-0000-000000000000",
+  "/saved",
+  "/admin/content",
+  "/admin/content/new",
+  "/admin/content/calendar",
+  "/admin/content/library",
+  "/admin/content/00000000-0000-0000-0000-000000000000/preview",
+  "/admin/media",
+  "/admin/media/settings",
+  "/admin/media/cleanup",
+  "/admin/podcasts",
+  "/admin/gallery",
+  "/admin/gallery/reports",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -187,6 +208,32 @@ test("protected prayer and care responses are never publicly cacheable", async (
     expect(res.headers()["cache-control"]).toContain("private");
     expect(res.headers()["cache-control"]).toContain("no-store");
   }
+});
+
+test("teaching, gallery, and saved responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/reading", "/music", "/gallery", "/saved", "/devotionals", "/lessons", "/podcasts", "/media"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"], path).toContain("private");
+    expect(res.headers()["cache-control"], path).toContain("no-store");
+  }
+});
+
+test("media delivery routes refuse unknown files without a cacheable answer", async ({ request }) => {
+  const id = "00000000-0000-0000-0000-000000000000";
+  for (const path of [`/api/media/${id}/play`, `/api/media/${id}/file`, `/api/media/${id}/vtt`, `/api/podcast/episodes/${id}/audio`, `/api/podcast/artwork/${id}`]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect([401, 403, 404, 503], path).toContain(res.status());
+    expect(res.headers()["location"], path).toBeUndefined();
+    expect(res.headers()["cache-control"] ?? "", path).not.toContain("public");
+  }
+  for (const path of [`/api/media/not-an-id/play`, `/api/podcast/episodes/not-an-id/audio`]) {
+    expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
+  }
+});
+
+test("the service worker never caches teaching media or photos", async ({ request }) => {
+  const sw = await (await request.get("/sw.js")).text();
+  for (const p of ["/api/media", "/gallery", "/storage/v1"]) expect(sw).not.toContain(p);
 });
 
 test("the service worker never caches prayer pages", async ({ request }) => {

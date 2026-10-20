@@ -337,6 +337,53 @@ Reads are always rechecked. Triggers on group membership end, membership status 
 
 `/prayer` is a protected prefix (`private, no-store`), pages use a generic document title (never a request title), and the service worker caches no pages. Search is a POST Server Action, so search words never appear in URLs or request logs. Composers keep drafts in component state only; failures keep the text. Server errors shown to members are generic; actions log no request content. Youth participation stays disabled (approved adult accounts only).
 
+## Teaching, media, and shared resources (Phase 7)
+
+Guides: [media-guide.md](media-guide.md) (administration, permission matrix, storage and costs), [podcast-guide.md](podcast-guide.md), [gallery-guide.md](gallery-guide.md), [media-limitations.md](media-limitations.md) (members and outside services).
+
+### Storage and access
+
+A private `media` schema (no Data API exposure, no privileges for `anon`/`authenticated`) reached only through `SECURITY DEFINER` functions: `media_*` for members and visitors, `media_admin_*` for staff, `media_job` for the signed scheduler. Every function rechecks the caller; every `UPDATE`/`DELETE` has a `WHERE` clause (hosted pg-safeupdate).
+
+| Area | Tables |
+| --- | --- |
+| Library | `assets` (one row per file or external video, status, rights, public-use flag, parent for captions, transcript), `settings` |
+| Content | `items` (kind `devotional`/`lesson`/`episode`/`book`/`assignment`/`playlist`, status, publish and expiry times, audience, group, featured, order), `item_media` (attachment role, members-only flag), `item_people`, `item_topics`, `item_links`, `series`, `people`, `topics` |
+| Podcasts | `shows` (church or external, feed URL and state, provider link, in-app playback switch, public feed switch), `external_episodes` (imported metadata only) |
+| Member data | `bookmarks`, `progress` (saved positions), `completions` (reading), `member_prefs` (muted kinds); private to their owner, no staff view |
+| Gallery | `albums`, `photos`, `photo_reports`, `moderation_log` |
+| Public feed | `public_hits` (hashed visitor keys for rate limiting, purged daily) |
+
+**One read rule.** `media.item_visible` (live status between publish and expiry, then audience: public, approved members, or the group's active members; episodes also need a visible show) is used by every list, detail, search, facet, series page, home section, bookmark, history entry, related link, RSS item, notification, and file. `media.asset_visible` lets a file through only if it's attached to (or the cover, artwork, or caption of) something the caller can see; on a public item, visitors get only files that are `public_ok` with confirmed rights and not members-only. Galleries use `media.album_visible` and `media.photo_visible` (approved photos only; never public). Staff checks use `media.require_cap`, which honors the super administrator's implicit grant.
+
+**Capabilities** `content.edit`, `content.publish`, `media.manage`, `podcasts.manage`, `gallery.moderate`, via roles `content_publisher`, `media_manager`, `podcast_manager`, `gallery_moderator` (and `content_editor`, which gains `content.edit`). None of them reaches messages, prayer, care, journals, giving, or member records.
+
+**Losing access.** Reads are always rechecked, so narrowing an audience, leaving a group, or losing approval hides content and files immediately. Triggers (`media.reconcile_access`) also delete unread teaching and gallery notices the person can no longer see.
+
+### Files and delivery
+
+- **Uploads** go from the browser straight to Storage with a one-time signed upload token from `createSignedUploadUrl` (TUS resumable above 6 MB, signed PUT otherwise), never through a Vercel function. The server then downloads (images) or range-reads (audio/video/documents) the stored object to sniff its real type, check size and dimensions, and record duration; images are re-encoded with `sharp` (HEIC decoded with `heic-decode`), which drops all metadata.
+- **Buckets** `media` and `media-uploads` are private. Storage policies call `public.media_can_read_object`, `media_can_write_object` (only the registered path of an upload in progress), and `media_can_delete_object`.
+- **Delivery** is through access-checked routes (`/api/media/<asset>/play|file|vtt`, `/api/podcast/episodes/<id>/audio`, `/api/podcast/artwork/<asset>`) that redirect to signed URLs (images 5 minutes, playback and downloads 30 minutes) with `private, no-store`. Captions are sanitized WebVTT served by the app. Signed URLs and request bodies are never logged.
+- **Video** is progressive MP4 (no transcoding, no adaptive streaming, no paid provider). YouTube and Vimeo are stored as references and embedded click-to-load from parsed IDs only (`youtube-nocookie.com`, Vimeo `dnt=1`).
+- **Cleanup** is reviewed and manual (`media_admin_cleanup_candidates` → delete with the manager's session → `media_admin_objects_deleted`). Files in use can't be removed; replacement swaps references in one transaction.
+
+### Publishing and scheduling
+
+Editors change drafts only; publishing, scheduling, expiry, archiving, and choosing **Public** need `content.publish` (public also needs `confirm_public = 'public'` and is limited to devotionals, lessons, and episodes). Publishing church-hosted media requires confirmed rights. Visibility is computed from `status`, `publish_at`, and `expires_at` on every read, so scheduled items appear on time with no job; `media.tick()` (called by `community.tick()` under its advisory lock) sends each item's notice once at publish time (skipping items live for more than 3 days), batches gallery notices, and purges rate-limit hashes.
+
+### Podcasts and feeds
+
+External feeds are fetched by `/api/jobs/events` (`refreshDueFeeds`) after `community.has_due_work()` reports due feeds, or by **Refresh now** (leased, rate-limited). `safeFetch` resolves DNS at connect time through a custom `lookup` that refuses every non-public address, follows at most 3 redirects manually, and caps time (15 s for feeds) and size (8 MB for feeds). `parseFeed` validates the XML first and refuses DOCTYPE/ENTITY. `media.ingest` dedupes by GUID hash, updates changes, hides vanished episodes, ignores empty feeds, and backs off after failures; imports never notify. External audio is never downloaded or rehosted; it plays from the publisher's URL only when the show allows in-app playback. The public RSS feed (`/podcast/feed.xml`) is built from `media_public_feed`, which returns only public, live episodes whose audio is public-use with confirmed rights, with stable enclosure URLs; the feed and enclosures are rate-limited by a keyed hash of the visitor's IP.
+
+### Player
+
+`PlayerProvider` (root layout) owns one `<audio>` element and the mini-player; `src/lib/media/coordinator.ts` makes every player (native video, embeds) claim playback so starting one pauses the others (YouTube/Vimeo through their postMessage APIs; Spotify/Apple embeds are unloaded). The mini-player sits above the dock and safe areas (`--player-clearance` feeds `--dock-clearance`). Media Session metadata and actions are set when supported. Positions are saved for members every 15 seconds, on pause, and on page hide (`media_progress_save`, keyed `a:<asset>` or `e:<external episode>`), and are never visible to staff.
+
+### Pages, caching, and search
+
+Devotionals, lessons, podcasts, and the hub (`/media`) live in the `(teaching)` route group: visitors see only public content with a sign-in note, members get the app shell. Reading, music, gallery, and saved are members-only (`(member)`). All of them, and `/api/media`, are `private, no-store` (proxy and `next.config.ts`); the service worker caches none of them. `media_search` searches teaching, shows, external episodes, and (members) album titles only.
+
 ## Announcements
 
 - Stored status is `draft | scheduled | published | archived`, plus `publish_at` / `expires_at`.

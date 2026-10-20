@@ -12,6 +12,8 @@ Design: [architecture.md](architecture.md#community-groups-messaging-and-notific
 | Moderator actions (`moderation`) | Your post hidden or restored; discussion locked; restriction applied or lifted; new report in your group (leaders) | Always on | Right away |
 | Event updates (`events`) | Waitlist promotion, time/place change, cancellation for events you're registered for | On | — (event emails are sent by Phase 4's own outbox) |
 | Prayer (`prayer`, Phase 6) | New comment on a request you wrote or follow; new update; answered prayer | On | Off (generic text only) |
+| Teaching (`teaching`, Phase 7) | New devotional, Sunday lesson, church podcast episode, reading assignment, or playlist you can see (once, at publish time; never for back-catalog or feed imports); per-kind switches | On | Off (generic text only) |
+| Gallery (`gallery`, Phase 7) | New approved photos in an album you can see (one grouped notice at most every 6 hours, after a 10-minute settle); decisions about photos you shared | On | Off (generic text only) |
 | Care (`care`, Phase 6) | Coordinator response or status change on your care request; care assignment and follow-up reminder (coordinators); requester reply (assigned coordinator); accepted volunteer assignment | On | Right away (generic text only; never digested) |
 
 Prayer moderator actions on your request or comment appear under Moderator actions.
@@ -50,7 +52,9 @@ Phase 5 reuses the Phase 4 scheduler instead of adding another:
 - **No duplicates across previews:** only one deployment URL is designated, every message is claimed under a row lock (`for update skip locked`), and every send carries an idempotency key. Other previews may send immediately after an action (best effort), which is safe for the same reasons.
 - **Retention run by the tick:** rate-limit records after 2 days; direct messages after `dm_retention_days` (default 730), and as soon as both participants have deleted a conversation; report evidence `report_evidence_days` (default 180) after a report is closed; read notifications after 180 days; sent/skipped delivery records after 60 days (push 14).
 
-Since Phase 6 the designated deployment is the Phase 6 preview (`supabase/manual/2026-10-24-prayer-scheduler.sql`).
+Since Phase 6 the designated deployment is the Phase 6 preview (`supabase/manual/2026-10-24-prayer-scheduler.sql`). Phase 7 adds `media.tick()` (called by `community.tick()`: scheduled content notices, gallery batches, rate-limit cleanup) and reports due podcast feeds through `community.has_due_work()`; `/api/jobs/events` then refreshes them. `supabase/manual/2026-10-25-media-scheduler.sql` moves the designated deployment to the Phase 7 preview.
+
+**Teaching and gallery are generic outside the app** ("A new Sunday lesson is available", "New photos were added to an album": the section, never the title, album name, or photo); the in-app list shows the title only after rechecking that the reader can still see the item or album, and an unread notice disappears when access is lost.
 
 ### Setup (owner)
 
