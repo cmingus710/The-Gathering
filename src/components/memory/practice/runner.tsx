@@ -55,7 +55,8 @@ export function PracticeRunner({
   const parts = short ? card.shortSegments : card.segments;
   const scored = activity === "type_verse" || activity === "word_order" || activity === "missing_words";
   const wholeAllowed = !scored || card.wordCount <= SCORED_WHOLE_LIMIT;
-  const [segment, setSegment] = useState<number>(initial.segment || (wholeAllowed ? 0 : 1));
+  // Kids presentation starts with the first short part; others with the whole passage when allowed.
+  const [segment, setSegment] = useState<number>(initial.segment || (wholeAllowed && !(kids && card.shortSegments.length > 1) ? 0 : 1));
   const [direction, setDirection] = useState(initial.direction);
   const [ignoreCase, setIgnoreCase] = useState(settings.ignore_case);
   const [ignorePunct, setIgnorePunct] = useState(settings.ignore_punctuation);

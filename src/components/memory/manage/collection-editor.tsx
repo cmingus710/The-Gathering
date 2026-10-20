@@ -43,50 +43,46 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
         <SectionHeading id="publishing">Publishing</SectionHeading>
         <Card className="space-y-4">
           {c.can_publish ? (
-            <div className="flex flex-wrap items-end gap-3">
-              {c.status !== "archived" && (c.status === "draft" || c.scheduled) ? (
-                <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "publish" }}>
-                  <SubmitButton size="sm" pendingText="Publishing…">
+            // One form for every status change, so its result message stays
+            // on screen after the buttons change with the new status.
+            <ActionForm action={collectionStatusAction} hidden={{ ...hidden, timezone: c.timezone }} className="space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                {c.status !== "archived" && (c.status === "draft" || c.scheduled) ? (
+                  <SubmitButton size="sm" name="op" value="publish" pendingText="Publishing…">
                     Publish now
                   </SubmitButton>
-                </ActionForm>
-              ) : null}
-              {c.status === "draft" ? (
-                <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "schedule", timezone: c.timezone }} className="flex flex-wrap items-end gap-2">
-                  <TextField label={`Publish at (${c.timezone.replaceAll("_", " ")})`} name="publish_at" type="datetime-local" required className="min-w-56" />
-                  <SubmitButton size="sm" variant="secondary" pendingText="Scheduling…">
-                    Schedule
-                  </SubmitButton>
-                </ActionForm>
-              ) : null}
-              {c.scheduled ? (
-                <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "unschedule" }}>
-                  <SubmitButton size="sm" variant="ghost">
+                ) : null}
+                {c.status === "draft" ? (
+                  <>
+                    <TextField id="schedule-publish-at" label={`Or publish at (${c.timezone.replaceAll("_", " ")})`} name="publish_at" type="datetime-local" className="min-w-56" />
+                    <SubmitButton size="sm" variant="secondary" name="op" value="schedule" pendingText="Scheduling…">
+                      Schedule
+                    </SubmitButton>
+                  </>
+                ) : null}
+                {c.scheduled ? (
+                  <SubmitButton size="sm" variant="ghost" name="op" value="unschedule">
                     Back to draft
                   </SubmitButton>
-                </ActionForm>
-              ) : null}
-              {c.status === "published" ? (
-                <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "archive" }}>
-                  <SubmitButton size="sm" variant="secondary">
+                ) : null}
+                {c.status === "published" ? (
+                  <SubmitButton size="sm" variant="secondary" name="op" value="archive">
                     Archive
                   </SubmitButton>
-                </ActionForm>
-              ) : null}
-              {c.status === "archived" ? (
-                <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "restore" }}>
-                  <SubmitButton size="sm" variant="secondary">
+                ) : null}
+                {c.status === "archived" ? (
+                  <SubmitButton size="sm" variant="secondary" name="op" value="restore">
                     Restore
                   </SubmitButton>
-                </ActionForm>
-              ) : null}
-            </div>
+                ) : null}
+              </div>
+            </ActionForm>
           ) : (
             <p className="text-meta text-text-secondary">A memory verse publisher publishes or schedules this collection.</p>
           )}
           <div className="flex flex-wrap items-end gap-3 border-t border-border pt-4">
             <ActionForm action={collectionStatusAction} hidden={{ ...hidden, op: "duplicate" }} className="flex flex-wrap items-end gap-2">
-              <TextField label="Duplicate as" name="title" defaultValue={`${c.title} (copy)`} maxLength={120} className="min-w-56" />
+              <TextField id="duplicate-title" label="Duplicate as" name="title" defaultValue={`${c.title} (copy)`} maxLength={120} className="min-w-56" />
               <SubmitButton size="sm" variant="secondary" pendingText="Duplicating…">
                 Duplicate
               </SubmitButton>
@@ -121,8 +117,8 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
               <img src={coverUrl} alt={c.cover_alt ?? ""} className="mb-4 aspect-[16/7] w-full max-w-xl rounded-tile object-cover" />
             ) : null}
             <ActionForm action={coverAction} hidden={hidden} className="grid gap-3 sm:grid-cols-2">
-              <TextField label="Image" name="cover" type="file" accept="image/png,image/jpeg,image/webp" />
-              <TextField label="Description for screen readers" name="cover_alt" maxLength={300} defaultValue={c.cover_alt ?? ""} optional />
+              <TextField id="cover-file" label="Image" name="cover" type="file" accept="image/png,image/jpeg,image/webp" />
+              <TextField id="cover-alt" label="Description for screen readers" name="cover_alt" maxLength={300} defaultValue={c.cover_alt ?? ""} optional />
               <div className="flex gap-2 sm:col-span-2">
                 <SubmitButton size="sm" variant="secondary" pendingText="Uploading…">
                   Save cover
@@ -179,11 +175,11 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
               {!i.retired && editable ? (
                 <>
                   <ActionForm action={saveItemAction} hidden={{ base, item_id: i.id }} className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <TextField label="Title (editorial)" name="title" maxLength={120} defaultValue={i.title ?? ""} optional />
-                    <TextField label="Hint (editorial)" name="hint" maxLength={300} defaultValue={i.hint ?? ""} optional hint="Shown only when a member asks for it." />
-                    <TextAreaField label="Note or explanation" name="note" rows={2} maxLength={2000} defaultValue={i.note} optional className="sm:col-span-2" />
-                    <TextField label="Assigned from" name="starts_on" type="date" defaultValue={i.starts_on ?? ""} optional />
-                    <TextField label="Assigned until" name="ends_on" type="date" defaultValue={i.ends_on ?? ""} optional />
+                    <TextField label="Title (editorial)" id={`${i.id}-title`} name="title" maxLength={120} defaultValue={i.title ?? ""} optional />
+                    <TextField label="Hint (editorial)" id={`${i.id}-hint`} name="hint" maxLength={300} defaultValue={i.hint ?? ""} optional hint="Shown only when a member asks for it." />
+                    <TextAreaField label="Note or explanation" id={`${i.id}-note`} name="note" rows={2} maxLength={2000} defaultValue={i.note} optional className="sm:col-span-2" />
+                    <TextField label="Assigned from" id={`${i.id}-starts_on`} name="starts_on" type="date" defaultValue={i.starts_on ?? ""} optional />
+                    <TextField label="Assigned until" id={`${i.id}-ends_on`} name="ends_on" type="date" defaultValue={i.ends_on ?? ""} optional />
                     <div className="sm:col-span-2">
                       <SubmitButton size="sm" variant="secondary" pendingText="Saving…">
                         Save verse details
@@ -215,7 +211,7 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
                     <ActionForm action={itemOpAction} hidden={{ base, item_id: i.id, op: "update_text" }} className="mt-3 space-y-2 rounded-tile border border-primary/50 bg-primary-soft/40 p-3">
                       <p className="font-semibold">The Bible source&apos;s text for this reference has changed.</p>
                       <p className="text-meta">Updating points this verse at the new text. Members keep their practice of the earlier text and are asked whether to switch; nothing switches silently.</p>
-                      <TextField label="Explanation for members" name="reason" required maxLength={500} />
+                      <TextField id={`${i.id}-reason`} label="Explanation for members" name="reason" required maxLength={500} />
                       <SubmitButton size="sm" pendingText="Updating…">
                         Use the updated text
                       </SubmitButton>
@@ -241,22 +237,22 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
           </SectionHeading>
           <Card>
             <ActionForm action={addItemAction} hidden={{ base, collection_id: c.id }} className="grid gap-3 sm:grid-cols-4">
-              <SelectField label="Book" name="book" defaultValue="JHN" className="sm:col-span-2">
+              <SelectField label="Book" id="add-book" name="book" defaultValue="JHN" className="sm:col-span-2">
                 {BOOK_LIST.map((b) => (
                   <option key={b.code} value={b.code}>
                     {b.name}
                   </option>
                 ))}
               </SelectField>
-              <TextField label="Chapter" name="chapter" inputMode="numeric" pattern="\d{1,3}" required />
-              <TextField label="End chapter" name="end_chapter" inputMode="numeric" pattern="\d{1,3}" optional hint="Only if it crosses chapters" />
-              <TextField label="From verse" name="start_verse" inputMode="numeric" pattern="\d{1,3}" required />
-              <TextField label="To verse" name="end_verse" inputMode="numeric" pattern="\d{1,3}" optional />
-              <TextField label="Assigned from" name="starts_on" type="date" optional />
-              <TextField label="Assigned until" name="ends_on" type="date" optional />
-              <TextField label="Title (editorial)" name="title" maxLength={120} optional className="sm:col-span-2" />
-              <TextField label="Hint (editorial)" name="hint" maxLength={300} optional className="sm:col-span-2" />
-              <TextAreaField label="Note or explanation" name="note" rows={2} maxLength={2000} optional className="sm:col-span-4" />
+              <TextField label="Chapter" id="add-chapter" name="chapter" inputMode="numeric" pattern="\d{1,3}" required />
+              <TextField label="End chapter" id="add-end_chapter" name="end_chapter" inputMode="numeric" pattern="\d{1,3}" optional hint="Only if it crosses chapters" />
+              <TextField label="From verse" id="add-start_verse" name="start_verse" inputMode="numeric" pattern="\d{1,3}" required />
+              <TextField label="To verse" id="add-end_verse" name="end_verse" inputMode="numeric" pattern="\d{1,3}" optional />
+              <TextField label="Assigned from" id="add-starts_on" name="starts_on" type="date" optional />
+              <TextField label="Assigned until" id="add-ends_on" name="ends_on" type="date" optional />
+              <TextField label="Title (editorial)" id="add-title" name="title" maxLength={120} optional className="sm:col-span-2" />
+              <TextField label="Hint (editorial)" id="add-hint" name="hint" maxLength={300} optional className="sm:col-span-2" />
+              <TextAreaField label="Note or explanation" id="add-note" name="note" rows={2} maxLength={2000} optional className="sm:col-span-4" />
               <div className="sm:col-span-4">
                 <SubmitButton pendingText="Adding…">Add verse</SubmitButton>
               </div>
@@ -272,8 +268,8 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
           </SectionHeading>
           <Card>
             <ActionForm action={sequenceAction} hidden={{ base, collection_id: c.id }} className="flex flex-wrap items-end gap-3">
-              <TextField label="First verse starts" name="start" type="date" required defaultValue={c.items.find((i) => !i.retired)?.starts_on ?? ""} />
-              <SelectField label="Each verse lasts" name="days" defaultValue="7">
+              <TextField label="First verse starts" id="sequence-start" name="start" type="date" required defaultValue={c.items.find((i) => !i.retired)?.starts_on ?? ""} />
+              <SelectField label="Each verse lasts" id="sequence-days" name="days" defaultValue="7">
                 <option value="7">1 week</option>
                 <option value="14">2 weeks</option>
                 <option value="1">1 day</option>
