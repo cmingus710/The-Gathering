@@ -126,6 +126,7 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
       expect(await caps(superAdmin)).toEqual([
         "announcements.manage",
         "audit.view",
+        "bible.manage",
         "community.manage",
         "community.moderate",
         "content.edit",
@@ -136,6 +137,8 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
         "members.manage",
         "members.view",
         "podcasts.manage",
+        "reading.edit",
+        "reading.publish",
         "roles.manage",
         "settings.manage",
       ]);
