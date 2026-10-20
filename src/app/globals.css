@@ -626,7 +626,8 @@ dialog.sheet[open] {
  * margin (scroll-padding) so nothing focused ends up behind the dock.
  */
 :root {
-  --dock-clearance: calc(6rem + env(safe-area-inset-bottom));
+  /* --player-clearance grows while the mini-player is shown (Phase 7). */
+  --dock-clearance: calc(6rem + env(safe-area-inset-bottom) + var(--player-clearance, 0rem));
 }
 @media (max-width: 1023.98px) {
   html {
@@ -663,4 +664,75 @@ dialog.sheet[open] {
   .coming-up:hover .coming-up-photo {
     transform: none;
   }
+}
+
+/*
+ * Persistent mini-player (Phase 7). Phones: just above the floating dock and
+ * clear of the safe area; pages without the dock: near the bottom edge.
+ * Desktop: a card in the bottom-right corner. While it shows, pages reserve
+ * extra room (--player-clearance) so it never covers the end of the content.
+ */
+html[data-player] {
+  --player-clearance: 5.25rem;
+}
+.mini-player {
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  background: var(--dock-solid);
+  border: 1px solid var(--dock-border);
+  box-shadow: var(--dock-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .mini-player {
+    background: var(--dock-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mini-player {
+    background: var(--dock-solid);
+  }
+}
+@media (max-width: 1023.98px) {
+  body:has(nav.dock) .mini-player {
+    bottom: calc(max(0.625rem, env(safe-area-inset-bottom)) + 4.375rem);
+  }
+}
+@media (min-width: 1024px) {
+  .mini-player {
+    bottom: 1.25rem;
+  }
+  html[data-player] #main {
+    padding-bottom: 8rem;
+  }
+}
+.mini-player:has(#mini-player-controls:not([hidden])) {
+  max-height: calc(100dvh - 9rem);
+  overflow-y: auto;
+}
+.media-icon-btn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  border-radius: 9999px;
+  color: var(--color-text);
+}
+.media-icon-btn:hover {
+  background: var(--color-surface-muted);
+}
+.media-icon-btn[aria-pressed="true"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.media-range {
+  min-height: 2.75rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.media-range:disabled {
+  cursor: default;
+  opacity: 0.5;
 }

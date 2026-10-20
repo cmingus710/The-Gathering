@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PlayerProvider } from "@/components/media/player-provider";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { getThemePreference } from "@/lib/theme/server";
 import { THEME_COLOR } from "@/lib/theme/tokens";
@@ -42,7 +43,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" data-theme={theme} className="h-full antialiased">
       <body className="min-h-full bg-background text-text">
-        {children}
+        {/* One audio player for the whole app, so listening continues across navigation. */}
+        <PlayerProvider>{children}</PlayerProvider>
         <ServiceWorkerRegistration />
       </body>
     </html>

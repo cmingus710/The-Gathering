@@ -35,15 +35,22 @@ export async function proxy(request: NextRequest) {
   }
   // The webhook, the signed events job, and calendar feeds carry no session;
   // skip session handling (and its cookies) for them.
-  if (pathname === WEBHOOK_PATH || pathname === "/api/jobs/events" || pathname.startsWith("/api/calendar/")) {
+  // The public podcast feed and its audio/artwork redirects carry no session either.
+  if (
+    pathname === WEBHOOK_PATH ||
+    pathname === "/api/jobs/events" ||
+    pathname.startsWith("/api/calendar/") ||
+    pathname.startsWith("/api/podcast/") ||
+    pathname === "/podcast/feed.xml"
+  ) {
     return NextResponse.next();
   }
 
   const { response, signedIn } = await updateSession(request);
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  // Community API responses are per-member and must never be cached publicly.
-  if (pathname.startsWith("/api/community/")) response.headers.set("Cache-Control", "private, no-store");
+  // Community and media API responses are per-viewer and must never be cached publicly.
+  if (pathname.startsWith("/api/community/") || pathname.startsWith("/api/media/")) response.headers.set("Cache-Control", "private, no-store");
 
   if (isProtected) {
     response.headers.set("Cache-Control", "private, no-store");
