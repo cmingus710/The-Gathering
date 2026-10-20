@@ -119,7 +119,14 @@ export function ImportForm({ planId }: { planId: string }) {
     <form action={action} className="space-y-3">
       <FormMessage state={state} />
       <input type="hidden" name="plan_id" value={planId} />
-      <TextField label="CSV file" name="file" type="file" accept=".csv,text/csv" required hint="Up to 1 MB and 2,000 days. You'll see a preview with any problems before anything changes." />
+      <TextField
+        label="Spreadsheet"
+        name="file"
+        type="file"
+        accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        required
+        hint="Excel (.xlsx) or CSV, up to 1 MB and 2,000 days. From Google Sheets or Numbers, download or export as .xlsx. You'll see a preview with any problems before anything changes."
+      />
       <SubmitButton variant="secondary" size="sm" pendingText="Checking…">
         Preview import
       </SubmitButton>

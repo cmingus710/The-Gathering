@@ -6,7 +6,7 @@ import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { isValidTimeZone, isValidYmd } from "@/lib/bible/dates";
-import { parsePlanCsv, PLAN_IMPORT_LIMITS, type RowIssue } from "@/lib/bible/plan-import";
+import { parsePlanCsv, parsePlanXlsx, PLAN_IMPORT_LIMITS, type RowIssue } from "@/lib/bible/plan-import";
 import { parsePassages, toDb } from "@/lib/bible/reference";
 import { removeBibleObjects, uploadBibleObject } from "@/lib/bible/storage";
 import { processEventCover } from "@/lib/events/images";
@@ -239,7 +239,7 @@ export async function retireDayAction(_prev: FormState, formData: FormData): Pro
 }
 
 // ---------------------------------------------------------------------------
-// CSV import (draft plans): parse and validate, store the preview, then
+// Spreadsheet import (draft plans, .xlsx or .csv): parse and validate, store the preview, then
 // apply on confirmation in one transaction.
 // ---------------------------------------------------------------------------
 export async function importStageAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -247,16 +247,17 @@ export async function importStageAction(_prev: FormState, formData: FormData): P
   const planId = uuid.safeParse(formData.get("plan_id")).data;
   const file = formData.get("file");
   if (!planId) return errorState("Plan not found.");
-  if (!(file instanceof File) || !file.size) return errorState("Choose a CSV file.");
+  if (!(file instanceof File) || !file.size) return errorState("Choose a spreadsheet (.xlsx or .csv).");
   if (file.size > PLAN_IMPORT_LIMITS.maxBytes) return errorState("The file must be smaller than 1 MB.");
-  if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") return errorState("Upload a .csv file (download the template to start).");
+  const excel = /\.xlsx$/i.test(file.name) || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (/\.(xls|xlsm|xlsb|ods|numbers)$/i.test(file.name)) return errorState("Save the spreadsheet as an Excel Workbook (.xlsx) or as CSV, then upload that.");
+  if (!excel && !/\.csv$/i.test(file.name) && file.type !== "text/csv") return errorState("Upload an Excel workbook (.xlsx) or a .csv file (download a template to start).");
   const supabase = await db();
   const { data: plan, error: planError } = await supabase.rpc("bible_admin_plan", { p_id: planId });
   if (planError || !plan) return errorState(dbErrorMessage(planError, "Plan not found."));
   const p = plan as { mode: "calendar" | "personal"; translation_id: string; status: string };
   if (p.status !== "draft") return errorState("Imports go into a draft plan. Create a new version to rework a published plan.");
-  const text = await file.text();
-  const result = parsePlanCsv(text, p.mode);
+  const result = excel ? parsePlanXlsx(new Uint8Array(await file.arrayBuffer()), p.mode) : parsePlanCsv(await file.text(), p.mode);
   // Check every passage against the plan's translation in the database.
   const refs = result.rows.flatMap((r) => r.passages.map((x) => ({ row: r.row, ref: x })));
   const dbErrors: RowIssue[] = [];

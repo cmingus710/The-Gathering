@@ -1,12 +1,15 @@
 import { toCsv } from "@/lib/giving/csv";
-import { CsvError, headerKey, parseCsv } from "./csv";
+import { CsvError, headerKey, parseCsv, type CsvRow } from "./csv";
 import { isValidYmd } from "./dates";
 import { formatPassage, parsePassages, toDb, type Passage } from "./reference";
+import { readXlsxTable, writeXlsx } from "./xlsx";
 
 /**
- * Reading plan CSV import. The plan's schedule decides the key column
- * explicitly: dated plans read `date` (YYYY-MM-DD, nothing else, so 03/04
- * can never be misread), numbered plans read `day`. A value in the other
+ * Reading plan import from CSV or Excel (.xlsx). Both become the same table
+ * and are checked by the same rules. The plan's schedule decides the key
+ * column explicitly: dated plans read `date` (YYYY-MM-DD in a CSV, so 03/04
+ * can never be misread; in Excel, a date-formatted cell, converted from its
+ * stored date rather than its display), numbered plans read `day`. A value in the other
  * column is an error rather than a guess.
  *
  * Columns: date | day, type (reading, rest, catch_up), passages (separated
@@ -39,11 +42,20 @@ export const PLAN_IMPORT_LIMITS = { maxBytes: 1024 * 1024, maxRows: 2000, maxCel
 const KINDS: Record<string, ImportRow["kind"]> = { reading: "reading", rest: "rest", catch_up: "catch_up", catchup: "catch_up", "catch-up": "catch_up" };
 
 export function parsePlanCsv(text: string, mode: PlanMode): ImportResult {
+  return parsePlanFile(() => parseCsv(text, PLAN_IMPORT_LIMITS), mode);
+}
+
+/** The first sheet of an Excel workbook; rows are numbered as in Excel. */
+export function parsePlanXlsx(bytes: Uint8Array, mode: PlanMode): ImportResult {
+  return parsePlanFile(() => readXlsxTable(bytes, PLAN_IMPORT_LIMITS), mode);
+}
+
+function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
   const errors: RowIssue[] = [];
   const warnings: RowIssue[] = [];
   let table;
   try {
-    table = parseCsv(text, PLAN_IMPORT_LIMITS);
+    table = read();
   } catch (e) {
     if (e instanceof CsvError) return { rows: [], errors: [{ row: e.line, message: e.message }], warnings };
     throw e;
@@ -142,11 +154,22 @@ function daysBetween(a: string, b: string): number {
 
 /** A downloadable template with examples of every supported form. */
 export function planTemplate(mode: PlanMode): string {
+  const { header, rows } = templateRows(mode);
+  return toCsv(header, rows);
+}
+
+/** The same template as an Excel workbook (dates as real date cells). */
+export function planTemplateXlsx(mode: PlanMode): Uint8Array {
+  const { header, rows } = templateRows(mode);
+  return writeXlsx("Reading plan", header, rows, { ...(mode === "calendar" ? { dateColumn: 0 } : { numberColumn: 0 }), widths: [12, 11, 34, 24, 48, 40] });
+}
+
+function templateRows(mode: PlanMode): { header: string[]; rows: string[][] } {
   const key = mode === "calendar" ? "date" : "day";
   const k = (i: number) => (mode === "calendar" ? `2027-01-0${i}` : String(i));
-  return toCsv(
-    [key, "type", "passages", "heading", "questions", "notes"],
-    [
+  return {
+    header: [key, "type", "passages", "heading", "questions", "notes"],
+    rows: [
       [k(1), "reading", "Genesis 1–2; Psalm 1", "In the beginning", "What does Genesis 1 show about God? | Which verse stood out to you?", ""],
       [k(2), "reading", "John 3:16–21", "God so loved the world", "", "Read slowly; consider reading it aloud."],
       [k(3), "reading", "Psalm 23; Psalm 24", "", "", ""],
@@ -155,5 +178,5 @@ export function planTemplate(mode: PlanMode): string {
       [k(6), "rest", "", "Rest", "", ""],
       [k(7), "reading", "Matthew 5:1–12, 43–48", "", "", ""],
     ],
-  );
+  };
 }

@@ -153,12 +153,18 @@ export default async function AdminPlanPage({ params, searchParams }: PageProps<
 
           {draft && canEdit ? (
             <Card>
-              <SectionHeading as="h2" description="Import many days at once from a spreadsheet saved as CSV.">
-                Import from CSV
+              <SectionHeading
+                as="h2"
+                description={`Import many days at once from an Excel workbook (.xlsx) or a CSV file. Put one ${plan.mode === "calendar" ? "date" : "day"} per row with its passages; the first sheet is read.`}
+              >
+                Import from a spreadsheet
               </SectionHeading>
               <div className="mb-4 flex flex-wrap gap-2">
+                <ButtonLink href={`/admin/bible/template?mode=${plan.mode}&format=xlsx`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
+                  Excel template ({plan.mode === "calendar" ? "dated" : "numbered days"})
+                </ButtonLink>
                 <ButtonLink href={`/admin/bible/template?mode=${plan.mode}`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
-                  Download the {plan.mode === "calendar" ? "dated" : "numbered-day"} template
+                  CSV template
                 </ButtonLink>
               </div>
               <ImportForm planId={plan.id} />

@@ -23,6 +23,7 @@
     "@supabase/supabase-js": "^2.118.0",
     "bidi-js": "^1.0.3",
     "fast-xml-parser": "^5.11.2",
+    "fflate": "0.8.3",
     "fontkit": "^2.0.4",
     "heic-decode": "^2.1.0",
     "lucide-react": "^1.59.0",

@@ -26,7 +26,7 @@ Each day is a **reading** (one or more passages), a **catch-up** day (passages o
 ## Creating a plan
 
 1. **New plan** → title, description, who it's for, schedule type, translation, time zone, audience (all members or one group). It starts as a draft.
-2. Add days one at a time (**Add a day**) or **Import from CSV** (below). Passages are typed the usual way and checked against the plan's translation: `Genesis 1–2; Psalm 23`, `John 3:16–21`, `Matthew 5:1–12, 43–48`.
+2. Add days one at a time (**Add a day**) or **Import from a spreadsheet** (Excel or CSV, below). Passages are typed the usual way and checked against the plan's translation: `Genesis 1–2; Psalm 23`, `John 3:16–21`, `Matthew 5:1–12, 43–48`.
 3. Optional cover (PNG/JPEG/WebP ≤ 4 MB, re-encoded without location data) with a description.
 4. **Preview** shows the day list and each day's passages as members will see them (once the translation is active).
 5. A publisher **publishes** after confirming. Publishing checks that the translation is active, the group is active, every reading day has passages, and every passage exists in the translation.
@@ -36,13 +36,22 @@ Each day is a **reading** (one or more passages), a **catch-up** day (passages o
 
 A day can link one community discussion, never broader than the plan: all-member plans link church-wide discussions; group plans link their own group's discussions. Members see **Write privately** (their journal) and **Join discussion** as separate actions; nothing they write privately is ever posted.
 
-## CSV import
+## Spreadsheet import (Excel or CSV)
 
-Download the template on the plan page (**Download the dated/numbered-day template**), or use [samples/reading-plan-dated.csv](samples/reading-plan-dated.csv) / [samples/reading-plan-numbered.csv](samples/reading-plan-numbered.csv).
+Upload an **Excel workbook (.xlsx)** or a **CSV** file. From Google Sheets use **File → Download → Microsoft Excel (.xlsx)**; from Numbers, **File → Export To → Excel**. Older `.xls` files need saving as `.xlsx` first.
+
+Start from a template on the plan page (**Excel template** or **CSV template**), or use [samples/reading-plan-dated.csv](samples/reading-plan-dated.csv) / [samples/reading-plan-numbered.csv](samples/reading-plan-numbered.csv). The simplest dated plan is two columns, `date` and `passages`, one row per date.
+
+In an Excel file:
+
+- Only the **first sheet** is read (others are ignored); row numbers in messages match Excel's.
+- **Dates** can be typed and shown any way Excel accepts (`11/1/2027`, `1-Nov-27`, `2027-11-01`): the app reads the date Excel stored, not how it's displayed, so day and month can't be swapped. A date stored as plain text must be written `YYYY-MM-DD`.
+- Formulas aren't run; the value Excel last saved is used. Blank rows are skipped.
+- Same limits as CSV (1 MB, 2,000 days, 12 columns).
 
 | Column | Required | Notes |
 | --- | --- | --- |
-| `date` | dated plans | `YYYY-MM-DD` only (so `03/04` can never be misread). Must be empty for numbered plans |
+| `date` | dated plans | In CSV, `YYYY-MM-DD` only (so `03/04` can never be misread). In Excel, a date cell. Must be empty for numbered plans |
 | `day` | numbered plans | 1–2000. Must be empty for dated plans |
 | `type` | no | `reading` (default when passages are given), `rest`, `catch_up` |
 | `passages` | reading days | Several passages separated by `;`. Same-book passages stay separate |
