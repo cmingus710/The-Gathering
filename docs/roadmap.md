@@ -9,7 +9,7 @@ Each phase is built, verified, and reviewed before the next begins.
 | 3 | Giving and contributions | **Built**, Stripe test mode (PR #6, awaiting review) |
 | 4 | Events and calendars | **Built** (PR into `main`, stacked on #5 and #6, awaiting review) |
 | 5 | Community, groups, messaging, and notifications | **Built** (draft PR #8, stacked on #7); hosted database applied; walkthrough pending |
-| 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted migrations and walkthrough pending |
+| 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted database applied; walkthrough pending |
 | 7 | Teaching and media | Planned |
 | 8 | Bible reading and journals | Planned |
 | 9 | Memory verses | Planned |

@@ -10,7 +10,7 @@ Phase 6 code is complete. It starts from the newest integrated work: the home re
 
 Preview: `https://the-gathering-d3cgv8af1-paint-by-number.vercel.app` (deployment `dpl_7ZVvAkGTE4eqE2d5XoZ8TjGPFNUM`, commit `b5aee08`, Ready); branch alias `https://the-gathering-git-phase-6-prayer-care-paint-by-number.vercel.app` once the branch builds.
 
-**The hosted database is not yet migrated for Phase 6.** Run `supabase/manual/2026-10-24-apply-prayer-1.sql` … `-4.sql` in the SQL editor (see [migration-history.md](migration-history.md#phase-6-2026-10-24)). Until then the preview is safe: Prayer pages say they can't load, the notification settings show only the Phase 5 categories, and nothing else changes.
+**The hosted database is fully migrated for Phase 6** (owner ran `supabase/manual/2026-10-24-apply-prayer-1.sql` … `-4.sql` in the SQL editor, 2026-10-20) and matches a fresh build from the files. The hosted walkthrough has not been done yet.
 
 Guides: [prayer-care-guide.md](prayer-care-guide.md) (administration and permission matrix), [prayer-privacy-guide.md](prayer-privacy-guide.md) (members), [prayer-retention.md](prayer-retention.md). Design: [architecture.md](architecture.md#prayer-and-care-phase-6).
 
@@ -45,9 +45,11 @@ Lint (zero warnings), typecheck, production build (all `/prayer` and `/admin/pra
 | Preview build `b5aee08` (`dpl_7ZVvAkGTE4eqE2d5XoZ8TjGPFNUM`) | Ready |
 | Signed-out `/prayer/team` → sign-in with `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
 | Production deploys from `main` | Canceled (production stays paused) |
-| Hosted migration history | 22 versions through `20261023000100`; Phase 6 steps **not applied yet** (owner, SQL editor) |
-| Fingerprint after applying | Not run yet |
-| Hosted walkthrough with authorized accounts | **Not done** (needs the migrations first) |
+| Hosted migration history | **Applied 2026-10-20** by the owner in the SQL editor (choosing "Run without RLS" at Supabase's warning: the scripts enable RLS on every table in a loop the checker doesn't detect). History: `20261024000100`…`000400`, all `created_by = phase-6` |
+| Prayer fingerprint (`supabase/tests/prayer-fingerprint.sql`) | **Pass: hosted equals the rehearsal and a fresh build in all 13 categories**: column 156 1f938e2d · constraint 118 9f6c7b9a · function 94 34f5e989 · function_grant 83 9b289f9b · index 59 57ef6211 · rls 15 2486b42d · schema_acl 1 12e169ef · seed_capability 5 f2349438 · seed_role 5 356ebd04 · seed_role_capability 8 5c79805d · seed_settings 1 8d831b0e · trigger 3 e83f479b · type 6 2439f248 |
+| Community fingerprint after Phase 6 | **Pass: all 15 categories equal a fresh build** (column 236 4fe6d646 · constraint 174 e69c9854 · function 124 b2103420 · index 101 1741e785 · trigger 4 a02edcd5; the rest unchanged from Phase 5) |
+| Direct checks | RLS on 15 of 15 `prayer` tables; `anon` and `authenticated` have no usage on the `prayer` schema; no prayer or care rows yet; retention off |
+| Hosted walkthrough with authorized accounts | **Not done** |
 | Notification email delivery for prayer/care | **Not verified** on hosted; the local tests prove only what the claim returns (mocked delivery), not that email arrives |
 
 ### Hosted walkthrough plan (after the four scripts)
