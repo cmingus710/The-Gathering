@@ -17,8 +17,8 @@ begin
   if to_regclass('bible.translations') is null or to_regclass('community.notifications') is null then
     raise exception 'Nothing was changed: this is not The Gathering database at the Phase 8 stage.';
   end if;
-  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261026000600') then
-    raise exception 'Nothing was changed: the previous step (20261026000600) is not recorded. Run the steps in order.';
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261026000700') then
+    raise exception 'Nothing was changed: the previous step (20261026000700) is not recorded. Run the steps in order.';
   end if;
   if exists (select 1 from supabase_migrations.schema_migrations where version = '20261027000100') then
     raise exception 'Nothing was changed: 20261027000100 is already applied.';

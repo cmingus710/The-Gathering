@@ -67,6 +67,14 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 36. `20261026000400_bible_member.sql` (Phase 8)
 37. `20261026000500_journal.sql` (Phase 8)
 38. `20261026000600_bible_notifications.sql` (Phase 8)
+39. `20261026000700_bible_import_statistics.sql` (Phase 8 follow-up)
+40. `20261027000100_memory_schema.sql` (Phase 9)
+41. `20261027000200_memory_collections.sql` (Phase 9)
+42. `20261027000300_memory_practice.sql` (Phase 9)
+43. `20261027000400_memory_challenges.sql` (Phase 9)
+44. `20261027000500_memory_notifications.sql` (Phase 9)
+
+Phase 9 (scripture memory) migrations each have a one-transaction operator script, `supabase/manual/2026-10-27-apply-memory-<1-5>.sql` (17–87 KB), with a preflight (step 1 needs `20261026000700`; each later step needs the one before; none runs twice). Run them in order in the SQL editor. No environment variables and no scheduler change: memory reminders and challenge milestones run inside the existing `community.tick()`. They create the private `memory` bucket. Then assign **Memory verse editor** / **Memory verse publisher** at Administration → Members, and authorize group leaders at Administration → Memory verses if wanted ([memory-admin-guide.md](memory-admin-guide.md)). Memory practice needs an active stored-text translation (the WEB). `supabase/tests/memory-fingerprint.sql` compares the hosted result with a fresh build (expected digests in [migration-history.md](migration-history.md#phase-9-2026-10-27)).
 
 Phase 8 (Bible reading and journals) migrations each have a one-transaction operator script, `supabase/manual/2026-10-26-apply-bible-<1-7>.sql` (step 7 is a small follow-up; the others are 19–55 KB, under the SQL editor limit), with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor. No scheduler change is needed: reminders run inside the existing `community.tick()`, which the designated deployment already calls. They create the private `bible` bucket. Then, at Administration → Members, assign the Bible source manager and reading plan editor/publisher roles as needed ([reading-plan-guide.md](reading-plan-guide.md#who-can-do-what)), and set up a translation ([bible-sources.md](bible-sources.md)). `supabase/tests/bible-fingerprint.sql` compares the hosted result with a fresh build.
 
@@ -120,6 +128,7 @@ The migrations create both buckets with type and size limits:
 - `media` (private, 50 MB, audio/video/images/PDF/PPTX/VTT; Phase 7; readable only through the content visibility rules, via short-lived signed links)
 - `media-uploads` (private, 50 MB, JPEG/PNG/WebP/HEIC; Phase 7; quarantine for gallery originals, deleted after processing)
 - `bible` (private, 50 MB, WebP/PDF/CSV/TSV/plain text; Phase 8; plan covers readable by the plan's members, staged text imports and reference PDFs readable only by Bible source managers)
+- `memory` (private, 10 MB, WebP; Phase 9; collection covers readable only by people who can see the collection, written by its editors)
 
 The 50 MB limits match the Free plan's per-file cap. On a paid plan, raise the project's upload limit (Storage → Settings) and the bucket limit together, then the limits in `/admin/media/settings`. Storage, egress, and video delivery costs: [media-guide.md](media-guide.md#storage-delivery-and-costs).
 
