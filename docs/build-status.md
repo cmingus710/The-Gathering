@@ -50,6 +50,7 @@ Lint (zero warnings), typecheck, production build, **524 Vitest tests** (44 file
 | Check | Result |
 | --- | --- |
 | Branch pushed | `phase-7/teaching-media` and `claude/blissful-hypatia-inbw75` |
+| `MEDIA_RATE_SECRET` | Set 2026-10-20 in Vercel as a **sensitive Preview** variable for all preview branches (random 256-bit value, not stored anywhere else). Not set for Production (paused); without it the app falls back to `EVENTS_JOB_SECRET` |
 | Preview build `6b5687c` (`dpl_CipV8dwh9xBGj4jc2etYdSgcA1t3`) | **Ready**: `https://the-gathering-raw7tufzl-paint-by-number.vercel.app`, branch alias `https://the-gathering-git-phase-7-teaching-media-paint-by-number.vercel.app` (the URL the scheduler script uses) |
 | Signed-out `/gallery` → sign-in with `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
 | `/podcast/feed.xml` before the migrations | 404 "Not found" (no public feed configured; the feed itself is public, cached 60 s) |
