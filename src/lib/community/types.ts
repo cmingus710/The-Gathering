@@ -116,7 +116,7 @@ export type ConversationPage = {
 export type NotificationItem = {
   id: string;
   kind: string;
-  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care";
+  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care" | "teaching" | "gallery";
   title: string;
   url: string;
   count: number;

@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api|community|groups|messages|notifications|design)/:path*",
+        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api|community|groups|messages|notifications|design|devotionals|lessons|podcasts|media|reading|music|gallery|saved)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

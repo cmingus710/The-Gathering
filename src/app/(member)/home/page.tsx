@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { Launcher, type LauncherTile } from "@/components/home/launcher";
+import { TeachingSection, type HomeTeaching } from "@/components/home/teaching";
 import { ComingUpBanner, ComingUpEmpty, GatheringPanel, GreetingBanner, HeadingLink, HomeSectionHeading, LifeAtGathering } from "@/components/home/sections";
 import { Icon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
@@ -41,7 +42,7 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
   const now = new Date();
   const tz = settings.timezone;
 
-  const [announcementsResult, eventsResult, invitations, defaultBanner] = await Promise.all([
+  const [announcementsResult, eventsResult, invitations, defaultBanner, teaching] = await Promise.all([
     listLiveAnnouncements(supabase, { limit: 3 }).then(
       (data): { ok: true; data: AnnouncementWithImage[] } => ({ ok: true, data }),
       () => ({ ok: false as const }),
@@ -51,6 +52,11 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
     // Null until an editor sets one (or before the banner migration is applied).
     Promise.resolve(supabase.rpc("events_home_banner_default")).then(
       ({ data, error }) => (error ? null : (data as DefaultBanner)),
+      () => null,
+    ),
+    // Today's devotional, latest lesson, featured podcast, current reading; skipped on any error.
+    Promise.resolve(supabase.rpc("media_home")).then(
+      ({ data, error }) => (error || !data ? null : (data as HomeTeaching)),
       () => null,
     ),
   ]);
@@ -170,6 +176,8 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
           />
         </div>
       </div>
+
+      {teaching ? <TeachingSection data={teaching} /> : null}
     </div>
   );
 }

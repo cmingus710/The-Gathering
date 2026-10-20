@@ -1,5 +1,10 @@
 import type { Audience, ItemCard, ItemKind, ItemState } from "./types";
 
+/** Storage paths of card covers, to sign in one request (Storage RLS decides). */
+export function coverPaths(items: Array<Pick<ItemCard, "cover">>, prefer: "small" | "large" = "small"): string[] {
+  return items.flatMap((i) => (i.cover ? [prefer === "small" ? (i.cover.variant_path ?? i.cover.path) : i.cover.path] : []));
+}
+
 /** Member-facing routes for each kind of content. */
 export function itemHref(item: Pick<ItemCard, "id" | "kind">): string {
   switch (item.kind) {

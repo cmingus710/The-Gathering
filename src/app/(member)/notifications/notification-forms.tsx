@@ -38,6 +38,8 @@ const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string 
   events: { label: "Event updates", hint: "Changes and cancellations for events you're registered for. Event emails are set on the Events page." },
   prayer: { label: "Prayer", hint: "Comments and updates on requests you wrote or follow. Email and push never include the request or names." },
   care: { label: "Care", hint: "Responses to your care requests, volunteer confirmations, and (for coordinators) assignments and follow-ups. Email and push are generic." },
+  teaching: { label: "Teaching and media", hint: "New devotionals, Sunday lessons, podcast episodes, reading assignments, and playlists you can see. Email and push only name the section." },
+  gallery: { label: "Photo galleries", hint: "New photos in albums you can see (grouped, a few times a day) and decisions about photos you shared." },
 };
 
 export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]; pushAvailable: boolean }) {
@@ -45,7 +47,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
   return (
     <form action={action} className="space-y-6">
       <FormMessage state={state} />
-      {/* Only categories the database reports (Prayer and Care appear once Phase 6 is applied). */}
+      {/* Only categories the database reports (each phase's categories appear once its migrations are applied). */}
       <input type="hidden" name="categories" value={(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).join(",")} />
       {(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).map((c) => (
         <fieldset key={c} className="space-y-3 border-b border-border pb-5 last:border-0">

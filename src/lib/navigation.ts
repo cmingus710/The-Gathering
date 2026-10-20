@@ -4,10 +4,11 @@ import type { IconName } from "@/lib/icons";
 
 export type { IconName };
 
-export type NavSection = "connect" | "church" | "you";
+export type NavSection = "connect" | "church" | "learn" | "you";
 
 export const NAV_SECTIONS: Array<{ key: NavSection; label: string }> = [
   { key: "church", label: "Church life" },
+  { key: "learn", label: "Teaching & media" },
   { key: "connect", label: "Connect" },
   { key: "you", label: "You" },
 ];
@@ -39,7 +40,14 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "profile", label: "Profile", icon: "profile", section: "you", status: "available", href: "/profile" },
   { key: "notifications", label: "Notifications", icon: "notifications", section: "you", status: "available", href: "/notifications", count: "notifications" },
   { key: "prayer", label: "Prayer", icon: "prayer", section: "church", status: "available", href: "/prayer" },
-  { key: "media", label: "Teaching & media", icon: "podcasts", section: "church", status: "upcoming", phase: 7 },
+  { key: "devotionals", label: "Devotionals", icon: "devotionals", section: "learn", status: "available", href: "/devotionals" },
+  { key: "lessons", label: "Sunday lessons", icon: "lessons", section: "learn", status: "available", href: "/lessons" },
+  { key: "podcasts", label: "Podcasts", icon: "podcasts", section: "learn", status: "available", href: "/podcasts" },
+  { key: "reading", label: "Church reading", icon: "reading", section: "learn", status: "available", href: "/reading" },
+  { key: "music", label: "Music", icon: "music", section: "learn", status: "available", href: "/music" },
+  { key: "gallery", label: "Gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
+  { key: "media", label: "Search teaching & media", icon: "media", section: "learn", status: "available", href: "/media" },
+  { key: "saved", label: "Saved", icon: "media", section: "you", status: "available", href: "/saved" },
   { key: "grow", label: "Bible reading", icon: "bible", section: "church", status: "upcoming", phase: 8 },
 ];
 

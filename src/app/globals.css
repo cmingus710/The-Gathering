@@ -736,3 +736,10 @@ html[data-player] {
   cursor: default;
   opacity: 0.5;
 }
+
+/* Long-form teaching text (devotionals, lessons): a comfortable measure and leading. */
+.reading-body {
+  max-width: 68ch;
+  font-size: 1.125rem;
+  line-height: 1.75;
+}

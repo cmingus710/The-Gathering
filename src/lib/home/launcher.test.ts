@@ -16,8 +16,12 @@ describe("launcher config", () => {
 
   it("shows only implemented sections, in order", () => {
     const ids = launcherItemsFor(none).map((i) => i.id);
-    expect(ids).toEqual(["directory", "events", "community", "messages", "groups", "prayer", "announcements", "notifications", "profile"]);
-    for (const upcoming of ["bible", "lessons", "devotionals", "podcasts", "memory-verses", "youth"]) expect(ids).not.toContain(upcoming);
+    expect(ids).toEqual([
+      "directory", "events", "community", "messages", "groups", "prayer",
+      "devotionals", "lessons", "podcasts", "reading", "music", "gallery",
+      "announcements", "notifications", "profile",
+    ]);
+    for (const upcoming of ["bible", "memory-verses", "youth"]) expect(ids).not.toContain(upcoming);
   });
 
   it("shows Give only when online giving is configured", () => {
@@ -43,7 +47,7 @@ describe("launcher config", () => {
   it("links every available tile to an existing member route", () => {
     for (const item of launcherItemsFor({ capabilities: new Set(), features: { giving: true } })) {
       const segment = item.href.slice(1);
-      const found = ["(member)", "(events)", "(giving)"].some((g) => existsSync(path.join(ROOT, "src/app", g, segment, "page.tsx")));
+      const found = ["(member)", "(events)", "(giving)", "(teaching)"].some((g) => existsSync(path.join(ROOT, "src/app", g, segment, "page.tsx")));
       expect(found, item.href).toBe(true);
     }
   });

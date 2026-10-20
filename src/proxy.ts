@@ -21,6 +21,12 @@ const PROTECTED_PREFIXES = [
   "/notifications",
   "/prayer",
   "/design",
+  // Phase 7: members-only sections (devotionals, lessons, podcasts, and the
+  // media hub also serve public content to visitors, so they aren't here).
+  "/reading",
+  "/music",
+  "/gallery",
+  "/saved",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -51,6 +57,11 @@ export async function proxy(request: NextRequest) {
 
   // Community and media API responses are per-viewer and must never be cached publicly.
   if (pathname.startsWith("/api/community/") || pathname.startsWith("/api/media/")) response.headers.set("Cache-Control", "private, no-store");
+
+  // Teaching pages show members more than visitors: never cache them publicly.
+  if (["/devotionals", "/lessons", "/podcasts", "/media"].some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
 
   if (isProtected) {
     response.headers.set("Cache-Control", "private, no-store");

@@ -150,5 +150,29 @@
     "asset": "assets/brand/source/more.png",
     "width": 1254,
     "height": 1254
+  },
+  {
+    "name": "church-reading",
+    "subject": "closed ivory book with gold corner plates, gold binding bands, and a gold ribbon bookmark",
+    "color": "warm brown",
+    "asset": "assets/brand/source/church-reading.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "music",
+    "subject": "sculpted gold beamed eighth notes",
+    "color": "dusty burgundy",
+    "asset": "assets/brand/source/music.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "gallery",
+    "subject": "two stacked ivory photo prints with a gold sun over teal mountains",
+    "color": "muted teal",
+    "asset": "assets/brand/source/gallery.png",
+    "width": 1254,
+    "height": 1254
   }
 ]

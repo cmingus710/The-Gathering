@@ -46,11 +46,15 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "profile", label: "Profile", art: "profile", glyph: "profile", order: 90, status: "available", href: "/profile" },
   // A generic invitation to pray: the tile never shows request text.
   { id: "prayer", label: "Prayer", art: "prayer", glyph: "prayer", order: 55, status: "available", href: "/prayer" },
+  // Teaching, media, and shared resources (Phase 7): each section has its own tile.
+  { id: "devotionals", label: "Devotionals", art: "devotionals", glyph: "devotionals", order: 56, status: "available", href: "/devotionals" },
+  { id: "lessons", label: "Sunday Lessons", art: "lessons", glyph: "lessons", order: 57, status: "available", href: "/lessons" },
+  { id: "podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts", order: 58, status: "available", href: "/podcasts" },
+  { id: "reading", label: "Church Reading", art: "church-reading", glyph: "reading", order: 59, status: "available", href: "/reading" },
+  { id: "music", label: "Music", art: "music", glyph: "music", order: 62, status: "available", href: "/music" },
+  { id: "gallery", label: "Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
   // Later phases (see docs/roadmap.md). Not links until they ship.
-  { id: "podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts", order: 110, status: "upcoming", phase: 7 },
-  { id: "lessons", label: "Lessons", art: "lessons", glyph: "lessons", order: 120, status: "upcoming", phase: 7 },
   { id: "bible", label: "Bible", art: "bible", glyph: "bible", order: 130, status: "upcoming", phase: 8 },
-  { id: "devotionals", label: "Devotionals", art: "devotionals", glyph: "devotionals", order: 140, status: "upcoming", phase: 8 },
   { id: "memory-verses", label: "Memory verses", art: "memory-verses", glyph: "memory", order: 150, status: "upcoming", phase: 9 },
   { id: "youth", label: "Youth", art: "youth", glyph: "youth", order: 160, status: "upcoming", phase: 10 },
 ];
