@@ -1,6 +1,104 @@
 # Build status
 
-Last updated: 2026-10-24 · Phase 6 branch `phase-6/prayer-care` (also pushed as `claude/phase-6-prayer-care-fxuuce`), stacked on the unmerged home redesign (`claude/brave-knuth-s19gty`, no PR yet), design PR #9, and Phases 2–5 (PRs #5–#8)
+Last updated: 2026-10-25 · Phase 7 branch `phase-7/teaching-media` (also pushed as `claude/blissful-hypatia-inbw75`), stacked on Phase 6 (`phase-6/prayer-care`), which contains the home redesign, design PR #9, and Phases 2–5
+
+## Phase 7: teaching, media, and shared resources
+
+### Summary
+
+Phase 7 code is complete. It starts from the head of `phase-6/prayer-care` (the newest integrated work: Phases 2–6, design, and the home redesign) and merges `main`'s one newer commit (the supplied Church Reading, Gallery, and Music icons), so nothing is duplicated or lost. None of the earlier PRs is merged, so the Phase 7 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused (`main` deploys show Canceled); giving stays in Stripe test mode. Phase 8 hasn't started.
+
+**The hosted database is not migrated for Phase 7 yet.** The six operator scripts are ready and rehearsed; following the Phase 6 practice, the owner runs them in the SQL editor (see [Hosted](#hosted)). Until then the Phase 7 preview runs, but the new sections report that they can't load.
+
+Guides: [media-guide.md](media-guide.md) (administration, permission matrix, storage and costs), [podcast-guide.md](podcast-guide.md), [gallery-guide.md](gallery-guide.md), [media-limitations.md](media-limitations.md) (members and outside services). Design: [architecture.md](architecture.md#teaching-media-and-shared-resources-phase-7).
+
+### What was built
+
+| Area | Where |
+| --- | --- |
+| Six sections in the menu with the supplied art (Devotionals, Sunday Lessons, Podcasts, Church Reading, Music, Gallery), plus the Teaching & media hub and Saved | `/devotionals`, `/lessons`, `/podcasts`, `/reading`, `/music`, `/gallery`, `/media`, `/saved` |
+| Teaching content editor: drafts, preview, publish/schedule/expiry/archive, audiences, featured and order, people, topics, series, tags, scripture, related links, attachments | `/admin/content`, `/admin/content/calendar`, `/admin/content/library`, `/admin/content/<id>/preview` |
+| Media library: direct resumable uploads, validation, processing states, rights, captions and transcripts, external YouTube/Vimeo, usage, replacement, cleanup, usage report | `/admin/media`, `/admin/media/cleanup`, `/admin/media/settings` |
+| Podcasts: church shows, optional public RSS, external RSS and Spotify/Apple shows with scheduled and manual refresh | `/admin/podcasts`, `/podcast/feed.xml` |
+| Gallery: albums for members or a group, member uploads with progress/cancel/retry, moderation, reports and removal requests | `/admin/gallery`, `/admin/gallery/reports`, `/gallery/mine` |
+| Player: one coordinated player, persistent mini-player above the dock, Media Session, saved positions, captions, transcripts, click-to-load embeds | `src/components/media/` |
+| Home: compact Teaching & media section (today's devotional, latest lesson, featured podcast, this week's reading), shown only for published content; launcher and Coming up kept | `/home` |
+| Notifications: `teaching` and `gallery` categories with per-kind switches, generic email/push, on the existing queues and scheduler | `/notifications/settings` |
+
+**Icons.** All six sections use the supplied dimensional art (`assets/menu/`: devotionals, lessons, podcasts, church-reading, music, gallery; 22 of 22 menu tiles supplied). No temporary symbols were needed. The Bible icon is not reused; the Bible tile stays "Coming later" (Phase 8). Small line glyphs for the nav and empty states (`reading`, `music`, `gallery`, `media`) were added to the in-app icon set; they are drawn in the existing style, not the supplied art.
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build, **524 Vitest tests** (44 files, run serially; 40 in `tests/db/media.test.ts` against PostgreSQL 16 built from every migration, 31 new unit tests for embeds, scripture, safe fetching, feeds, files, and images, including a synthetic HEIC fixture), and **180 Playwright tests** (desktop and Pixel 7) pass. `tests/db/safeupdate.test.ts` covers the Phase 7 functions. Earlier-phase suites all still pass.
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `media` schema unreadable; staff functions refused without the capability; pending/suspended accounts refused; visitors see only public live items; members see members and their groups' items; group items hidden from non-members (lists, search, details, files, captions, transcripts, covers, bookmarks, history, related links, RSS); drafts, scheduled, expired, archived hidden |
+| Publishing | Editors can't publish or make public; public needs a publisher, the confirmation, and an eligible kind; rights required to publish church-hosted media; scheduled items appear at their time with no job; expiry hides; group thread links must fit the audience |
+| Files | Public items expose only public-use, rights-confirmed, not-members-only files to visitors; storage read/write/delete policies follow the same rules; removal refused while in use; replacement swaps every reference |
+| Losing access | Leaving the group or losing approval hides items and files and deletes unread teaching/gallery notices |
+| Podcasts | Public feed contains only public, live, rights-confirmed episodes of the one public church show; external ingest dedupes, updates, hides missing, ignores empty feeds, backs off; claims are leased and rate-limited; external audio only when playback is allowed |
+| Gallery | Albums never public; uploads limited (size, batch, daily, pending); retries return the same photo; duplicates refused; approval needs a minors decision; only moderators review; reports; uploader removal |
+| Notifications | One content notice at publish time, none for back-catalog; muted kinds respected; gallery notices batched; access rechecked before delivery; generic email text |
+| Safety libraries | SSRF (private/reserved IPv4/IPv6, DNS rebinding at connect time, redirects), malformed XML and DOCTYPE/entities refused, VTT sanitized, file sniffing, image metadata (GPS) stripped, HEIC decoded and oriented |
+| Browser | Signed-out redirects for 20 Phase 7 routes; teaching, gallery, and saved pages `private, no-store`; media delivery routes give no cacheable answer and no redirect for unknown files; the service worker caches no media |
+
+**Not verified in a browser:** the player itself (mini-player placement above the dock, coordination between players, Media Session, saved positions), uploads to real storage, the gallery viewer, and embeds. They need a database with content, so they are part of the hosted walkthrough. Without Supabase configured (local e2e), the public teaching pages fail to load just as the events pages do.
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Branch pushed | `phase-7/teaching-media` and `claude/blissful-hypatia-inbw75` |
+| Preview build | PREVIEW_PLACEHOLDER |
+| Production deploys from `main` | Canceled (production stays paused) |
+| Hosted migration history | **Not applied.** Ends at `20261024000400` (Phase 6). Scripts `supabase/manual/2026-10-25-apply-media-1.sql` … `-6.sql` then `2026-10-25-media-scheduler.sql`, for the owner to run in the SQL editor |
+| Rehearsal | Out of order and rerun both stop at the preflight; schema (17), community (15), prayer (13), and the new media (15) fingerprints match a fresh build. Expected media digests are in [migration-history.md](migration-history.md#phase-7-2026-10-25) |
+| Hosted walkthrough with authorized accounts | **Not done** (needs the migrations) |
+| Feed refresh, email delivery, and push for teaching/gallery | **Not verified** on hosted |
+| Device checks (iPhone/Android mini-player, lock-screen controls, HEIC from a phone camera) | **Not done** |
+| Provider checks (YouTube, Vimeo, Spotify, Apple embeds; external RSS) | **Pending**: tested only against parsed IDs and local synthetic feeds. The official provider documentation pages were blocked by this environment's network proxy, so embed parameters follow the providers' published URL formats as found through search |
+
+### Hosted walkthrough plan (after the scripts)
+
+With the authorized test accounts (A: super administrator; B: approved member) and only synthetic or licensed media titled `[TEST] Synthetic …` (generate audio/video with ffmpeg; never member media):
+
+1. Run scripts 1–6 and the scheduler script; run `supabase/tests/media-fingerprint.sql` and compare with the expected digests.
+2. A uploads a synthetic MP3, MP4 (under 50 MB), image, PDF, and VTT; confirms rights; adds a YouTube reference to a public test video.
+3. A grants B `content_editor` temporarily. B drafts a lesson; confirm B can't publish. A schedules it 10 minutes ahead for a test group with "notify" on; confirm it appears on time without opening the admin, and the notice arrives in-app (and by email only to allowlisted addresses).
+4. A makes a devotional public; sign out and confirm only public-use files show; try a members-only file URL signed out (refused).
+5. Play audio, navigate (mini-player stays above the dock), start a video (audio pauses), reload (position resumes); check lock-screen controls on a phone.
+6. Add an external RSS show with a known public feed; refresh now; confirm no notices; turn on the public feed for a public church show and validate `/podcast/feed.xml`.
+7. B uploads a synthetic HEIC to a test album; A reviews (minors: none), approves; B reports it; A resolves; B removes it.
+8. Clean up: archive or delete test content, remove test files through cleanup, archive the album, and remove B's temporary role (all audited).
+
+### Known limitations (Phase 7)
+
+- **Video:** progressive MP4 only, 50 MB per file on the Free plan; no transcoding or adaptive streaming; long video belongs on YouTube/Vimeo. No paid provider was added.
+- **Signed URLs** work for anyone holding them until they expire (5 minutes for images, 30 for playback).
+- **Outside services** keep their own visibility: restricting a page doesn't make YouTube, Vimeo, Spotify, Apple, Audible, or feed content private.
+- **Spotify** may play 30-second previews without a Spotify login; the app never downloads or proxies Spotify or external audio.
+- **Audible** is an outbound link only; completion is the member's own mark.
+- **Screenshots** of gallery photos can't be prevented. No facial recognition; minors are a moderator decision.
+- **Cleanup** is manual and reviewed; no automatic retention runs.
+- **Search** covers titles, summaries, people, tags, and scripture references of visible content (topics, series, and dates are filters), plus show, external episode, and album titles; not body text or transcripts.
+- **Phone push** for teaching arrives with Phase 12 (web push and email work now).
+- **Test runs:** run Vitest with `--no-file-parallelism` when `TEST_DATABASE_URL` is set (pre-existing).
+
+### Still open from earlier phases
+
+- **Phase 6:** hosted walkthrough not done; prayer/care notification email not verified on hosted. The scheduler still targets the Phase 6 preview until the Phase 7 scheduler script runs.
+- **Home redesign:** no PR exists for `claude/brave-knuth-s19gty`; its banner migration is applied on hosted.
+- **Phase 5:** hosted walkthrough not done; VAPID keys not set (push off); push not tested on a device.
+- **Giving on Phase 6/7 previews:** the Stripe variables are scoped to the Phase 3 branch only, so Give shows as not configured on these previews.
+- **Phase 4:** importing .ics into Apple/Google/Outlook, subscribing to the private feed, month grid on a phone, screen reader pass.
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute remain in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical iPhone/Android, VoiceOver/TalkBack, production configuration (deliberately not done).
+
+---
+
+# Phase 6 build status
 
 ## Phase 6: prayer requests and care coordination
 
