@@ -50,7 +50,9 @@ Lint (zero warnings), typecheck, production build, **524 Vitest tests** (44 file
 | Check | Result |
 | --- | --- |
 | Branch pushed | `phase-7/teaching-media` and `claude/blissful-hypatia-inbw75` |
-| Preview build | PREVIEW_PLACEHOLDER |
+| Preview build `6b5687c` (`dpl_CipV8dwh9xBGj4jc2etYdSgcA1t3`) | **Ready**: `https://the-gathering-raw7tufzl-paint-by-number.vercel.app`, branch alias `https://the-gathering-git-phase-7-teaching-media-paint-by-number.vercel.app` (the URL the scheduler script uses) |
+| Signed-out `/gallery` → sign-in with `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
+| `/podcast/feed.xml` before the migrations | 404 "Not found" (no public feed configured; the feed itself is public, cached 60 s) |
 | Production deploys from `main` | Canceled (production stays paused) |
 | Hosted migration history | **Not applied.** Ends at `20261024000400` (Phase 6). Scripts `supabase/manual/2026-10-25-apply-media-1.sql` … `-6.sql` then `2026-10-25-media-scheduler.sql`, for the owner to run in the SQL editor |
 | Rehearsal | Out of order and rerun both stop at the preflight; schema (17), community (15), prayer (13), and the new media (15) fingerprints match a fresh build. Expected media digests are in [migration-history.md](migration-history.md#phase-7-2026-10-25) |
