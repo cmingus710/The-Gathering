@@ -3,10 +3,13 @@ import { deliverCommunityEmails } from "@/lib/community/jobs";
 import { getCommunityDeliveryDeps } from "@/lib/community/server";
 import { deliverEventEmails, verifyJobSignature } from "@/lib/events/jobs";
 import { getDeliveryDeps, getEventsConfig } from "@/lib/events/server";
+import { refreshDueFeeds } from "@/lib/media/feeds";
+import { getMediaJob } from "@/lib/media/server";
 import { getChurchSettings } from "@/lib/settings/queries";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Feed refreshes (up to 5 × 15 s) run after email delivery.
+export const maxDuration = 120;
 
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
@@ -25,7 +28,8 @@ function bearerOk(header: string | null, secret: string | undefined): boolean {
  * signed with EVENTS_JOB_SECRET over "tick.<ts>."). A Vercel cron (GET with
  * CRON_SECRET) can drive it too after a production release. Safe to call
  * from several places: reminders are deduplicated and each message is
- * claimed by exactly one sender.
+ * claimed by exactly one sender. Since Phase 7 it also refreshes external
+ * podcast feeds that are due (each show is leased while it is fetched).
  */
 async function run() {
   const { settings } = await getChurchSettings();
@@ -46,7 +50,18 @@ async function run() {
         communityResult = { error: "failed" };
       }
     }
-    return json({ tick, sent, community: communityResult });
+    // Phase 7: external podcast feeds due for their scheduled refresh.
+    let feeds: unknown = null;
+    const media = getMediaJob();
+    if (media) {
+      try {
+        feeds = await refreshDueFeeds(media, { limit: 5 });
+      } catch (err) {
+        console.error("[media] feed refresh failed", { error: (err as Error)?.name });
+        feeds = { error: "failed" };
+      }
+    }
+    return json({ tick, sent, community: communityResult, feeds });
   } catch (err) {
     console.error("[events] job failed", { error: (err as Error)?.name });
     return json({ error: "failed" }, 500);

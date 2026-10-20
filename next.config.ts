@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
     "/giving/statement/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
     "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
   },
+  // libheif's WebAssembly HEIC decoder is loaded from node_modules at run
+  // time rather than bundled (Phase 7 photo uploads).
+  serverExternalPackages: ["heic-decode", "libheif-js"],
   experimental: {
     // Uploads go through Server Actions; Vercel caps request bodies at 4.5 MB.
     serverActions: { bodySizeLimit: "4.5mb" },
