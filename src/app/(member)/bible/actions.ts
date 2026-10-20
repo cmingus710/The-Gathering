@@ -157,3 +157,12 @@ export async function clearAnnotationsAction(formData: FormData) {
   if (kind === "bookmarks" || kind === "highlights") await rpc("bible_annotations_clear", { p_kind: kind, p_confirm: kind });
   revalidatePath("/bible/bookmarks");
 }
+
+/** The member's preferred Bible version (empty = the church's default). */
+export async function preferredVersionAction(formData: FormData) {
+  await requireApprovedMember("/bible");
+  const value = String(formData.get("translation_id") ?? "");
+  if (value && !uuid.safeParse(value).success) return;
+  await rpc("bible_reader_prefs_save", { p: { translation_id: value } });
+  revalidatePath("/bible", "layout");
+}

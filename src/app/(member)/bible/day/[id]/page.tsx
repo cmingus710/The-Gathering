@@ -15,7 +15,7 @@ import { requireApprovedMember } from "@/lib/auth/viewer";
 import { formatYmd } from "@/lib/bible/dates";
 import { kindLabel } from "@/lib/bible/format";
 import { resolveText, type TextResult } from "@/lib/bible/source";
-import type { Enrollment, PassagePayload, PlanCard, PlanPassage } from "@/lib/bible/types";
+import type { Enrollment, PassagePayload, PlanCard, PlanPassage, Translation } from "@/lib/bible/types";
 import { isUuid } from "@/lib/media/format";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { requireClient } from "@/lib/supabase/server";
@@ -51,8 +51,9 @@ const REASONS: Record<Extract<TextResult, { status: "unavailable" }>["reason"], 
   rejected: "The scripture source couldn't provide this passage.",
 };
 
-export default async function DayPage({ params }: PageProps<"/bible/day/[id]">) {
+export default async function DayPage({ params, searchParams }: PageProps<"/bible/day/[id]">) {
   const { id } = await params;
+  const { v } = await searchParams;
   if (!isUuid(id)) notFound();
   await requireApprovedMember(`/bible/day/${id}`);
   const supabase = await requireClient();
@@ -62,14 +63,31 @@ export default async function DayPage({ params }: PageProps<"/bible/day/[id]">) 
   const day = data as Day;
   const active = day.enrollment?.status === "active";
 
+  // The version: ?v=CODE for this visit, else the member's preferred version,
+  // else the plan's. A passage that doesn't exist in the chosen version (its
+  // versification differs) is shown in the plan's version instead, labelled
+  // and said so; verses are never mixed within a passage.
+  const { data: list } = await supabase.rpc("bible_translations");
+  const versions = (list as { preferred_id: string | null; items: Translation[] } | null) ?? { preferred_id: null, items: [] };
+  const planId = day.plan.translation.id;
+  const requested = typeof v === "string" ? versions.items.find((t) => t.code === v) : undefined;
+  const chosen = requested?.id ?? versions.items.find((t) => t.id === versions.preferred_id)?.id ?? planId;
+
   // Each passage separately, in order; an unavailable one is said so plainly.
+  const fetchPassage = (translation: string, p: PlanPassage) =>
+    supabase.rpc("bible_passage", { p_translation: translation, p_book: p.book, p_sc: p.sc, p_sv: p.sv, p_ec: p.ec, p_ev: p.ev });
   const texts = await Promise.all(
     day.passages.map(async (p) => {
-      const r = await supabase.rpc("bible_passage", { p_translation: day.plan.translation.id, p_book: p.book, p_sc: p.sc, p_sv: p.sv, p_ec: p.ec, p_ev: p.ev });
-      if (r.error || !r.data) return { p, payload: null, text: null, problem: dbErrorMessage(r.error, "This passage couldn't be loaded.") };
+      let r = await fetchPassage(chosen, p);
+      let fallback: string | null = null;
+      if (chosen !== planId && (r.error?.code === "22023" || r.error?.code === "P0002")) {
+        fallback = dbErrorMessage(r.error, "It isn't available in that version.");
+        r = await fetchPassage(planId, p);
+      }
+      if (r.error || !r.data) return { p, payload: null, text: null, fallback, problem: dbErrorMessage(r.error, "This passage couldn't be loaded.") };
       const payload = r.data as PassagePayload;
       const text = await resolveText(payload.translation, payload.verses, payload.provider, { book: p.book, sc: p.sc, sv: p.sv, ec: p.ec, ev: p.ev });
-      return { p, payload, text, problem: null };
+      return { p, payload, text, fallback, problem: null };
     }),
   );
   const [bookmarks, notes] = await Promise.all([
@@ -79,7 +97,8 @@ export default async function DayPage({ params }: PageProps<"/bible/day/[id]">) 
   const bookmarked = ((bookmarks.data as Array<{ kind: string; day: { id: string } | null }> | null) ?? []).some((b) => b.kind === "assignment" && b.day?.id === day.id);
   const myNotes = (notes.data as Array<{ id: string; title: string; excerpt: string; question: string | null }> | null) ?? [];
   const fums = texts.flatMap((t) => (t.text?.status === "ok" && t.text.fumsId ? [t.text.fumsId] : []));
-  const translation = texts.find((t) => t.payload)?.payload?.translation;
+  const shown = [...new Map(texts.flatMap((t) => (t.payload ? [[t.payload.translation.id, t.payload.translation] as const] : []))).values()];
+  const chosenVersion = versions.items.find((t) => t.id === chosen);
   const isToday = day.scheduled === day.today;
 
   return (
@@ -119,12 +138,38 @@ export default async function DayPage({ params }: PageProps<"/bible/day/[id]">) 
         <CommunityText source={day.notes} className="mb-6 text-text-secondary" />
       ) : null}
 
-      {texts.map(({ p, payload, text, problem }) => (
+      {day.passages.length && versions.items.length > 1 ? (
+        <nav aria-label="Bible version" className="mb-6 flex flex-wrap items-center gap-2 text-meta">
+          <span className="text-text-secondary">
+            Version{chosen !== planId && chosenVersion ? ` (this plan was prepared with ${day.plan.translation.code})` : ""}:
+          </span>
+          {versions.items.map((t) => (
+            <Link
+              key={t.id}
+              href={`/bible/day/${day.id}?${new URLSearchParams({ v: t.code })}`}
+              aria-current={t.id === chosen ? "true" : undefined}
+              className={t.id === chosen ? "rounded-control bg-surface-muted px-3 py-1.5 font-semibold text-text" : "rounded-control px-3 py-1.5 font-semibold text-primary hover:underline"}
+            >
+              {t.code}
+            </Link>
+          ))}
+          <Link href="/bible#bible-version" className="px-1 text-text-secondary hover:underline">
+            Change my version
+          </Link>
+        </nav>
+      ) : null}
+
+      {texts.map(({ p, payload, text, fallback, problem }) => (
         <section key={p.id} aria-labelledby={`passage-${p.id}`} className="mb-8">
           <h2 id={`passage-${p.id}`} className="mb-3 text-title font-semibold">
             {p.label}
             {payload ? <span className="ml-2 text-meta font-semibold text-text-secondary">{payload.translation.code}</span> : null}
           </h2>
+          {fallback && payload ? (
+            <p className="mb-3 text-meta text-text-secondary">
+              {chosenVersion?.code ?? "Your version"}: {fallback} Shown in {payload.translation.code}, the plan&apos;s version, instead.
+            </p>
+          ) : null}
           {problem ? (
             <Alert tone="warning" title="This passage isn't available.">
               {problem}
@@ -146,7 +191,9 @@ export default async function DayPage({ params }: PageProps<"/bible/day/[id]">) 
           ) : null}
         </section>
       ))}
-      {translation ? <Attribution translation={translation} /> : null}
+      {shown.map((t) => (
+        <Attribution key={t.id} translation={t} />
+      ))}
 
       {day.kind !== "rest" && active && !day.retired ? (
         <div className="my-8">

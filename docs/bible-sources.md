@@ -29,6 +29,25 @@ curl -sO https://registry.npmjs.org/world-english-bible/-/world-english-bible-1.
 node scripts/bible-prepare-web.mjs --tarball world-english-bible-1.0.1.tgz --out web.csv
 ```
 
+### American Standard Version (ASV), offered beside the WEB
+
+The ASV (1901) is the second public-domain version, so members can choose between WEB and ASV (see [bible-reading-guide.md](bible-reading-guide.md#choosing-your-bible-version)). The WEB stays the church's default; the ASV is added as another active translation.
+
+- **Rights:** published in the United States in 1901; public domain. No trademark or naming condition.
+- **The data used here:** `eng-asv.zefania.xml` from [seven1m/open-bibles](https://github.com/seven1m/open-bibles) at a pinned commit (Zefania XML by the Free Bible Software Group, which names Biola University's Unbound Bible ASV as its source). `scripts/bible-prepare-asv.mjs` checks its SHA-256, refuses DOCTYPE/entity declarations, and changes typography only (backtick apostrophes become ’, spaces collapse). 31,102 verses.
+- **Why this copy:** three ASV copies were compared verse by verse; see [asv-crosscheck.md](asv-crosscheck.md). Only this copy is used. The cross-check lists the 63 verses where it disagrees with both others; spot-check them against a printed ASV or [ebible.org/asv](https://ebible.org/asv/) in the review before publishing.
+- **What the review will show:** Romans 16:26–27 as *beyond the usual numbering* (the ASV places the doxology at 16:25–27; keep them) and Romans 14:24–26 as *missing* (acknowledge). No verses are empty: the ASV prints verses such as Acts 8:37 in square brackets (its margin readings), and the brackets are kept, as are `[supplied words]`. There are no Psalm superscriptions or poetry line breaks in this source.
+
+Suggested ASV settings: code **ASV**, name "American Standard Version (1901)", rights **Public domain**, attribution "American Standard Version (1901). Public domain.", copy/print/export allowed. Activate it; leave WEB as the default (or make ASV the default if the church prefers).
+
+```bash
+# Download the pinned file (raw.githubusercontent.com), then:
+curl -sO https://raw.githubusercontent.com/seven1m/open-bibles/f257a3559025c3f873b48a75019f53a9354ed7de/eng-asv.zefania.xml
+node scripts/bible-prepare-asv.mjs --xml eng-asv.zefania.xml --out asv.csv
+```
+
+A plan is prepared and validated in one translation (its own). Members who prefer another version read each day's passages in that version when the passage exists there; otherwise that passage is shown in the plan's version with a note. Every passage is labelled with its code, and verses are never mixed within one passage.
+
 ### Licensed translations
 
 Check the publisher's **current** terms before configuring, and record what you checked in the translation's "What the license says" field. Summaries found 2026-10-20 (from search results; the official pages were unreachable from this environment, so confirm them):

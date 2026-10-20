@@ -17,9 +17,9 @@ Guides: [bible-sources.md](bible-sources.md) (translations, sources, rights, imp
 | Area | Where |
 | --- | --- |
 | Bible tile live with the supplied Bible art; "Bible reading" and "My Journal" in the menus | home launcher, `src/lib/navigation.ts` |
-| Hub: today's reading per plan, featured church plan, available plans, bookmarks, journal, earlier plans | `/bible` |
+| Hub: today's reading per plan, featured church plan, available plans, bookmarks, journal, preferred Bible version (WEB or ASV), earlier plans | `/bible` |
 | Plan: join (start date + time zone, or count-from choice for dated plans), today, progress, all days by month, catch-up, reminders, main plan, start date, leave, delete history | `/bible/plans/<id>`, `/bible/plans/<id>/catch-up` |
-| Day: passages with translation label and attribution, mark read/undo, changed-since notice, reflection (Write privately / Join discussion), related teaching, your notes, bookmark, previous/next | `/bible/day/<id>` |
+| Day: passages in the member's preferred version (falling back to the plan's version per passage, with a note) with translation label and attribution, per-visit version switch, mark read/undo, changed-since notice, reflection (Write privately / Join discussion), related teaching, your notes, bookmark, previous/next | `/bible/day/<id>` |
 | Reader: book/chapter navigation, verse numbers, headings, poetry, highlights (4 named colors), bookmarks, notes, text size, spacing, translation switch, copy/print permissions, honest unavailable states | `/bible/read/<code>/<book>/<chapter>` |
 | Bookmarks and highlights, data download and clearing | `/bible/bookmarks` |
 | My Journal: list, search (POST), archive, export (Markdown/JSON), delete all; editor with autosave and conflict handling; links to passages, plan days and questions, devotionals and lessons ("Write privately" also on devotional/lesson pages) | `/journal`, `/journal/new`, `/journal/<id>` |
@@ -32,6 +32,7 @@ Guides: [bible-sources.md](bible-sources.md) (translations, sources, rights, imp
 
 - **No translation has been selected by the church.** The adapter and the full administration workflow are built for stored text and for API.Bible.
 - **Functional testing uses the World English Bible (WEB)**, public domain, labelled WEB everywhere it appears ("World English Bible" is an eBible.org trademark used only for the unaltered text). Data: npm package `world-english-bible@1.0.1`, integrity-checked by `scripts/bible-prepare-web.mjs` (whitespace-only conversion). The test fixture `tests/fixtures/bible/web-sample.csv` is an excerpt (Genesis 1–2, Psalm 23, John 3, Acts 8, Romans 16, Jude).
+- **American Standard Version (ASV, 1901)** is offered beside the WEB as a second public-domain version members can choose. Data: `eng-asv.zefania.xml` from seven1m/open-bibles at a pinned commit, SHA-256-checked by `scripts/bible-prepare-asv.mjs` (typography-only conversion), chosen after a three-copy verse-by-verse comparison ([asv-crosscheck.md](asv-crosscheck.md)). Fixture: `tests/fixtures/bible/asv-sample.csv` (same chapters). Members pick their version under **Bible reading → Bible version**; no schema change was needed (reader settings already stored a translation).
 - Licensing was checked on 2026-10-20 through search results of the official pages (eBible.org, API.Bible, Crossway); the pages themselves were blocked by this environment's network policy. Summaries and links: [bible-sources.md](bible-sources.md#choosing-a-source).
 - **API.Bible adapter: not verified live** (no key, provider unreachable from here). It is tested only against recorded response shapes. FUMS tracking loads only where its text is shown.
 
@@ -48,12 +49,13 @@ Saves about 1.2 s after typing stops, on leaving a field, and on Ctrl/⌘+S; one
 
 ### Verified locally (no hosted services)
 
-Lint (zero warnings), typecheck, production build (every new route dynamic), **608 Vitest tests** (56 files, run serially; 35 in `tests/db/bible.test.ts` against PostgreSQL 16 built from all 38 migrations), and **218 Playwright tests** (desktop and Pixel 7; 38 new). `tests/db/safeupdate.test.ts` covers every Phase 8 function. Earlier-phase suites all pass (one expectation updated: super administrators now also hold the three Phase 8 capabilities).
+Lint (zero warnings), typecheck, production build (every new route dynamic), **612 Vitest tests** (56 files, run serially; 39 in `tests/db/bible.test.ts` against PostgreSQL 16 built from all 38 migrations), and **218 Playwright tests** (desktop and Pixel 7; 38 new). `tests/db/safeupdate.test.ts` covers every Phase 8 function. Earlier-phase suites all pass (one expectation updated: super administrators now also hold the three Phase 8 capabilities).
 
 | Area | Proven by tests |
 | --- | --- |
 | Access | `bible`/`journal` schemas closed to anon, members, and admins; pending/suspended refused; source, plan editor, publisher, and content editor scopes |
 | Sources | Staging never publishes; omitted verses (Acts 8:37, Romans 16:25) flagged and published only after acceptance; duplicates block; malformed lines and unknown books flagged; typed confirmation; rights must be reconfirmed when permissions of an active translation change; draft translations never readable; no text shared between translations |
+| Second version (ASV) | Sample imports through the same review (Romans 16:26–27 flagged beyond numbering and kept only on acceptance, nothing empty); WEB and ASV both listed, default first; each serves its own wording (John 3:16, Psalm 23:1, bracketed Acts 8:37) labelled with its code; preferred version saved per member, not visible to others or admins, only active versions accepted, cleared with an empty choice |
 | Scripture accuracy | John 3:16 returned exactly as the source; Psalm 23 heading and poetry lines preserved; translation code and attribution returned; nonexistent chapters/verses refused |
 | References | Verse ranges, whole chapters, chapter ranges, cross-chapter ranges, comma continuations, several passages including same-book, aliases, ambiguous names refused, one-chapter books (`Jude 3` vs ambiguous `Jude 1`), invalid chapters/verses, labels identical in SQL and TypeScript |
 | CSV import | Templates parse cleanly; explicit date/day mapping; YYYY-MM-DD only; leap days; duplicates, rest-day mistakes, bad references by row; gaps warned; DB validation against the translation; add refuses conflicts; replace; one bad row rolls back everything; drafts only |
@@ -87,7 +89,7 @@ Lint (zero warnings), typecheck, production build (every new route dynamic), **6
 With the authorized test accounts (A: super administrator; B: approved member; C: another member in B's household) and only synthetic journal text marked `[TEST]`:
 
 1. Run scripts 1–6; run `supabase/tests/bible-fingerprint.sql` (compare with migration-history.md) and the earlier fingerprints against a fresh build.
-2. A prepares the WEB CSV (`scripts/bible-prepare-web.mjs`), adds translation WEB (public domain, confirm rights), imports it, reviews the five omitted verses and spot-checks chapters against ebible.org, publishes, activates, makes it the default.
+2. A prepares the WEB CSV (`scripts/bible-prepare-web.mjs`), adds translation WEB (public domain, confirm rights), imports it, reviews the five omitted verses and spot-checks chapters against ebible.org, publishes, activates, makes it the default. Then prepares the ASV CSV (`scripts/bible-prepare-asv.mjs`), adds translation ASV the same way, accepts Romans 16:26–27, acknowledges Romans 14:24–26, spot-checks the 63 verses in asv-crosscheck.md, publishes, and activates it (WEB stays default).
 3. A uploads a small test PDF as a reference file; opens the restricted preview; signs out and confirms the link route refuses.
 4. A creates a dated plan from `docs/samples/reading-plan-dated.csv` (dates moved to this week), previews, publishes, features it; creates a numbered plan by hand with a rest day.
 5. B joins both (numbered: start two days ago), opens today, marks read/unread, highlights and bookmarks in the reader, writes `[TEST]` journal entries from a question and a passage; tests autosave across two tabs (conflict), going offline, and signing out mid-edit.
@@ -98,7 +100,7 @@ With the authorized test accounts (A: super administrator; B: approved member; C
 
 ### Known limitations (Phase 8)
 
-- **Translation:** none chosen by the church; the WEB is for testing. API.Bible is unverified live; no ESV adapter.
+- **Translation:** none chosen by the church; the WEB (default) and ASV are public-domain versions members can choose between. API.Bible is unverified live; no ESV adapter.
 - **PDF extraction** is intentionally not offered (reference only; see bible-sources.md).
 - **Copy/print restrictions** are browser courtesies, not enforcement.
 - **Highlights** are per verse (no partial-verse ranges).

@@ -7,12 +7,15 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SelectField } from "@/components/ui/field";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { kindLabel, scheduleLabel } from "@/lib/bible/format";
 import { signBiblePaths } from "@/lib/bible/storage";
-import type { DaySummary, Enrollment, PlanCard, Progress } from "@/lib/bible/types";
+import type { DaySummary, Enrollment, PlanCard, Progress, Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
+import { preferredVersionAction } from "./actions";
 
 export const metadata: Metadata = { title: "Bible reading" };
 
@@ -39,7 +42,9 @@ export default async function BiblePage() {
   const supabase = await requireClient();
   const [{ data, error }, translations] = await Promise.all([supabase.rpc("bible_hub"), supabase.rpc("bible_translations")]);
   const hub = (data ?? { featured: null, enrollments: [], available: [], history: [] }) as Hub;
-  const hasTranslation = !translations.error && ((translations.data as { items: unknown[] } | null)?.items.length ?? 0) > 0;
+  const versions = (translations.error ? null : (translations.data as { default_id: string | null; preferred_id: string | null; items: Translation[] } | null)) ?? { default_id: null, preferred_id: null, items: [] };
+  const hasTranslation = versions.items.length > 0;
+  const churchDefault = versions.items.find((t) => t.id === versions.default_id);
   const covers = await signBiblePaths(supabase, [hub.featured?.cover_path, ...hub.available.map((p) => p.cover_path)]);
   const others = hub.available.filter((p) => p.id !== hub.featured?.id);
   const canManage = viewer.capabilities.has(CAPABILITIES.readingEdit) || viewer.capabilities.has(CAPABILITIES.readingPublish);
@@ -171,6 +176,27 @@ export default async function BiblePage() {
           </li>
         </ul>
       </section>
+
+      {versions.items.length > 1 ? (
+        <section aria-labelledby="bible-version" className="mb-8">
+          <SectionHeading id="bible-version" description="Used when you open the Bible and for your plans' daily readings. Each passage is labelled with its version; versions are never mixed within a passage.">
+            Bible version
+          </SectionHeading>
+          <form action={preferredVersionAction} className="flex flex-wrap items-end gap-3 rounded-card border border-border bg-surface p-4">
+            <SelectField label="Version I prefer" name="translation_id" defaultValue={versions.preferred_id ?? ""} className="min-w-0 flex-1 basis-64">
+              <option value="">{churchDefault ? `No preference (${churchDefault.code}, or each plan's own version)` : "No preference (each plan's own version)"}</option>
+              {versions.items.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.code})
+                </option>
+              ))}
+            </SelectField>
+            <SubmitButton variant="secondary" pendingText="Saving…">
+              Save
+            </SubmitButton>
+          </form>
+        </section>
+      ) : null}
 
       {hub.history.length ? (
         <section aria-labelledby="bible-history">

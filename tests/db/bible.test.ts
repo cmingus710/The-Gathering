@@ -21,12 +21,15 @@ const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
  * concurrency, export and deletion, bookmarks and highlights, and reminders
  * (one per day, rest days skipped, generic wording, access rechecked).
  *
- * Scripture comes from tests/fixtures/bible/web-sample.csv: an excerpt of
- * the public-domain World English Bible prepared by
- * scripts/bible-prepare-web.mjs. Every person and plan is synthetic.
+ * Scripture comes from tests/fixtures/bible/web-sample.csv and
+ * asv-sample.csv: excerpts of the public-domain World English Bible and
+ * American Standard Version prepared by scripts/bible-prepare-web.mjs and
+ * scripts/bible-prepare-asv.mjs. Every person and plan is synthetic.
  */
 type Json = Record<string, unknown>;
 const FIXTURE = readFileSync(path.resolve(__dirname, "../fixtures/bible/web-sample.csv"), "utf8");
+const ASV_FIXTURE = readFileSync(path.resolve(__dirname, "../fixtures/bible/asv-sample.csv"), "utf8");
+const ASV_JOHN_3_16 = "For God so loved the world, that he gave his only begotten Son, that whosoever believeth on him should not perish, but have eternal life.";
 const JOHN_3_16 = "For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish, but have eternal life.";
 const SECRET_PHRASE = "zebra-lantern private reflection";
 
@@ -699,6 +702,73 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       await rpc(as(m3), "bible_enrollment_update", [enr.id, j({ reminders_paused: false })]);
       await rpc(as(m3), "bible_plan_leave", [enr.id]);
       expect(await reminders(m3)).toHaveLength(0);
+    });
+  });
+
+  describe("a second version (ASV) and the member's preferred version", () => {
+    let asv: string;
+    it("imports the ASV sample through the same review and keeps its numbering", async () => {
+      asv = (await rpc<Json>(as(sourceMgr), "bible_admin_translation_save", [null, j({
+        code: "ASV", name: "American Standard Version (1901)", source_kind: "database",
+        attribution: "American Standard Version (1901). Public domain.", copyright: "Public domain",
+        rights: "public_domain", confirm_rights: true, allow_copy: true, allow_print: true, allow_export: true,
+      })])).id as string;
+      const { id, summary } = await stageImport(asv, ASV_FIXTURE);
+      expect(summary.duplicate).toBe(0);
+      expect(summary.malformed).toBe(0);
+      expect(summary.empty).toBe(0); // the ASV prints Acts 8:37 (bracketed)
+      const flagged = (await rpc<Json>(as(sourceMgr), "bible_admin_import", [id, null, 100, 0])).issues as Json[];
+      // The ASV numbers the Romans doxology 16:25–27; the reference numbering
+      // stops at 16:25, so 16:26–27 are flagged and kept only on acceptance.
+      expect(flagged.map((x) => `${x.issue} ${x.book} ${x.chapter}:${x.verse}`)).toEqual(["out_of_range ROM 16:26", "out_of_range ROM 16:27"]);
+      await fails(as(sourceMgr), "bible_admin_import_publish", [id, "ASV", true, null], /Review every flagged line/);
+      await rpc(as(sourceMgr), "bible_admin_import_accept", [id, flagged.map((x) => x.line as number), true]);
+      const pub = await rpc<Json>(as(sourceMgr), "bible_admin_import_publish", [id, "ASV", true, "Sample reviewed against the source"]);
+      expect(pub.verses).toBe(190);
+      await rpc(as(sourceMgr), "bible_admin_translation_status", [asv, "activate", "ASV"]);
+    });
+
+    it("lists both versions with the church's default first", async () => {
+      const list = await rpc<Json>(as(m3), "bible_translations");
+      expect((list.items as Json[]).map((t) => t.code)).toEqual(["WEB", "ASV"]);
+      expect(list.default_id).toBe(web);
+      expect(list.preferred_id).toBeNull();
+    });
+
+    it("serves each version's own words, labelled, without mixing", async () => {
+      const a = await rpc<Json>(as(m3), "bible_passage", [asv, "JHN", 3, 16, 3, 16]);
+      const w = await rpc<Json>(as(m3), "bible_passage", [web, "JHN", 3, 16, 3, 16]);
+      expect((a.translation as Json).code).toBe("ASV");
+      expect((a.verses as Json[]).map((v) => v.t)).toEqual([ASV_JOHN_3_16]);
+      expect((w.verses as Json[]).map((v) => v.t)).toEqual([JOHN_3_16]);
+      const ps = await rpc<Json>(as(m3), "bible_passage", [asv, "PSA", 23, 1, 23, 1]);
+      expect((ps.verses as Json[])[0].t).toBe("Jehovah is my shepherd; I shall not want.");
+      // Square brackets are the source's own (a verse the ASV prints in its margin).
+      const acts = await rpc<Json>(as(m3), "bible_chapter", [asv, "ACT", 8]);
+      expect(String((acts.verses as Json[]).find((v) => v.v === 37)!.t)).toMatch(/^\[And Philip said/);
+      // Versification differs: the ASV's doxology is Romans 16:25–27; the WEB has
+      // no 16:26. The day page falls back to the plan's version on this error.
+      expect(((await rpc<Json>(as(m3), "bible_passage", [asv, "ROM", 16, 25, 16, 27])).verses as Json[])).toHaveLength(3);
+      await fails(as(m3), "bible_passage", [web, "ROM", 16, 26, 16, 27], /verse doesn't exist/);
+      const [{ n }] = await db.raw<{ n: number }>("select count(*)::int n from bible.verses where translation_id = $1", [asv]);
+      expect(n).toBe(190);
+    });
+
+    it("saves the member's preferred version privately and clears it", async () => {
+      const saved = await rpc<Json>(as(m3), "bible_reader_prefs_save", [j({ translation_id: asv })]);
+      expect(saved.translation_id).toBe(asv);
+      expect((await rpc<Json>(as(m3), "bible_translations")).preferred_id).toBe(asv);
+      // Other members (and administrators) keep their own.
+      expect((await rpc<Json>(as(m1), "bible_translations")).preferred_id).not.toBe(asv);
+      expect((await rpc<Json>(as(admin), "bible_translations")).preferred_id).toBeNull();
+      // Only an active version can be chosen.
+      const draft = (await rpc<Json>(as(sourceMgr), "bible_admin_translation_save", [null, j({ code: "DRAFTV", name: "Draft version" })])).id;
+      await fails(as(m3), "bible_reader_prefs_save", [j({ translation_id: draft })], /isn't available/);
+      // Other reader settings don't touch the choice; an empty value clears it.
+      await rpc(as(m3), "bible_reader_prefs_save", [j({ text_size: 120 })]);
+      expect((await rpc<Json>(as(m3), "bible_reader_prefs")).translation_id).toBe(asv);
+      await rpc(as(m3), "bible_reader_prefs_save", [j({ translation_id: "" })]);
+      expect((await rpc<Json>(as(m3), "bible_translations")).preferred_id).toBeNull();
     });
   });
 });

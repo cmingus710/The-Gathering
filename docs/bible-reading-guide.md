@@ -6,7 +6,7 @@ Open **Bible Reading** from the home menu (the Bible tile), or **My Journal** fr
 
 - **Bible reading** (`/bible`) shows today's reading for each plan you've joined, the church's featured plan, other plans you can join, your bookmarks and highlights, and plans you've left.
 - **Join a plan.** For a plan with numbered days, choose your start date and time zone; "today" follows that time zone. For the church's dated plan, dates follow the church's time zone; if it has already begun you choose to start from today or include the earlier readings.
-- **Today's reading** opens the passages with the translation's name. Mark it **read** when you've read it (opening a reading never marks it). Select again to undo. Rest days never count as missed.
+- **Today's reading** opens the passages in your preferred version (see below), labelled with the version's name. Mark it **read** when you've read it (opening a reading never marks it). Select again to undo. Rest days never count as missed.
 - **All days** lists the whole plan by month (or by 30 days), with what you've read.
 - **Catch up** lists earlier readings you haven't marked, to read in any order.
 - **Several plans** at once are fine; your **main plan** is the one on the home page.
@@ -15,12 +15,24 @@ Open **Bible Reading** from the home menu (the Bible tile), or **My Journal** fr
 
 ## Reading the Bible
 
-**Open the Bible** (`/bible/read`) goes to the church's translation (or the one you chose last). Choose a book and chapter, or use the previous/next links.
+**Open the Bible** (`/bible/read`) goes to your preferred version (or the church's, if you haven't chosen one). Choose a book and chapter, or use the previous/next links.
 
 - **Reading settings**: text size, line spacing, and verse numbers; saved to your account.
 - **Select verse numbers** to highlight (yellow, green, blue, pink), bookmark, or **Write privately** about them.
 - The translation's name and required notices appear under the text. Some translations don't allow copying or printing; the reader respects that.
 - If a translation's source is unavailable, the page says so. It never shows another translation or made-up text instead.
+
+## Choosing your Bible version
+
+When the church offers more than one version (for example the **World English Bible, WEB** and the **American Standard Version, ASV**), choose the one you prefer under **Bible reading → Bible version** and select **Save**.
+
+- **Open the Bible** then opens your version. Switching version in the reader also saves it as your choice.
+- **Plan readings** are shown in your version. If a passage is numbered differently in your version (Romans 16:25–27, for example), that passage is shown in the plan's version instead, and the page says so.
+- On a reading's page, the **Version** links (WEB · ASV) switch just that page, without changing your choice.
+- Every passage shows its version's code, and the version's name and notice appear underneath. Verses from different versions are never mixed in one passage.
+- Choose **No preference** to go back to the church's version (and each plan's own version for plan readings).
+
+Your choice is private, like your other reading settings.
 
 ## Reflection and discussion
 
