@@ -90,6 +90,9 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
   if (unknown.length) warnings.push({ row: 1, message: `Ignored column${unknown.length > 1 ? "s" : ""}: ${unknown.join(", ")}.` });
 
   const rows: ImportRow[] = [];
+  // Every date or day number in the file, including rows with other problems,
+  // so a row that fails on its passages never shows up as a missing day.
+  const keys: Pick<ImportRow, "day_date" | "day_number">[] = [];
   const seen = new Map<string, number>();
   for (const { line, cells } of table.slice(1)) {
     const get = (n: string) => (idx(n) >= 0 ? (cells[idx(n)] ?? "").trim() : "");
@@ -107,6 +110,7 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
     } else {
       day_number = +key;
     }
+    if (day_date || day_number !== null) keys.push({ day_date, day_number });
     const typeRaw = get("type").toLowerCase();
     const passageCells = passageCols.map((i) => ({ column: columnLabel(table[0].cells[i] ?? ""), text: (cells[i] ?? "").trim() })).filter((c) => c.text);
     const passagesText = passageCells.map((c) => c.text).join("; ");
@@ -146,7 +150,7 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
     }
   }
   if (!rows.length && !errors.length) errors.push({ row: null, message: "The file has no days." });
-  warnings.push(...gapWarnings(rows, mode));
+  warnings.push(...gapWarnings(keys, mode));
   return { rows, errors, warnings };
 }
 

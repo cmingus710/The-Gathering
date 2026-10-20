@@ -59,7 +59,7 @@ In an Excel file:
 | `questions` | no | Up to 5, separated by ` \| ` |
 | `notes` | no | Up to 4,000 characters |
 
-Book names: full names (`1 Corinthians`, `Song of Songs`, `Psalm`/`Psalms`), USFM codes (`1CO`), and common abbreviations (`Gen`, `Ps`, `1 Cor`, `Jn`, `Rev`). Ambiguous abbreviations (`Jo`, `Ju`, `Ph`, `Ma`, `Th`, `Ti`) are refused with a message. In one-chapter books a bare number is a verse (`Jude 3`); `Jude 1` is refused as ambiguous (write `Jude 1:1` or `Jude`). Partial verses (`16a`) aren't supported.
+Book names: full names (`1 Corinthians`, `Song of Songs`, `Psalm`/`Psalms`), USFM codes (`1CO`), and standard abbreviations (`Gn`, `Ps`, `1 Cor`, `1Ch`, `Jn`, `He`, `Jsh`, `Zph`, `Rev`…). Ambiguous abbreviations (`Jo`, `Ju`, `Ph`, `Ma`, `Th`, `Ti`) are refused with a message. In one-chapter books a bare number is a verse (`Jude 3`), except `1`: `Jude 1` or `2 John 1` means the whole book, as reading schedules write it (write `Jude 1:1` for the first verse). Partial verses (`16a`) aren't supported.
 
 Flow:
 

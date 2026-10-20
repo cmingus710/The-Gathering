@@ -47,6 +47,9 @@ describe("parsePassages", () => {
     for (const [input, code] of [
       ["1 Cor 13", "1CO"], ["I Corinthians 13", "1CO"], ["First John 1", "1JN"], ["1JN 1", "1JN"], ["Ps 23", "PSA"],
       ["Song of Solomon 2", "SNG"], ["Song of Songs 2", "SNG"], ["Rev. 21", "REV"], ["jhn 3", "JHN"], ["Phil 4", "PHP"], ["Phlm 1:4", "PHM"],
+      // Abbreviations from a church's printed yearly plan.
+      ["He 1", "HEB"], ["Jsh 1", "JOS"], ["Zph 1", "ZEP"], ["Gn 1", "GEN"], ["Lv 1", "LEV"], ["Dn 1", "DAN"], ["Ho 1", "HOS"], ["1Ch 1", "1CH"],
+      ["2Jn 1", "2JN"], ["3 Jn 1", "3JN"], ["1 Jn 1", "1JN"], ["Eze 1", "EZK"], ["La 1", "LAM"], ["Pr 1", "PRO"], ["Ro 1", "ROM"], ["Act 1", "ACT"],
     ] as const) {
       expect(ok(input)[0].book).toBe(code);
     }
@@ -59,12 +62,15 @@ describe("parsePassages", () => {
     expect(findBookCode("Jo")).toBeNull();
   });
 
-  it("handles one-chapter books without reinterpreting a bare 1", () => {
+  it("handles one-chapter books: a bare number is a verse, a bare 1 the whole book", () => {
     expect(ok("Jude 3")).toEqual([{ book: "JUD", sc: 1, sv: 3, ec: 1, ev: 3 }]);
     expect(ok("Jude 3-7")).toEqual([{ book: "JUD", sc: 1, sv: 3, ec: 1, ev: 7 }]);
     expect(ok("Jude 1:1-25")).toEqual([{ book: "JUD", sc: 1, sv: 1, ec: 1, ev: 25 }]);
     expect(ok("Jude")).toEqual([{ book: "JUD", sc: 1, sv: null, ec: 1, ev: null }]);
-    expect(err("Jude 1")).toMatch(/could mean verse 1 or the whole book/);
+    // A bare 1 is the book's only chapter, as reading schedules write "2 John 1".
+    expect(ok("Jude 1")).toEqual([{ book: "JUD", sc: 1, sv: null, ec: 1, ev: null }]);
+    expect(ok("2Jn 1")).toEqual([{ book: "2JN", sc: 1, sv: null, ec: 1, ev: null }]);
+    expect(ok("Jude 1:1")).toEqual([{ book: "JUD", sc: 1, sv: 1, ec: 1, ev: 1 }]);
   });
 
   it("rejects chapters and verses that don't exist, and backwards ranges", () => {

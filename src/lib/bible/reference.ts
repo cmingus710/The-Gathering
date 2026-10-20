@@ -8,8 +8,9 @@ import { BOOK_LIST, bookByCode, chapterCount, lastVerse, type BookCode } from ".
  * aliases below). Anything else, or anything that could mean two things, is
  * an error with a reason: nothing is silently reinterpreted. Notably:
  *   - "Jo", "Ju", "Ph", "Ma", "Th", "Ti" aren't accepted (several books);
- *   - in a one-chapter book a bare number is a verse ("Jude 3"), but a bare
- *     "1" ("Jude 1") is ambiguous (verse 1 or the whole book) and refused;
+ *   - in a one-chapter book a bare number is a verse ("Jude 3"), except a
+ *     bare "1" ("2 John 1"), which reading schedules use for the whole book
+ *     (its only chapter); write "2 John 1:1" for the first verse;
  *   - partial verses ("16a") aren't supported.
  * Validation here uses the reference versification; the database checks
  * again against the plan's translation.
@@ -35,6 +36,11 @@ const ALIASES: Record<string, BookCode> = {
   tit: "TIT", phlm: "PHM", phm: "PHM", philem: "PHM", heb: "HEB", jas: "JAS", jm: "JAS", "1pet": "1PE", "1pt": "1PE", "1pe": "1PE",
   "2pet": "2PE", "2pt": "2PE", "2pe": "2PE", "1jn": "1JN", "1jo": "1JN", "1john": "1JN", "2jn": "2JN", "2jo": "2JN", "3jn": "3JN", "3jo": "3JN",
   jud: "JUD", jude: "JUD", rev: "REV", rv: "REV", re: "REV", revelations: "REV", apocalypse: "REV",
+  // Further standard abbreviations (SBL, Logos, Blue Letter Bible, printed plans). Each names exactly one book.
+  jsh: "JOS", zph: "ZEP", zp: "ZEP", he: "HEB", nb: "NUM", de: "DEU", jdgs: "JDG", "1kg": "1KI", "2kg": "2KI", "1kin": "1KI", "2kin": "2KI",
+  es: "EST", jr: "JER", psm: "PSA", pslm: "PSA", ec: "ECC", joe: "JOL", mc: "MIC", hg: "HAG", zc: "ZEC", ml: "MAL", mr: "MRK", ephes: "EPH",
+  pp: "PHP", "1thes": "1TH", "2thes": "2TH", pm: "PHM", jd: "JUD", "1jhn": "1JN", "2jhn": "2JN", "3jhn": "3JN", "1joh": "1JN", "2joh": "2JN",
+  "3joh": "3JN", "1tm": "1TI", "2tm": "2TI", "1ts": "1TH", "2ts": "2TH", "1c": "1CO", "2c": "2CO", ezra: "EZR", hbk: "HAB", phi: "PHP", sg: "SNG",
 };
 
 /** Lowercase, numerals for leading ordinals, no spaces or periods. */
@@ -118,11 +124,8 @@ export function parsePassages(input: string): ParseResult {
         if (versesMode && chapter !== null) {
           p = { book, sc: chapter, sv: a, ec: chapter, ev: b };
         } else if (single) {
-          if (!mm[2] && a === 1) {
-            const name = bookByCode(book)!.name;
-            return { ok: false, error: `“${name} 1” could mean verse 1 or the whole book. Write “${name} 1:1” or “${name}”.` };
-          }
-          p = { book, sc: 1, sv: a, ec: 1, ev: b };
+          // "2 John 1": the book's only chapter, as reading schedules write it.
+          p = !mm[2] && a === 1 ? { book, sc: 1, sv: null, ec: 1, ev: null } : { book, sc: 1, sv: a, ec: 1, ev: b };
         } else {
           p = { book, sc: a, sv: null, ec: b, ev: null };
         }

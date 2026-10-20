@@ -74,6 +74,12 @@ describe("parsePlanCsv", () => {
     expect(p.warnings.map((w) => w.message)).toEqual(["The plan starts at day 2, not day 1.", "Days 3–4 are missing. Add rest days if that's intended."]);
   });
 
+  it("never reports a row with other problems as a missing day", () => {
+    const r = parsePlanCsv(["date,passages", "2027-01-01,John 1", "2027-01-02,Xyz 2", "2027-01-03,John 3"].join("\n"), "calendar");
+    expect(r.errors.map((e) => e.row)).toEqual([3]);
+    expect(r.warnings).toEqual([]);
+  });
+
   it("refuses broken files with a clear message", () => {
     expect(parsePlanCsv('day,passages\n1,"John 1\n', "personal").errors[0].message).toMatch(/isn't closed/);
     expect(parsePlanCsv("", "personal").errors[0].message).toMatch(/empty/);
