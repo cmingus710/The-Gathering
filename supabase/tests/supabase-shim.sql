@@ -50,6 +50,8 @@ create table storage.objects (
   bucket_id text references storage.buckets (id),
   name text,
   owner uuid,
+  -- Hosted Storage records the stored size and content type here.
+  metadata jsonb,
   created_at timestamptz default now()
 );
 alter table storage.objects enable row level security;

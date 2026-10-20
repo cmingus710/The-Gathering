@@ -128,16 +128,22 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
         "audit.view",
         "community.manage",
         "community.moderate",
+        "content.edit",
+        "content.publish",
         "events.manage",
+        "gallery.moderate",
+        "media.manage",
         "members.manage",
         "members.view",
+        "podcasts.manage",
         "roles.manage",
         "settings.manage",
       ]);
     });
 
     it("keeps content editing separate from membership and finance", async () => {
-      expect(await caps(editor)).toEqual(["announcements.manage"]);
+      // Phase 7: content editors also draft teaching content (never publish it).
+      expect(await caps(editor)).toEqual(["announcements.manage", "content.edit"]);
       const [r] = await db.query(as(editor), "select public.has_capability('finance.manage') f, public.has_capability('members.manage') m");
       expect(r).toEqual({ f: false, m: false });
     });
