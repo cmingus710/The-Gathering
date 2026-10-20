@@ -45,14 +45,16 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
   return (
     <form action={action} className="space-y-6">
       <FormMessage state={state} />
-      {(Object.keys(CATEGORY_INFO) as NotificationCategory[]).map((c) => (
+      {/* Only categories the database reports (Prayer and Care appear once Phase 6 is applied). */}
+      <input type="hidden" name="categories" value={(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).join(",")} />
+      {(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).map((c) => (
         <fieldset key={c} className="space-y-3 border-b border-border pb-5 last:border-0">
           <legend className="font-bold">{CATEGORY_INFO[c].label}</legend>
           <p className="text-meta text-text-secondary">{CATEGORY_INFO[c].hint}</p>
           <div className="grid gap-3 sm:grid-cols-3">
-            <CheckboxField name={`${c}.in_app`} label="In the app" defaultChecked={prefs[c].in_app} disabled={c === "moderation"} />
+            <CheckboxField name={`${c}.in_app`} label="In the app" defaultChecked={prefs[c]!.in_app} disabled={c === "moderation"} />
             {c === "events" ? null : (
-              <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c].email}>
+              <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
                 {c === "messages" || c === "care" ? null : (
@@ -63,7 +65,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
                 )}
               </SelectField>
             )}
-            {pushAvailable ? <CheckboxField name={`${c}.push`} label="Push on my devices" defaultChecked={prefs[c].push} /> : null}
+            {pushAvailable ? <CheckboxField name={`${c}.push`} label="Push on my devices" defaultChecked={prefs[c]!.push} /> : null}
           </div>
         </fieldset>
       ))}

@@ -130,7 +130,8 @@ export type NotificationCategory = NotificationItem["category"];
 export type Pref = { in_app: boolean; email: "off" | "immediate" | "daily" | "weekly"; push: boolean };
 
 export type MySettings = {
-  prefs: Record<NotificationCategory, Pref>;
+  // Prayer and care appear once the Phase 6 migrations are applied.
+  prefs: Partial<Record<NotificationCategory, Pref>> & Record<"forum" | "groups" | "messages" | "moderation" | "events", Pref>;
   timezone: string | null;
   effective_timezone: string;
   quiet_enabled: boolean;

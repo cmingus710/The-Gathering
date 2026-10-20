@@ -28,7 +28,8 @@ const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "pray
 
 export async function savePrefsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireApprovedMember("/notifications/settings");
-  for (const c of CATEGORIES) {
+  const shown = new Set(String(formData.get("categories") ?? "").split(","));
+  for (const c of CATEGORIES.filter((x) => shown.has(x))) {
     const email = String(formData.get(`${c}.email`) ?? "off");
     const { error } = await rpc("community_set_pref", {
       p_category: c,
