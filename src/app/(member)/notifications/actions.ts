@@ -24,7 +24,7 @@ export async function markReadAction(_prev: FormState, formData: FormData): Prom
   return { status: "success", message: id ? "Marked as read." : "All notifications marked as read." };
 }
 
-const CATEGORIES = ["forum", "groups", "messages", "moderation", "events"] as const;
+const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "prayer", "care"] as const;
 
 export async function savePrefsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireApprovedMember("/notifications/settings");

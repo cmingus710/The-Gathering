@@ -1,5 +1,5 @@
 /**
- * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community). The database (public.capabilities,
+ * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community, Phase 6 prayer and care). The database (public.capabilities,
  * public.has_capability) is the source of truth; these constants keep the app
  * code typed. Add a key here only after adding it in a migration.
  */
@@ -22,6 +22,12 @@ export const CAPABILITIES = {
   // reports/moderation (Community moderator). Group leaders hold neither.
   communityManage: "community.manage",
   communityModerate: "community.moderate",
+  // Prayer and care: explicit roles only (never implied by super_admin).
+  prayerConfidential: "prayer.confidential",
+  prayerModerate: "prayer.moderate",
+  prayerIdentity: "prayer.identity",
+  careCoordinate: "care.coordinate",
+  careAssign: "care.assign",
 } as const;
 
 export type Capability = (typeof CAPABILITIES)[keyof typeof CAPABILITIES];
@@ -44,6 +50,7 @@ export const ADMIN_AREA_CAPABILITIES: readonly Capability[] = [
   CAPABILITIES.eventsManage,
   CAPABILITIES.communityManage,
   CAPABILITIES.communityModerate,
+  CAPABILITIES.prayerModerate,
 ];
 
 export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {

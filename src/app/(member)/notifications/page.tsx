@@ -1,4 +1,4 @@
-import { Bell, CalendarDays, MessageCircle, MessagesSquare, Settings, ShieldAlert, UsersRound } from "lucide-react";
+import { Bell, CalendarDays, HandHeart, HandHelping, MessageCircle, MessagesSquare, Settings, ShieldAlert, UsersRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LiveRefresh } from "@/components/community/live-refresh";
@@ -19,6 +19,8 @@ const ICON = {
   messages: MessageCircle,
   moderation: ShieldAlert,
   events: CalendarDays,
+  prayer: HandHeart,
+  care: HandHelping,
 } as const;
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {

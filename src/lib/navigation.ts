@@ -38,7 +38,7 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "directory", label: "Directory", icon: "directory", section: "connect", status: "available", href: "/directory" },
   { key: "profile", label: "Profile", icon: "profile", section: "you", status: "available", href: "/profile" },
   { key: "notifications", label: "Notifications", icon: "notifications", section: "you", status: "available", href: "/notifications", count: "notifications" },
-  { key: "prayer", label: "Prayer", icon: "prayer", section: "church", status: "upcoming", phase: 6 },
+  { key: "prayer", label: "Prayer", icon: "prayer", section: "church", status: "available", href: "/prayer" },
   { key: "media", label: "Teaching & media", icon: "podcasts", section: "church", status: "upcoming", phase: 7 },
   { key: "grow", label: "Bible reading", icon: "bible", section: "church", status: "upcoming", phase: 8 },
 ];
@@ -94,6 +94,20 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: "/admin/moderation",
     icon: "moderation",
     requires: [CAPABILITIES.communityModerate],
+  },
+  {
+    key: "prayer",
+    label: "Prayer reports",
+    href: "/admin/prayer",
+    icon: "prayer",
+    requires: [CAPABILITIES.prayerModerate],
+  },
+  {
+    key: "prayer-settings",
+    label: "Prayer settings",
+    href: "/admin/prayer/settings",
+    icon: "settings",
+    requires: [CAPABILITIES.settingsManage],
   },
   {
     key: "finance",

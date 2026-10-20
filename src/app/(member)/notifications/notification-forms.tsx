@@ -36,6 +36,8 @@ const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string 
   messages: { label: "Direct messages", hint: "Email and push only say “You have a new message”, never the text or sender." },
   moderation: { label: "Moderator actions", hint: "Always shown in the app when a moderator acts on your posts or account." },
   events: { label: "Event updates", hint: "Changes and cancellations for events you're registered for. Event emails are set on the Events page." },
+  prayer: { label: "Prayer", hint: "Comments and updates on requests you wrote or follow. Email and push never include the request or names." },
+  care: { label: "Care", hint: "Responses to your care requests, volunteer confirmations, and (for coordinators) assignments and follow-ups. Email and push are generic." },
 };
 
 export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]; pushAvailable: boolean }) {
@@ -53,7 +55,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
               <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c].email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
-                {c === "messages" ? null : (
+                {c === "messages" || c === "care" ? null : (
                   <>
                     <option value="daily">Daily summary</option>
                     <option value="weekly">Weekly summary</option>

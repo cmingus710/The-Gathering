@@ -44,8 +44,9 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "announcements", label: "News", art: "announcements", glyph: "announcements", order: 70, status: "available", href: "/announcements" },
   { id: "notifications", label: "Notifications", art: "notifications", glyph: "notifications", order: 80, status: "available", href: "/notifications", count: "notifications" },
   { id: "profile", label: "Profile", art: "profile", glyph: "profile", order: 90, status: "available", href: "/profile" },
+  // A generic invitation to pray: the tile never shows request text.
+  { id: "prayer", label: "Prayer", art: "prayer", glyph: "prayer", order: 55, status: "available", href: "/prayer" },
   // Later phases (see docs/roadmap.md). Not links until they ship.
-  { id: "prayer", label: "Prayer", art: "prayer", glyph: "prayer", order: 100, status: "upcoming", phase: 6 },
   { id: "podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts", order: 110, status: "upcoming", phase: 7 },
   { id: "lessons", label: "Lessons", art: "lessons", glyph: "lessons", order: 120, status: "upcoming", phase: 7 },
   { id: "bible", label: "Bible", art: "bible", glyph: "bible", order: 130, status: "upcoming", phase: 8 },
