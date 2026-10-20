@@ -8,7 +8,7 @@ Last updated: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also push
 
 Phase 9 code is complete and verified locally, including a signed-in walkthrough of the real app against the real migrations. Nothing was duplicated or lost: the branch started from the Phase 8 head, then merged `main` (#14 and the sign-in redesign) and the newer Phase 8 follow-up cleanly. Production builds stay paused; giving stays in Stripe test mode. Phase 10 hasn't started.
 
-**The hosted database is not yet migrated for Phase 9.** Five operator scripts are ready and rehearsed at the hosted stage; the owner runs them in the SQL editor. Until then the preview's memory pages show "couldn't be loaded" and the home memory card is absent (nothing else changes).
+**The hosted database is migrated for Phase 9 (2026-10-20).** The owner ran the five operator scripts in the SQL editor; the history lists `20261027000100`…`000500` (`created_by = phase-9`) and `supabase/tests/memory-fingerprint.sql` on the hosted project matches the fresh-build digests in all 15 categories. A database-level hosted walkthrough passed and its `[TEST]` data was removed (below). A walkthrough in the browser while signed in as the test accounts is still to do (I can't sign in as them).
 
 Guides: [memory-admin-guide.md](memory-admin-guide.md) (administration, permission matrix), [memory-member-guide.md](memory-member-guide.md) (members), [memory-scoring.md](memory-scoring.md) (scoring, review schedule, badges), [memory-privacy.md](memory-privacy.md) (privacy, challenge sharing, withdrawal, Phase 10). Design: [architecture.md](architecture.md#scripture-memory-and-practice-phase-9).
 
@@ -90,24 +90,33 @@ Lint (zero warnings), typecheck, production build (every route dynamic), **707 V
 | Preview build `16ec916` (`dpl_3Ajd1vk74hXuwJ9tnjBw4BBXXd1C`) | **Ready**: `https://the-gathering-o1072onrg-paint-by-number.vercel.app` (Vercel Authentication required) |
 | Signed-out `/memory/review` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
 | Production deploys from `main` | Unchanged (paused); nothing merged by this phase |
-| Hosted migration history | **Not applied.** Read-only check 2026-10-20: 39 versions, latest `20261026000700`, no `memory` schema or bucket (the stage step 1 expects); WEB and ASV active; collation `en_US.UTF-8` |
-| Hosted walkthrough with authorized accounts | **Not done** (needs the migrations) |
+| Hosted migration history | **Applied** (owner, SQL editor): 44 versions, latest `20261027000500`; memory fingerprint equal to a fresh build in all 15 categories |
 
-### Hosted walkthrough plan (after the scripts)
+### Hosted walkthrough (database level, 2026-10-20)
 
-With the authorized test accounts (A: super administrator; B: approved member; C: B's household member; a group B belongs to with a leader L) and only `[TEST]` content:
+Run on the hosted project through the real `memory_*` functions as each authorized test account (role `authenticated` with that account's JWT claims, exactly what the app sends), using `[TEST]` content. Accounts: A `robtwebb@me.com` (super administrator), B `breaktwomusic@gmail.com` (approved member of `[TEST] Synthetic Public Group`), C `rob@justlovecorp.com` (teaching staff, no memory roles).
 
-1. Run scripts 1–5; run `supabase/tests/memory-fingerprint.sql` (compare with migration-history.md) and the earlier fingerprints against a fresh build.
-2. A creates `[TEST] Memory` (WEB, sequence) with John 3:16–17, Psalm 23:1–6, and Romans 8:28; fills dates from this week; previews each activity; publishes. Checks the tile and home card as B.
-3. B adds the assignment and a personal verse (ASV Psalm 23:1), completes all six activities (phone and desktop, light and dark, enlarged text, keyboard), checks the review queue, progress, and a badge; toggles airplane mode during a submission.
-4. A authorizes the group; L creates a group collection and a challenge (threshold 3); B joins, pauses, resumes, leaves.
-5. B switches on a review reminder a few minutes ahead with email to an allowlisted address; confirm one generic reminder; pause.
-6. A and C try B's verse URL: not found. B downloads and then deletes their practice history.
-7. Clean up: archive or delete `[TEST]` collections and challenges, revoke the group authorization, remove temporary roles (audited), reset B's memory settings.
+| Check | Result |
+| --- | --- |
+| A creates `[TEST] Phase 9 walkthrough` (WEB, sequence) with John 3:16–17 (assigned this week), Psalm 23:1–6, Romans 8:28, and publishes | Pass |
+| Captured text equals the hosted WEB verses exactly for all three passages; reference keys and source-current checks correct; Psalm 23 split into 5 parts (10 for kids) | Pass |
+| C (other staff) refused memory administration; B can't archive A's collection ("not found"); clients can't read the `bible` schema directly | Pass |
+| B: home card shows the reference and collection only (no verse text); adding the assignment creates a new verse due today | Pass |
+| B completes all six activities; each saved; typing scored 100% with the typed verse number set aside; no answers in the typing, flashcard, or self-check setups; the schedule changes at most once that day; badges First steps, Recited, Explorer awarded once | Pass |
+| Retried submission returns the stored result (`replayed`), no extra attempt | Pass |
+| A (super administrator) and C get "not found" for B's verse; A's collection view has no accuracy or session fields | Pass |
+| A creates `[TEST] Phase 9 challenge` (threshold 3) for the group; C (not in the group) gets "not found"; B joins (totals stay hidden with one person sharing, no names), pauses sharing, leaves | Pass |
+| B switches on a review reminder; the scheduler (pg_cron → Phase 7 preview worker → `community.tick()`) created one `memory_review_due` at 21:05 UTC with the generic email title "You have memory verses ready to review", and the email was sent; three later runs added no duplicate | Pass |
+| Cleanup: B deleted their practice history through `memory_history_delete`, reminders off; the `[TEST]` challenge, collection, unused passage captures, B's memory settings, the test notice, and memory rate events removed. All memory tables are empty again; no roles were granted or left over | Done |
+
+Not covered on hosted (covered by the local suites): text-version changes (would need editing hosted scripture), challenge totals above the threshold (the group has two members), household denial (no shared household between test accounts), browser rendering signed in.
+
+**Outstanding configuration found:** the hosted WEB and ASV translations have empty attribution text, so pages show only the code and name (for example "WEB · World English Bible"). A Bible source manager should add the attribution wording at Administration → Bible sources (Phase 8 setting; see bible-sources.md).
 
 ### Known limitations (Phase 9)
 
-- **Hosted database not migrated yet**, so no hosted walkthrough.
+- **Signed-in browser walkthrough on the hosted preview** not done (needs signing in as the test accounts); the database-level hosted walkthrough passed.
+- **Hosted WEB/ASV attribution text is empty** (Phase 8 configuration).
 - **API.Bible translations** can't be memorized (stored text is required for server-side scoring); none is configured anyway.
 - **Hints are counted on the server, but read & repeat "show every word" is reported by the device** (it's an unscored learning activity).
 - **Self-check and flashcards** record the member's own judgment and prove nothing; no audio, microphone, or voice scoring (by design).
