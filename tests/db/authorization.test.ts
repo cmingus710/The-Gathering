@@ -136,6 +136,8 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
         "media.manage",
         "members.manage",
         "members.view",
+        "memory.manage",
+        "memory.publish",
         "podcasts.manage",
         "reading.edit",
         "reading.publish",
