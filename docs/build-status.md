@@ -1,12 +1,133 @@
 # Build status
 
-Last updated: 2026-10-25 · Phase 7 branch `phase-7/teaching-media` (also pushed as `claude/blissful-hypatia-inbw75`), stacked on Phase 6 (`phase-6/prayer-care`), which contains the home redesign, design PR #9, and Phases 2–5
+Last updated: 2026-10-26 · Phase 8 branch `phase-8/bible-reading-journals` (also pushed as `claude/dreamy-babbage-an0yog`), stacked on Phase 7 (`phase-7/teaching-media`, which contains Phases 2–6, design PR #9, and the home redesign) · PR [#13](https://github.com/cmingus710/The-Gathering/pull/13) (draft)
+
+## Phase 8: Bible reading plans, scripture reader, and private journals
+
+### Summary
+
+Phase 8 code is complete and verified locally. It starts from the head of `phase-7/teaching-media` (`71728f2`), the newest integrated work, which already includes `main`; nothing was duplicated or lost. None of the earlier PRs is merged, so PR #13 into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused; giving stays in Stripe test mode. Phase 9 hasn't started.
+
+**The hosted database is not yet migrated for Phase 8.** The six operator scripts are ready and rehearsed; the owner runs them in the SQL editor (they're too large to pass through the SQL connector safely). Until then, the preview's Bible and journal pages show "couldn't be loaded" and the home card is simply absent.
+
+Guides: [bible-sources.md](bible-sources.md) (translations, sources, rights, imports, PDFs), [reading-plan-guide.md](reading-plan-guide.md) (administration, CSV import, correction and versioning policy), [bible-reading-guide.md](bible-reading-guide.md) (members), [journal-privacy.md](journal-privacy.md) (privacy, export, deletion, retention). Design: [architecture.md](architecture.md#bible-reading-plans-scripture-reader-and-journals-phase-8).
+
+### What was built and where
+
+| Area | Where |
+| --- | --- |
+| Bible tile live with the supplied Bible art; "Bible reading" and "My Journal" in the menus | home launcher, `src/lib/navigation.ts` |
+| Hub: today's reading per plan, featured church plan, available plans, bookmarks, journal, earlier plans | `/bible` |
+| Plan: join (start date + time zone, or count-from choice for dated plans), today, progress, all days by month, catch-up, reminders, main plan, start date, leave, delete history | `/bible/plans/<id>`, `/bible/plans/<id>/catch-up` |
+| Day: passages with translation label and attribution, mark read/undo, changed-since notice, reflection (Write privately / Join discussion), related teaching, your notes, bookmark, previous/next | `/bible/day/<id>` |
+| Reader: book/chapter navigation, verse numbers, headings, poetry, highlights (4 named colors), bookmarks, notes, text size, spacing, translation switch, copy/print permissions, honest unavailable states | `/bible/read/<code>/<book>/<chapter>` |
+| Bookmarks and highlights, data download and clearing | `/bible/bookmarks` |
+| My Journal: list, search (POST), archive, export (Markdown/JSON), delete all; editor with autosave and conflict handling; links to passages, plan days and questions, devotionals and lessons ("Write privately" also on devotional/lesson pages) | `/journal`, `/journal/new`, `/journal/<id>` |
+| Home "Today's Reading" card (only with an active plan) | `/home` |
+| **Reading plan controls** | **Admin → Reading plans** `/admin/bible`, `/admin/bible/plans/<id>` (days, add, CSV template and import, publishing, details, cover, duplicate, change log), `/admin/bible/plans/<id>/days/<day>` (edit, revise with impact, retire), `/admin/bible/plans/<id>/preview`, `/admin/bible/plans/<id>/import/<import>` |
+| **Bible source controls** | **Admin → Bible sources** `/admin/bible/sources` (translations, add, recent imports, reference PDFs), `/admin/bible/sources/<id>` (settings, rights, activation, default, text import), `/admin/bible/sources/imports/<id>` (review and publish) |
+| Notifications: `reading` category (reminders, plan changes), generic email/push | `/notifications/settings` |
+
+### Selected scripture source and permissions
+
+- **No translation has been selected by the church.** The adapter and the full administration workflow are built for stored text and for API.Bible.
+- **Functional testing uses the World English Bible (WEB)**, public domain, labelled WEB everywhere it appears ("World English Bible" is an eBible.org trademark used only for the unaltered text). Data: npm package `world-english-bible@1.0.1`, integrity-checked by `scripts/bible-prepare-web.mjs` (whitespace-only conversion). The test fixture `tests/fixtures/bible/web-sample.csv` is an excerpt (Genesis 1–2, Psalm 23, John 3, Acts 8, Romans 16, Jude).
+- Licensing was checked on 2026-10-20 through search results of the official pages (eBible.org, API.Bible, Crossway); the pages themselves were blocked by this environment's network policy. Summaries and links: [bible-sources.md](bible-sources.md#choosing-a-source).
+- **API.Bible adapter: not verified live** (no key, provider unreachable from here). It is tested only against recorded response shapes. FUMS tracking loads only where its text is shown.
+
+### Required configuration (no secret values)
+
+- Database: run `supabase/manual/2026-10-26-apply-bible-1.sql` … `-6.sql` in order; compare with `supabase/tests/bible-fingerprint.sql` (expected digests in [migration-history.md](migration-history.md#phase-8-2026-10-26)).
+- Roles: assign **Bible source manager**, **Reading plan editor**, **Reading plan publisher** at Administration → Members (super administrators hold them implicitly).
+- Optional, only for a licensed API translation: `API_BIBLE_KEY` (any name; sensitive, server-only) and `API_BIBLE_BASE_URL` in Vercel. Nothing new is needed for stored-text translations.
+- Scheduler: none. Reminders run in the existing `community.tick()`; email still needs `EVENTS_JOB_SECRET` on the designated deployment, which is unchanged (the Phase 7 scheduler script is still pending from Phase 7).
+
+### Autosave and conflict behavior
+
+Saves about 1.2 s after typing stops, on leaving a field, and on Ctrl/⌘+S; one save in flight, newer text sent right after (an older response can't overwrite newer text); every save names its base version. Status: Unsaved changes / Saving… / Saved / Not saved (plus offline, signed out, changed elsewhere). "Saved" only after the server confirms the exact text. Temporary failures retry with backoff (1, 2, 5, 10, 30 s); offline waits for the connection; a stale save returns the newer saved text and offers **Keep mine** (overwrite), **Use the other version**, or **Keep both** (mine saved as a new entry); an expired session stops saving, keeps the text, and resumes on Retry after signing in. Leaving with unsaved text asks first. Retried first saves never create two entries (client key). No browser storage.
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build (every new route dynamic), **608 Vitest tests** (56 files, run serially; 35 in `tests/db/bible.test.ts` against PostgreSQL 16 built from all 38 migrations), and **218 Playwright tests** (desktop and Pixel 7; 38 new). `tests/db/safeupdate.test.ts` covers every Phase 8 function. Earlier-phase suites all pass (one expectation updated: super administrators now also hold the three Phase 8 capabilities).
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `bible`/`journal` schemas closed to anon, members, and admins; pending/suspended refused; source, plan editor, publisher, and content editor scopes |
+| Sources | Staging never publishes; omitted verses (Acts 8:37, Romans 16:25) flagged and published only after acceptance; duplicates block; malformed lines and unknown books flagged; typed confirmation; rights must be reconfirmed when permissions of an active translation change; draft translations never readable; no text shared between translations |
+| Scripture accuracy | John 3:16 returned exactly as the source; Psalm 23 heading and poetry lines preserved; translation code and attribution returned; nonexistent chapters/verses refused |
+| References | Verse ranges, whole chapters, chapter ranges, cross-chapter ranges, comma continuations, several passages including same-book, aliases, ambiguous names refused, one-chapter books (`Jude 3` vs ambiguous `Jude 1`), invalid chapters/verses, labels identical in SQL and TypeScript |
+| CSV import | Templates parse cleanly; explicit date/day mapping; YYYY-MM-DD only; leap days; duplicates, rest-day mistakes, bad references by row; gaps warned; DB validation against the translation; add refuses conflicts; replace; one bad row rolls back everything; drafts only |
+| Schedules | Personal days map to the member's start date and zone; calendar "today" follows the plan's zone; midyear join counting from today vs from the start; leap day; DST (New York spring-forward); time-zone date boundaries |
+| Progress | Rest days never counted or markable; completion idempotent both ways; opening doesn't mark; catch-up; leave keeps history; rejoin restores it |
+| Versioning | Revising a future day needs a reason and a publisher; completions and journal links keep revision 1 and show what was read; past days need "correct-past"; published days can't be deleted, only retired (completions kept); plans with readers can't be deleted; title edits keep progress; structural changes refused; next-version duplicate; archived plans stay readable to those who joined |
+| Journals | Idempotent create; unreadable/uneditable/undeletable by household member, super admin, plan publisher and editor, source manager, group leader, content editor; search is owner-only with literal wildcards; stale save → conflict with current text, retry idempotent, force overwrites; linked teaching withheld after archiving while the note stays; suspension pauses access, reinstatement restores; archive, export, delete, delete-all confirmation; no journal text in audit log, notifications, or staff views |
+| Annotations | Bookmarks and highlights private, toggle, validated verses, can't be removed by others, exported, clearable; verse rows carry no annotation columns; reader settings separate |
+| Reminders | One per day at the member's time, never twice (including two overlapping scheduler runs on separate connections); generic email and push text; rest days, finished readings skipped; leaving a group turns reminders off; paused or left enrollments hide the notice |
+| Account deletion | Journal, enrollments, highlights, bookmarks, settings removed |
+| Autosave (unit) | Debounce, one save in flight, latest text after, retry backoff, non-retryable stop, conflict choices, session expiry, offline |
+| Other units | API adapter (host allowlist, key only in header, outages/misconfiguration honest, caching only when allowed and never across translations), PDF signature/pages/text-layer, export Markdown, highlight contrast in both themes |
+| Browser | Signed-out redirects for 16 Phase 8 routes; `/bible`, `/journal` `private, no-store`; journal and Bible APIs refuse signed-out callers without cacheable answers; the service worker caches none of it |
+
+**Not verified in a browser:** the signed-in pages themselves (reader, highlights, autosave UI, admin flows). They need the hosted database; see the walkthrough plan.
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Branches pushed | `phase-8/bible-reading-journals` and `claude/dreamy-babbage-an0yog` |
+| Preview build `cc86476` (`dpl_5ynVxQGfc5P6eDkvByZLgKsJHdPS`) | **Ready**: `https://the-gathering-gi05ridlm-paint-by-number.vercel.app`, branch alias `https://the-gathering-git-phase-8-bible-reading-09a899-paint-by-number.vercel.app` (Vercel Authentication required) |
+| Signed-out `/journal` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
+| Production deploys from `main` | Unchanged: paused (nothing merged) |
+| Hosted migration history | **Not applied.** Read-only check 2026-10-20: 32 versions, latest `20261025000600`, no `bible`/`journal` schema or `bible` bucket (the stage step 1 expects) |
+| Hosted walkthrough with authorized accounts | **Not done** (needs the migrations and authorized test accounts) |
+| API.Bible live integration | **Not configured or verified** |
+
+### Hosted walkthrough plan (after the scripts)
+
+With the authorized test accounts (A: super administrator; B: approved member; C: another member in B's household) and only synthetic journal text marked `[TEST]`:
+
+1. Run scripts 1–6; run `supabase/tests/bible-fingerprint.sql` (compare with migration-history.md) and the earlier fingerprints against a fresh build.
+2. A prepares the WEB CSV (`scripts/bible-prepare-web.mjs`), adds translation WEB (public domain, confirm rights), imports it, reviews the five omitted verses and spot-checks chapters against ebible.org, publishes, activates, makes it the default.
+3. A uploads a small test PDF as a reference file; opens the restricted preview; signs out and confirms the link route refuses.
+4. A creates a dated plan from `docs/samples/reading-plan-dated.csv` (dates moved to this week), previews, publishes, features it; creates a numbered plan by hand with a rest day.
+5. B joins both (numbered: start two days ago), opens today, marks read/unread, highlights and bookmarks in the reader, writes `[TEST]` journal entries from a question and a passage; tests autosave across two tabs (conflict), going offline, and signing out mid-edit.
+6. A revises a future day B has read and one B hasn't; confirms B's completion stays, B sees the change notice; corrects a past day; retires a day.
+7. A (super admin) and C (household) try B's journal URLs: not found. B exports and deletes the test entries.
+8. B switches on a reminder a few minutes ahead with email to an allowlisted address; confirm one reminder, generic text; pause it.
+9. Clean up: delete `[TEST]` entries, leave/delete test enrollments, archive or delete test plans, remove the test PDF, remove temporary roles (audited).
+
+### Known limitations (Phase 8)
+
+- **Translation:** none chosen by the church; the WEB is for testing. API.Bible is unverified live; no ESV adapter.
+- **PDF extraction** is intentionally not offered (reference only; see bible-sources.md).
+- **Copy/print restrictions** are browser courtesies, not enforcement.
+- **Highlights** are per verse (no partial-verse ranges).
+- **Reminders** run every 5 minutes (at or shortly after the chosen time) and are skipped if more than 3 hours late; calendar plans' "today" is the church's date, which can differ from the member's near midnight.
+- **Journals** are protected by access control, not end-to-end encryption; no on-device recovery and no offline journaling.
+- **Phone push** for reminders arrives with Phase 12 (web push and email work now; VAPID keys still unset on previews).
+- **Audio Bible** isn't included (no Listen button). Lesson Studio, attachments, and Follow Along remain Phase 13.
+
+### Still open from earlier phases
+
+- **Phase 7:** scheduler handover script not run (`events.settings.job_url` still points at the Phase 6 preview); hosted walkthrough, feed refresh, email/push for teaching and gallery, device checks, provider embed checks.
+- **Phase 6:** hosted walkthrough; prayer/care notification email on hosted.
+- **Home redesign:** no PR for `claude/brave-knuth-s19gty`.
+- **Phase 5:** hosted walkthrough; VAPID keys not set (push off); push on a device.
+- **Giving on Phase 6–8 previews:** Stripe variables are scoped to the Phase 3 branch, so Give shows as not configured.
+- **Phase 4:** .ics import into calendars, private feed subscription, month grid on a phone, screen reader pass.
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical devices, VoiceOver/TalkBack, production configuration (deliberately not done).
+
+---
+
+# Phase 7 build status
 
 ## Phase 7: teaching, media, and shared resources
 
 ### Summary
 
-Phase 7 code is complete. It starts from the head of `phase-6/prayer-care` (the newest integrated work: Phases 2–6, design, and the home redesign) and merges `main`'s one newer commit (the supplied Church Reading, Gallery, and Music icons), so nothing is duplicated or lost. None of the earlier PRs is merged, so the Phase 7 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused (`main` deploys show Canceled); giving stays in Stripe test mode. Phase 8 hasn't started.
+Phase 7 code is complete. It starts from the head of `phase-6/prayer-care` (the newest integrated work: Phases 2–6, design, and the home redesign) and merges `main`'s one newer commit (the supplied Church Reading, Gallery, and Music icons), so nothing is duplicated or lost. None of the earlier PRs is merged, so the Phase 7 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused (`main` deploys show Canceled); giving stays in Stripe test mode.
 
 **The hosted database is fully migrated for Phase 7** (owner ran `supabase/manual/2026-10-25-apply-media-1.sql` … `-6.sql` in the SQL editor, 2026-10-20) and matches a fresh build from the files. The scheduler handover script and the hosted walkthrough are still to do.
 
