@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ItemCard } from "@/components/media/item-card";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { coverPaths } from "@/lib/media/format";
 import { listItems } from "@/lib/media/pages";
 import { signPaths } from "@/lib/media/storage";
@@ -17,7 +18,7 @@ export default async function MusicPage() {
   const urls = await signPaths(supabase, coverPaths(list.items));
   return (
     <>
-      <PageHeader title="Music & playlists" description="Worship sets and playlists from our church, on Spotify." />
+      <SectionHero art="music" glyph="music" title="Music & playlists" description="Worship sets and playlists from our church, on Spotify." />
       <p className="mb-6 rounded-tile bg-surface-muted px-4 py-3 text-meta text-text-secondary">
         Playlists play through Spotify. Without a Spotify login in this browser you may hear 30-second previews, and full playback depends on your Spotify
         account. Playlists are hosted by Spotify, so anyone with a playlist&apos;s Spotify link can open it there.

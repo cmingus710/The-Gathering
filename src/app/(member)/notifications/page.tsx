@@ -4,7 +4,8 @@ import Link from "next/link";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -35,7 +36,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
   return (
     <>
       <LiveRefresh />
-      <PageHeader
+      <SectionHero art="notifications" glyph="notifications"
         title="Notifications"
         description="Only what you can still see is listed. Giving records never appear here."
         actions={

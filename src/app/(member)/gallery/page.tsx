@@ -4,7 +4,8 @@ import Link from "next/link";
 import { TileIcon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { formatDay } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { Album } from "@/lib/media/types";
@@ -19,7 +20,7 @@ export default async function GalleryPage() {
   const urls = await signPaths(supabase, albums.map((a) => a.cover?.thumb_path));
   return (
     <>
-      <PageHeader
+      <SectionHero art="gallery" glyph="gallery"
         title="Photo galleries"
         description="Photos from church life, shared with members. Never public."
         actions={

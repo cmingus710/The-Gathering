@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { FeaturedItem } from "@/components/media/featured-item";
 import { ItemCard } from "@/components/media/item-card";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { coverPaths } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { ItemCard as Card } from "@/lib/media/types";
@@ -37,7 +38,7 @@ export default async function ReadingPage() {
 
   return (
     <>
-      <PageHeader title="Church reading" description="What we're reading together, this week's assignment, and discussion." />
+      <SectionHero art="church-reading" glyph="reading" title="Church reading" description="What we're reading together, this week's assignment, and discussion." />
       {error ? <Alert tone="error" title="Church reading couldn't be loaded right now." className="mb-6" /> : null}
       {empty ? (
         <EmptyState glyph="reading" title="Nothing assigned yet">

@@ -5,7 +5,8 @@ import { EventListItem } from "@/components/events/event-list-item";
 import { MonthGrid } from "@/components/events/month-grid";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink, buttonClasses } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { getViewer } from "@/lib/auth/viewer";
 import { addDays, formatDayLong, localDate } from "@/lib/events/format";
@@ -65,7 +66,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="events" glyph="events"
         title="Events"
         description={isMember ? "Gatherings, studies, and ways to serve. Register for events and add them to your calendar." : "Upcoming public events. Members can sign in to see members-only events and register."}
         actions={

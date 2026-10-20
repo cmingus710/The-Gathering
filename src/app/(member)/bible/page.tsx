@@ -1,4 +1,4 @@
-import { BookOpen, Bookmark, ChevronRight, NotebookPen } from "lucide-react";
+import { BookOpen, ChevronRight, NotebookPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProgressSummary } from "@/components/bible/progress";
@@ -6,7 +6,9 @@ import { TileIcon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
+import { TileGrid } from "@/components/ui/tile-grid";
 import { SelectField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -51,7 +53,7 @@ export default async function BiblePage() {
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="bible" glyph="bible"
         title="Bible reading"
         description="Read along with the church, or at your own pace. Your progress, highlights, and notes are private to you."
         actions={
@@ -167,14 +169,14 @@ export default async function BiblePage() {
 
       <section aria-labelledby="bible-yours" className="mb-8">
         <SectionHeading id="bible-yours">Yours</SectionHeading>
-        <ul className={rowListClass}>
-          <li>
-            <ListRow plain href="/bible/bookmarks" icon={<Bookmark className="size-5" aria-hidden="true" />} label="Bookmarks and highlights" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
-          </li>
-          <li>
-            <ListRow plain href="/journal" icon={<NotebookPen className="size-5" aria-hidden="true" />} label="My Journal" description="Private notes and reflections" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
-          </li>
-        </ul>
+        <TileGrid
+          label="Your Bible reading"
+          tiles={[
+            ...(hasTranslation ? [{ href: "/bible/read", label: "Open the Bible", art: "bible" as const, glyph: "bible" as const }] : []),
+            { href: "/bible/bookmarks", label: "Bookmarks & highlights", glyph: "memory" },
+            { href: "/journal", label: "My Journal", glyph: "journal" },
+          ]}
+        />
       </section>
 
       {versions.items.length > 1 ? (

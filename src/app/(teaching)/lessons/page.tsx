@@ -4,7 +4,8 @@ import { FeaturedItem } from "@/components/media/featured-item";
 import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { coverPaths, isUuid, isYmd } from "@/lib/media/format";
 import { listItems } from "@/lib/media/pages";
 import { BOOKS, bookOf } from "@/lib/media/scripture";
@@ -48,7 +49,7 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
 
   return (
     <>
-      <PageHeader title="Sunday lessons" description="Watch, listen, and read lessons from Sunday gatherings." />
+      <SectionHero art="lessons" glyph="lessons" title="Sunday lessons" description="Watch, listen, and read lessons from Sunday gatherings." />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/lessons" /></div> : null}
       {!list.ok ? <Alert tone="error" title="Lessons couldn't be loaded right now." className="mb-6" /> : null}
       {top ? (

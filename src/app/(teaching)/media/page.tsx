@@ -5,12 +5,13 @@ import { ItemCard } from "@/components/media/item-card";
 import { ExternalEpisodeCard, ShowCard, showArtPaths } from "@/components/media/podcast";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
+import { TileGrid, type GridTile } from "@/components/ui/tile-grid";
 import { coverPaths, formatDay } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { ExternalEpisode, ItemCard as Card, Show } from "@/lib/media/types";
 import { teachingViewer } from "@/lib/media/viewer";
-import type { IconName } from "@/lib/icons";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 
@@ -18,13 +19,13 @@ export const metadata: Metadata = { title: "Teaching & media" };
 
 type Hit = (Card & { type: "item" }) | (Show & { type: "show" }) | (ExternalEpisode & { type: "external" }) | { type: "album"; id: string; title: string; album_on: string | null };
 
-const SECTIONS: Array<{ href: string; label: string; glyph: IconName; members?: boolean }> = [
-  { href: "/devotionals", label: "Devotionals", glyph: "devotionals" },
-  { href: "/lessons", label: "Sunday lessons", glyph: "lessons" },
-  { href: "/podcasts", label: "Podcasts", glyph: "podcasts" },
-  { href: "/reading", label: "Church reading", glyph: "reading", members: true },
-  { href: "/music", label: "Music & playlists", glyph: "music", members: true },
-  { href: "/gallery", label: "Photo galleries", glyph: "gallery", members: true },
+const SECTIONS: Array<GridTile & { members?: boolean }> = [
+  { href: "/devotionals", label: "Devotionals", art: "devotionals", glyph: "devotionals" },
+  { href: "/lessons", label: "Sunday lessons", art: "lessons", glyph: "lessons" },
+  { href: "/podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts" },
+  { href: "/reading", label: "Church reading", art: "church-reading", glyph: "reading", members: true },
+  { href: "/music", label: "Music & playlists", art: "music", glyph: "music", members: true },
+  { href: "/gallery", label: "Photo galleries", art: "gallery", glyph: "gallery", members: true },
 ];
 
 /**
@@ -48,21 +49,12 @@ export default async function MediaHubPage({ searchParams }: PageProps<"/media">
 
   return (
     <>
-      <PageHeader title="Teaching & media" description="Devotionals, Sunday lessons, podcasts, reading, music, and photos in one place." />
+      <SectionHero glyph="media" title="Teaching & media" description="Devotionals, Sunday lessons, podcasts, reading, music, and photos in one place." />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/media" /></div> : null}
 
-      <nav aria-label="Sections" className="mb-8">
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {SECTIONS.filter((s) => viewer.member || !s.members).map((s) => (
-            <li key={s.href}>
-              <Link href={s.href} className="interactive flex min-h-16 items-center gap-3 rounded-card border border-border bg-surface p-3 font-semibold hover:bg-surface-muted/60">
-                <TileIcon name={s.glyph} className="size-10" />
-                {s.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="mb-8">
+        <TileGrid label="Sections" tiles={SECTIONS.filter((s) => viewer.member || !s.members)} />
+      </div>
 
       <form role="search" aria-label="Search teaching and media" className="mb-8 flex gap-2">
         <label htmlFor="mq" className="sr-only">

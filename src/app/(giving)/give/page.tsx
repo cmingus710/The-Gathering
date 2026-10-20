@@ -3,7 +3,7 @@ import { HandCoins, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { PageHeader } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { displayName, getViewer } from "@/lib/auth/viewer";
 import { getGivingServer } from "@/lib/giving/server";
 import { createClient } from "@/lib/supabase/server";
@@ -25,7 +25,7 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="give" glyph="giving"
         eyebrow="Give"
         title="Thank you for giving"
         description="Your generosity helps our church family worship, serve, and care for our neighbors. Choose an amount, how often, and where you'd like it to go."

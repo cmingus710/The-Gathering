@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { GroupCardView } from "@/components/community/group-card";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { signGroupImages, tryCommunityRpc } from "@/lib/community/queries";
 import type { GroupCard, GroupInvitation } from "@/lib/community/types";
@@ -18,7 +19,7 @@ export default async function GroupsPage({ searchParams }: PageProps<"/groups">)
   const images = data ? await signGroupImages([...data.mine, ...data.discover].map((g) => g.image_path)) : new Map<string, string>();
   return (
     <>
-      <PageHeader
+      <SectionHero art="groups" glyph="groups"
         title="Groups"
         description="Small groups and ministries. A group's details, roster, discussions, and events are for its members only."
       />

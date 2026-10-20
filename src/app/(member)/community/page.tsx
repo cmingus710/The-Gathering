@@ -5,7 +5,8 @@ import { ThreadRow } from "@/components/community/thread-row";
 import { Icon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, SectionLink, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, SectionLink, rowListClass } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -25,7 +26,7 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="community" glyph="community"
         title="Community"
         description="Conversations for our church family. Only approved members can read them, and group discussions stay inside their group."
         actions={

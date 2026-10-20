@@ -4,7 +4,8 @@ import Link from "next/link";
 import { MemberAvatar } from "@/components/profile/member-avatar";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink, buttonClasses } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { DIRECTORY_PAGE_SIZE, cityLine, parsePage, parseQuery } from "@/lib/directory/format";
 import { searchDirectory, type DirectoryCard } from "@/lib/directory/queries";
@@ -37,7 +38,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="directory" glyph="directory"
         title="Directory"
         description="Approved members of our church family. Only members can see this, and each person chooses what they share."
         actions={

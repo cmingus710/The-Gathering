@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { PageHeader, SectionHeading } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { segmentClass, SegmentedTrack } from "@/components/ui/segmented";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
 
   return (
     <>
-      <PageHeader
+      <SectionHero glyph="journal"
         title="My Journal"
         description="Private notes and reflections. Only you can read them: not church staff, group leaders, or anyone in your household."
         actions={

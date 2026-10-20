@@ -2,7 +2,8 @@ import { Megaphone } from "lucide-react";
 import type { Metadata } from "next";
 import { AnnouncementFeedItem } from "@/components/announcements/announcement-card";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { listLiveAnnouncements, type AnnouncementWithImage } from "@/lib/announcements/queries";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -23,7 +24,7 @@ export default async function AnnouncementsPage() {
   }
   return (
     <>
-      <PageHeader title="Announcements" description="News and updates from the church." />
+      <SectionHero art="announcements" glyph="announcements" title="Announcements" description="News and updates from the church." />
       {failed ? (
         <Alert tone="error" title="Announcements couldn't be loaded right now." />
       ) : announcements.length ? (

@@ -6,7 +6,8 @@ import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { formatDay, isYmd } from "@/lib/media/format";
 import { listItems, prepareDetail } from "@/lib/media/pages";
 import { signPaths } from "@/lib/media/storage";
@@ -29,7 +30,7 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
   if (error || !data) {
     return (
       <>
-        <PageHeader title="Devotionals" />
+        <SectionHero art="devotionals" glyph="devotionals" title="Devotionals" />
         <Alert tone="error" title="Devotionals couldn't be loaded right now." />
       </>
     );
@@ -43,7 +44,7 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
 
   return (
     <>
-      <PageHeader
+      <SectionHero art="devotionals" glyph="devotionals"
         eyebrow={isToday ? "Today's devotional" : "Devotional"}
         title={formatDay(day.date, "weekday")}
         actions={

@@ -5,7 +5,8 @@ import { CountPill } from "@/components/community/notification-bell";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
+import { EmptyState, rowListClass } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -20,7 +21,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
   return (
     <>
       <LiveRefresh />
-      <PageHeader
+      <SectionHero art="messages" glyph="messages"
         title="Messages"
         description="One-to-one messages between members. Only you and the other person can read them."
         actions={

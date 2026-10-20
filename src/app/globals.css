@@ -569,6 +569,27 @@ dialog.sheet[open] {
   opacity: var(--emblem-opacity);
 }
 
+/* Section page header (src/components/ui/section-hero.tsx): the section's home tile on the greeting surface. */
+.section-hero-art {
+  display: block;
+  flex-shrink: 0;
+  width: 4.75rem;
+  aspect-ratio: 1;
+  filter: var(--tile-shadow);
+}
+.section-hero-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+@media (min-width: 40rem) {
+  .section-hero-art {
+    width: 6.5rem;
+  }
+}
+
 /* Header symbol on dark: a faint warm halo lifts the charcoal figures (the artwork itself is unchanged). */
 .brand-halo {
   background: var(--brand-halo);

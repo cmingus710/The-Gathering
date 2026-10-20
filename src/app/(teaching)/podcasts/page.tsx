@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { EpisodeList, ShowCard, showArtPaths } from "@/components/media/podcast";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { coverPaths } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { EpisodeEntry, ItemCard, Show } from "@/lib/media/types";
@@ -23,7 +24,7 @@ export default async function PodcastsPage() {
 
   return (
     <>
-      <PageHeader title="Podcasts" description="Shows from our church and others we recommend." />
+      <SectionHero art="podcasts" glyph="podcasts" title="Podcasts" description="Shows from our church and others we recommend." />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/podcasts" /></div> : null}
       {error ? <Alert tone="error" title="Podcasts couldn't be loaded right now." className="mb-6" /> : null}
       {!error && !shows.length ? (

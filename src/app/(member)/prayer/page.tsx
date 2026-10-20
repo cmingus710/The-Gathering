@@ -8,7 +8,8 @@ import { PrayerRow } from "@/components/prayer/prayer-row";
 import { SearchPanel } from "@/components/prayer/search-panel";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, rowListClass } from "@/components/ui/card";
+import { SectionHero } from "@/components/ui/section-hero";
 import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -68,7 +69,7 @@ export default async function PrayerHomePage({ searchParams }: PageProps<"/praye
   return (
     <>
       <LiveRefresh />
-      <PageHeader
+      <SectionHero art="prayer" glyph="prayer"
         eyebrow={
           art ? (
             // Decorative: the dimensional Prayer artwork supplied for the menu.
