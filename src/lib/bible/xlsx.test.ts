@@ -111,8 +111,8 @@ describe("Excel reading plan import", () => {
     const bomb = zipSync({ "xl/worksheets/sheet1.xml": new Uint8Array(20 * 1024 * 1024) }, { level: 9 });
     expect(bomb.byteLength).toBeLessThan(PLAN_IMPORT_LIMITS.maxBytes);
     expect(err(bomb)).toMatch(/too large once opened/);
-    const wide = workbook(`<row r="3">${str("A3", "day")}${str("M3", "too far")}</row>`);
-    expect(parsePlanXlsx(wide, "personal").errors[0]).toEqual({ row: 3, message: "A row has more than 12 columns." });
+    const wide = workbook(`<row r="3">${str("A3", "day")}${str("Q3", "too far")}</row>`);
+    expect(parsePlanXlsx(wide, "personal").errors[0]).toEqual({ row: 3, message: "A row has more than 16 columns." });
   });
 
   it("recognises date formats and converts serials", () => {

@@ -12,8 +12,12 @@ import { readXlsxTable, writeXlsx } from "./xlsx";
  * stored date rather than its display), numbered plans read `day`. A value in the other
  * column is an error rather than a guess.
  *
- * Columns: date | day, type (reading, rest, catch_up), passages (separated
- * by semicolons), heading, questions (separated by " | "), notes.
+ * Columns: date | day, the day's passages, type (reading, rest, catch_up),
+ * heading, questions (separated by " | "), notes. Passages can be in one
+ * `passages` column (separated by semicolons) and/or in dedicated columns,
+ * one reading per cell: Passage 1, Passage 2… (also Reading 1…, Old
+ * Testament, New Testament, Psalm, Proverbs, Gospel). A day's passages are
+ * every filled passage cell, in column order.
  *
  * Errors block the import (row-level messages); warnings (gaps in dates or
  * day numbers) are shown in the preview and don't block. Rest days are
@@ -37,7 +41,16 @@ export type RowIssue = { row: number | null; message: string };
 
 export type ImportResult = { rows: ImportRow[]; errors: RowIssue[]; warnings: RowIssue[] };
 
-export const PLAN_IMPORT_LIMITS = { maxBytes: 1024 * 1024, maxRows: 2000, maxCellChars: 4000, maxColumns: 12 } as const;
+export const PLAN_IMPORT_LIMITS = { maxBytes: 1024 * 1024, maxRows: 2000, maxCellChars: 4000, maxColumns: 16 } as const;
+
+/** Header keys (after headerKey) that hold passages. */
+export function isPassageColumn(key: string): boolean {
+  return /^(passages?|readings?)(_?\d{1,2})?$/.test(key) || PASSAGE_NAMES.has(key);
+}
+const PASSAGE_NAMES = new Set(["old_testament", "ot", "new_testament", "nt", "psalm", "psalms", "proverb", "proverbs", "gospel", "gospels", "epistle"]);
+
+/** How a passage column is named in messages ("Passage 2"), from the file's own header. */
+const columnLabel = (raw: string) => raw.trim() || "passages";
 
 const KINDS: Record<string, ImportRow["kind"]> = { reading: "reading", rest: "rest", catch_up: "catch_up", catchup: "catch_up", "catch-up": "catch_up" };
 
@@ -68,9 +81,12 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
   if (idx(keyCol) < 0) {
     return { rows: [], errors: [{ row: 1, message: `This plan uses ${mode === "calendar" ? "dates" : "numbered days"}, so the file needs a “${keyCol}” column.` }], warnings };
   }
-  if (idx("passages") < 0) return { rows: [], errors: [{ row: 1, message: "The file needs a “passages” column." }], warnings };
-  const known = new Set(["date", "day", "type", "passages", "heading", "questions", "notes"]);
-  const unknown = header.filter((h) => h && !known.has(h));
+  const passageCols = header.flatMap((h, i) => (isPassageColumn(h) ? [i] : []));
+  if (!passageCols.length) {
+    return { rows: [], errors: [{ row: 1, message: "The file needs a passages column: “passages”, or one passage per column as “Passage 1”, “Passage 2”…" }], warnings };
+  }
+  const known = new Set(["date", "day", "type", "heading", "questions", "notes"]);
+  const unknown = header.filter((h) => h && !known.has(h) && !isPassageColumn(h));
   if (unknown.length) warnings.push({ row: 1, message: `Ignored column${unknown.length > 1 ? "s" : ""}: ${unknown.join(", ")}.` });
 
   const rows: ImportRow[] = [];
@@ -92,7 +108,8 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
       day_number = +key;
     }
     const typeRaw = get("type").toLowerCase();
-    const passagesText = get("passages");
+    const passageCells = passageCols.map((i) => ({ column: columnLabel(table[0].cells[i] ?? ""), text: (cells[i] ?? "").trim() })).filter((c) => c.text);
+    const passagesText = passageCells.map((c) => c.text).join("; ");
     let kind: ImportRow["kind"] | undefined = typeRaw ? KINDS[typeRaw] : passagesText ? "reading" : undefined;
     if (typeRaw && !kind) rowErrors.push(`Type must be reading, rest, or catch_up, not “${typeRaw}”.`);
     if (!typeRaw && !passagesText) {
@@ -102,9 +119,13 @@ function parsePlanFile(read: () => CsvRow[], mode: PlanMode): ImportResult {
     let passages: Passage[] = [];
     if (kind === "rest" && passagesText) rowErrors.push("A rest day has no passages.");
     if (passagesText && kind !== "rest") {
-      const parsed = parsePassages(passagesText);
-      if (parsed.ok) passages = parsed.passages;
-      else rowErrors.push(parsed.error);
+      // Each cell on its own, so a problem names its column.
+      for (const c of passageCells) {
+        const parsed = parsePassages(c.text);
+        if (parsed.ok) passages.push(...parsed.passages);
+        else rowErrors.push(passageCells.length > 1 ? `${c.column}: ${parsed.error}` : parsed.error);
+      }
+      if (passages.length > 20) rowErrors.push("A day can have at most 20 passages.");
     }
     if (kind === "reading" && !passagesText) rowErrors.push("A reading day needs passages.");
     const questions = get("questions") ? get("questions").split("|").map((q) => q.trim()).filter(Boolean) : [];
@@ -161,22 +182,22 @@ export function planTemplate(mode: PlanMode): string {
 /** The same template as an Excel workbook (dates as real date cells). */
 export function planTemplateXlsx(mode: PlanMode): Uint8Array {
   const { header, rows } = templateRows(mode);
-  return writeXlsx("Reading plan", header, rows, { ...(mode === "calendar" ? { dateColumn: 0 } : { numberColumn: 0 }), widths: [12, 11, 34, 24, 48, 40] });
+  return writeXlsx("Reading plan", header, rows, { ...(mode === "calendar" ? { dateColumn: 0 } : { numberColumn: 0 }), widths: [12, 22, 22, 18, 18, 10, 22, 44, 40] });
 }
 
 function templateRows(mode: PlanMode): { header: string[]; rows: string[][] } {
   const key = mode === "calendar" ? "date" : "day";
   const k = (i: number) => (mode === "calendar" ? `2027-01-0${i}` : String(i));
   return {
-    header: [key, "type", "passages", "heading", "questions", "notes"],
+    header: [key, "Passage 1", "Passage 2", "Passage 3", "Passage 4", "type", "heading", "questions", "notes"],
     rows: [
-      [k(1), "reading", "Genesis 1–2; Psalm 1", "In the beginning", "What does Genesis 1 show about God? | Which verse stood out to you?", ""],
-      [k(2), "reading", "John 3:16–21", "God so loved the world", "", "Read slowly; consider reading it aloud."],
-      [k(3), "reading", "Psalm 23; Psalm 24", "", "", ""],
-      [k(4), "reading", "Genesis 3:1–15; Genesis 3:20–24", "", "", "Two passages from the same book."],
-      [k(5), "catch_up", "", "Catch-up day", "", "Finish anything you missed this week."],
-      [k(6), "rest", "", "Rest", "", ""],
-      [k(7), "reading", "Matthew 5:1–12, 43–48", "", "", ""],
+      [k(1), "Genesis 1–2", "Matthew 1", "Psalm 1", "Proverbs 1:1–6", "", "In the beginning", "What does Genesis 1 show about God? | Which verse stood out to you?", ""],
+      [k(2), "Genesis 3", "Matthew 2", "Psalm 2", "", "", "", "", "Leave a passage column empty when there are fewer readings."],
+      [k(3), "Genesis 4:1–16; Genesis 4:25–26", "Matthew 3", "", "", "", "", "", "Two passages in one cell: separate them with a semicolon."],
+      [k(4), "John 3:16–21", "", "", "", "", "God so loved the world", "", "Read slowly; consider reading it aloud."],
+      [k(5), "", "", "", "", "catch_up", "Catch-up day", "", "Finish anything you missed this week."],
+      [k(6), "", "", "", "", "rest", "Rest", "", ""],
+      [k(7), "Matthew 5:1–12, 43–48", "Psalm 23", "", "", "", "", "", ""],
     ],
   };
 }

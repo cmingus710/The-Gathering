@@ -8,11 +8,35 @@ describe("parsePlanCsv", () => {
       expect(r.errors).toEqual([]);
       expect(r.rows).toHaveLength(7);
       expect(r.rows.find((x) => x.kind === "rest")?.passages).toEqual([]);
-      expect(r.rows[0].labels).toEqual(["Genesis 1–2", "Psalm 1"]);
+      expect(r.warnings).toEqual([]);
+      // One reading per Passage column, in column order; empty columns skipped.
+      expect(r.rows[0].labels).toEqual(["Genesis 1–2", "Matthew 1", "Psalm 1", "Proverbs 1:1–6"]);
       expect(r.rows[0].questions).toHaveLength(2);
-      expect(r.rows[3].labels).toEqual(["Genesis 3:1–15", "Genesis 3:20–24"]);
-      expect(r.rows[6].labels).toEqual(["Matthew 5:1–12", "Matthew 5:43–48"]);
+      expect(r.rows[1].labels).toEqual(["Genesis 3", "Matthew 2", "Psalm 2"]);
+      expect(r.rows[2].labels).toEqual(["Genesis 4:1–16", "Genesis 4:25–26", "Matthew 3"]);
+      expect(r.rows[6].labels).toEqual(["Matthew 5:1–12", "Matthew 5:43–48", "Psalm 23"]);
     }
+  });
+
+  it("reads passages from dedicated columns, alone or with a passages column", () => {
+    const r = parsePlanCsv(
+      ["date,Old Testament,New Testament,Psalm,Proverbs,passages", "2027-01-01,Genesis 1–2,Matthew 1,Psalm 1,Proverbs 1:1–6,", "2027-01-02,,Matthew 2,,,Jude"].join("\n"),
+      "calendar",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+    expect(r.rows.map((x) => x.labels)).toEqual([["Genesis 1–2", "Matthew 1", "Psalm 1", "Proverbs 1:1–6"], ["Matthew 2", "Jude 1"]]);
+    const generic = parsePlanCsv(["day,Reading 1,Reading 2,passage_3", "1,John 1,Psalm 1,Proverbs 1"].join("\n"), "personal");
+    expect(generic.rows[0].labels).toEqual(["John 1", "Psalm 1", "Proverbs 1"]);
+  });
+
+  it("names the column of a bad passage and treats any filled passage cell as passages", () => {
+    const r = parsePlanCsv(["day,Passage 1,Passage 2,type", "1,John 1,Jo 3,", "2,,Psalm 1,rest", "3,,,"].join("\n"), "personal");
+    const by = (row: number) => r.errors.filter((e) => e.row === row).map((e) => e.message);
+    expect(by(2)[0]).toMatch(/^Passage 2: .*isn't a book name/);
+    expect(by(3)).toEqual(["A rest day has no passages."]);
+    expect(by(4)[0]).toMatch(/set type to rest/);
+    expect(parsePlanCsv("day,heading\n1,x\n", "personal").errors[0].message).toMatch(/Passage 1/);
   });
 
   it("maps dates and day numbers explicitly, never one as the other", () => {

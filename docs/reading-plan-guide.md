@@ -40,21 +40,21 @@ A day can link one community discussion, never broader than the plan: all-member
 
 Upload an **Excel workbook (.xlsx)** or a **CSV** file. From Google Sheets use **File → Download → Microsoft Excel (.xlsx)**; from Numbers, **File → Export To → Excel**. Older `.xls` files need saving as `.xlsx` first.
 
-Start from a template on the plan page (**Excel template** or **CSV template**), or use [samples/reading-plan-dated.csv](samples/reading-plan-dated.csv) / [samples/reading-plan-numbered.csv](samples/reading-plan-numbered.csv). The simplest dated plan is two columns, `date` and `passages`, one row per date.
+Start from a template on the plan page (**Excel template** or **CSV template**), or use [samples/reading-plan-dated.csv](samples/reading-plan-dated.csv) / [samples/reading-plan-numbered.csv](samples/reading-plan-numbered.csv). The templates have a column for the date (or day) and dedicated passage columns, **Passage 1** to **Passage 4**, one reading per cell (for example Old Testament, New Testament, Psalm, Proverbs). The simplest dated plan is two columns, `date` and `Passage 1`, one row per date.
 
 In an Excel file:
 
 - Only the **first sheet** is read (others are ignored); row numbers in messages match Excel's.
 - **Dates** can be typed and shown any way Excel accepts (`11/1/2027`, `1-Nov-27`, `2027-11-01`): the app reads the date Excel stored, not how it's displayed, so day and month can't be swapped. A date stored as plain text must be written `YYYY-MM-DD`.
 - Formulas aren't run; the value Excel last saved is used. Blank rows are skipped.
-- Same limits as CSV (1 MB, 2,000 days, 12 columns).
+- Same limits as CSV (1 MB, 2,000 days, 16 columns).
 
 | Column | Required | Notes |
 | --- | --- | --- |
 | `date` | dated plans | In CSV, `YYYY-MM-DD` only (so `03/04` can never be misread). In Excel, a date cell. Must be empty for numbered plans |
 | `day` | numbered plans | 1–2000. Must be empty for dated plans |
 | `type` | no | `reading` (default when passages are given), `rest`, `catch_up` |
-| `passages` | reading days | Several passages separated by `;`. Same-book passages stay separate |
+| Passage columns | reading days | Any number of columns named `Passage 1`, `Passage 2`… (or `Reading 1`…, `Old Testament`, `New Testament`, `Psalm`, `Proverbs`, `Gospel`), and/or one `passages` column. Each cell holds one reading, or several separated by `;`. The day's passages are every filled cell, in column order; empty cells are skipped. A problem names its column. Same-book passages stay separate. At most 20 per day |
 | `heading` | no | Up to 160 characters |
 | `questions` | no | Up to 5, separated by ` \| ` |
 | `notes` | no | Up to 4,000 characters |
