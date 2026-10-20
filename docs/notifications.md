@@ -14,6 +14,7 @@ Design: [architecture.md](architecture.md#community-groups-messaging-and-notific
 | Prayer (`prayer`, Phase 6) | New comment on a request you wrote or follow; new update; answered prayer | On | Off (generic text only) |
 | Teaching (`teaching`, Phase 7) | New devotional, Sunday lesson, church podcast episode, reading assignment, or playlist you can see (once, at publish time; never for back-catalog or feed imports); per-kind switches | On | Off (generic text only) |
 | Gallery (`gallery`, Phase 7) | New approved photos in an album you can see (one grouped notice at most every 6 hours, after a 10-minute settle); decisions about photos you shared | On | Off (generic text only) |
+| Bible reading (`reading`, Phase 8) | The daily reading reminder a member switched on for a plan (at their time and time zone; skipped on rest days, days already read, and days with no reading); upcoming readings of a plan you follow were changed | On | Right away (generic text only; no digests) |
 | Care (`care`, Phase 6) | Coordinator response or status change on your care request; care assignment and follow-up reminder (coordinators); requester reply (assigned coordinator); accepted volunteer assignment | On | Right away (generic text only; never digested) |
 
 Prayer moderator actions on your request or comment appear under Moderator actions.

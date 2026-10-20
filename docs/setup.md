@@ -18,6 +18,8 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `EVENTS_EMAIL_ALLOWLIST` | Vercel Preview | Recommended | Test addresses that may receive event email outside production (falls back to `GIVING_EMAIL_ALLOWLIST`; with neither, nothing is sent) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Vercel Preview (private key sensitive, server only) | Optional (web push) | VAPID key pair for web push and a contact (`mailto:…` or `https://…`). Without all three, push is off and in-app/email still work. See [notifications.md](notifications.md#web-push-optional). |
 | `MEDIA_RATE_SECRET` | Vercel Preview (server, sensitive) | Optional | Key for hashing visitor IP addresses in the public podcast feed's rate limit (falls back to `EVENTS_JOB_SECRET`). Never logged; hashes are purged within a day. |
+| `API_BIBLE_KEY` (any name you choose) | Vercel (server, sensitive) | Only for an API.Bible translation | The church's API.Bible key. The translation stores only this variable's **name**. Not needed for stored-text translations such as the WEB. See [bible-sources.md](bible-sources.md#apibible-configuration). |
+| `API_BIBLE_BASE_URL` | Vercel (server) | Optional | API.Bible base URL (default `https://rest.api.bible/v1`); only the provider's own https hosts are accepted. |
 | `CRON_SECRET` | Vercel Production (later) | Optional | Only if a Vercel cron should also call `GET /api/jobs/events` after release |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
@@ -59,6 +61,14 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 30. `20261025000400_media_podcasts.sql` (Phase 7)
 31. `20261025000500_media_gallery.sql` (Phase 7)
 32. `20261025000600_media_notifications.sql` (Phase 7)
+33. `20261026000100_bible_schema.sql` (Phase 8)
+34. `20261026000200_bible_sources.sql` (Phase 8)
+35. `20261026000300_bible_plans.sql` (Phase 8)
+36. `20261026000400_bible_member.sql` (Phase 8)
+37. `20261026000500_journal.sql` (Phase 8)
+38. `20261026000600_bible_notifications.sql` (Phase 8)
+
+Phase 8 (Bible reading and journals) migrations each have a one-transaction operator script, `supabase/manual/2026-10-26-apply-bible-<1-6>.sql` (19–55 KB, under the SQL editor limit), with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor. No scheduler change is needed: reminders run inside the existing `community.tick()`, which the designated deployment already calls. They create the private `bible` bucket. Then, at Administration → Members, assign the Bible source manager and reading plan editor/publisher roles as needed ([reading-plan-guide.md](reading-plan-guide.md#who-can-do-what)), and set up a translation ([bible-sources.md](bible-sources.md)). `supabase/tests/bible-fingerprint.sql` compares the hosted result with a fresh build.
 
 Phase 7 (teaching and media) migrations each have a one-transaction operator script, `supabase/manual/2026-10-25-apply-media-<1-6>.sql` (37–59 KB, under the SQL editor limit), with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor, then `supabase/manual/2026-10-25-media-scheduler.sql` to make the Phase 7 preview the designated scheduler deployment. They create the private `media` and `media-uploads` buckets. After applying, assign the content publisher, media manager, podcast manager, and gallery moderator roles as needed ([media-guide.md](media-guide.md#roles-and-permissions)). `supabase/tests/media-fingerprint.sql` compares the hosted result with a fresh build.
 
@@ -109,6 +119,7 @@ The migrations create both buckets with type and size limits:
 - `group-images` (private, 2 MB, WebP; Phase 5; readable only by people who may see the group)
 - `media` (private, 50 MB, audio/video/images/PDF/PPTX/VTT; Phase 7; readable only through the content visibility rules, via short-lived signed links)
 - `media-uploads` (private, 50 MB, JPEG/PNG/WebP/HEIC; Phase 7; quarantine for gallery originals, deleted after processing)
+- `bible` (private, 50 MB, WebP/PDF/CSV/TSV/plain text; Phase 8; plan covers readable by the plan's members, staged text imports and reference PDFs readable only by Bible source managers)
 
 The 50 MB limits match the Free plan's per-file cap. On a paid plan, raise the project's upload limit (Storage → Settings) and the bucket limit together, then the limits in `/admin/media/settings`. Storage, egress, and video delivery costs: [media-guide.md](media-guide.md#storage-delivery-and-costs).
 

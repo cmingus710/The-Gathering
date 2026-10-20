@@ -561,6 +561,22 @@ describeDb("Bible reading plans, scripture, and journals", () => {
     });
   });
 
+  describe("account deletion", () => {
+    it("removes a deleted member's journal, progress, bookmarks, and highlights", async () => {
+      const gone = await db.createAuthUser("b.gone@example.test", { fullName: "Departing Reader" });
+      await db.setStatus(gone, "approved");
+      await rpc(as(gone), "journal_entry_create", [randomUUID(), "Synthetic", "Synthetic text", null]);
+      await rpc(as(gone), "bible_highlight_set", [web, "JHN", 3, [16], "green"]);
+      const plans = (await rpc<Json>(as(gone), "bible_hub")).available as Json[];
+      await rpc(as(gone), "bible_plan_join", [plans[0].id, null, null, true]);
+      await db.raw("delete from auth.users where id = $1", [gone]);
+      for (const table of ["journal.entries", "bible.highlights", "bible.enrollments", "bible.bookmarks", "bible.reader_prefs"]) {
+        const [{ n }] = await db.raw<{ n: number }>(`select count(*)::int n from ${table} where profile_id = $1`, [gone]);
+        expect(n, table).toBe(0);
+      }
+    });
+  });
+
   describe("bookmarks, highlights, and export", () => {
     it("are private, toggle, and are included in the member's export", async () => {
       const b = await rpc<Json>(as(m1), "bible_bookmark_toggle", [j({ kind: "passage", translation_id: web, book: "JHN", chapter: 3, start_verse: 16, end_verse: 17 })]);
@@ -568,6 +584,9 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       await fails(as(m1), "bible_bookmark_toggle", [j({ kind: "passage", translation_id: web, book: "JHN", chapter: 3, start_verse: 99 })], /can't be bookmarked/);
       expect((await rpc<Json[]>(as(m1), "bible_bookmarks"))[0]).toMatchObject({ reference: "John 3:16–17", translation_code: "WEB", available: true });
       expect(await rpc<Json[]>(as(m2), "bible_bookmarks")).toEqual([]);
+      // Someone else can't remove it.
+      await rpc(as(m2), "bible_bookmark_remove", [b.id]);
+      expect(await rpc<Json[]>(as(m1), "bible_bookmarks")).toHaveLength(1);
       const h = await rpc<Json[]>(as(m1), "bible_highlight_set", [web, "JHN", 3, [16, 17], "yellow"]);
       expect(h).toEqual([{ verse: 16, color: "yellow" }, { verse: 17, color: "yellow" }]);
       await fails(as(m1), "bible_highlight_set", [web, "JHN", 3, [99], "yellow"], /Choose verses/);
@@ -642,6 +661,33 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       const [{ enabled }] = await db.raw<{ enabled: boolean }>("select reminders as enabled from bible.enrollments where id = $1", [e.id]);
       expect(enabled).toBe(false);
       await db.raw("update community.group_members set state = 'active', ended_at = null where group_id = $1 and profile_id = $2", [group, m1]);
+    });
+
+    it("never sends twice when two scheduler runs overlap, and pushes only generic text", async () => {
+      const p2 = await newPlan("personal", "Synthetic Concurrency Plan");
+      await day(p2, { number: 1 }, [P("PSA", 23)]);
+      await publish(p2);
+      const e = await rpc<Json>(as(m2), "bible_plan_join", [p2, await today(), tz, true]);
+      const [{ t }] = await db.raw<{ t: string }>("select to_char((now() at time zone $1)::time - interval '2 minutes', 'HH24:MI') t", [tz]);
+      await rpc(as(m2), "bible_enrollment_update", [e.id, j({ reminders: true, reminder_time: t })]);
+      await db.raw("update community.notification_prefs set push = true where profile_id = $1", [m2]);
+      await db.raw("insert into community.notification_prefs (profile_id, category, in_app, email, push) values ($1, 'reading', true, 'immediate', true) on conflict (profile_id, category) do update set push = true", [m2]);
+      await db.raw("insert into community.push_subscriptions (profile_id, endpoint, p256dh, auth) values ($1, 'https://push.example.test/synthetic', $2, 'synthetic-auth')", [m2, "p".repeat(40)]);
+      const a = await db.connect();
+      const b = await db.connect();
+      try {
+        await Promise.all([a.query("select community.tick()"), b.query("select community.tick()")]);
+      } finally {
+        await a.end();
+        await b.end();
+      }
+      const mine = (await notifs(m2)).filter((n) => n.kind === "reading_reminder" && String(n.title).includes("Concurrency"));
+      expect(mine).toHaveLength(1);
+      const [{ n: emails }] = await db.raw<{ n: number }>("select count(*)::int n from community.email_outbox where notification_id = $1", [mine[0].id]);
+      expect(emails).toBe(1);
+      const claimed = await db.raw<{ r: Json[] }>("select community.op_push_claim('{\"limit\": 50}'::jsonb) r");
+      const push = (claimed[0].r as Json[]).find((x) => x.url === `/notifications/open/${mine[0].id}`);
+      expect(push?.body).toBe("There's an update about your Bible reading.");
     });
 
     it("rechecks the enrollment before showing or delivering a reminder", async () => {

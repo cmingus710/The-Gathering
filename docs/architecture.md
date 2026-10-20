@@ -27,6 +27,8 @@ src/
     admin/community, admin/moderation                     Phase 5 administration
     (member)/prayer        prayer requests, care requests, ways to help, team workspace (Phase 6)
     admin/prayer           prayer reports, settings, sensitive-access log (Phase 6)
+    (member)/bible, journal  Bible reading plans, reader, bookmarks; My Journal (Phase 8)
+    admin/bible            reading plans and Bible sources (Phase 8)
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -70,6 +72,9 @@ Two independent axes:
 | Care coordinator | `care.coordinate` | yes, explicit only (Phase 6) |
 | Care team lead | `care.coordinate`, `care.assign` | yes, explicit only (Phase 6) |
 | Group leader | `groups.lead` (reserved; leadership is per group, see Phase 5) | no |
+| Reading plan editor | `reading.edit` | yes (Phase 8) |
+| Reading plan publisher | `reading.edit`, `reading.publish` | yes (Phase 8) |
+| Bible source manager | `bible.manage` | yes (Phase 8) |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
 `settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, or `care.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
@@ -383,6 +388,54 @@ External feeds are fetched by `/api/jobs/events` (`refreshDueFeeds`) after `comm
 ### Pages, caching, and search
 
 Devotionals, lessons, podcasts, and the hub (`/media`) live in the `(teaching)` route group: visitors see only public content with a sign-in note, members get the app shell. Reading, music, gallery, and saved are members-only (`(member)`). All of them, and `/api/media`, are `private, no-store` (proxy and `next.config.ts`); the service worker caches none of them. `media_search` searches teaching, shows, external episodes, and (members) album titles only.
+
+## Bible reading plans, scripture reader, and journals (Phase 8)
+
+Guides: [bible-sources.md](bible-sources.md) (translations, sources, imports, PDFs), [reading-plan-guide.md](reading-plan-guide.md) (administration, CSV import, versioning policy), [bible-reading-guide.md](bible-reading-guide.md) (members), [journal-privacy.md](journal-privacy.md) (privacy, export, retention).
+
+### Storage and access
+
+Two private schemas (no Data API exposure, no privileges for `anon`/`authenticated`, RLS on with no policies) reached only through `SECURITY DEFINER` functions: `bible_*` (members), `bible_admin_*` (staff), `journal_*` (owner only). Every function rechecks the caller; every `UPDATE`/`DELETE` has a `WHERE` clause.
+
+| Area | Tables |
+| --- | --- |
+| Canon | `books` (66 rows: USFM code, ordinal, name, testament, reference verse counts per chapter) |
+| Sources | `translations` (code, source kind `database`/`api`, provider id and the *name* of the key's environment variable, attribution, copyright, rights basis and confirmation, cache/copy/print/export permissions, per-view verse limit, tracking requirement, status), `verses` (one translation's text: book, chapter, verse, text, omitted flag, heading, paragraph, poetry), `settings` (default translation) |
+| Imports | `imports` (structured file, status `uploading → processing → staged → published` / `failed` / `discarded`, summary), `staged_verses` (every source line with its source reference and issue), `reference_files` (PDFs: rights statement, pages, text layer) |
+| Plans | `plans` (schedule `calendar`/`personal`, time zone, translation, audience members/group, status, featured, version, previous version), `plan_days` (stable id, date or day number, kind `reading`/`rest`/`catch_up`, heading, notes, questions, linked discussion, revision, retired), `plan_passages` (ordered, book + chapter/verse range + label), `plan_day_links` (devotionals/lessons), `day_revisions` (snapshot of every earlier revision), `plan_changes` (change log), `plan_imports` (CSV previews) |
+| Member data | `enrollments` (start date, count-from date, time zone, primary, reminder time/pause, left), `completions` (enrollment + day + revision read), `bookmarks`, `highlights` (translation + book + chapter + verse + color), `reader_prefs` |
+| Journals | `journal.entries` (owner, title, body, status, version, client key, optional link to a passage / plan day + revision + question / devotional or lesson) |
+
+**Read rules.** `bible.plan_visible` (published and in the audience: approved members, or the group's active members) decides plans for members; `bible.member_can_read_plan` also opens archived plans to people who joined them. Members read only `active` translations. Journal functions filter on `profile_id = auth.uid()` and nothing else; there is no staff path.
+
+**Capabilities** `reading.edit`, `reading.publish`, `bible.manage` via roles `reading_plan_editor`, `reading_plan_publisher`, `bible_source_manager` (super administrators implicitly). Content editors get none. None of them reaches journals, progress, bookmarks, or highlights.
+
+### Scripture
+
+- **Sources.** `bible_chapter` / `bible_passage` return stored verses, or for API translations the provider configuration; `src/lib/bible/source.ts` then fetches from API.Bible on the server (key from the named environment variable, fixed https host allowlist through the Phase 7 `safeFetch`, no redirects, 8 s / 2 MB). Outages return "unavailable"; nothing is substituted. API text is never stored in the database; an in-memory copy is kept only when the translation allows caching (≤ 30 days), keyed by translation, text version, and passage.
+- **Imports.** Files upload from the browser to the private `bible` bucket with one-time tokens; the server reads them back (UTF-8, 50 MB, strict CSV/TSV or verse-per-line parsing), stages every line, and the database flags duplicates, numbering beyond the reference versification, empty verses, and missing verses. Publication requires every flagged line decided, no duplicates, acknowledged missing verses, and the typed code, then replaces the translation's text in one transaction.
+- **References.** `src/lib/bible/reference.ts` parses controlled book names and aliases (ambiguous ones refused), whole chapters, chapter ranges, verse ranges, cross-chapter ranges, comma continuations, and several passages; `bible.passage_problem` validates against the translation's own verses (or the reference versification for API sources). Labels are generated identically in SQL and TypeScript.
+- **PDFs** are reference files only: signature/size/page checks with `pdf-lib`, text-layer detection, admin-only 5-minute signed preview. No extraction (layout and OCR can't recover verse boundaries reliably).
+- **Reader.** Verse numbers precede each verse in reading order (screen readers hear "Verse 16"), headings/paragraphs/poetry come from the source, highlights are the member's own `mark` washes (AA contrast checked), copy/print follow permissions (courtesy only), attribution under every passage; API.Bible's FUMS script loads only where its text is shown.
+
+### Plans, dates, and versioning
+
+- "Today" is `bible.enrollment_today`: the plan's time zone for calendar plans, the member's for personal plans. Personal day N is `start_date + N − 1` (date arithmetic, so DST can't shift it). Progress counts reading days only (rest days never count), from the member's count-from date for midyear joins.
+- Completion (`bible_day_complete`) is idempotent both ways and records the day's current revision; opening a reading never marks it.
+- Published plans: presentation edits only; schedule/translation/time zone/audience locked; days revised one at a time with a reason (snapshot to `day_revisions`, `revision + 1`, plan `version + 1`), past days only with an explicit correction, retired rather than deleted (completions reference days with `on delete restrict`). Members whose affected day is ahead and unread get one `reading_plan_changed` notice per plan.
+- CSV import: parsed and validated on the server (`src/lib/bible/plan-import.ts` plus `bible_admin_validate_refs`), stored as a preview, applied on confirmation in one transaction (`add` refuses conflicts, `replace` clears the draft), revalidating every row. Drafts only.
+
+### Journals and autosave
+
+`src/lib/journal/autosave.ts` keeps one save in flight, debounces edits, names the base version on every save (`journal_entry_save` refuses stale versions with the current text, accepts exact retries idempotently), retries temporary failures with backoff, waits while offline, stops on conflict (keep mine / use saved / keep both) and on session expiry (text kept in memory), and reports "Saved" only after the server confirms the exact text. Saves go through `/api/journal/entries` (create, idempotent client key) and `/api/journal/entries/<id>` (PUT), which return 401/409/429/503 and never log bodies. No browser storage is used for journal text.
+
+### Notifications and scheduling
+
+Category `reading` (`reading_reminder`, `reading_plan_changed`) on the Phase 5–7 notification system. `bible.tick()` runs inside `community.tick()` under its advisory lock: for each active enrollment with reminders on and not paused, at or after the member's local reminder time and less than 3 hours late, once per local date (`last_reminded_on` under a row lock, date in the merge key), skipping rest days, days already read, days without an assignment, and plans the member can no longer see. `community.notify` rechecks membership; `notification_visible` rechecks the enrollment and plan on every read and delivery claim. Email/push text is generic. Losing access (group exit, suspension) switches off reminders for invisible plans and drops unread reading notices.
+
+### Pages and caching
+
+Members: `/bible` (hub), `/bible/today`, `/bible/plans/<id>` (+ `/catch-up`), `/bible/day/<id>`, `/bible/read/<code>/<book>/<chapter>`, `/bible/bookmarks`, `/journal`, `/journal/new`, `/journal/<id>`; home shows a compact Today's Reading card only for an active plan. Staff: `/admin/bible` (plans, days, preview, import, change log), `/admin/bible/sources` (translations, imports, review, PDFs). `/bible`, `/journal`, `/api/journal/*`, `/api/bible/*` are protected, `private, no-store`, and not cached by the service worker; journal page titles are generic.
 
 ## Announcements
 

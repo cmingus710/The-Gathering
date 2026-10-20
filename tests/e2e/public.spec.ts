@@ -160,6 +160,23 @@ for (const path of [
   "/admin/podcasts",
   "/admin/gallery",
   "/admin/gallery/reports",
+  // Phase 8 (Bible reading, journals, and their administration)
+  "/bible",
+  "/bible/today",
+  "/bible/read",
+  "/bible/read/WEB/JHN/3",
+  "/bible/bookmarks",
+  "/bible/plans/00000000-0000-0000-0000-000000000000",
+  "/bible/plans/00000000-0000-0000-0000-000000000000/catch-up",
+  "/bible/day/00000000-0000-0000-0000-000000000000",
+  "/journal",
+  "/journal/new",
+  "/journal/00000000-0000-0000-0000-000000000000",
+  "/admin/bible",
+  "/admin/bible/plans/new",
+  "/admin/bible/plans/00000000-0000-0000-0000-000000000000",
+  "/admin/bible/sources",
+  "/admin/bible/sources/imports/00000000-0000-0000-0000-000000000000",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -330,4 +347,33 @@ test("visual snapshots for review", async ({ page }, info) => {
     await page.goto(path);
     await page.screenshot({ path: `test-results/screens/${info.project.name}-${name}.png`, fullPage: true });
   }
+});
+
+test("Bible reading and journal responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/bible", "/bible/bookmarks", "/journal", "/journal/new"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"], path).toContain("private");
+    expect(res.headers()["cache-control"], path).toContain("no-store");
+  }
+});
+
+test("journal and Bible APIs refuse signed-out visitors without a cacheable answer", async ({ request }) => {
+  const id = "00000000-0000-0000-0000-000000000000";
+  const save = await request.put(`/api/journal/entries/${id}`, { data: { title: "Synthetic", body: "Synthetic", base_version: 1 } });
+  expect([401, 503]).toContain(save.status());
+  expect(save.headers()["cache-control"]).toContain("no-store");
+  const create = await request.post("/api/journal/entries", { data: { client_key: id, title: "Synthetic", body: "Synthetic" } });
+  expect([401, 503]).toContain(create.status());
+  expect(create.headers()["cache-control"]).toContain("no-store");
+  for (const path of ["/api/journal/export", "/api/journal/export?scope=all", `/api/bible/references/${id}`, "/admin/bible/template?mode=calendar"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.status(), path).not.toBe(200);
+    expect(res.headers()["location"] ?? "", path).not.toContain("supabase");
+    expect(res.headers()["cache-control"] ?? "", path).not.toContain("public");
+  }
+});
+
+test("the service worker never caches Bible reading or journal pages", async ({ request }) => {
+  const sw = await (await request.get("/sw.js")).text();
+  for (const p of ["/bible", "/journal", "/api/journal"]) expect(sw).not.toContain(p);
 });
