@@ -8,7 +8,7 @@ Last updated: 2026-10-25 · Phase 7 branch `phase-7/teaching-media` (also pushed
 
 Phase 7 code is complete. It starts from the head of `phase-6/prayer-care` (the newest integrated work: Phases 2–6, design, and the home redesign) and merges `main`'s one newer commit (the supplied Church Reading, Gallery, and Music icons), so nothing is duplicated or lost. None of the earlier PRs is merged, so the Phase 7 PR into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused (`main` deploys show Canceled); giving stays in Stripe test mode. Phase 8 hasn't started.
 
-**The hosted database is not migrated for Phase 7 yet.** The six operator scripts are ready and rehearsed; following the Phase 6 practice, the owner runs them in the SQL editor (see [Hosted](#hosted)). Until then the Phase 7 preview runs, but the new sections report that they can't load.
+**The hosted database is fully migrated for Phase 7** (owner ran `supabase/manual/2026-10-25-apply-media-1.sql` … `-6.sql` in the SQL editor, 2026-10-20) and matches a fresh build from the files. The scheduler handover script and the hosted walkthrough are still to do.
 
 Guides: [media-guide.md](media-guide.md) (administration, permission matrix, storage and costs), [podcast-guide.md](podcast-guide.md), [gallery-guide.md](gallery-guide.md), [media-limitations.md](media-limitations.md) (members and outside services). Design: [architecture.md](architecture.md#teaching-media-and-shared-resources-phase-7).
 
@@ -55,7 +55,11 @@ Lint (zero warnings), typecheck, production build, **524 Vitest tests** (44 file
 | Signed-out `/gallery` → sign-in with `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
 | `/podcast/feed.xml` before the migrations | 404 "Not found" (no public feed configured; the feed itself is public, cached 60 s) |
 | Production deploys from `main` | Canceled (production stays paused) |
-| Hosted migration history | **Not applied.** Ends at `20261024000400` (Phase 6). Scripts `supabase/manual/2026-10-25-apply-media-1.sql` … `-6.sql` then `2026-10-25-media-scheduler.sql`, for the owner to run in the SQL editor |
+| Hosted migration history | **Applied 2026-10-20** by the owner in the SQL editor. History: `20261025000100`…`000600`, all `created_by = phase-7` |
+| Media fingerprint (`supabase/tests/media-fingerprint.sql`, run through the connector, read-only) | **Pass: hosted equals the rehearsal and a fresh build in all 15 categories** (column 261 · constraint 236 · function 145 · function_grant 134 · index 87 · rls 21 · schema_acl 1 · seed_capability 5 · seed_role 4 · seed_role_capability 6 · seed_settings 1 · storage_bucket 2 · storage_policy 3 · trigger 2 · type 7; digests as in [migration-history.md](migration-history.md#phase-7-2026-10-25)) |
+| Community and prayer fingerprints after Phase 7 | **Pass:** community (15 categories) and prayer (13) equal a fresh build from all 32 migrations |
+| Direct checks | RLS on 21 of 21 `media` tables; no teaching items, files, or albums yet |
+| Scheduler (`supabase/manual/2026-10-25-media-scheduler.sql`) | **Not run yet.** `events.settings.job_url` still points at the Phase 6 preview, which doesn't have the feed refresh code. Teaching and gallery notices already run there (they're in the database's `community.tick()`), but external podcast feeds won't refresh until the script runs |
 | Rehearsal | Out of order and rerun both stop at the preflight; schema (17), community (15), prayer (13), and the new media (15) fingerprints match a fresh build. Expected media digests are in [migration-history.md](migration-history.md#phase-7-2026-10-25) |
 | Hosted walkthrough with authorized accounts | **Not done** (needs the migrations) |
 | Feed refresh, email delivery, and push for teaching/gallery | **Not verified** on hosted |
