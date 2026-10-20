@@ -20,11 +20,11 @@ export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[0.95rem] font-semibold",
-                    active ? "border-text bg-text text-background" : "border-border bg-surface text-text hover:bg-surface-muted",
+                    "flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-meta font-semibold transition-colors",
+                    active ? "border-cta bg-cta text-on-cta" : "border-border bg-surface text-text hover:bg-surface-muted",
                   )}
                 >
-                  <NavIcon name={item.icon} className="size-4" />
+                  <NavIcon name={item.icon} className="size-5" />
                   {item.label}
                 </Link>
               </li>
@@ -45,11 +45,11 @@ export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-3 rounded-full px-4 py-2 font-semibold",
-                  active ? "bg-surface-muted text-text" : "text-text-secondary hover:bg-surface hover:text-text",
+                  "flex min-h-11 items-center gap-3 rounded-tile px-3 py-1.5 font-semibold transition-colors",
+                  active ? "bg-primary-soft text-text" : "text-text-secondary hover:bg-surface-muted hover:text-text",
                 )}
               >
-                <NavIcon name={item.icon} />
+                <NavIcon name={item.icon} active={active} />
                 {item.label}
               </Link>
             </li>

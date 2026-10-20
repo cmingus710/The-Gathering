@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { cn } from "@/components/ui/cn";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { PasswordField } from "@/components/ui/password-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PASSWORD_MIN } from "@/lib/auth/schemas";
 import { initialFormState } from "@/lib/forms";
@@ -14,6 +16,7 @@ import {
   signInAction,
   signUpAction,
 } from "./actions";
+import { authLinkClass } from "./ui";
 
 export function SignInForm({ next }: { next: string }) {
   const [state, action] = useActionState(signInAction, initialFormState);
@@ -24,30 +27,33 @@ export function SignInForm({ next }: { next: string }) {
         <FormMessage state={state} />
         <input type="hidden" name="next" value={next} />
         <TextField
-          label="Email"
+          label="Email address"
           name="email"
           type="email"
           autoComplete="email"
           inputMode="email"
+          placeholder="you@example.com"
           required
           defaultValue={v.email}
           error={state.fieldErrors?.email}
         />
-        <TextField
-          label="Password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          error={state.fieldErrors?.password}
-        />
-        <div className="flex justify-end">
-          <Link href="/forgot-password" className="font-semibold text-primary underline-offset-2 hover:underline">
-            Forgot your password?
-          </Link>
+        <div className="space-y-2">
+          <PasswordField
+            label="Password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            required
+            error={state.fieldErrors?.password}
+          />
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className={cn(authLinkClass, "inline-flex min-h-11 items-center text-meta")}>
+              Forgot password?
+            </Link>
+          </div>
         </div>
-        <SubmitButton pendingText="Signing in…" className="w-full">
-          Sign in
+        <SubmitButton pendingText="Signing in…" size="lg" className="w-full font-serif tracking-[0.02em]">
+          Sign In
         </SubmitButton>
       </form>
       {v.unverified === "1" && v.email ? <ResendVerification email={v.email} /> : null}

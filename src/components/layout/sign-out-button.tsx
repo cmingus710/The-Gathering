@@ -8,11 +8,11 @@ export function SignOutButton({ className, label = "Sign out" }: { className?: s
       <button
         type="submit"
         className={cn(
-          "flex min-h-11 w-full items-center gap-3 rounded-full px-4 py-2 text-left font-semibold text-text hover:bg-surface-muted",
+          "flex min-h-11 w-full items-center gap-3 rounded-full px-4 py-2 text-left font-semibold text-text transition-colors hover:bg-surface-muted",
           className,
         )}
       >
-        <LogOut className="size-5" aria-hidden="true" />
+        <LogOut className="size-6 p-0.5" aria-hidden="true" />
         {label}
       </button>
     </form>

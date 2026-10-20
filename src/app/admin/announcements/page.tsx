@@ -74,7 +74,7 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
           ))}
         </ul>
       </nav>
-      {filter === "all" ? <p className="mb-4 text-[0.95rem] text-text-secondary">Archived announcements are listed under Archived.</p> : null}
+      {filter === "all" ? <p className="mb-4 text-meta text-text-secondary">Archived announcements are listed under Archived.</p> : null}
 
       {error ? (
         <Alert tone="error" title="Announcements couldn't be loaded right now." />
@@ -88,14 +88,14 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
         <ul className="space-y-3">
           {shown.map((a) => (
             <li key={a.id}>
-              <Link href={`/admin/announcements/${a.id}`} className="block rounded-card bg-surface p-4 hover:border-primary sm:p-5">
+              <Link href={`/admin/announcements/${a.id}`} className="interactive block rounded-card border border-border bg-surface p-4 sm:p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <AnnouncementStatusBadge status={a.effective} />
                   <VisibilityBadge visibility={a.visibility} />
                   {a.pinned ? <PinnedBadge /> : null}
                 </div>
                 <p className="mt-2 text-lg font-bold">{a.title}</p>
-                <p className="text-[0.95rem] text-text-secondary">
+                <p className="text-meta text-text-secondary">
                   {a.effective === "scheduled" && a.publish_at
                     ? `Publishes ${formatDateTime(a.publish_at, settings.timezone)}`
                     : a.publish_at && a.effective !== "draft"

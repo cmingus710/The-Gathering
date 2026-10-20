@@ -11,7 +11,7 @@ export default function ServiceUnavailablePage() {
     <div className="flex min-h-dvh flex-col items-center px-4 py-12">
       <LogoPlaque className="mb-8" logoClassName="w-36" />
       <main id="main" className="w-full max-w-md space-y-4">
-        <h1 className="text-2xl font-bold">We can&apos;t reach the member service</h1>
+        <h1 className="font-display text-2xl font-semibold">We can&apos;t reach the member service</h1>
         <Alert tone="error" title={isSupabaseConfigured() ? "The service didn't respond." : "The member service isn't configured yet."}>
           {isSupabaseConfigured()
             ? "Please try again in a few minutes."

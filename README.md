@@ -49,3 +49,4 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases
 - [docs/build-status.md](docs/build-status.md): what is done and verified, and what still needs external setup
+- [docs/design-system.md](docs/design-system.md): tokens, light/dark themes, the custom icon set, navigation, and the home layout

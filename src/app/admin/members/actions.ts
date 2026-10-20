@@ -6,7 +6,9 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { sendEmail } from "@/lib/email/send";
 import { membershipApprovedEmail } from "@/lib/email/templates";
-import { errorState, type FormState } from "@/lib/forms";
+import { errorState, formValues, validationErrorState, type FormState } from "@/lib/forms";
+import { PHOTO_BUCKET } from "@/lib/profile/photos";
+import { adminProfileSchema } from "@/lib/profile/schemas";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -76,4 +78,65 @@ export async function changeRoleAction(_prev: FormState, formData: FormData): Pr
   if (error) return errorState(dbErrorMessage(error));
   revalidatePath("/admin", "layout");
   return { status: "success", message: parsed.data.op === "grant" ? "Role assigned." : "Role removed." };
+}
+
+const PROFILE_FIELD_LABELS: Record<string, string> = {
+  first_name: "first name",
+  last_name: "last name",
+  preferred_name: "preferred name",
+  phone: "phone",
+  contact_email: "directory email",
+  street_address: "street address",
+  city: "city",
+  state_region: "state",
+  postal_code: "postal code",
+  bio: "bio",
+  birthday: "birthday",
+  photo: "photo",
+};
+
+/**
+ * Corrects a member's profile (members.manage). The database function
+ * re-checks the capability, protects super administrators' profiles, and
+ * audits the changed field names (never the values).
+ */
+export async function updateMemberProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.membersManage, "/admin/members");
+  const values = formValues(formData);
+  const parsed = adminProfileSchema.safeParse({ ...Object.fromEntries(formData), removePhoto: formData.get("removePhoto") === "on" });
+  if (!parsed.success) return validationErrorState(parsed.error, values);
+  const d = parsed.data;
+  const supabase = await createClient();
+  if (!supabase) return errorState("The member service is unavailable. Nothing was changed.", { values });
+
+  const { data: before } = await supabase.from("member_profile_details").select("photo_path").eq("profile_id", d.userId).maybeSingle();
+  const { data: changed, error } = await supabase.rpc("admin_update_member_profile", {
+    p_user_id: d.userId,
+    p_first_name: d.firstName,
+    p_last_name: d.lastName,
+    p_preferred_name: d.preferredName,
+    p_phone: d.phone,
+    p_contact_email: d.contactEmail,
+    p_street_address: d.streetAddress,
+    p_city: d.city,
+    p_state_region: d.stateRegion,
+    p_postal_code: d.postalCode,
+    p_bio: d.bio,
+    p_birthday_month: d.birthdayMonth,
+    p_birthday_day: d.birthdayDay,
+    p_remove_photo: d.removePhoto,
+  });
+  if (error) return errorState(dbErrorMessage(error, "The profile couldn't be saved. Check the details and try again."), { values });
+
+  const fields = (changed as string[] | null) ?? [];
+  if (fields.includes("photo") && before?.photo_path) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([before.photo_path]);
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath("/directory", "layout");
+  const { removePhoto: _r, ...rest } = values;
+  void _r;
+  return fields.length
+    ? { status: "success", message: `Saved: ${fields.map((f) => PROFILE_FIELD_LABELS[f] ?? f).join(", ")}.`, values: rest }
+    : { status: "success", message: "Nothing changed.", values: rest };
 }

@@ -21,14 +21,14 @@ export default async function AccountStatusPage({ searchParams }: PageProps<"/ac
     <div className="flex min-h-dvh flex-col items-center px-4 py-8 sm:py-12">
       <LogoPlaque src={settings.logoUrl} alt={settings.churchName} className="mb-8" logoClassName="w-32 sm:w-40" priority />
       <main id="main" className="w-full max-w-lg">
-        <div className="rounded-card bg-surface p-6 sm:p-8">
+        <div className="rounded-card border border-border bg-surface p-6 sm:p-8">
           {params.verified && !suspended ? (
             <Alert tone="success" title="Your email address is verified." className="mb-6" />
           ) : null}
           <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
             {suspended ? <ShieldOff className="size-7" aria-hidden="true" /> : <Hourglass className="size-7" aria-hidden="true" />}
           </div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="font-display text-2xl font-semibold">
             {suspended ? "Your access is paused" : "Thanks for registering"}
           </h1>
           <p className="mt-2">

@@ -49,7 +49,7 @@ export function BrandAssetForm({
           </figure>
         ))}
       </div>
-      <p className="text-[0.95rem] text-text-secondary">
+      <p className="text-meta text-text-secondary">
         {preview ? "Previewing your selected file — not saved yet." : isDefault ? "Using the approved artwork." : "Using an uploaded replacement."}
       </p>
 
@@ -60,7 +60,7 @@ export function BrandAssetForm({
           <label htmlFor={inputId} className="block font-semibold">
             Replace {asset}
           </label>
-          <p id={`${inputId}-hint`} className="text-[0.95rem] text-text-secondary">
+          <p id={`${inputId}-hint`} className="text-meta text-text-secondary">
             PNG, JPEG, or WebP, up to 2 MB{asset === "icon" ? ", at least 192 × 192 pixels" : ""}. Use the approved artwork without stretching or cropping.
           </p>
           <input
@@ -71,7 +71,7 @@ export function BrandAssetForm({
             accept={ACCEPT}
             aria-describedby={`${inputId}-hint${error ? ` ${inputId}-error` : ""}`}
             aria-invalid={error ? true : undefined}
-            className="block w-full text-[0.95rem] file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-border-strong file:bg-surface file:px-4 file:font-semibold hover:file:bg-primary-soft"
+            className="block w-full text-meta file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-border-strong file:bg-surface file:px-4 file:font-semibold hover:file:bg-primary-soft"
             onChange={(e) => {
               const file = e.target.files?.[0];
               setClientError(null);

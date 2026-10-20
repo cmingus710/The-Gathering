@@ -12,21 +12,75 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `RESEND_API_KEY` | Vercel (server) | Optional | App notifications (membership approved). Without it, approvals still work and admins are told no email was sent. |
 | `EMAIL_FROM` | Vercel (server) | With Resend | e.g. `The Gathering <hello@your-domain.org>`, on a domain verified in Resend |
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Vercel Preview (server, sensitive) | For giving | Stripe **test** key, webhook signing secret, and the shared ingest secret. See [giving-setup.md](giving-setup.md). Live keys are refused. |
+| `GIVING_EMAIL_ALLOWLIST`, `GIVING_WEBHOOK_HOST` | Vercel Preview | For giving | Test-email allowlist; dedicated webhook hostname |
+| `EVENTS_JOB_SECRET` | Vercel Preview, branch-scoped (server, sensitive) | For event and community email/push | Shared with `events.secrets('job')`; signs the scheduler and email delivery. Without it, events and RSVPs work but email stays queued. See [events-guide.md](events-guide.md#scheduler-reminders-and-retries). |
+| `EVENTS_EMAIL_ALLOWLIST` | Vercel Preview | Recommended | Test addresses that may receive event email outside production (falls back to `GIVING_EMAIL_ALLOWLIST`; with neither, nothing is sent) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Vercel Preview (private key sensitive, server only) | Optional (web push) | VAPID key pair for web push and a contact (`mailto:…` or `https://…`). Without all three, push is off and in-app/email still work. See [notifications.md](notifications.md#web-push-optional). |
+| `MEDIA_RATE_SECRET` | Vercel Preview (server, sensitive) | Optional | Key for hashing visitor IP addresses in the public podcast feed's rate limit (falls back to `EVENTS_JOB_SECRET`). Never logged; hashes are purged within a day. |
+| `API_BIBLE_KEY` (any name you choose) | Vercel (server, sensitive) | Only for an API.Bible translation | The church's API.Bible key. The translation stores only this variable's **name**. Not needed for stored-text translations such as the WEB. See [bible-sources.md](bible-sources.md#apibible-configuration). |
+| `API_BIBLE_BASE_URL` | Vercel (server) | Optional | API.Bible base URL (default `https://rest.api.bible/v1`); only the provider's own https hosts are accepted. |
+| `CRON_SECRET` | Vercel Production (later) | Optional | Only if a Vercel cron should also call `GET /api/jobs/events` after release |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
 ## 2. Supabase
 
 ### Database
 
-The Phase 1 schema is in `supabase/migrations/` and must be applied in filename order:
+The schema is in `supabase/migrations/` and must be applied in filename order:
 
 1. `20261018000100_identity_and_capabilities.sql`
 2. `20261018000200_church_settings.sql`
 3. `20261018000300_announcements.sql`
 4. `20261018000400_storage.sql`
 5. `20261018000500_explicit_function_grants.sql`
+6. `20261019000100_member_profiles.sql` (Phase 2)
+7. `20261019000200_directory.sql` (Phase 2)
+8. `20261019000300_households.sql` (Phase 2)
+9. `20261019000400_profile_photos.sql` (Phase 2)
+10. `20261020000100_giving_schema.sql` (Phase 3)
+11. `20261020000200_giving_ingest.sql` (Phase 3)
+12. `20261020000300_giving_access.sql` (Phase 3)
+13. `20261021000100_events_schema.sql` (Phase 4)
+14. `20261021000200_events_jobs.sql` (Phase 4)
+15. `20261021000300_events_access.sql` (Phase 4)
+16. `20261021000400_settings_safeupdate.sql` (Phase 4 fix: settings saves on hosted Supabase)
+17. `20261022000100_community_schema.sql` (Phase 5)
+18. `20261022000200_community_notifications.sql` (Phase 5)
+19. `20261022000300_community_forum.sql` (Phase 5)
+20. `20261022000400_community_groups.sql` (Phase 5)
+21. `20261022000500_community_messaging_moderation.sql` (Phase 5)
+22. `20261023000100_home_coming_up_banner.sql` (home redesign)
+23. `20261024000100_prayer_schema.sql` (Phase 6)
+24. `20261024000200_prayer_notifications.sql` (Phase 6)
+25. `20261024000300_prayer_requests.sql` (Phase 6)
+26. `20261024000400_prayer_care.sql` (Phase 6)
+27. `20261025000100_media_schema.sql` (Phase 7)
+28. `20261025000200_media_library.sql` (Phase 7)
+29. `20261025000300_media_content.sql` (Phase 7)
+30. `20261025000400_media_podcasts.sql` (Phase 7)
+31. `20261025000500_media_gallery.sql` (Phase 7)
+32. `20261025000600_media_notifications.sql` (Phase 7)
+33. `20261026000100_bible_schema.sql` (Phase 8)
+34. `20261026000200_bible_sources.sql` (Phase 8)
+35. `20261026000300_bible_plans.sql` (Phase 8)
+36. `20261026000400_bible_member.sql` (Phase 8)
+37. `20261026000500_journal.sql` (Phase 8)
+38. `20261026000600_bible_notifications.sql` (Phase 8)
 
-**Project `ymuiutwdnhxdqsetnwkt`:** all five migrations are applied and the history has been reconciled with the repository. The migration history matches the repository exactly (verified 2026-10-18); see [migration-history.md](migration-history.md).
+Phase 8 (Bible reading and journals) migrations each have a one-transaction operator script, `supabase/manual/2026-10-26-apply-bible-<1-6>.sql` (19–55 KB, under the SQL editor limit), with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor. No scheduler change is needed: reminders run inside the existing `community.tick()`, which the designated deployment already calls. They create the private `bible` bucket. Then, at Administration → Members, assign the Bible source manager and reading plan editor/publisher roles as needed ([reading-plan-guide.md](reading-plan-guide.md#who-can-do-what)), and set up a translation ([bible-sources.md](bible-sources.md)). `supabase/tests/bible-fingerprint.sql` compares the hosted result with a fresh build.
+
+Phase 7 (teaching and media) migrations each have a one-transaction operator script, `supabase/manual/2026-10-25-apply-media-<1-6>.sql` (37–59 KB, under the SQL editor limit), with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor, then `supabase/manual/2026-10-25-media-scheduler.sql` to make the Phase 7 preview the designated scheduler deployment. They create the private `media` and `media-uploads` buckets. After applying, assign the content publisher, media manager, podcast manager, and gallery moderator roles as needed ([media-guide.md](media-guide.md#roles-and-permissions)). `supabase/tests/media-fingerprint.sql` compares the hosted result with a fresh build.
+
+Phase 6 (prayer and care) migrations each have a one-transaction operator script, `supabase/manual/2026-10-24-apply-prayer-<1-4>.sql`, with a preflight (previous step recorded, this one absent). Run them in order in the SQL editor. No scheduler change is needed: follow-up reminders run inside the existing `community.tick()`. After applying, assign prayer/care roles at Administration → Members (explicit only; see [prayer-care-guide.md](prayer-care-guide.md)). Retention stays off until the church adopts a policy ([prayer-retention.md](prayer-retention.md)).
+
+Phase 5 (community) migrations each have a one-transaction operator script, `supabase/manual/2026-10-22-apply-community-<1-5>.sql`, kept under the SQL editor's request limit. Run them in order; each refuses to run out of order or twice. Then run `supabase/manual/2026-10-22-community-scheduler.sql` (after filling in the designated branch URL) so the existing scheduler also handles community digests, retention, and delivery. Status on the hosted project: [build-status.md](build-status.md#phase-5-community-groups-messaging-and-notifications).
+
+Giving also needs the ingest secret stored in `giving.secrets`, plus Stripe test keys and the webhook. See [giving-setup.md](giving-setup.md).
+
+Events need the job secret in `events.secrets` and the database scheduler (`pg_cron` + `pg_net`) for reminders. The three Phase 4 migrations can be applied in one transaction with `supabase/manual/2026-10-21-apply-events.sql`. See [events-guide.md](events-guide.md).
+
+**Project `ymuiutwdnhxdqsetnwkt`:** all nine migrations are applied, and the history matches the repository versions; see [migration-history.md](migration-history.md). Phase 2 was applied through the SQL connector with the repository version numbers recorded, plus one snippet (the `household_leave` function, which contains `delete from`) run in the SQL editor.
 
 For a new project, run `supabase link --project-ref <ref> && supabase db push`, or paste each file into the SQL editor in order.
 
@@ -51,13 +105,25 @@ For a new project, run `supabase link --project-ref <ref> && supabase db push`, 
 4. **Password policy (recommended):** minimum length 10. The app also enforces 10 characters with a letter and a digit.
 5. **Rate limits:** keep the defaults. The app shows a friendly "too many attempts" message.
 
+### Realtime (Phase 5)
+
+Community live updates use **private** Broadcast channels (`member:<id>`), authorized by an RLS policy on `realtime.messages` that the Phase 5 migrations create. Nothing to configure in the dashboard: private channels work with the default setting. If you ever turn on **Realtime → Settings → "Allow public access: off"**, community updates keep working, because they never use public channels. The app falls back to polling every 60 seconds if Realtime is unavailable.
+
 ### Storage
 
 The migrations create both buckets with type and size limits:
 - `branding` (public, 2 MB, PNG/JPEG/WebP)
 - `announcement-images` (private, 4 MB, PNG/JPEG/WebP)
+- `profile-photos` (private, 1 MB, WebP only; the app re-encodes every upload with `sharp`)
+- `event-images` (private, 2 MB, WebP; Phase 4)
+- `group-images` (private, 2 MB, WebP; Phase 5; readable only by people who may see the group)
+- `media` (private, 50 MB, audio/video/images/PDF/PPTX/VTT; Phase 7; readable only through the content visibility rules, via short-lived signed links)
+- `media-uploads` (private, 50 MB, JPEG/PNG/WebP/HEIC; Phase 7; quarantine for gallery originals, deleted after processing)
+- `bible` (private, 50 MB, WebP/PDF/CSV/TSV/plain text; Phase 8; plan covers readable by the plan's members, staged text imports and reference PDFs readable only by Bible source managers)
 
-No dashboard work is needed.
+The 50 MB limits match the Free plan's per-file cap. On a paid plan, raise the project's upload limit (Storage → Settings) and the bucket limit together, then the limits in `/admin/media/settings`. Storage, egress, and video delivery costs: [media-guide.md](media-guide.md#storage-delivery-and-costs).
+
+No dashboard work is needed. Phase 2 adds no environment variables. Photo processing uses `sharp`, a normal runtime dependency that Vercel supports.
 
 ## 3. Resend
 

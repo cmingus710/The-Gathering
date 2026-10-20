@@ -1,0 +1,178 @@
+[
+  {
+    "name": "directory",
+    "subject": "three welcoming sculpted people, central gold figure flanked by ivory figures",
+    "color": "champagne gold",
+    "asset": "assets/brand/source/directory.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "events",
+    "subject": "elegant ivory calendar with gold binding rings and a simple gold date square, no numbers or letters",
+    "color": "slate blue",
+    "asset": "assets/brand/source/events.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "community",
+    "subject": "two overlapping sculpted ivory and dark teal speech bubbles with three gold dots",
+    "color": "muted teal",
+    "asset": "assets/brand/source/community.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "messages",
+    "subject": "single ivory speech bubble with three gold dots",
+    "color": "dusty burgundy",
+    "asset": "assets/brand/source/messages.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "groups",
+    "subject": "four ivory and gold people arranged in a connected circle",
+    "color": "sage green",
+    "asset": "assets/brand/source/groups.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "give",
+    "subject": "ivory open hand supporting a floating gold heart",
+    "color": "amber gold",
+    "asset": "assets/brand/source/give.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "prayer",
+    "subject": "two ivory hands pressed together in prayer with a restrained golden glow",
+    "color": "slate blue",
+    "asset": "assets/brand/source/prayer.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "bible",
+    "subject": "open ivory Bible with detailed page edges and gold ribbon bookmark, no readable text",
+    "color": "warm ivory",
+    "asset": "assets/brand/source/bible.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "lessons",
+    "subject": "closed burgundy book with raised gold play triangle",
+    "color": "dusty burgundy",
+    "asset": "assets/brand/source/lessons.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "devotionals",
+    "subject": "ivory open page with rising gold sun",
+    "color": "muted teal",
+    "asset": "assets/brand/source/devotionals.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "podcasts",
+    "subject": "sculpted ivory microphone with gold grille and sound arcs",
+    "color": "slate blue",
+    "asset": "assets/brand/source/podcasts.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "memory-verses",
+    "subject": "two layered ivory scripture cards and one gold sparkle, no letters",
+    "color": "sage green",
+    "asset": "assets/brand/source/memory-verses.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "youth",
+    "subject": "three energetic stylized ivory and gold figures with a small star",
+    "color": "muted teal",
+    "asset": "assets/brand/source/youth.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "home",
+    "subject": "elegant sculpted ivory house with gold roof and softly lit doorway",
+    "color": "champagne gold",
+    "asset": "assets/brand/source/home.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "profile",
+    "subject": "single ivory person bust framed by a fine gold circular rim",
+    "color": "warm slate blue",
+    "asset": "assets/brand/source/profile.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "announcements",
+    "subject": "ivory megaphone with gold rim and restrained sound arcs",
+    "color": "amber gold",
+    "asset": "assets/brand/source/announcements.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "administration",
+    "subject": "sculpted ivory shield with gold checkmark",
+    "color": "warm charcoal",
+    "asset": "assets/brand/source/administration.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "notifications",
+    "subject": "ivory bell with gold clapper and small gold notification dot",
+    "color": "dusty burgundy",
+    "asset": "assets/brand/source/notifications.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "more",
+    "subject": "four sculpted rounded ivory and gold squares arranged in a precise 2 by 2 grid",
+    "color": "sage green",
+    "asset": "assets/brand/source/more.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "church-reading",
+    "subject": "closed ivory book with gold corner plates, gold binding bands, and a gold ribbon bookmark",
+    "color": "warm brown",
+    "asset": "assets/brand/source/church-reading.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "music",
+    "subject": "sculpted gold beamed eighth notes",
+    "color": "dusty burgundy",
+    "asset": "assets/brand/source/music.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "name": "gallery",
+    "subject": "two stacked ivory photo prints with a gold sun over teal mountains",
+    "color": "muted teal",
+    "asset": "assets/brand/source/gallery.png",
+    "width": 1254,
+    "height": 1254
+  }
+]

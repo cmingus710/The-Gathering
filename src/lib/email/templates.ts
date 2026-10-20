@@ -1,10 +1,10 @@
 import { getSiteUrl } from "@/lib/site-url";
 
-function escape(value: string): string {
+export function escape(value: string): string {
   return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function layout(churchName: string, bodyHtml: string): string {
+export function layout(churchName: string, bodyHtml: string): string {
   return `<!doctype html><html><body style="margin:0;background:#F7F4ED;font-family:Arial,Helvetica,sans-serif;color:#363430">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F4ED;padding:32px 16px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:12px;padding:32px">

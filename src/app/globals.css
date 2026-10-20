@@ -3,65 +3,256 @@
 @import "@fontsource-variable/source-serif-4/index.css";
 
 /*
- * The Gathering · shared design tokens (dark interface).
+ * The Gathering · shared design tokens.
  * Source of truth, mirrored in src/lib/theme/tokens.ts where contrast is
- * verified by unit tests. Do not add a theme editor.
+ * verified by unit tests for both themes. Do not add a theme editor.
  *
- * Brand palette (approved; unchanged): gold #AD8C53, charcoal #363430,
- * ivory #F7F4ED, sand #EAE3D5, deep gold #80642F, olive #52664D, clay #A14538.
+ * Approved palette (unchanged): gold #AD8C53, charcoal #363430, ivory #F7F4ED,
+ * white #FFFFFF, sand #EAE3D5, deep gold #80642F, warm gray #716B61,
+ * olive #52664D, clay #A14538.
  *
- * Usage rules on the dark interface
- * - primary (brand gold) is the accent: links, active states, focus rings,
- *   section actions. Never put gold text on surface-muted (4.4:1).
- * - cta (ivory) is the main button fill, with charcoal text.
- * - The logo and icon keep their original colours on an ivory plaque, because
- *   the charcoal artwork would disappear on dark backgrounds.
+ * Themes
+ * - Light is the default. Dark applies with data-theme="dark" on any element
+ *   (the root, or a preview panel), and data-theme="system" follows the OS.
+ *   The root attribute comes from the "theme" cookie on the server, so the
+ *   first paint is already in the right theme (no flash, no script).
+ *
+ * Usage rules
+ * - primary is the accessible accent for text, links, active states, and focus
+ *   rings: deep gold on light, a lifted gold on dark.
+ * - accent is the original gold #AD8C53: icon highlights, rules, motifs. It is
+ *   never used for small text on light surfaces (under 3:1).
+ * - cta is the main button fill: charcoal on light, ivory on dark.
+ * - The charcoal artwork of the logo sits on an ivory plate in dark mode
+ *   (--mark-plate) instead of being recoloured.
  */
 @theme {
   /* Approved brand palette */
   --color-brand-gold: #ad8c53;
   --color-brand-charcoal: #363430;
   --color-ivory: #f7f4ed;
+  --color-white: #ffffff;
   --color-sand: #eae3d5;
   --color-deep-gold: #80642f;
+  --color-warm-gray: #716b61;
   --color-olive: #52664d;
   --color-clay: #a14538;
 
-  /* Semantic tokens for the dark interface */
-  --color-background: #121110;
-  --color-surface: #22201e;
-  --color-surface-muted: #2e2c29;
+  /* Semantic tokens: light theme (default) */
+  --color-background: #f7f4ed;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1ece2;
+  --color-surface-raised: #ffffff;
+  --color-primary: #80642f;
+  --color-primary-hover: #664f24;
+  --color-primary-soft: #f3ebdb;
+  --color-on-primary: #ffffff;
+  --color-accent: #ad8c53;
+  --color-cta: #363430;
+  --color-cta-hover: #24221f;
+  --color-on-cta: #f7f4ed;
+  --color-text: #363430;
+  --color-text-secondary: #6b655b;
+  --color-border: #e6decf;
+  --color-border-strong: #8f887b;
+  --color-success: #4a5d45;
+  --color-success-soft: #edf1e9;
+  --color-danger: #a14538;
+  --color-danger-hover: #86372c;
+  --color-danger-soft: #f8ece9;
+  --color-on-danger: #ffffff;
 
-  --color-primary: #ad8c53;
-  --color-primary-hover: #c4a46c;
-  --color-primary-soft: #2a261f;
-  --color-on-primary: #1c1b19;
-
-  --color-cta: #f7f4ed;
-  --color-cta-hover: #eae3d5;
-  --color-on-cta: #1c1b19;
-
-  --color-text: #f7f4ed;
-  --color-text-secondary: #b3ac9f;
-
-  --color-border: #33312d;
-  --color-border-strong: #7f796e;
-
-  --color-success: #9db794;
-  --color-success-soft: #1d261c;
-  --color-danger: #e59484;
-  --color-danger-hover: #eeab9e;
-  --color-danger-soft: #2d1b18;
+  /* Sign-in pages (approved mockup): warm ivory, deep plum, antique gold */
+  --color-warm-ivory: #f6f1e6;
+  --color-plum: #352936;
+  --color-antique-gold: #b89a60;
 
   --font-sans: "Source Sans 3 Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, "Times New Roman", serif;
 
-  --radius-control: 0.875rem;
-  --radius-card: 1.25rem;
+  /* Type scale (rem, so text resizing and zoom are preserved) */
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.3;
+  --text-meta: 0.9375rem;
+  --text-meta--line-height: 1.45;
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.35;
+  --text-display: 1.75rem;
+  --text-display--line-height: 1.15;
+
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-tile: 0.875rem;
+  --radius-button: 9999px;
+
+  --ease-gentle: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-:root {
+/* Theme-scoped values that are not colour utilities. */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --mark-plate: transparent;
+  --mark-plate-ring: transparent;
+  --mark-img: 92%;
+  --icon-fill: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  --header-bg: color-mix(in srgb, var(--color-background) 88%, transparent);
+  --elev-card: 0 1px 2px rgb(54 52 48 / 0.06), 0 1px 0 rgb(54 52 48 / 0.02);
+  --elev-lift: 0 6px 20px -8px rgb(54 52 48 / 0.22), 0 1px 2px rgb(54 52 48 / 0.06);
+  --elev-bar: 0 -1px 0 rgb(54 52 48 / 0.04), 0 10px 30px -12px rgb(54 52 48 / 0.28);
+}
+
+/* Light values again, so a light panel nested in a dark page is light too. */
+[data-theme="light"] {
+  --color-background: #f7f4ed;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1ece2;
+  --color-surface-raised: #ffffff;
+  --color-primary: #80642f;
+  --color-primary-hover: #664f24;
+  --color-primary-soft: #f3ebdb;
+  --color-on-primary: #ffffff;
+  --color-cta: #363430;
+  --color-cta-hover: #24221f;
+  --color-on-cta: #f7f4ed;
+  --color-text: #363430;
+  --color-text-secondary: #6b655b;
+  --color-border: #e6decf;
+  --color-border-strong: #8f887b;
+  --color-success: #4a5d45;
+  --color-success-soft: #edf1e9;
+  --color-danger: #a14538;
+  --color-danger-hover: #86372c;
+  --color-danger-soft: #f8ece9;
+  --color-on-danger: #ffffff;
+}
+
+/* --theme-dark-tokens: mirrored in tokens.ts (palettes.dark) */
+[data-theme="dark"] {
+  --color-background: #141311;
+  --color-surface: #1f1d1b;
+  --color-surface-muted: #2a2825;
+  --color-surface-raised: #26241f;
+  --color-primary: #c9aa72;
+  --color-primary-hover: #dabf8c;
+  --color-primary-soft: #2d2820;
+  --color-on-primary: #1c1b19;
+  --color-accent: #ad8c53;
+  --color-cta: #f7f4ed;
+  --color-cta-hover: #eae3d5;
+  --color-on-cta: #1c1b19;
+  --color-text: #f7f4ed;
+  --color-text-secondary: #b8b1a4;
+  --color-border: #36332f;
+  --color-border-strong: #827c71;
+  --color-success: #a3bc99;
+  --color-success-soft: #1e271d;
+  --color-danger: #e8998a;
+  --color-danger-hover: #f0b0a4;
+  --color-danger-soft: #2e1c19;
+  --color-on-danger: #1c1b19;
+}
+[data-theme="dark"] {
   color-scheme: dark;
+  --mark-plate: #f7f4ed;
+  --mark-plate-ring: rgb(173 140 83 / 0.35);
+  --mark-img: 70%;
+  --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
+  --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
+  --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
+  --elev-bar: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+}
+/* System preference: same values as dark, applied only when the OS asks. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --color-background: #141311;
+    --color-surface: #1f1d1b;
+    --color-surface-muted: #2a2825;
+    --color-surface-raised: #26241f;
+    --color-primary: #c9aa72;
+    --color-primary-hover: #dabf8c;
+    --color-primary-soft: #2d2820;
+    --color-on-primary: #1c1b19;
+    --color-cta: #f7f4ed;
+    --color-cta-hover: #eae3d5;
+    --color-on-cta: #1c1b19;
+    --color-text: #f7f4ed;
+    --color-text-secondary: #b8b1a4;
+    --color-border: #36332f;
+    --color-border-strong: #827c71;
+    --color-success: #a3bc99;
+    --color-success-soft: #1e271d;
+    --color-danger: #e8998a;
+    --color-danger-hover: #f0b0a4;
+    --color-danger-soft: #2e1c19;
+    --color-on-danger: #1c1b19;
+    color-scheme: dark;
+    --mark-plate: #f7f4ed;
+    --mark-plate-ring: rgb(173 140 83 / 0.35);
+    --mark-img: 70%;
+    --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
+    --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
+    --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
+    --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
+    --elev-bar: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+  }
+}
+
+/*
+ * Home surfaces (greeting, launcher tiles, Coming up, floating dock). Kept
+ * apart from the colour tokens above; same light / dark / system rules.
+ */
+:root,
+[data-theme="light"] {
+  --hero-bg: linear-gradient(112deg, #fffdf8 0%, #f8f0e1 48%, #ecdcb8 100%);
+  --hero-border: rgb(173 140 83 / 0.38);
+  --hero-shadow: 0 1px 2px rgb(54 52 48 / 0.05), 0 12px 32px -18px rgb(128 100 47 / 0.45);
+  --emblem-opacity: 0.13;
+  --dock-bg: rgb(255 253 248 / 0.8);
+  --dock-solid: #fffdf8;
+  --dock-border: rgb(54 52 48 / 0.1);
+  --dock-shadow: 0 14px 34px -14px rgb(54 52 48 / 0.42), 0 2px 6px -2px rgb(54 52 48 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --dock-active-bg: linear-gradient(180deg, rgb(173 140 83 / 0.2), rgb(173 140 83 / 0.1));
+  --dock-active-border: rgb(128 100 47 / 0.35);
+  --dock-active-text: #6e5426;
+  --tile-shadow: drop-shadow(0 6px 10px rgb(54 52 48 / 0.18));
+  --tile-shadow-hover: drop-shadow(0 10px 16px rgb(54 52 48 / 0.24));
+  --brand-halo: transparent;
+}
+[data-theme="dark"] {
+  --hero-bg: linear-gradient(112deg, #1c1a17 0%, #27221b 46%, #4a3c27 100%);
+  --hero-border: rgb(201 170 114 / 0.3);
+  --hero-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --emblem-opacity: 0.16;
+  --dock-bg: rgb(30 28 25 / 0.72);
+  --dock-solid: #1f1d1b;
+  --dock-border: rgb(247 244 237 / 0.1);
+  --dock-shadow: 0 16px 36px -10px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --dock-active-bg: linear-gradient(180deg, rgb(201 170 114 / 0.26), rgb(173 140 83 / 0.12));
+  --dock-active-border: rgb(201 170 114 / 0.42);
+  --dock-active-text: #dabf8c;
+  --tile-shadow: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+  --tile-shadow-hover: drop-shadow(0 12px 20px rgb(0 0 0 / 0.55));
+  --brand-halo: radial-gradient(closest-side, rgb(247 244 237 / 0.16), transparent);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --hero-bg: linear-gradient(112deg, #1c1a17 0%, #27221b 46%, #4a3c27 100%);
+    --hero-border: rgb(201 170 114 / 0.3);
+    --hero-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --emblem-opacity: 0.16;
+    --dock-bg: rgb(30 28 25 / 0.72);
+    --dock-solid: #1f1d1b;
+    --dock-border: rgb(247 244 237 / 0.1);
+    --dock-shadow: 0 16px 36px -10px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --dock-active-bg: linear-gradient(180deg, rgb(201 170 114 / 0.26), rgb(173 140 83 / 0.12));
+    --dock-active-border: rgb(201 170 114 / 0.42);
+    --dock-active-text: #dabf8c;
+    --tile-shadow: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+    --tile-shadow-hover: drop-shadow(0 12px 20px rgb(0 0 0 / 0.55));
+    --brand-halo: radial-gradient(closest-side, rgb(247 244 237 / 0.16), transparent);
+  }
 }
 
 html {
@@ -74,13 +265,26 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 1.0625rem;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+/* Theme-scoped panels (icon reference) paint their own canvas. */
+[data-theme] {
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 h1,
 h2,
 h3 {
   text-wrap: balance;
+}
+
+/* Selected feature headings use the serif. */
+.font-display {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
 }
 
 /* Visible keyboard focus everywhere; mouse clicks don't show the ring. */
@@ -106,7 +310,106 @@ h3 {
   top: 1rem;
 }
 
-/* Formatted announcement bodies (rendered from the sanitized Markdown subset). */
+/* Approved artwork plates (see components/brand/logo.tsx). */
+.brand-mark,
+.brand-plaque {
+  background-color: var(--mark-plate);
+  box-shadow: 0 0 0 1px var(--mark-plate-ring);
+}
+
+/* Interactive surfaces: a quiet lift on hover, a press, never motion-heavy. */
+.interactive {
+  transition:
+    background-color 160ms var(--ease-gentle),
+    border-color 160ms var(--ease-gentle),
+    box-shadow 160ms var(--ease-gentle),
+    transform 120ms var(--ease-gentle);
+}
+.interactive:hover {
+  border-color: var(--color-border-strong);
+}
+.interactive:active {
+  transform: scale(0.985);
+}
+
+/* Custom icon system (src/components/icons). */
+:is(.g-icon, .g-icon-tile) .g-accent {
+  color: var(--color-accent);
+}
+:is(.g-icon, .g-icon-tile) .g-fill {
+  fill: var(--icon-fill);
+}
+.g-icon .g-fill {
+  opacity: 0;
+  transition: opacity 160ms var(--ease-gentle);
+}
+.g-icon[data-active="true"] .g-fill {
+  opacity: 1;
+}
+.g-icon[data-active="true"] .g-accent {
+  color: var(--color-primary);
+}
+
+/*
+ * Sign-in pages: a light, warm panel scoped to the (auth) route group. It
+ * re-points the semantic tokens, so the shared form components render in the
+ * mockup's palette here (in both the light and dark themes, as the approved
+ * mockup has a single look) without restyling the rest of the app. Mirrored in
+ * src/lib/theme/tokens.ts (authPalette), where contrast is unit-tested.
+ * Antique gold is decorative only (thin rules); it is never used for text.
+ */
+.auth-theme {
+  color-scheme: light;
+  --color-background: #f6f1e6;
+  --color-surface: #fcfaf5;
+  --color-surface-muted: #ede6d8;
+  --color-surface-raised: #fcfaf5;
+  --color-primary: #352936;
+  --color-primary-hover: #4a3a4b;
+  --color-primary-soft: #ece3e3;
+  --color-on-primary: #f6f1e6;
+  --color-accent: #b89a60;
+  --color-cta: #352936;
+  --color-cta-hover: #4a3a4b;
+  --color-on-cta: #f6f1e6;
+  --color-text: #2b2230;
+  --color-text-secondary: #5e5361;
+  --color-border: #e0d6c4;
+  --color-border-strong: #8a7e86;
+  --color-success: #3f5a3a;
+  --color-success-soft: #e5ecdf;
+  --color-danger: #9a3324;
+  --color-danger-hover: #7f2a1e;
+  --color-danger-soft: #f6e3dd;
+  --color-on-danger: #f6f1e6;
+  --mark-plate: transparent;
+  --mark-plate-ring: transparent;
+  --radius-control: 0.375rem;
+  --radius-card: 0.5rem;
+  --radius-button: 0.375rem;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Plum scrim over the barn photograph so the welcome text stays legible. */
+.auth-hero-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(53 41 54 / 0.5) 0%,
+    rgb(53 41 54 / 0.05) 32%,
+    rgb(53 41 54 / 0.25) 55%,
+    rgb(53 41 54 / 0.85) 100%
+  );
+}
+@media (min-width: 64rem) {
+  .auth-hero-scrim {
+    background:
+      linear-gradient(90deg, rgb(53 41 54 / 0.82) 0%, rgb(53 41 54 / 0.62) 40%, rgb(53 41 54 / 0.16) 76%, rgb(53 41 54 / 0) 100%),
+      linear-gradient(180deg, rgb(53 41 54 / 0.35) 0%, rgb(53 41 54 / 0) 24%, rgb(53 41 54 / 0) 68%, rgb(53 41 54 / 0.6) 100%);
+  }
+}
+
+/* Formatted announcement and discussion bodies (sanitized Markdown subset). */
 .prose-gathering {
   max-width: 68ch;
   overflow-wrap: anywhere;
@@ -143,9 +446,10 @@ h3 {
   padding-left: 1.4em;
 }
 .prose-gathering blockquote {
-  border-left: 3px solid var(--color-brand-gold);
+  border-left: 3px solid var(--color-accent);
   padding-left: 1em;
   color: var(--color-text);
+  font-family: var(--font-serif);
   font-style: italic;
 }
 .prose-gathering hr {
@@ -162,16 +466,423 @@ h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .interactive:active {
+    transform: none;
+  }
 }
 
-/* Horizontal card rails (announcements on Home). */
-.rail {
-  scrollbar-width: none;
-  scroll-snap-type: x mandatory;
+/* Bottom sheet (More menu) slides up; reduced motion makes it instant. */
+dialog.sheet[open] {
+  animation: sheet-in 200ms var(--ease-gentle);
 }
-.rail::-webkit-scrollbar {
+@keyframes sheet-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+
+/*
+ * Home launcher (src/components/home/launcher.tsx). Columns follow the
+ * launcher's own width in rem, so enlarged text gets fewer, wider columns:
+ * 2 below 19.5rem (narrow phones), 3 on phones, then 4–6 on wider screens.
+ * Art is capped at 7rem so it never stretches across wide screens.
+ */
+.launcher {
+  container-type: inline-size;
+  position: relative;
+}
+.launcher-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Scrolling hands off to the page at either end: no overscroll containment. */
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-accent) 45%, transparent) transparent;
+  /* Keeps a focused tile clear of the edge fades. */
+  scroll-padding-block: 1.75rem 2.5rem;
+  /* Room for focus rings and the hover lift inside the clipped area. */
+  padding: 0.375rem 0.25rem 0.25rem;
+  margin: -0.375rem -0.25rem -0.25rem;
+}
+.launcher[data-bounded] .launcher-scroll {
+  --fade-top: 1.75rem;
+  --fade-bottom: 2.5rem;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+}
+.launcher[data-bounded][data-at-start] .launcher-scroll {
+  --fade-top: 0px;
+}
+.launcher[data-bounded][data-at-end] .launcher-scroll {
+  --fade-bottom: 0px;
+}
+/* Scroll cue below the menu (never on top of a tile); hidden at the end. */
+.launcher-more {
   display: none;
 }
-.rail > * {
-  scroll-snap-align: start;
+.launcher[data-bounded] .launcher-more {
+  display: block;
+  width: 2.25rem;
+  height: 0.25rem;
+  margin: 0.5rem auto 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  transition: opacity 160ms var(--ease-gentle);
+}
+.launcher[data-bounded][data-at-end] .launcher-more {
+  opacity: 0.25;
+}
+.launcher-grid {
+  --launcher-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--launcher-cols), minmax(0, 1fr));
+  gap: 0.875rem 0.5rem;
+}
+@container (max-width: 19.5rem) {
+  .launcher-grid {
+    --launcher-cols: 2;
+  }
+}
+@container (min-width: 36rem) {
+  .launcher-grid {
+    --launcher-cols: 4;
+  }
+}
+@container (min-width: 46rem) {
+  .launcher-grid {
+    --launcher-cols: 5;
+  }
+}
+@container (min-width: 56rem) {
+  .launcher-grid {
+    --launcher-cols: 6;
+  }
+}
+.launcher-tile {
+  display: flex;
+  min-height: 2.75rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-card);
+  padding: 0.25rem 0.125rem 0.375rem;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.launcher-art {
+  position: relative;
+  display: block;
+  width: min(84%, 7rem);
+  aspect-ratio: 1;
+  filter: var(--tile-shadow);
+  transition:
+    transform 160ms var(--ease-gentle),
+    filter 160ms var(--ease-gentle);
+}
+.launcher-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+/* Shown only if a supplied artwork is missing: the original tile glyph. */
+.launcher-fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+.launcher-label {
+  max-width: 100%;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (hover: hover) {
+  .launcher-tile:hover .launcher-art {
+    transform: translateY(-2px);
+    filter: var(--tile-shadow-hover);
+  }
+}
+.launcher-tile:active .launcher-art {
+  transform: scale(0.96);
+}
+.launcher-tile:focus-visible {
+  outline-offset: 0;
+}
+
+/* Greeting banner: charcoal to muted gold, fine border, emblem at the right. */
+.home-hero {
+  background: var(--hero-bg);
+  border: 1px solid var(--hero-border);
+  box-shadow: var(--hero-shadow);
+}
+.home-emblem {
+  opacity: var(--emblem-opacity);
+}
+
+/* Header symbol on dark: a faint warm halo lifts the charcoal figures (the artwork itself is unchanged). */
+.brand-halo {
+  background: var(--brand-halo);
+}
+
+/*
+ * Coming up banner. The overlay and calendar leaf stay dark in both themes:
+ * they sit on photography, so ivory text keeps its contrast either way.
+ */
+.coming-up {
+  background: #1c1a17;
+  color: #f7f4ed;
+  border: 1px solid rgb(201 170 114 / 0.28);
+}
+.coming-up-scrim {
+  background:
+    linear-gradient(90deg, rgb(20 18 16 / 0.94) 0%, rgb(20 18 16 / 0.82) 38%, rgb(20 18 16 / 0.35) 72%, rgb(20 18 16 / 0.15) 100%),
+    linear-gradient(0deg, rgb(20 18 16 / 0.35), transparent 60%);
+}
+.coming-up-branded {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgb(173 140 83 / 0.38), transparent 55%),
+    linear-gradient(112deg, #1c1a17 0%, #2a241c 55%, #3f3323 100%);
+}
+.coming-up-leaf {
+  background: rgb(20 18 16 / 0.58);
+  border: 1px solid rgb(201 170 114 / 0.4);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 8px 20px -10px rgb(0 0 0 / 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.coming-up-arrow {
+  background: rgb(20 18 16 / 0.55);
+  border: 1px solid rgb(247 244 237 / 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition:
+    background-color 160ms var(--ease-gentle),
+    transform 160ms var(--ease-gentle);
+}
+.coming-up:hover .coming-up-arrow {
+  background: rgb(173 140 83 / 0.45);
+}
+.coming-up:hover .coming-up-photo {
+  transform: scale(1.02);
+}
+.coming-up-photo {
+  transition: transform 400ms var(--ease-gentle);
+}
+
+/*
+ * Floating dock (phones and small tablets). Smoked glass on dark,
+ * translucent ivory on light; a solid surface where blur isn't supported.
+ * The page reserves --dock-clearance, and focus scrolling keeps the same
+ * margin (scroll-padding) so nothing focused ends up behind the dock.
+ */
+:root {
+  /* --player-clearance grows while the mini-player is shown (Phase 7). */
+  --dock-clearance: calc(6rem + env(safe-area-inset-bottom) + var(--player-clearance, 0rem));
+}
+@media (max-width: 1023.98px) {
+  html {
+    scroll-padding-bottom: var(--dock-clearance);
+    scroll-padding-top: 4.5rem;
+  }
+}
+.dock {
+  background: var(--dock-solid);
+  border: 1px solid var(--dock-border);
+  box-shadow: var(--dock-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .dock {
+    background: var(--dock-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .dock {
+    background: var(--dock-solid);
+  }
+}
+.dock-active {
+  background: var(--dock-active-bg);
+  box-shadow: inset 0 0 0 1px var(--dock-active-border);
+  color: var(--dock-active-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher-tile:hover .launcher-art,
+  .launcher-tile:active .launcher-art,
+  .coming-up:hover .coming-up-photo {
+    transform: none;
+  }
+}
+
+/*
+ * Persistent mini-player (Phase 7). Phones: just above the floating dock and
+ * clear of the safe area; pages without the dock: near the bottom edge.
+ * Desktop: a card in the bottom-right corner. While it shows, pages reserve
+ * extra room (--player-clearance) so it never covers the end of the content.
+ */
+html[data-player] {
+  --player-clearance: 5.25rem;
+}
+.mini-player {
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  background: var(--dock-solid);
+  border: 1px solid var(--dock-border);
+  box-shadow: var(--dock-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .mini-player {
+    background: var(--dock-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mini-player {
+    background: var(--dock-solid);
+  }
+}
+@media (max-width: 1023.98px) {
+  body:has(nav.dock) .mini-player {
+    bottom: calc(max(0.625rem, env(safe-area-inset-bottom)) + 4.375rem);
+  }
+}
+@media (min-width: 1024px) {
+  .mini-player {
+    bottom: 1.25rem;
+  }
+  html[data-player] #main {
+    padding-bottom: 8rem;
+  }
+}
+.mini-player:has(#mini-player-controls:not([hidden])) {
+  max-height: calc(100dvh - 9rem);
+  overflow-y: auto;
+}
+.media-icon-btn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  border-radius: 9999px;
+  color: var(--color-text);
+}
+.media-icon-btn:hover {
+  background: var(--color-surface-muted);
+}
+.media-icon-btn[aria-pressed="true"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.media-range {
+  min-height: 2.75rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.media-range:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* Long-form teaching text (devotionals, lessons): a comfortable measure and leading. */
+.reading-body {
+  max-width: 68ch;
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+
+/*
+ * Scripture reader (Phase 8). Presentation only: the member's text size and
+ * line spacing arrive as --reader-size / --reader-leading on the reader, and
+ * highlights are soft washes that keep body text at AA contrast in both
+ * themes (checked in src/lib/bible/reader-colors.test.ts).
+ */
+:root,
+[data-theme="light"] {
+  --hl-yellow: #f7e9ad;
+  --hl-green: #dcecd5;
+  --hl-blue: #d9e6f3;
+  --hl-pink: #f5dde2;
+}
+[data-theme="dark"] {
+  --hl-yellow: #4a3f17;
+  --hl-green: #243b27;
+  --hl-blue: #213547;
+  --hl-pink: #47262f;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --hl-yellow: #4a3f17;
+    --hl-green: #243b27;
+    --hl-blue: #213547;
+    --hl-pink: #47262f;
+  }
+}
+.scripture {
+  font-family: var(--font-serif);
+  font-size: calc(1.1875rem * var(--reader-size, 1));
+  line-height: var(--reader-leading, 1.7);
+}
+.scripture .verse-num {
+  font-family: var(--font-sans);
+  font-size: 0.68em;
+  font-weight: 700;
+  color: var(--color-primary);
+  vertical-align: 0.42em;
+  margin-inline: 0.15em 0.2em;
+}
+.scripture[data-verse-numbers="off"] .verse-num {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.scripture .poetry {
+  white-space: pre-line;
+  padding-left: 1.25em;
+  text-indent: -0.75em;
+}
+.scripture mark {
+  color: inherit;
+  border-radius: 0.2em;
+  padding-block: 0.05em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.scripture mark[data-color="yellow"] { background: var(--hl-yellow); }
+.scripture mark[data-color="green"] { background: var(--hl-green); }
+.scripture mark[data-color="blue"] { background: var(--hl-blue); }
+.scripture mark[data-color="pink"] { background: var(--hl-pink); }
+.scripture [data-selected="true"] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.2em;
+}
+.scripture[data-no-copy="true"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+@media print {
+  .scripture[data-no-print="true"] { display: none; }
+  .print-notice { display: block !important; }
 }

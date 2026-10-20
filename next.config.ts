@@ -15,6 +15,17 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: false,
   poweredByHeader: false,
+  // The floating dev indicator would sit on top of the phone tab bar; compile
+  // and runtime errors are still shown when it is hidden.
+  devIndicators: false,
+  // The statement PDF reads the logo from disk.
+  outputFileTracingIncludes: {
+    "/giving/statement/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
+    "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
+  },
+  // libheif's WebAssembly HEIC decoder is loaded from node_modules at run
+  // time rather than bundled (Phase 7 photo uploads).
+  serverExternalPackages: ["heic-decode", "libheif-js"],
   experimental: {
     // Uploads go through Server Actions; Vercel caps request bodies at 4.5 MB.
     serverActions: { bodySizeLimit: "4.5mb" },
@@ -38,7 +49,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|profile|admin|account-status)/:path*",
+        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api|community|groups|messages|notifications|design|devotionals|lessons|podcasts|media|reading|music|gallery|saved|bible|journal)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

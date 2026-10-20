@@ -1,0 +1,44 @@
+/* eslint-disable @next/next/no-img-element -- short-lived signed URLs */
+import { Film, Headphones } from "lucide-react";
+import Link from "next/link";
+import { TileIcon } from "@/components/icons/icon";
+import { durationLabel, formatDay, itemDate, itemHref, speakers } from "@/lib/media/format";
+import type { ItemCard } from "@/lib/media/types";
+import { itemCover } from "./item-card";
+
+/** A larger card for "Latest lesson" and similar single highlights. */
+export function FeaturedItem({ item, urls, eyebrow }: { item: ItemCard; urls: Map<string, string>; eyebrow: string }) {
+  const cover = itemCover(item, urls, "large");
+  const day = itemDate(item);
+  const who = speakers(item);
+  return (
+    <Link href={itemHref(item)} className="interactive block overflow-hidden rounded-card border border-border bg-surface shadow-(--elev-card) hover:bg-surface-muted/40">
+      {cover ? (
+        <img src={cover} alt={item.cover?.alt ?? ""} className="aspect-[16/9] w-full object-cover" />
+      ) : (
+        <div className="flex aspect-[16/7] items-center justify-center bg-surface-muted" aria-hidden="true">
+          <TileIcon name="lessons" className="size-16" />
+        </div>
+      )}
+      <div className="space-y-1.5 p-5">
+        <p className="text-meta font-semibold text-primary">{eyebrow}</p>
+        <h2 className="font-display text-2xl font-semibold leading-snug text-text">{item.title}</h2>
+        <p className="text-meta text-text-secondary">{[day ? formatDay(day) : null, who || null, item.series?.title].filter(Boolean).join(" · ")}</p>
+        {item.summary ? <p className="text-text-secondary line-clamp-3">{item.summary}</p> : null}
+        <p className="flex flex-wrap gap-3 pt-1 text-meta font-semibold text-text">
+          {item.media?.video ? (
+            <span className="inline-flex items-center gap-1">
+              <Film className="size-4" aria-hidden="true" /> Watch
+            </span>
+          ) : null}
+          {item.media?.audio ? (
+            <span className="inline-flex items-center gap-1">
+              <Headphones className="size-4" aria-hidden="true" /> Listen
+            </span>
+          ) : null}
+          {durationLabel(item.media?.duration_seconds) ? <span className="text-text-secondary">{durationLabel(item.media?.duration_seconds)}</span> : null}
+        </p>
+      </div>
+    </Link>
+  );
+}

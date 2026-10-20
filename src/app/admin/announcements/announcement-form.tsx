@@ -84,7 +84,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
       <FormMessage state={state} />
       {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
 
-      <div className="space-y-6 rounded-card bg-surface p-5 sm:p-6">
+      <div className="space-y-6 rounded-card border border-border bg-surface p-5 sm:p-6">
         <TextField label="Title" name="title" required maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} error={fe.title} />
 
         <div className="space-y-2">
@@ -140,8 +140,8 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
           </div>
           <div id={`${tabsId}-preview-panel`} role="tabpanel" aria-labelledby={`${tabsId}-preview-tab`} hidden={tab !== "preview"} tabIndex={0}>
             <div className="rounded-control border border-border bg-background p-4 sm:p-6">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Preview as members will see it</p>
-              <article className="overflow-hidden rounded-card bg-surface">
+              <p className="mb-3 text-meta font-semibold text-text-secondary">Preview as members will see it</p>
+              <article className="overflow-hidden rounded-card border border-border bg-surface">
                 {imageUrl ? <img src={imageUrl} alt={imageAlt} className="aspect-[16/9] w-full object-cover" /> : null}
                 <div className="p-5">
                   <div className="mb-2 flex flex-wrap gap-2">
@@ -162,7 +162,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <fieldset className="space-y-4 rounded-card bg-surface p-5 sm:p-6">
+        <fieldset className="space-y-4 rounded-card border border-border bg-surface p-5 sm:p-6">
           <legend className="float-left mb-2 w-full text-xl font-bold">Image</legend>
           <div className="clear-both space-y-4">
             {imageUrl ? <img src={imageUrl} alt="" className="aspect-[16/9] w-full rounded-control bg-surface-muted object-cover" /> : null}
@@ -170,7 +170,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
               <label htmlFor="field-image" className="block font-semibold">
                 {initial.imageUrl ? "Replace image" : "Add an image"} <span className="font-normal text-text-secondary">(optional)</span>
               </label>
-              <p id="field-image-hint" className="text-[0.95rem] text-text-secondary">PNG, JPEG, or WebP, up to 4 MB. Wide images work best.</p>
+              <p id="field-image-hint" className="text-meta text-text-secondary">PNG, JPEG, or WebP, up to 4 MB. Wide images work best.</p>
               <input
                 id="field-image"
                 name="image"
@@ -183,7 +183,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
                   setFilePreview(f ? URL.createObjectURL(f) : null);
                   if (f) setRemoveImage(false);
                 }}
-                className="block w-full text-[0.95rem] file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-border-strong file:bg-surface file:px-4 file:font-semibold hover:file:bg-primary-soft"
+                className="block w-full text-meta file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-border-strong file:bg-surface file:px-4 file:font-semibold hover:file:bg-primary-soft"
               />
               {fe.image ? (
                 <p id="field-image-error" className="font-medium text-danger">
@@ -210,7 +210,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
           </div>
         </fieldset>
 
-        <fieldset className="space-y-4 rounded-card bg-surface p-5 sm:p-6">
+        <fieldset className="space-y-4 rounded-card border border-border bg-surface p-5 sm:p-6">
           <legend className="float-left mb-2 w-full text-xl font-bold">Audience and timing</legend>
           <div className="clear-both space-y-5">
             <fieldset>
@@ -233,7 +233,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
                     />
                     <span>
                       <span className="block font-semibold">{label}</span>
-                      <span className="block text-[0.95rem] text-text-secondary">{hint}</span>
+                      <span className="block text-meta text-text-secondary">{hint}</span>
                     </span>
                   </label>
                 ))}
@@ -263,7 +263,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
         </fieldset>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 rounded-card bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-end gap-3 rounded-card border border-border bg-surface p-4">
         <span className="mr-auto flex items-center gap-2 text-text-secondary">
           Current state: <AnnouncementStatusBadge status={initial.effective} />
         </span>

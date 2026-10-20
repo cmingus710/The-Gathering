@@ -11,6 +11,7 @@ import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/time";
+import { DirectoryBadge } from "./directory-badge";
 import { StatusControls } from "./member-controls";
 
 export const metadata: Metadata = { title: "Members" };
@@ -30,6 +31,7 @@ type Row = {
   membership_status: "pending" | "approved" | "suspended";
   created_at: string;
   user_roles: Array<{ role_key: string; roles: { name: string } | null }>;
+  member_profile_details?: { directory_listed: boolean } | null;
 };
 
 export default async function MembersPage({ searchParams }: PageProps<"/admin/members">) {
@@ -40,9 +42,14 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
   const supabase = await requireClient();
   const { settings } = await getChurchSettings();
 
+  const canManage = viewer.capabilities.has(CAPABILITIES.membersManage);
+  // Directory visibility is part of the private details, readable only with members.manage.
+  const columns =
+    "id, email, full_name, preferred_name, membership_status, created_at, user_roles!user_roles_user_id_fkey(role_key, roles(name))" +
+    (canManage ? ", member_profile_details(directory_listed)" : "");
   let query = supabase
     .from("profiles")
-    .select("id, email, full_name, preferred_name, membership_status, created_at, user_roles!user_roles_user_id_fkey(role_key, roles(name))")
+    .select(columns)
     .order("created_at", { ascending: filter === "pending" })
     .limit(200);
   if (filter !== "all") query = query.eq("membership_status", filter);
@@ -51,11 +58,10 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
     query = query.or(`full_name.ilike."%${term}%",preferred_name.ilike."%${term}%",email.ilike."%${term}%"`);
   }
   const { data, error } = await query.returns<Row[]>();
-  const canManage = viewer.capabilities.has(CAPABILITIES.membersManage);
 
   return (
     <>
-      <PageHeader title="Members" description="Review registrations and manage member access." />
+      <PageHeader title="Members" description="Review registrations, manage member access, and correct profile details. Everyone is listed here, including members hidden from the directory." />
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <nav aria-label="Filter members by status" className="-mx-1 overflow-x-auto px-1">
           <ul className="flex gap-1.5">
@@ -106,14 +112,14 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
             const name = m.preferred_name || m.full_name || m.email;
             const isSelf = m.id === viewer.id;
             return (
-              <li key={m.id} className="rounded-card bg-surface p-4 sm:p-5">
+              <li key={m.id} className="rounded-card border border-border bg-surface p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link href={`/admin/members/${m.id}`} className="group inline-flex items-center gap-1 font-semibold hover:underline">
                       {name}
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </Link>
-                    <p className="break-all text-[0.95rem] text-text-secondary">{m.email}</p>
+                    <p className="break-all text-meta text-text-secondary">{m.email}</p>
                     <p className="text-sm text-text-secondary">Registered {formatDate(m.created_at, settings.timezone)}</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -121,6 +127,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
                     {m.user_roles.map((r) => (
                       <Badge key={r.role_key}>{r.roles?.name ?? r.role_key}</Badge>
                     ))}
+                    {canManage ? <DirectoryBadge status={m.membership_status} listed={m.member_profile_details?.directory_listed ?? true} /> : null}
                   </div>
                 </div>
                 {canManage && !isSelf ? (

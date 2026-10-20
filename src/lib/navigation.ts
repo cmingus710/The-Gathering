@@ -1,26 +1,27 @@
 import type { Capability } from "@/lib/auth/capabilities";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
+import type { IconName } from "@/lib/icons";
 
-export type IconName =
-  | "home"
-  | "announcements"
-  | "profile"
-  | "community"
-  | "prayer"
-  | "events"
-  | "grow"
-  | "media"
-  | "give"
-  | "directory"
-  | "dashboard"
-  | "members"
-  | "settings"
-  | "audit";
+export type { IconName };
+
+export type NavSection = "connect" | "church" | "learn" | "you";
+
+export const NAV_SECTIONS: Array<{ key: NavSection; label: string }> = [
+  { key: "church", label: "Church life" },
+  { key: "learn", label: "Teaching & media" },
+  { key: "connect", label: "Connect" },
+  { key: "you", label: "You" },
+];
 
 export type NavItem = {
   key: string;
   label: string;
+  /** Shorter label for the phone tab bar. */
+  shortLabel?: string;
   icon: IconName;
+  section: NavSection;
+  /** Live unread count shown beside the link. */
+  count?: "messages" | "notifications";
 } & ({ status: "available"; href: string } | { status: "upcoming"; phase: number });
 
 /**
@@ -28,31 +29,54 @@ export type NavItem = {
  * so members can see what is coming without hitting dead ends.
  */
 export const MEMBER_NAV: NavItem[] = [
-  { key: "home", label: "Home", icon: "home", status: "available", href: "/home" },
-  { key: "announcements", label: "Announcements", icon: "announcements", status: "available", href: "/announcements" },
-  { key: "profile", label: "Profile", icon: "profile", status: "available", href: "/profile" },
-  { key: "directory", label: "Directory", icon: "directory", status: "upcoming", phase: 2 },
-  { key: "give", label: "Give", icon: "give", status: "upcoming", phase: 3 },
-  { key: "events", label: "Events", icon: "events", status: "upcoming", phase: 4 },
-  { key: "community", label: "Community", icon: "community", status: "upcoming", phase: 5 },
-  { key: "prayer", label: "Prayer", icon: "prayer", status: "upcoming", phase: 6 },
-  { key: "media", label: "Media", icon: "media", status: "upcoming", phase: 7 },
-  { key: "grow", label: "Grow", icon: "grow", status: "upcoming", phase: 8 },
+  { key: "home", label: "Home", icon: "home", section: "church", status: "available", href: "/home" },
+  { key: "events", label: "Events", icon: "events", section: "church", status: "available", href: "/events" },
+  { key: "announcements", label: "Announcements", shortLabel: "News", icon: "announcements", section: "church", status: "available", href: "/announcements" },
+  { key: "give", label: "Give", icon: "giving", section: "church", status: "available", href: "/give" },
+  { key: "community", label: "Community", icon: "community", section: "connect", status: "available", href: "/community" },
+  { key: "groups", label: "Groups", icon: "groups", section: "connect", status: "available", href: "/groups" },
+  { key: "messages", label: "Messages", icon: "messages", section: "connect", status: "available", href: "/messages", count: "messages" },
+  { key: "directory", label: "Directory", icon: "directory", section: "connect", status: "available", href: "/directory" },
+  { key: "profile", label: "Profile", icon: "profile", section: "you", status: "available", href: "/profile" },
+  { key: "notifications", label: "Notifications", icon: "notifications", section: "you", status: "available", href: "/notifications", count: "notifications" },
+  { key: "prayer", label: "Prayer", icon: "prayer", section: "church", status: "available", href: "/prayer" },
+  { key: "devotionals", label: "Devotionals", icon: "devotionals", section: "learn", status: "available", href: "/devotionals" },
+  { key: "lessons", label: "Sunday lessons", icon: "lessons", section: "learn", status: "available", href: "/lessons" },
+  { key: "podcasts", label: "Podcasts", icon: "podcasts", section: "learn", status: "available", href: "/podcasts" },
+  { key: "reading", label: "Church reading", icon: "reading", section: "learn", status: "available", href: "/reading" },
+  { key: "music", label: "Music", icon: "music", section: "learn", status: "available", href: "/music" },
+  { key: "gallery", label: "Gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
+  { key: "media", label: "Search teaching & media", icon: "media", section: "learn", status: "available", href: "/media" },
+  { key: "saved", label: "Saved", icon: "media", section: "you", status: "available", href: "/saved" },
+  // Phase 8: Bible reading plans and the reader; journals are private to each member.
+  { key: "bible", label: "Bible reading", icon: "bible", section: "learn", status: "available", href: "/bible" },
+  { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },
 ];
 
-/** The small set shown in the phone tab bar; everything else lives under More. */
-export const MOBILE_PRIMARY_KEYS = ["home", "announcements", "profile"] as const;
+/**
+ * The phone tab bar: the four most-used destinations, then More. Profile is
+ * always one tap away from the avatar in the header, so it lives under More.
+ */
+export const MOBILE_PRIMARY_KEYS = ["home", "events", "community", "messages"] as const;
 
-export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[] };
+/** requires: all of these; anyOf: at least one of these (when given). */
+export type AdminNavItem = { key: string; label: string; href: string; icon: IconName; requires: Capability[]; anyOf?: Capability[] };
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  { key: "dashboard", label: "Dashboard", href: "/admin", icon: "dashboard", requires: [] },
+  { key: "dashboard", label: "Dashboard", href: "/admin", icon: "admin", requires: [] },
   {
     key: "members",
     label: "Members",
     href: "/admin/members",
-    icon: "members",
+    icon: "directory",
     requires: [CAPABILITIES.membersView],
+  },
+  {
+    key: "interests",
+    label: "Ministry interests",
+    href: "/admin/ministry-interests",
+    icon: "sprout",
+    requires: [CAPABILITIES.membersManage],
   },
   {
     key: "announcements",
@@ -61,12 +85,100 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: "announcements",
     requires: [CAPABILITIES.announcementsManage],
   },
+  {
+    key: "events",
+    label: "Events",
+    href: "/admin/events",
+    icon: "events",
+    requires: [CAPABILITIES.eventsManage],
+  },
+  {
+    key: "community",
+    label: "Community",
+    href: "/admin/community",
+    icon: "community",
+    requires: [CAPABILITIES.communityManage],
+  },
+  {
+    key: "moderation",
+    label: "Moderation",
+    href: "/admin/moderation",
+    icon: "moderation",
+    requires: [CAPABILITIES.communityModerate],
+  },
+  {
+    key: "content",
+    label: "Teaching content",
+    href: "/admin/content",
+    icon: "lessons",
+    requires: [],
+    anyOf: [CAPABILITIES.contentEdit, CAPABILITIES.contentPublish],
+  },
+  {
+    key: "media",
+    label: "Media library",
+    href: "/admin/media",
+    icon: "media",
+    requires: [],
+    anyOf: [CAPABILITIES.mediaManage, CAPABILITIES.contentEdit, CAPABILITIES.contentPublish, CAPABILITIES.podcastsManage],
+  },
+  {
+    key: "podcasts",
+    label: "Podcasts",
+    href: "/admin/podcasts",
+    icon: "podcasts",
+    requires: [CAPABILITIES.podcastsManage],
+  },
+  {
+    key: "gallery",
+    label: "Gallery",
+    href: "/admin/gallery",
+    icon: "gallery",
+    requires: [],
+    anyOf: [CAPABILITIES.galleryModerate, CAPABILITIES.eventsManage],
+  },
+  {
+    key: "bible-plans",
+    label: "Reading plans",
+    href: "/admin/bible",
+    icon: "bible",
+    requires: [],
+    anyOf: [CAPABILITIES.readingEdit, CAPABILITIES.readingPublish],
+  },
+  {
+    key: "bible-sources",
+    label: "Bible sources",
+    href: "/admin/bible/sources",
+    icon: "reading",
+    requires: [CAPABILITIES.bibleManage],
+  },
+  {
+    key: "prayer",
+    label: "Prayer reports",
+    href: "/admin/prayer",
+    icon: "prayer",
+    requires: [CAPABILITIES.prayerModerate],
+  },
+  {
+    key: "prayer-settings",
+    label: "Prayer settings",
+    href: "/admin/prayer/settings",
+    icon: "settings",
+    requires: [CAPABILITIES.settingsManage],
+  },
+  {
+    key: "finance",
+    label: "Giving",
+    href: "/admin/finance",
+    icon: "giving",
+    requires: [CAPABILITIES.financeView],
+  },
   { key: "settings", label: "Church settings", href: "/admin/settings", icon: "settings", requires: [CAPABILITIES.settingsManage] },
   { key: "audit", label: "Audit log", href: "/admin/audit", icon: "audit", requires: [CAPABILITIES.auditView] },
 ];
 
 export function adminNavFor(capabilities: ReadonlySet<Capability>): AdminNavItem[] {
-  return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)));
+  return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)) && (!item.anyOf || item.anyOf.some((c) => capabilities.has(c))));
 }
 
 export function isActivePath(pathname: string, href: string): boolean {

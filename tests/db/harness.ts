@@ -68,6 +68,15 @@ export class TestDb {
     }
   }
 
+  /** A separate connection to the same database (for concurrency tests). */
+  async connect(): Promise<Client> {
+    const url = new URL(TEST_DATABASE_URL!);
+    url.pathname = `/${this.name}`;
+    const client = new Client({ connectionString: url.toString() });
+    await client.connect();
+    return client;
+  }
+
   /** Superuser query (test setup only, bypasses RLS). */
   async raw<T extends Record<string, unknown> = Record<string, unknown>>(sql: string, params: unknown[] = []) {
     return (await this.client.query(sql, params)).rows as T[];

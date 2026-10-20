@@ -38,7 +38,7 @@ export function StatusControls({ userId, status, name, compact = false }: { user
         ) : null}
         {confirming ? (
           <div role="group" aria-label={`Confirm suspending ${name}`} className="flex w-full flex-wrap items-center gap-2 rounded-control bg-danger-soft p-3">
-            <p className="w-full text-[0.95rem]">
+            <p className="w-full text-meta">
               {name} will lose access to member areas until reinstated. Continue?
             </p>
             <SubmitButton name="status" value="suspended" size="sm" variant="danger" pendingText="Suspending…">
@@ -77,7 +77,7 @@ export function RoleControls({
                   {role.name}
                   {has ? <span className="ml-2 text-sm font-semibold text-success">· Assigned</span> : null}
                 </p>
-                <p className="text-[0.95rem] text-text-secondary">{role.description}</p>
+                <p className="text-meta text-text-secondary">{role.description}</p>
               </div>
               <form action={action}>
                 <input type="hidden" name="userId" value={userId} />

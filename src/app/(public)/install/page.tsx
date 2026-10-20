@@ -33,7 +33,7 @@ export default function InstallPage() {
       <div className="flex items-center gap-4">
         <IconBadge className="size-16" />
         <div>
-          <h1 className="text-3xl font-bold">Add The Gathering to your Home Screen</h1>
+          <h1 className="font-display text-3xl font-semibold">Add The Gathering to your Home Screen</h1>
           <p className="mt-1 text-text-secondary">It opens full-screen like an app, with no app store needed.</p>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function InstallPage() {
                 <li key={step}>{step}</li>
               ))}
             </ol>
-            {s.note ? <p className="mt-3 text-[0.95rem] text-text-secondary">{s.note}</p> : null}
+            {s.note ? <p className="mt-3 text-meta text-text-secondary">{s.note}</p> : null}
           </Card>
         ))}
       </div>

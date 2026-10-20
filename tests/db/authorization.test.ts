@@ -96,7 +96,7 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
     });
 
     it("refuses to assign roles reserved for later phases", async () => {
-      await expect(db.query(as(superAdmin), "select public.admin_grant_role($1, 'finance_admin')", [member])).rejects.toThrow(
+      await expect(db.query(as(superAdmin), "select public.admin_grant_role($1, 'group_leader')", [member])).rejects.toThrow(
         /cannot be assigned/,
       );
     });
@@ -126,15 +126,27 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
       expect(await caps(superAdmin)).toEqual([
         "announcements.manage",
         "audit.view",
+        "bible.manage",
+        "community.manage",
+        "community.moderate",
+        "content.edit",
+        "content.publish",
+        "events.manage",
+        "gallery.moderate",
+        "media.manage",
         "members.manage",
         "members.view",
+        "podcasts.manage",
+        "reading.edit",
+        "reading.publish",
         "roles.manage",
         "settings.manage",
       ]);
     });
 
     it("keeps content editing separate from membership and finance", async () => {
-      expect(await caps(editor)).toEqual(["announcements.manage"]);
+      // Phase 7: content editors also draft teaching content (never publish it).
+      expect(await caps(editor)).toEqual(["announcements.manage", "content.edit"]);
       const [r] = await db.query(as(editor), "select public.has_capability('finance.manage') f, public.has_capability('members.manage') m");
       expect(r).toEqual({ f: false, m: false });
     });
@@ -390,8 +402,9 @@ describeDb("database authorization (RLS, grants, privileged functions)", () => {
       await db.query(as(superAdmin), "insert into storage.objects (bucket_id, name) values ('branding', 'logo/x.png')");
     });
 
-    it("restricts both buckets to raster image types", async () => {
-      const buckets = await db.raw("select id, allowed_mime_types from storage.buckets order by id");
+    it("restricts the Phase 1 buckets to raster image types", async () => {
+      const buckets = await db.raw("select id, allowed_mime_types from storage.buckets where id in ('branding', 'announcement-images')");
+      expect(buckets).toHaveLength(2);
       for (const b of buckets) expect(b.allowed_mime_types).toEqual(["image/png", "image/jpeg", "image/webp"]);
     });
   });

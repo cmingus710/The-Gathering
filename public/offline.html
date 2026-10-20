@@ -3,19 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#121110" />
+    <meta name="theme-color" content="#F7F4ED" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)" />
     <title>You're offline · The Gathering</title>
     <style>
+      :root { color-scheme: light dark; --bg: #F7F4ED; --card: #FFFFFF; --text: #363430; --muted: #6B655B; --cta: #363430; --on-cta: #F7F4ED; --ring: #80642F; --line: #E6DECF; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #141311; --card: #1F1D1B; --text: #F7F4ED; --muted: #B8B1A4; --cta: #F7F4ED; --on-cta: #1C1B19; --ring: #C9AA72; --line: #36332F; }
+      }
       body { margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
-        background: #121110; color: #F7F4ED; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px; }
-      main { max-width: 26rem; text-align: center; background: #22201E; border-radius: 20px; padding: 32px 24px; }
+        background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px; }
+      main { max-width: 26rem; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 32px 24px; }
       .badge { display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%; background: #F7F4ED; }
       img { width: 52px; height: auto; }
-      h1 { font-size: 1.6rem; margin: 16px 0 8px; }
-      p { color: #B3AC9F; line-height: 1.6; margin: 0 0 20px; }
-      a { display: inline-block; min-height: 48px; line-height: 48px; padding: 0 24px; background: #F7F4ED; color: #1C1B19;
+      h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.6rem; margin: 16px 0 8px; }
+      p { color: var(--muted); line-height: 1.6; margin: 0 0 20px; }
+      a { display: inline-block; min-height: 48px; line-height: 48px; padding: 0 24px; background: var(--cta); color: var(--on-cta);
         border-radius: 999px; font-weight: 600; text-decoration: none; }
-      a:focus-visible { outline: 3px solid #AD8C53; outline-offset: 2px; }
+      a:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
     </style>
   </head>
   <body>
