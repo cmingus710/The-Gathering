@@ -111,6 +111,9 @@ export function PlanForm({ plan, options, timezones }: { plan: PlanFormValues | 
           </div>
         </>
       )}
+      {!plan?.id ? (
+        <p className="text-meta text-text-secondary">Next you&apos;ll add the days: one at a time, or all at once from an Excel workbook (.xlsx) or CSV with the dates and passages.</p>
+      ) : null}
       <SubmitButton pendingText="Saving…">{plan?.id ? "Save details" : "Create draft"}</SubmitButton>
     </form>
   );
