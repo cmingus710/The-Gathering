@@ -29,6 +29,9 @@ src/
     admin/prayer           prayer reports, settings, sensitive-access log (Phase 6)
     (member)/bible, journal  Bible reading plans, reader, bookmarks; My Journal (Phase 8)
     admin/bible            reading plans and Bible sources (Phase 8)
+    (member)/memory        memory home, assignment, collections, My Verses, practice, review,
+                           progress, settings, challenges; /memory/lead for authorized group leaders (Phase 9)
+    admin/memory           memory verse collections, assignments, preview, challenges (Phase 9)
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -75,6 +78,8 @@ Two independent axes:
 | Reading plan editor | `reading.edit` | yes (Phase 8) |
 | Reading plan publisher | `reading.edit`, `reading.publish` | yes (Phase 8) |
 | Bible source manager | `bible.manage` | yes (Phase 8) |
+| Memory verse editor | `memory.manage` | yes (Phase 9) |
+| Memory verse publisher | `memory.manage`, `memory.publish` | yes (Phase 9) |
 | Youth leader | `youth.lead` (reserved) | Phase 10 |
 
 `settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, or `care.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
@@ -436,6 +441,43 @@ Category `reading` (`reading_reminder`, `reading_plan_changed`) on the Phase 5�
 ### Pages and caching
 
 Members: `/bible` (hub), `/bible/today`, `/bible/plans/<id>` (+ `/catch-up`), `/bible/day/<id>`, `/bible/read/<code>/<book>/<chapter>`, `/bible/bookmarks`, `/journal`, `/journal/new`, `/journal/<id>`; home shows a compact Today's Reading card only for an active plan. Staff: `/admin/bible` (plans, days, preview, import, change log), `/admin/bible/sources` (translations, imports, review, PDFs). `/bible`, `/journal`, `/api/journal/*`, `/api/bible/*` are protected, `private, no-store`, and not cached by the service worker; journal page titles are generic.
+
+## Scripture memory and practice (Phase 9)
+
+Guides: [memory-admin-guide.md](memory-admin-guide.md) (administration, permission matrix), [memory-member-guide.md](memory-member-guide.md) (members), [memory-scoring.md](memory-scoring.md) (scoring, review schedule, badges), [memory-privacy.md](memory-privacy.md) (privacy, challenge sharing, withdrawal, Phase 10 integration).
+
+### Storage and access
+
+One private schema, `memory` (no Data API exposure, no privileges for `anon`/`authenticated`, RLS on with no policies), reached only through `SECURITY DEFINER` functions: `memory_*` (members, owner-only), `memory_admin_*` (staff and authorized leaders), `memory_challenge*` (participants and organizers). Every function rechecks the caller; every `UPDATE`/`DELETE` has a `WHERE` clause.
+
+| Area | Tables |
+| --- | --- |
+| Scripture | `passages` (a captured version of one reference in one stored-text translation: exact verse text, tokens with spacing/line-break flags, practice segments at 32 and 16 words, text version, SHA-256 content hash, `superseded_by`) |
+| Content | `collections` (audience members/group/personal, one translation, kind collection/sequence, draft/published/archived, `publish_at` for scheduling, goal, cover), `items` (stable id, passage version, position, editorial title/note/hint, assignment window, retired), `item_versions` (text updates with reasons), `group_authorizations` |
+| Member data | `member_settings` (difficulty, presentation, typing rules, celebrations, daily goal, time zone, pause, reminders), `cards` (one per member per passage version: step 0–7, due date, best step, sessions), `sessions` (server-chosen setup, hints, reveal, single submission with stored result, 1-day expiry), `attempts` (completed, accuracy, hints, confidence, quality, steps before/after, local date), `awards` |
+| Challenges | `challenges` (group, collection, dates, shared goal, threshold), `challenge_participants` (joined, sharing, left), `challenge_milestones` |
+
+**Capabilities** `memory.manage`, `memory.publish` via roles `memory_verse_editor`, `memory_verse_publisher` (super administrators implicitly). Authorized group leaders (`memory.leader_authorized`: a publisher-authorized group + active Phase 5 leadership) act as publishers for their groups' collections and challenges only. None of these reaches cards, sessions, attempts, settings, or awards.
+
+**Visibility.** `memory.collection_visible`: published and `publish_at` passed, translation still active, and in the audience (approved members, or the group's active adult members); personal collections only to their owner. Archived collections leave browsing; cards keep their history.
+
+### Scripture
+
+Passages come only from the Phase 8 `bible.verses` of an active `database` translation (API text may not be stored, and scoring needs the exact wording on the server). `memory.capture_passage` validates the reference (explicit verses, at most 30 verses / 900 words, omitted verses excluded), hashes the text, and reuses or creates a version; a newer text marks older versions superseded but never changes them. Display uses the stored verses with the translation label and attribution (`ScriptureText`/`Attribution` from Phase 8). Editorial fields live on `items`, never in passage text.
+
+### Practice, scoring, and scheduling
+
+`memory_session_start` builds the activity on the server (`memory.build_setup`: blanks, choice bank without ambiguous duplicates, shuffled pieces with random ids, typing rules) and returns only what may be shown; answers for typing, flashcards, and self-check are fetched by `memory_session_reveal` or returned after submission. Hints are counted in `memory_session_hint`. `memory_session_submit` scores (`score_typed` with LCS alignment, `score_blanks`, `score_order`), records an attempt, applies the schedule (`interval_for`, one change per verse per day), and awards badges idempotently, all in one transaction under a row lock; a retried submission returns the stored result. Details: [memory-scoring.md](memory-scoring.md).
+
+The browser (`src/components/memory/practice/*`) posts to `/api/memory/sessions` and `/api/memory/sessions/<id>` (401/404/409/410/429/503, `private, no-store`, bodies never logged) through `SubmissionQueue` (`src/lib/memory/submit.ts`): "Saved" only after the server confirms; retries with backoff; offline waits; signed-out and expired states keep the answer on the page. No browser storage. Focus moves to the result heading after checking; hidden words are empty boxes with no text in the DOM.
+
+### Notifications and scheduling
+
+Category `memory` (`memory_weekly_verse`, `memory_review_due`, `memory_practice_reminder`, `memory_challenge_milestone`) on the Phase 5–8 notification system; the community functions are regenerated from the Phase 8 definitions with asserted edits. `memory.tick()` runs inside `community.tick()` under its advisory lock: for members with a reminder switched on and not paused, at or after their local reminder time and less than 3 hours late, once per local date per kind (`last_*_on` under a row lock, date in the merge key); a review reminder replaces the practice reminder that day. Milestones are recorded once per challenge (`challenge_milestones`). `notification_visible` rechecks choices, pause, collection visibility, and participation on every read and delivery claim. Email/push text is generic. Losing group membership or approval ends challenge participation (triggers) and drops unread memory notices.
+
+### Pages and caching
+
+Members: `/memory`, `/memory/assignment`, `/memory/collections` (+ `/new`, `/<id>`), `/memory/verses` (+ `/add`, `/<id>`), `/memory/practice/<id>`, `/memory/review`, `/memory/progress`, `/memory/settings`, `/memory/challenges/<id>`, `/memory/lead/*` (authorized leaders); the home shows a compact memory card only while a verse is assigned. Staff: `/admin/memory/*` (shared components in `src/components/memory/manage`). `/memory` and `/api/memory/*` are protected, `private, no-store`, and not cached by the service worker.
 
 ## Announcements
 

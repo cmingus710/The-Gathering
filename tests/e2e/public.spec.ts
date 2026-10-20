@@ -177,6 +177,27 @@ for (const path of [
   "/admin/bible/plans/00000000-0000-0000-0000-000000000000",
   "/admin/bible/sources",
   "/admin/bible/sources/imports/00000000-0000-0000-0000-000000000000",
+  // Phase 9 (scripture memory, practice, challenges, and their management)
+  "/memory",
+  "/memory/assignment",
+  "/memory/collections",
+  "/memory/collections/new",
+  "/memory/collections/00000000-0000-0000-0000-000000000000",
+  "/memory/verses",
+  "/memory/verses/add",
+  "/memory/verses/00000000-0000-0000-0000-000000000000",
+  "/memory/practice/00000000-0000-0000-0000-000000000000",
+  "/memory/review",
+  "/memory/progress",
+  "/memory/settings",
+  "/memory/challenges/00000000-0000-0000-0000-000000000000",
+  "/memory/lead",
+  "/memory/lead/collections/new",
+  "/admin/memory",
+  "/admin/memory/collections/new",
+  "/admin/memory/collections/00000000-0000-0000-0000-000000000000",
+  "/admin/memory/collections/00000000-0000-0000-0000-000000000000/preview",
+  "/admin/memory/challenges/new",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -421,4 +442,29 @@ test("journal and Bible APIs refuse signed-out visitors without a cacheable answ
 test("the service worker never caches Bible reading or journal pages", async ({ request }) => {
   const sw = await (await request.get("/sw.js")).text();
   for (const p of ["/bible", "/journal", "/api/journal"]) expect(sw).not.toContain(p);
+});
+
+test("memory practice APIs refuse signed-out visitors without a cacheable answer", async ({ request }) => {
+  const id = "00000000-0000-0000-0000-000000000000";
+  const start = await request.post("/api/memory/sessions", { data: { card_id: id, activity: "type_verse", difficulty: "guided", segment: 0 } });
+  expect([401, 503]).toContain(start.status());
+  expect(start.headers()["cache-control"]).toContain("no-store");
+  const submit = await request.post(`/api/memory/sessions/${id}`, { data: { action: "submit", text: "Synthetic answer" } });
+  expect([401, 503]).toContain(submit.status());
+  expect(submit.headers()["cache-control"]).toContain("no-store");
+  expect(await submit.text()).not.toContain("Synthetic answer");
+  const exp = await request.get("/api/memory/export", { maxRedirects: 0 });
+  expect([401, 503]).toContain(exp.status());
+  expect(exp.headers()["cache-control"] ?? "").not.toContain("public");
+  expect((await request.post("/api/memory/sessions/not-an-id", { data: { action: "reveal" } })).status()).toBe(404);
+});
+
+test("memory pages are never publicly cacheable and never cached by the service worker", async ({ request }) => {
+  for (const path of ["/memory", "/memory/review", "/memory/progress"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"], path).toContain("private");
+    expect(res.headers()["cache-control"], path).toContain("no-store");
+  }
+  const sw = await (await request.get("/sw.js")).text();
+  for (const p of ["/memory", "/api/memory"]) expect(sw).not.toContain(p);
 });

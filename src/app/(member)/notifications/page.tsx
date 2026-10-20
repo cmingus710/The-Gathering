@@ -1,4 +1,4 @@
-import { Bell, BookOpen, BookOpenCheck, CalendarDays, HandHeart, HandHelping, Images, MessageCircle, MessagesSquare, Settings, ShieldAlert, UsersRound } from "lucide-react";
+import { Bell, BookMarked, BookOpen, BookOpenCheck, CalendarDays, HandHeart, HandHelping, Images, MessageCircle, MessagesSquare, Settings, ShieldAlert, UsersRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LiveRefresh } from "@/components/community/live-refresh";
@@ -24,6 +24,7 @@ const ICON = {
   teaching: BookOpen,
   gallery: Images,
   reading: BookOpenCheck,
+  memory: BookMarked,
 } as const;
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {

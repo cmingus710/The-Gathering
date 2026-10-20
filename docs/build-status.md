@@ -1,6 +1,146 @@
 # Build status
 
-Last updated: 2026-10-26 · Phase 8 branch `phase-8/bible-reading-journals` (also pushed as `claude/dreamy-babbage-an0yog`), stacked on Phase 7 (`phase-7/teaching-media`, which contains Phases 2–6, design PR #9, and the home redesign) · PR [#13](https://github.com/cmingus710/The-Gathering/pull/13) (draft)
+Last updated: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also pushed as `claude/phase-9-scripture-memory-ns026j`), based on `main` after PR #14 (Phases 2–8, member redesign, sign-in redesign) plus the Phase 8 follow-up `b93b514` (`20261026000700`, already applied on the hosted project but not yet in `main`) · merged into `main` by PR [#15](https://github.com/cmingus710/The-Gathering/pull/15) (production builds still paused)
+
+## Phase 9: Scripture memory and practice
+
+### Summary
+
+Phase 9 code is complete and verified locally, including a signed-in walkthrough of the real app against the real migrations. Nothing was duplicated or lost: the branch started from the Phase 8 head, then merged `main` (#14 and the sign-in redesign) and the newer Phase 8 follow-up cleanly. Production builds stay paused; giving stays in Stripe test mode. Phase 10 hasn't started.
+
+**The hosted database is migrated for Phase 9 (2026-10-20).** The owner ran the five operator scripts in the SQL editor; the history lists `20261027000100`…`000500` (`created_by = phase-9`) and `supabase/tests/memory-fingerprint.sql` on the hosted project matches the fresh-build digests in all 15 categories. A database-level hosted walkthrough passed and its `[TEST]` data was removed (below). A walkthrough in the browser while signed in as the test accounts is still to do (I can't sign in as them).
+
+Guides: [memory-admin-guide.md](memory-admin-guide.md) (administration, permission matrix), [memory-member-guide.md](memory-member-guide.md) (members), [memory-scoring.md](memory-scoring.md) (scoring, review schedule, badges), [memory-privacy.md](memory-privacy.md) (privacy, challenge sharing, withdrawal, Phase 10). Design: [architecture.md](architecture.md#scripture-memory-and-practice-phase-9).
+
+### What was built and where
+
+| Area | Where |
+| --- | --- |
+| Memory Verses tile live with the supplied art (after Bible Reading); "Memory verses" in the menus | home launcher, `src/lib/navigation.ts` |
+| Home memory card, only while a verse is assigned (no results shown) | `/home` |
+| Memory home: current verse, today's reviews and goal, recent verses, challenges, leading links | `/memory` |
+| Current assignment with exact text, translation, attribution, church note, goal; coming up; earlier | `/memory/assignment` |
+| Collections: church, group, and private personal ones | `/memory/collections`, `/memory/collections/<id>`, `/memory/collections/new` |
+| My Verses; add from the approved source with an exact-text preview; verse detail (schedule, history, version decision, remove/restore/delete, add to my collection) | `/memory/verses`, `/memory/verses/add`, `/memory/verses/<id>` |
+| Practice: the six activities, three difficulties, parts for long passages, kids presentation, saved-state handling | `/memory/practice/<id>` |
+| Review queue (due today in the member's time zone, upcoming two weeks), progress and badges with "how progress works" | `/memory/review`, `/memory/progress` |
+| Practice settings, reminders, pause, download, delete history | `/memory/settings` |
+| Opt-in group challenges | `/memory/challenges/<id>` |
+| **Management** (staff): collections, verses and assignments, multiweek sequences, covers, publish/schedule/archive/restore/duplicate/delete, text updates, preview, group-leader authorization, challenges | **Admin → Memory verses** `/admin/memory/*` |
+| **Management** (authorized group leaders, their groups only) | `/memory/lead/*` |
+| Notifications: `memory` category, generic email/push | `/notifications/settings` |
+
+### Scripture source
+
+The approved Phase 8 source: stored-text translations only (WEB and ASV, both public domain, labelled with their codes and attribution). Each memory item keeps the translation, book/chapter/verse range, exact text, attribution, a stable reference key, and a content version (text version + SHA-256 hash). API.Bible translations are refused for memory practice (their text may not be stored, and scoring needs it server-side). Editorial titles, notes, and hints are separate from the text. Local verification used the WEB excerpt fixture (`tests/fixtures/bible/web-sample.csv`); the hosted project has the full WEB and ASV.
+
+### Activities and scoring (summary)
+
+Read & repeat (progressive hiding, not scored) · Flashcards (reference ↔ verse, self-assessed after flipping) · Missing words (choices without ambiguous duplicates in Guided/Growing, typed in Challenge) · Word order (tap/keyboard, no dragging; identical pieces interchangeable, each with its own id) · Type the verse (word-by-word alignment; case and punctuation configurable; contractions never expanded; verse numbers and the reference set aside; the member's text kept beside the comparison) · Self-check (reference only, reveal, self-assessment; no microphone or voice scoring). Accuracy, hints, confidence, completion, and review step are recorded separately; strong recall requires every word with no hints. Full rules: [memory-scoring.md](memory-scoring.md).
+
+### Review schedule and progress definitions
+
+Steps 0–7 with reviews after 0, 1, 2, 4, 7, 14, 30, 60 days, in the member's own calendar; one change per verse per day; early reviews don't move it; a hard day eases back one step; missed days never lower anything. Stages: New, Learning (steps 1–2), Reviewing (3–5), Well known (6–7). Review-ready = reached step 3 (three separate review days); never "mastered". Progress shows verses practiced, review-ready verses, practice activities (total and 7 days), days practiced in the last 28 (no streaks), collection progress, and badges.
+
+### Permission model
+
+| | Editor | Publisher | Authorized group leader | Super admin | Others (incl. household, other staff) |
+| --- | --- | --- | --- | --- | --- |
+| Draft/edit church & group collections | ✓ | ✓ | their groups | ✓ | — |
+| Publish, schedule, archive, text updates | — | ✓ | their groups | ✓ | — |
+| Authorize group leaders | — | ✓ | — | ✓ | — |
+| Run challenges | — | any group | their groups | ✓ | — |
+| See anyone's practice, results, schedule, badges, settings, personal collections | — | — | — | — | — |
+
+### Required configuration (no secret values)
+
+- Database: run `supabase/manual/2026-10-27-apply-memory-1.sql` … `-5.sql` in order; compare with `supabase/tests/memory-fingerprint.sql` (expected digests in [migration-history.md](migration-history.md#phase-9-2026-10-27)) and re-run the earlier fingerprints against a fresh build.
+- Roles: assign **Memory verse editor** / **Memory verse publisher** at Administration → Members; authorize group leaders at Administration → Memory verses if wanted.
+- No new environment variables, buckets to create by hand, or scheduler changes (reminders run in `community.tick()`; email still needs the existing job secret on the designated deployment).
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build (every route dynamic), **707 Vitest tests** (59 files, run serially; 63 in `tests/db/memory.test.ts` against PostgreSQL 16 built from all 44 migrations; 11 new unit tests), and **266 Playwright tests** (desktop and Pixel 7; 44 new). `tests/db/safeupdate.test.ts` covers every Phase 9 function. Earlier-phase suites pass (one expectation updated: super administrators also hold the two memory capabilities; one launcher expectation: the Memory Verses tile is live).
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `memory` schema closed to clients; pending/suspended refused; editor drafts but can't publish; publisher publishes; content editor, plan publisher, unauthorized leader get no admin; client keys idempotent; audit without content |
+| Scripture | John 3:16–17 captured exactly with code, attribution, ref key, version; editorial text separate; poetry lines kept; long passages split into parts summing to the whole; >30 verses, missing verses, verse-less ranges, API translations refused; omitted verse (Acts 8:37) left out and noted; member preview saves nothing |
+| Collections | Current assignment and home card (none without one; no text on the card); scheduled hidden until time; archive hides; group audience only for group members; leader authorized for one group only, never church-wide or another group, revocable; personal collections invisible to others and staff; duplicate → draft; delete only unused drafts; sequence dates; reorder keeps ids; window validation |
+| Activities | All six start and submit; flashcard and self-check text only after reveal; missing-word blanks carry no answers, unique choices, case-insensitive by default, wrong answers marked; word order with repeated "the world" accepted in either order, incomplete/duplicate orders refused, hint points to first misplaced position; typed text never sent before submission |
+| Scoring | Case and punctuation tolerance only when configured; straight vs curly apostrophes equal; contraction expanded not accepted; Unicode NFC/NFD and Greek; verse numbers and reference set aside with the member's text preserved; missing/extra/changed marks and exact accuracy; hints counted on the server lower the result; long passages require parts; kids parts shorter |
+| Safety | Retried submission returns the same result with one attempt; two connections submitting at once record one; expired → status, removed card → conflict, nothing recorded; nobody else can start/hint/reveal/submit; rate limit |
+| Schedule | New verses due today; strong recall advances once per day; early reviews don't move; partial keeps step; hard day eases one step without losing review-ready; overdue verses advance normally; time zones decide "today" (Kiritimati vs Pago Pago); learning activity moves a new verse to step 1 only |
+| Badges & progress | Awarded once; Explorer after six activities and not again; separate measures, no "mastery" |
+| Privacy | Household member, super admin, publisher, editor, leader: not found for another member's verse, can't delete it, not in their lists; admin collection view has no result fields; export is owner-only and omits text when the license doesn't allow export |
+| Challenges | Only publishers/authorized leaders; threshold ≥ 3; visible only to the group; explicit opt-in; hidden below threshold; pre-join practice excluded; rounded totals with no names; leaders see the same; pause/resume (from now), leave, losing the group, and suspension remove contributions; reinstated members must rejoin |
+| Versions | Re-import changes text → update notice; switching creates a fresh card and keeps the old one's history as "earlier text"; collection text update needs a publisher and a reason; practice continues on the earlier text until the member chooses |
+| Deletion | Remove/restore keep history; delete needs confirmation, removes attempts, keeps the passage; delete-all needs the typed phrase and removes cards, awards, personal collections; account deletion removes everything |
+| Reminders | Nothing unless asked; one review reminder a day with generic email text and one email; paused hidden; suspension drops unread; weekly verse once with in-app reference and generic email; milestones once, only to sharing participants who asked; two overlapping scheduler runs → one practice reminder |
+| Units | Submission queue (saved only on confirmation, backoff, final outcomes, max attempts, offline wait, single flight, HTTP mapping); wording (review dates across DST, non-shaming explanations) |
+| Browser (signed out) | Redirects for 20 Phase 9 routes; `/memory/*` `private, no-store`; memory APIs refuse without caching or echoing answers; the service worker caches none of it |
+
+**Local signed-in walkthrough** (real app build against a local stand-in for the Supabase HTTP API over the real migrations; 47 checks, all passing): an administrator created, filled (John 3:16–17, Psalm 23:1–6, Genesis 1:1), sequenced, previewed, and published a `[TEST]` collection; a member saw the live tile and home card, started the assignment, and completed all six activities on a phone (light) and desktop (dark), with "Saved" only after confirmation and focus moving to the result; hidden text absent from the page before reveal; repeated words ordered either way; the typed answer kept beside the comparison; kids presentation at 200% text without sideways scrolling; keyboard-only word order with screen-reader announcements; a dropped connection retried to "Saved"; a signed-out submission kept the answer and saved on retry; a household member and an administrator got "not found" for the member's verse. The walk found and fixed two bugs: repeated field ids in the collection editor (labels pointed at the wrong inputs) and a publish message that vanished after publishing.
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Branches pushed | `phase-9/scripture-memory` and `claude/phase-9-scripture-memory-ns026j` |
+| Preview build `16ec916` (`dpl_3Ajd1vk74hXuwJ9tnjBw4BBXXd1C`) | **Ready**: `https://the-gathering-o1072onrg-paint-by-number.vercel.app` (Vercel Authentication required) |
+| Signed-out `/memory/review` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
+| Production deploys from `main` | Unchanged (paused); nothing merged by this phase |
+| Hosted migration history | **Applied** (owner, SQL editor): 44 versions, latest `20261027000500`; memory fingerprint equal to a fresh build in all 15 categories |
+
+### Hosted walkthrough (database level, 2026-10-20)
+
+Run on the hosted project through the real `memory_*` functions as each authorized test account (role `authenticated` with that account's JWT claims, exactly what the app sends), using `[TEST]` content. Accounts: A `robtwebb@me.com` (super administrator), B `breaktwomusic@gmail.com` (approved member of `[TEST] Synthetic Public Group`), C `rob@justlovecorp.com` (teaching staff, no memory roles).
+
+| Check | Result |
+| --- | --- |
+| A creates `[TEST] Phase 9 walkthrough` (WEB, sequence) with John 3:16–17 (assigned this week), Psalm 23:1–6, Romans 8:28, and publishes | Pass |
+| Captured text equals the hosted WEB verses exactly for all three passages; reference keys and source-current checks correct; Psalm 23 split into 5 parts (10 for kids) | Pass |
+| C (other staff) refused memory administration; B can't archive A's collection ("not found"); clients can't read the `bible` schema directly | Pass |
+| B: home card shows the reference and collection only (no verse text); adding the assignment creates a new verse due today | Pass |
+| B completes all six activities; each saved; typing scored 100% with the typed verse number set aside; no answers in the typing, flashcard, or self-check setups; the schedule changes at most once that day; badges First steps, Recited, Explorer awarded once | Pass |
+| Retried submission returns the stored result (`replayed`), no extra attempt | Pass |
+| A (super administrator) and C get "not found" for B's verse; A's collection view has no accuracy or session fields | Pass |
+| A creates `[TEST] Phase 9 challenge` (threshold 3) for the group; C (not in the group) gets "not found"; B joins (totals stay hidden with one person sharing, no names), pauses sharing, leaves | Pass |
+| B switches on a review reminder; the scheduler (pg_cron → Phase 7 preview worker → `community.tick()`) created one `memory_review_due` at 21:05 UTC with the generic email title "You have memory verses ready to review", and the email was sent; three later runs added no duplicate | Pass |
+| Cleanup: B deleted their practice history through `memory_history_delete`, reminders off; the `[TEST]` challenge, collection, unused passage captures, B's memory settings, the test notice, and memory rate events removed. All memory tables are empty again; no roles were granted or left over | Done |
+
+Not covered on hosted (covered by the local suites): text-version changes (would need editing hosted scripture), challenge totals above the threshold (the group has two members), household denial (no shared household between test accounts), browser rendering signed in.
+
+**Outstanding configuration found:** the hosted WEB and ASV translations have empty attribution text, so pages show only the code and name (for example "WEB · World English Bible"). A Bible source manager should add the attribution wording at Administration → Bible sources (Phase 8 setting; see bible-sources.md).
+
+### Known limitations (Phase 9)
+
+- **Signed-in browser walkthrough on the hosted preview** not done (needs signing in as the test accounts); the database-level hosted walkthrough passed.
+- **Hosted WEB/ASV attribution text is empty** (Phase 8 configuration).
+- **API.Bible translations** can't be memorized (stored text is required for server-side scoring); none is configured anyway.
+- **Hints are counted on the server, but read & repeat "show every word" is reported by the device** (it's an unscored learning activity).
+- **Self-check and flashcards** record the member's own judgment and prove nothing; no audio, microphone, or voice scoring (by design).
+- **Challenge totals** are rounded and delayed a day; a determined observer of a small group could still guess roughly (documented in memory-privacy.md).
+- **Phone push** for reminders arrives with Phase 12 (web push and email work now; VAPID keys still unset on previews).
+- **Family/youth challenges, child profiles, and guardian access** are Phase 10 (integration points in memory-privacy.md).
+- **No offline practice**: the server chooses each activity, so starting one needs a connection (answers survive a dropped connection).
+
+### Still open from earlier phases
+
+- **Phase 8:** follow-up `20261026000700` is applied on the hosted project but its branch commit (`b93b514`) isn't in `main` yet (this PR includes it); hosted walkthrough; API.Bible not configured.
+- **Phase 7:** scheduler handover script (`events.settings.job_url`), hosted walkthrough, feed refresh, email/push for teaching and gallery, device and provider embed checks.
+- **Phase 6:** hosted walkthrough; prayer/care notification email on hosted.
+- **Phase 5:** hosted walkthrough; VAPID keys not set (push off); push on a device.
+- **Giving on later previews:** Stripe variables are scoped to the Phase 3 branch, so Give shows as not configured.
+- **Phase 4:** .ics import into calendars, private feed subscription, month grid on a phone, screen reader pass.
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; Deployment Protection decision; test subscription and open test dispute in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical devices, VoiceOver/TalkBack, production configuration (deliberately not done).
+- **Design:** `design/section-tiles` (section header banners and tile hubs) is unmerged and not included here.
+
+---
+
+# Phase 8 build status
 
 ## Phase 8: Bible reading plans, scripture reader, and private journals
 
@@ -8,7 +148,7 @@ Last updated: 2026-10-26 · Phase 8 branch `phase-8/bible-reading-journals` (als
 
 Phase 8 code is complete and verified locally. It starts from the head of `phase-7/teaching-media` (`71728f2`), the newest integrated work, which already includes `main`; nothing was duplicated or lost. None of the earlier PRs is merged, so PR #13 into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused; giving stays in Stripe test mode. Phase 9 hasn't started.
 
-**The hosted database is migrated for Phase 8 (2026-10-20).** The owner ran the six operator scripts in the SQL editor; the migration history lists `20261026000100`…`000600`, and `supabase/tests/bible-fingerprint.sql` on the hosted project matches the fresh-build digests in all 16 categories. Next: import the WEB and ASV texts (Admin → Bible sources) and run the hosted walkthrough below.
+**The hosted database is migrated for Phase 8 (2026-10-20).** The owner ran the six operator scripts in the SQL editor; the migration history lists `20261026000100`…`000600`, and `supabase/tests/bible-fingerprint.sql` on the hosted project matches the fresh-build digests in all 16 categories. The WEB is imported, published, and active. A follow-up script, `supabase/manual/2026-10-26-apply-bible-7.sql`, fixes import timeouts seen on the hosted project (see migration-history.md); run it before importing more text. Next: import the ASV and run the hosted walkthrough below.
 
 Guides: [bible-sources.md](bible-sources.md) (translations, sources, rights, imports, PDFs), [reading-plan-guide.md](reading-plan-guide.md) (administration, CSV import, correction and versioning policy), [bible-reading-guide.md](bible-reading-guide.md) (members), [journal-privacy.md](journal-privacy.md) (privacy, export, deletion, retention). Design: [architecture.md](architecture.md#bible-reading-plans-scripture-reader-and-journals-phase-8).
 

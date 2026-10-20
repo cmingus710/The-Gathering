@@ -30,6 +30,8 @@ const PROTECTED_PREFIXES = [
   // Phase 8: Bible reading (progress, bookmarks, highlights) and journals.
   "/bible",
   "/journal",
+  // Phase 9: scripture memory (practice, progress, settings, challenges).
+  "/memory",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -59,7 +61,7 @@ export async function proxy(request: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   // Community and media API responses are per-viewer and must never be cached publicly.
-  if (["/api/community/", "/api/media/", "/api/journal/", "/api/bible/"].some((p) => pathname.startsWith(p))) {
+  if (["/api/community/", "/api/media/", "/api/journal/", "/api/bible/", "/api/memory/"].some((p) => pathname.startsWith(p))) {
     response.headers.set("Cache-Control", "private, no-store");
   }
 
