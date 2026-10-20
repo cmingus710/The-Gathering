@@ -43,9 +43,9 @@ export function ConfirmDialog({
         ref={ref}
         aria-labelledby={titleId}
         aria-describedby={children ? bodyId : undefined}
-        className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-card border border-border bg-surface p-6 text-text backdrop:bg-black/60"
+        className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-card border border-border bg-surface p-6 text-text shadow-(--elev-lift) backdrop:bg-black/50 backdrop:backdrop-blur-[2px]"
       >
-        <h2 id={titleId} className="text-xl font-bold">
+        <h2 id={titleId} className="font-display text-xl font-semibold">
           {title}
         </h2>
         {children ? (

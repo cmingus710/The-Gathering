@@ -71,11 +71,11 @@ export default async function AuditPage() {
       ) : !data?.length ? (
         <EmptyState icon={<ClipboardList className="size-5" aria-hidden="true" />} title="No administrative changes yet" />
       ) : (
-        <ol className="divide-y divide-border rounded-card bg-surface">
+        <ol className="divide-y divide-border rounded-card border border-border bg-surface">
           {data.map((e) => (
             <li key={e.id} className="px-4 py-3 sm:px-5">
               <p className="font-semibold">{describe(e, names)}</p>
-              <p className="text-[0.95rem] text-text-secondary">
+              <p className="text-meta text-text-secondary">
                 {e.actor ? e.actor.full_name || e.actor.email : "System"} ·{" "}
                 <time dateTime={e.created_at}>{formatDateTime(e.created_at, settings.timezone)}</time>
               </p>

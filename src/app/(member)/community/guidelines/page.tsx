@@ -53,8 +53,8 @@ export default async function GuidelinesPage({ searchParams }: PageProps<"/commu
               <AckGuidelinesForm version={g.version} next={next} />
             </Card>
           )}
-          <section aria-labelledby="privacy-heading" className="space-y-2 text-[0.95rem] text-text-secondary">
-            <h2 id="privacy-heading" className="text-[0.95rem] font-bold uppercase tracking-[0.08em] text-text">Privacy at a glance</h2>
+          <section aria-labelledby="privacy-heading" className="space-y-2 text-meta text-text-secondary">
+            <h2 id="privacy-heading" className="text-[1.0625rem] font-semibold text-text">Privacy at a glance</h2>
             <p>Church-wide discussions are visible to approved members only. Group discussions are visible only to that group&apos;s current members.</p>
             <p>
               Direct messages are visible only to the two people in the conversation. They are protected by access controls, not end-to-end encryption.

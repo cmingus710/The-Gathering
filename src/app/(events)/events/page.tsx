@@ -4,8 +4,9 @@ import Link from "next/link";
 import { EventListItem } from "@/components/events/event-list-item";
 import { MonthGrid } from "@/components/events/month-grid";
 import { Alert } from "@/components/ui/alert";
-import { ButtonLink } from "@/components/ui/button";
+import { ButtonLink, buttonClasses } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/ui/card";
+import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { getViewer } from "@/lib/auth/viewer";
 import { addDays, formatDayLong, localDate } from "@/lib/events/format";
 import { byLocalDay, getCategories, isMonth, listOccurrences, localRange, monthGrid, shiftMonth } from "@/lib/events/queries";
@@ -20,10 +21,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function Agenda({ days, byDay, now }: { days: string[]; byDay: Map<string, EventOccurrence[]>; now: Date }) {
   const withEvents = days.filter((d) => byDay.get(d)?.length);
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {withEvents.map((day) => (
         <section key={day} aria-labelledby={`day-${day}`}>
-          <h2 id={`day-${day}`} className="mb-2 text-[0.95rem] font-bold uppercase tracking-[0.08em] text-text-secondary">
+          {/* Each card leads with its date block; the day heading keeps the list navigable by heading. */}
+          <h2 id={`day-${day}`} className="sr-only">
             {formatDayLong(day)}
           </h2>
           <ul className="space-y-2">
@@ -80,26 +82,18 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
       />
 
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <nav aria-label="Calendar view" className="flex gap-2">
-          <Link
-            href={qs({ view: "list" })}
-            aria-current={view === "list" ? "page" : undefined}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 font-semibold ${view === "list" ? "border-cta bg-cta text-on-cta" : "border-border bg-surface-muted"}`}
-          >
+        <SegmentedTrack label="Calendar view">
+          <Link href={qs({ view: "list" })} aria-current={view === "list" ? "page" : undefined} className={segmentClass(view === "list")}>
             <List className="size-4" aria-hidden="true" /> Upcoming
           </Link>
-          <Link
-            href={qs({ view: "month", month })}
-            aria-current={view === "month" ? "page" : undefined}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 font-semibold ${view === "month" ? "border-cta bg-cta text-on-cta" : "border-border bg-surface-muted"}`}
-          >
+          <Link href={qs({ view: "month", month })} aria-current={view === "month" ? "page" : undefined} className={segmentClass(view === "month")}>
             <CalendarDays className="size-4" aria-hidden="true" /> Month
           </Link>
-        </nav>
+        </SegmentedTrack>
         <form method="get" action="/events" className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="view" value={view} />
           {view === "month" ? <input type="hidden" name="month" value={month} /> : null}
-          <label className="flex flex-col text-sm font-semibold">
+          <label className="flex flex-col text-meta font-semibold">
             Category
             <select name="category" defaultValue={category} className="mt-1 min-h-11 rounded-control border border-border-strong bg-surface px-3">
               <option value="">All categories</option>
@@ -110,7 +104,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
               ))}
             </select>
           </label>
-          <button type="submit" className="min-h-11 rounded-full border border-border bg-surface-muted px-4 font-semibold hover:border-border-strong">
+          <button type="submit" className={buttonClasses("secondary", "sm")}>
             Filter
           </button>
         </form>
@@ -126,7 +120,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
             <Link href={qs({ view: "month", month: shiftMonth(month, -1) })} className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 font-semibold hover:bg-surface-muted">
               <ChevronLeft className="size-5" aria-hidden="true" /> <span>Previous<span className="sr-only"> month</span></span>
             </Link>
-            <h2 className="text-xl font-bold" aria-live="polite">
+            <h2 className="font-display text-xl font-semibold" aria-live="polite">
               {monthLabel}
             </h2>
             <Link href={qs({ view: "month", month: shiftMonth(month, 1) })} className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 font-semibold hover:bg-surface-muted">
@@ -139,7 +133,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
             {grid.days.some((d) => d.startsWith(month) && byDay.get(d)?.length) ? (
               <Agenda days={grid.days.filter((d) => d.startsWith(month))} byDay={byDay} now={now} />
             ) : (
-              <EmptyState icon={<CalendarDays className="size-8" aria-hidden="true" />} title={`No events in ${monthLabel}`}>
+              <EmptyState glyph="events" title={`No events in ${monthLabel}`}>
                 {category ? "Try all categories, or another month." : "Try another month."}
               </EmptyState>
             )}
@@ -148,7 +142,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
       ) : listDays.length ? (
         <Agenda days={listDays.filter((d) => d >= today)} byDay={byDay} now={now} />
       ) : (
-        <EmptyState icon={<CalendarDays className="size-8" aria-hidden="true" />} title="No upcoming events">
+        <EmptyState glyph="events" title="No upcoming events">
           {category ? "Nothing in this category yet. Try all categories." : "New events will appear here."}
         </EmptyState>
       )}

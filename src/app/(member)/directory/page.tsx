@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search, UserPen, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, UserPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MemberAvatar } from "@/components/profile/member-avatar";
@@ -51,6 +51,8 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
         <label htmlFor="directory-search" className="sr-only">
           Search the directory by name or city
         </label>
+        <span className="relative flex-1">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
         <input
           id="directory-search"
           name="q"
@@ -58,11 +60,11 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
           defaultValue={q}
           maxLength={80}
           placeholder="Search by name or city"
-          className="min-h-12 w-full rounded-full border border-border-strong bg-surface px-5"
+          className="min-h-12 w-full rounded-full border border-border-strong bg-surface pl-11 pr-5 transition-colors hover:border-text-secondary"
         />
+        </span>
         <button type="submit" className={buttonClasses("primary")}>
-          <Search className="size-4" aria-hidden="true" />
-          <span className="sr-only sm:not-sr-only">Search</span>
+          Search
         </button>
       </form>
 
@@ -72,7 +74,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
         </Alert>
       ) : !result.members.length ? (
         <EmptyState
-          icon={<Users className="size-6" aria-hidden="true" />}
+          glyph="directory"
           title={q ? "No members match that search" : "No one is listed yet"}
           action={
             q ? (
@@ -86,26 +88,26 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
         </EmptyState>
       ) : (
         <>
-          <p className="mb-3 text-[0.95rem] text-text-secondary" role="status">
+          <p className="mb-3 text-meta text-text-secondary" role="status">
             {result.total === 1 ? "1 member" : `${result.total} members`}
             {q ? ` matching “${q}”` : ""}
           </p>
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-2 sm:grid-cols-2">
             {result.members.map((m) => {
               const place = cityLine(m.city, m.stateRegion);
               return (
                 <li key={m.id}>
                   <Link
                     href={`/directory/${m.id}`}
-                    className="flex min-h-20 items-center gap-4 rounded-card bg-surface p-4 transition-colors hover:bg-surface-muted"
+                    className="interactive flex min-h-[4.5rem] items-center gap-3.5 rounded-tile border border-border bg-surface px-3.5 py-3 shadow-(--elev-card) hover:bg-surface-muted/50"
                   >
                     <MemberAvatar name={m.displayName} photoUrl={m.photoUrl} size="sm" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[1.05rem] font-semibold">{m.displayName}</span>
+                      <span className="block truncate text-title font-semibold">{m.displayName}</span>
                       {m.fullName && m.fullName !== m.displayName ? (
-                        <span className="block truncate text-[0.95rem] text-text-secondary">{m.fullName}</span>
+                        <span className="block truncate text-meta text-text-secondary">{m.fullName}</span>
                       ) : null}
-                      {place ? <span className="block truncate text-[0.95rem] text-text-secondary">{place}</span> : null}
+                      {place ? <span className="block truncate text-meta text-text-secondary">{place}</span> : null}
                     </span>
                     <ChevronRight className="size-5 shrink-0 text-text-secondary" aria-hidden="true" />
                   </Link>
@@ -122,7 +124,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
               ) : (
                 <span />
               )}
-              <p className="text-[0.95rem] text-text-secondary">
+              <p className="text-meta text-text-secondary">
                 Page {Math.min(page, pages)} of {pages}
               </p>
               {page < pages ? (

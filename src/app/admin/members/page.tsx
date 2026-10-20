@@ -112,14 +112,14 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
             const name = m.preferred_name || m.full_name || m.email;
             const isSelf = m.id === viewer.id;
             return (
-              <li key={m.id} className="rounded-card bg-surface p-4 sm:p-5">
+              <li key={m.id} className="rounded-card border border-border bg-surface p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link href={`/admin/members/${m.id}`} className="group inline-flex items-center gap-1 font-semibold hover:underline">
                       {name}
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </Link>
-                    <p className="break-all text-[0.95rem] text-text-secondary">{m.email}</p>
+                    <p className="break-all text-meta text-text-secondary">{m.email}</p>
                     <p className="text-sm text-text-secondary">Registered {formatDate(m.created_at, settings.timezone)}</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">

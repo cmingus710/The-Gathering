@@ -61,7 +61,7 @@ export function ReportDialog({
           </div>
         ) : (
           <form action={action} className="mt-4 space-y-4">
-            <p className="text-[0.95rem] text-text-secondary">
+            <p className="text-meta text-text-secondary">
               Moderators will see only {what}
               {type === "message" ? ", not the rest of your conversation" : ""}. If someone is in danger right now, call 911.
             </p>

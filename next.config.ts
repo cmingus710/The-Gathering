@@ -15,6 +15,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: false,
   poweredByHeader: false,
+  // The floating dev indicator would sit on top of the phone tab bar; compile
+  // and runtime errors are still shown when it is hidden.
+  devIndicators: false,
   // The statement PDF reads the logo from disk.
   outputFileTracingIncludes: {
     "/giving/statement/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
@@ -43,7 +46,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api|community|groups|messages|notifications)/:path*",
+        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|api|community|groups|messages|notifications|design)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

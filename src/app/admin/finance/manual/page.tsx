@@ -41,7 +41,7 @@ export default async function ManualGiftPage({ searchParams }: PageProps<"/admin
         </Card>
         <Card>
           <SectionHeading>Donor (optional)</SectionHeading>
-          <p className="mb-3 text-[0.95rem] text-text-secondary">Link a member account so the gift appears in their history. Otherwise enter a name, or leave it unidentified.</p>
+          <p className="mb-3 text-meta text-text-secondary">Link a member account so the gift appears in their history. Otherwise enter a name, or leave it unidentified.</p>
           <form action="/admin/finance/manual" className="mb-3 flex gap-2">
             <label htmlFor="donor-q" className="sr-only">Search members</label>
             <input id="donor-q" name="q" defaultValue={q} placeholder="Name or email" className="min-h-11 w-full rounded-control border border-border-strong bg-surface px-3" />

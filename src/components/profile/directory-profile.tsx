@@ -38,7 +38,7 @@ export function DirectoryProfileView({ profile, linkHousehold = true }: { profil
       <Card className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
         <MemberAvatar name={profile.displayName} photoUrl={profile.photoUrl} size="lg" />
         <div className="min-w-0">
-          <h1 className="text-[1.75rem] font-bold leading-tight">{profile.displayName}</h1>
+          <h1 className="font-display text-[1.75rem] font-semibold leading-tight">{profile.displayName}</h1>
           {showFull ? <p className="text-text-secondary">{profile.fullName}</p> : null}
           {place && !profile.streetAddress ? <p className="mt-1 text-text-secondary">{place}</p> : null}
         </div>
@@ -98,7 +98,7 @@ export function DirectoryProfileView({ profile, linkHousehold = true }: { profil
               <Row icon={<Sparkles className="size-5" aria-hidden="true" />} label="Ministry interests">
                 <ul className="mt-1 flex flex-wrap gap-1.5">
                   {profile.ministryInterests.map((i) => (
-                    <li key={i} className="rounded-full bg-surface-muted px-3 py-1 text-[0.95rem] text-text">
+                    <li key={i} className="rounded-full bg-surface-muted px-3 py-1 text-meta text-text">
                       {i}
                     </li>
                   ))}

@@ -7,7 +7,8 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "dang
 export type ButtonSize = "md" | "sm";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold leading-tight transition-colors " +
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold leading-tight " +
+  "transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary " +
   "disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55 " +
   "select-none text-center";
@@ -15,15 +16,15 @@ const base =
 const variants: Record<ButtonVariant, string> = {
   primary: "bg-cta text-on-cta hover:bg-cta-hover active:bg-cta-hover disabled:hover:bg-cta",
   secondary:
-    "bg-surface-muted text-text border border-border hover:border-border-strong active:bg-surface disabled:hover:border-border",
+    "bg-surface text-text border border-border-strong/60 hover:border-border-strong hover:bg-surface-muted active:bg-surface-muted disabled:hover:border-border",
   ghost: "bg-transparent text-primary hover:bg-primary-soft active:bg-primary-soft",
-  danger: "bg-danger text-on-cta hover:bg-danger-hover active:bg-danger-hover disabled:hover:bg-danger",
+  danger: "bg-danger text-on-danger hover:bg-danger-hover active:bg-danger-hover disabled:hover:bg-danger",
   "danger-outline": "bg-transparent text-danger border border-danger hover:bg-danger-soft active:bg-danger-soft",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  md: "min-h-12 px-6 py-2.5 text-base",
-  sm: "min-h-11 px-4 py-2 text-[0.95rem]",
+  md: "min-h-12 px-5 py-2.5 text-base",
+  sm: "min-h-11 px-4 py-2 text-meta",
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
@@ -59,7 +60,7 @@ export function Button({
       {...rest}
     >
       {loading ? <Spinner /> : icon}
-      <span>{loading && loadingText ? loadingText : children}</span>
+      <span className="inline-flex items-center gap-2">{loading && loadingText ? loadingText : children}</span>
     </button>
   );
 }
@@ -70,7 +71,7 @@ export function ButtonLink({ variant = "primary", size = "md", icon, className, 
   return (
     <Link className={buttonClasses(variant, size, className)} {...rest}>
       {icon}
-      <span>{children}</span>
+      <span className="inline-flex items-center gap-2">{children}</span>
     </Link>
   );
 }

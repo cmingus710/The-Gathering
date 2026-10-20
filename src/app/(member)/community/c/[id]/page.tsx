@@ -6,7 +6,7 @@ import { AudienceNotice } from "@/components/community/composer";
 import { ThreadRow } from "@/components/community/thread-row";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { communityRpc, tryCommunityRpc } from "@/lib/community/queries";
 import type { Category, ThreadPage } from "@/lib/community/types";
@@ -67,7 +67,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
         />
       ) : (
         <>
-          <ul className="space-y-2" aria-label={`Discussions in ${category.name}`}>
+          <ul className={rowListClass} aria-label={`Discussions in ${category.name}`}>
             {all.map((t) => (
               <li key={t.id}>
                 <ThreadRow thread={t} />

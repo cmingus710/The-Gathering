@@ -78,7 +78,7 @@ export default async function ContributionDetail({ params, searchParams }: PageP
             {p.stripe_invoice_id ? <Row label="Stripe invoice">{p.stripe_invoice_id}</Row> : null}
           </dl>
           {p.commitment ? (
-            <p className="mt-4 text-[0.95rem] text-text-secondary">
+            <p className="mt-4 text-meta text-text-secondary">
               Part of a {p.commitment.frequency} recurring gift ({formatCents(p.commitment.amount_cents)} now, {p.commitment.status}).
             </p>
           ) : null}
@@ -106,7 +106,7 @@ export default async function ContributionDetail({ params, searchParams }: PageP
           {can(CAPABILITIES.financeRecord) && !signedInGift ? (
             <Card>
               <SectionHeading>Donor account</SectionHeading>
-              <p className="mb-3 text-[0.95rem] text-text-secondary">
+              <p className="mb-3 text-meta text-text-secondary">
                 {p.profile_id ? "Linked to a member account; it appears in their giving history." : "Not linked to an account. Link it only when you're sure who gave it."}
               </p>
               <form action={`/admin/finance/contributions/${p.id}`} className="mb-3 flex gap-2">
@@ -124,7 +124,7 @@ export default async function ContributionDetail({ params, searchParams }: PageP
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <Card>
             <SectionHeading>Correct this entry</SectionHeading>
-            <p className="mb-3 text-[0.95rem] text-text-secondary">The original stays in history as reversed and links to the correction.</p>
+            <p className="mb-3 text-meta text-text-secondary">The original stays in history as reversed and links to the correction.</p>
             <CorrectManualForm
               paymentId={p.id}
               funds={(funds as FinanceFund[] | null) ?? []}
@@ -158,7 +158,7 @@ export default async function ContributionDetail({ params, searchParams }: PageP
         <Card>
           <SectionHeading>History</SectionHeading>
           {!p.history.length ? <p className="text-text-secondary">No finance actions recorded.</p> : (
-            <ul className="space-y-1 text-[0.95rem]">
+            <ul className="space-y-1 text-meta">
               {p.history.map((h, i) => (
                 <li key={i}>{formatDateTime(h.at, tz)} · {h.action.replace("finance.", "").replace(/_/g, " ")} · {h.actor ?? "system"}</li>
               ))}

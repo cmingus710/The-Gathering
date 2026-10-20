@@ -11,7 +11,7 @@
  * - Push messages (Phase 5) carry only generic text and an
  *   /notifications/open/<id> link; the app rechecks access on click.
  */
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `gathering-static-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/brand/gathering-icon.webp", "/brand/gathering-icon.png", "/icons/icon-192.png"];

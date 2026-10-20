@@ -58,7 +58,7 @@ export function GiveForm({
           <label htmlFor={amountId} className="mt-4 block font-semibold">
             Amount in US dollars
           </label>
-          <p id={`${amountId}-hint`} className="text-[0.95rem] text-text-secondary">
+          <p id={`${amountId}-hint`} className="text-meta text-text-secondary">
             Between {formatCents(minCents)} and {formatCents(maxCents)}.
           </p>
           <div className="relative mt-1.5">
@@ -99,7 +99,7 @@ export function GiveForm({
             ))}
           </div>
           {frequency !== "one_time" ? (
-            <p className="mt-3 text-[0.95rem] text-text-secondary">
+            <p className="mt-3 text-meta text-text-secondary">
               Recurring gifts start today and repeat {frequency === "weekly" ? "every week" : "every month"} until you cancel. You can change the amount or cancel at any time.
             </p>
           ) : null}
@@ -121,7 +121,7 @@ export function GiveForm({
                 <input type="radio" name="fundId" value={f.id} checked={fundId === f.id} onChange={() => setFundId(f.id)} className="mt-1 size-5 accent-primary" />
                 <span>
                   <span className="block font-semibold">{f.name}</span>
-                  {f.description ? <span className="block text-[0.95rem] text-text-secondary">{f.description}</span> : null}
+                  {f.description ? <span className="block text-meta text-text-secondary">{f.description}</span> : null}
                 </span>
               </label>
             ))}
@@ -130,11 +130,11 @@ export function GiveForm({
       </Card>
 
       <div className="rounded-card border border-primary/50 bg-primary-soft p-5" aria-live="polite">
-        <p className="text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">Your gift</p>
+        <p className="text-meta font-semibold text-text-secondary">Your gift</p>
         <p className="mt-1 text-xl font-bold">
           {inRange ? formatCents(cents!) : "—"} · {FREQUENCY_LABEL[frequency]} · {fund?.name}
         </p>
-        <p className="mt-1 text-[0.95rem] text-text-secondary">You&apos;ll confirm payment on Stripe&apos;s secure checkout page.</p>
+        <p className="mt-1 text-meta text-text-secondary">You&apos;ll confirm payment on Stripe&apos;s secure checkout page.</p>
       </div>
 
       <SubmitButton pendingText="Opening secure checkout…" className="w-full sm:w-auto">

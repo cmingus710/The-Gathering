@@ -31,7 +31,7 @@ export default async function OperationsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionHeading>Reconcile with Stripe</SectionHeading>
-          <p className="mb-4 text-[0.95rem] text-text-secondary">
+          <p className="mb-4 text-meta text-text-secondary">
             Reads every checkout, recurring invoice, refund, and dispute Stripe created in the range, plus any gifts still waiting for fee data,
             and records anything missing. Safe to run repeatedly: nothing is duplicated and existing records are only updated.
           </p>
@@ -40,7 +40,7 @@ export default async function OperationsPage() {
         <Card>
           <SectionHeading>Emails needing attention</SectionHeading>
           {!problemEmails.length ? <p className="text-text-secondary">All giving emails have been sent.</p> : (
-            <ul className="divide-y divide-border text-[0.95rem]">
+            <ul className="divide-y divide-border text-meta">
               {problemEmails.map((e) => (
                 <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span>{e.kind.replace("_", " ")} · {e.status} · {e.attempts} attempt(s){e.last_error ? ` · ${e.last_error}` : ""}<span className="block text-text-secondary">{e.to} · {formatDateTime(e.created_at, tz)}</span></span>
@@ -54,7 +54,7 @@ export default async function OperationsPage() {
       <Card className="mt-6">
         <SectionHeading>Recent webhook events</SectionHeading>
         {!recentEvents.length ? <p className="text-text-secondary">No events received yet.</p> : (
-          <ul className="divide-y divide-border text-[0.95rem]">
+          <ul className="divide-y divide-border text-meta">
             {recentEvents.map((e) => (
               <li key={e.id} className="py-2">
                 <span className="font-semibold">{e.type}</span> · {e.status} · {e.attempts} attempt(s) · {formatDateTime(e.received_at, tz)}

@@ -1,10 +1,11 @@
-import { ChevronRight, MessagesSquare, PenSquare, ShieldCheck, UsersRound } from "lucide-react";
+import { ChevronRight, PenSquare, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ThreadRow } from "@/components/community/thread-row";
+import { Icon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, SectionLink } from "@/components/ui/card";
+import { EmptyState, ListRow, PageHeader, SectionHeading, SectionLink, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -54,16 +55,17 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
           Please try again in a moment.
         </Alert>
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-8">
           <section aria-labelledby="categories-heading">
             <SectionHeading id="categories-heading">Church-wide discussions</SectionHeading>
             {categories.length ? (
-              <ul className="space-y-2">
+              <ul className={rowListClass}>
                 {categories.map((c) => (
                   <li key={c.id}>
                     <ListRow
+                      plain
                       href={`/community/c/${c.id}`}
-                      icon={<MessagesSquare className="size-5" aria-hidden="true" />}
+                      icon={<Icon name="community" className="size-5" />}
                       label={c.name}
                       description={c.description || undefined}
                       trailing={
@@ -78,7 +80,7 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
                 ))}
               </ul>
             ) : (
-              <EmptyState title="No categories yet">An administrator can add discussion categories.</EmptyState>
+              <EmptyState glyph="community" title="No categories yet">An administrator can add discussion categories.</EmptyState>
             )}
           </section>
 
@@ -87,24 +89,22 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
               Your groups
             </SectionHeading>
             {groups?.mine.length ? (
-              <ul className="space-y-2">
+              <ul className={rowListClass}>
                 {groups.mine.map((g) => (
                   <li key={g.id}>
-                    <ListRow href={`/groups/${g.id}`} icon={<UsersRound className="size-5" aria-hidden="true" />} label={g.name} description="Private group discussions and events" trailing={g.my_role === "leader" ? "Leader" : undefined} />
+                    <ListRow plain href={`/groups/${g.id}`} icon={<Icon name="groups" className="size-5" />} label={g.name} description="Private group discussions and events" trailing={g.my_role === "leader" ? "Leader" : undefined} />
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="rounded-card bg-surface px-5 py-4 text-text-secondary">
-                You&apos;re not in a group yet. <Link href="/groups" className="font-semibold text-primary underline">Find a group</Link>
-              </p>
+              <EmptyState glyph="groups" title="You're not in a group yet" action={<ButtonLink href="/groups" variant="secondary" size="sm">Find a group</ButtonLink>} />
             )}
           </section>
 
           <section aria-labelledby="recent-heading">
             <SectionHeading id="recent-heading">Recent activity</SectionHeading>
             {recent?.length ? (
-              <ul className="space-y-2">
+              <ul className={rowListClass}>
                 {recent.map((t) => (
                   <li key={t.id}>
                     <ThreadRow thread={t} showPlace />
@@ -112,13 +112,13 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
                 ))}
               </ul>
             ) : (
-              <EmptyState icon={<MessagesSquare className="size-6" aria-hidden="true" />} title="No discussions yet">
+              <EmptyState glyph="community" title="No discussions yet">
                 Start the first conversation.
               </EmptyState>
             )}
           </section>
 
-          <p className="flex items-center gap-2 text-[0.95rem] text-text-secondary">
+          <p className="flex items-center gap-2 text-meta text-text-secondary">
             <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
             <span>
               <Link href="/community/guidelines" className="font-semibold text-primary underline">Community guidelines</Link> · Use Report on anything that seems wrong.

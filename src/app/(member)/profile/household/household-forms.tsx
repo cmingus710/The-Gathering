@@ -48,7 +48,7 @@ export function InviteButton({ inviteeId, name }: { inviteeId: string; name: str
     <form action={action} className="space-y-2">
       <input type="hidden" name="inviteeId" value={inviteeId} />
       {state.status === "success" ? (
-        <p role="status" className="text-[0.95rem] font-semibold text-success">
+        <p role="status" className="text-meta font-semibold text-success">
           Invited
         </p>
       ) : (
@@ -57,7 +57,7 @@ export function InviteButton({ inviteeId, name }: { inviteeId: string; name: str
             Invite<span className="sr-only"> {name}</span>
           </SubmitButton>
           {state.status === "error" ? (
-            <p role="alert" className="text-[0.95rem] text-danger">
+            <p role="alert" className="text-meta text-danger">
               {state.message}
             </p>
           ) : null}

@@ -11,28 +11,28 @@ export function ThreadRow({ thread, showPlace = false }: { thread: ThreadCard; s
   return (
     <Link
       href={`/community/t/${thread.id}`}
-      className="block rounded-card bg-surface px-5 py-4 transition-colors hover:bg-surface-muted"
+      className="block px-4 py-3.5 transition-colors hover:bg-surface-muted/60 sm:px-5"
     >
-      <span className="flex flex-wrap items-center gap-2">
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 empty:hidden">
         {thread.pinned ? (
-          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary">
+          <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-primary">
             <Pin className="size-3.5" aria-hidden="true" /> Pinned
           </span>
         ) : null}
         {thread.locked ? (
-          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-text-secondary">
+          <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-text-secondary">
             <Lock className="size-3.5" aria-hidden="true" /> Locked
           </span>
         ) : null}
         {thread.status === "hidden" ? (
-          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-danger">
+          <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-danger">
             <EyeOff className="size-3.5" aria-hidden="true" /> Hidden
           </span>
         ) : null}
-        {showPlace && place ? <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">{place}</span> : null}
+        {showPlace && place ? <span className="text-[0.8125rem] font-semibold text-text-secondary">{place}</span> : null}
       </span>
-      <span className={`mt-1 block text-[1.05rem] font-semibold ${deleted ? "italic text-text-secondary" : "text-text"}`}>{title}</span>
-      {thread.excerpt ? <span className="mt-0.5 line-clamp-2 block text-[0.95rem] text-text-secondary">{thread.excerpt}</span> : null}
+      <span className={`mt-1 block text-title font-semibold ${deleted ? "italic text-text-secondary" : "text-text"}`}>{title}</span>
+      {thread.excerpt ? <span className="mt-0.5 line-clamp-2 block text-meta text-text-secondary">{thread.excerpt}</span> : null}
       <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
         {thread.author ? <span>{thread.author}</span> : null}
         <span className="inline-flex items-center gap-1">

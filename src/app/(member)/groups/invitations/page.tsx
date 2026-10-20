@@ -26,11 +26,11 @@ export default async function InvitationsPage() {
       ) : data.invitations.length ? (
         <ul className="space-y-3">
           {data.invitations.map((i) => (
-            <li key={i.id} className="flex gap-4 rounded-card bg-surface p-5">
+            <li key={i.id} className="flex gap-4 rounded-card border border-border bg-surface p-5">
               <GroupImage url={i.group.image_path ? images.get(i.group.image_path) : null} alt={i.group.image_alt} />
               <div className="min-w-0 flex-1 space-y-2">
-                <h2 className="text-[1.05rem] font-semibold">{i.group.name}</h2>
-                {i.group.summary ? <p className="text-[0.95rem] text-text-secondary">{i.group.summary}</p> : null}
+                <h2 className="text-title font-semibold">{i.group.name}</h2>
+                {i.group.summary ? <p className="text-meta text-text-secondary">{i.group.summary}</p> : null}
                 <p className="text-sm text-text-secondary">
                   Invited by {i.invited_by} · expires {new Date(i.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric" })}
                 </p>

@@ -25,7 +25,7 @@ test("manifest and icons are served", async ({ request }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.ok()).toBe(true);
   const manifest = await res.json();
-  expect(manifest).toMatchObject({ name: "The Gathering", display: "standalone", theme_color: "#121110", background_color: "#121110" });
+  expect(manifest).toMatchObject({ name: "The Gathering", display: "standalone", theme_color: "#F7F4ED", background_color: "#F7F4ED" });
   const purposes = manifest.icons.map((i: { sizes: string; purpose: string }) => `${i.sizes}:${i.purpose}`);
   expect(purposes).toEqual(expect.arrayContaining(["192x192:any", "512x512:any", "192x192:maskable", "512x512:maskable"]));
   for (const icon of manifest.icons) {
@@ -44,7 +44,51 @@ test("head includes Apple web app metadata and icons", async ({ page }) => {
   await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute("content", "The Gathering");
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(1);
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#121110");
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#F7F4ED");
+});
+
+test("theme: light without a saved choice, saved choice rendered by the server, system follows the OS", async ({ browser, baseURL }) => {
+  // No cookie: light, even when the OS prefers dark.
+  const fresh = await browser.newContext({ colorScheme: "dark" });
+  const p1 = await fresh.newPage();
+  await p1.goto(`${baseURL}/sign-in`);
+  await expect(p1.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(await p1.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(247, 244, 237)");
+  await fresh.close();
+
+  // Saved dark: already in the server HTML (no flash), with a matching theme-color.
+  const dark = await browser.newContext();
+  await dark.addCookies([{ name: "theme", value: "dark", url: baseURL! }]);
+  const html = await (await dark.request.get(`${baseURL}/sign-in`)).text();
+  expect(html).toMatch(/<html[^>]*data-theme="dark"/);
+  expect(html).toMatch(/<meta name="theme-color" content="#141311"/);
+  await dark.close();
+
+  // System: follows prefers-color-scheme.
+  const system = await browser.newContext({ colorScheme: "dark" });
+  await system.addCookies([{ name: "theme", value: "system", url: baseURL! }]);
+  const p3 = await system.newPage();
+  await p3.goto(`${baseURL}/sign-in`);
+  expect(await p3.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(20, 19, 17)");
+  await system.close();
+
+  // An unknown value falls back to light.
+  const junk = await browser.newContext();
+  await junk.addCookies([{ name: "theme", value: "sepia", url: baseURL! }]);
+  const p4 = await junk.newPage();
+  await p4.goto(`${baseURL}/sign-in`);
+  await expect(p4.locator("html")).toHaveAttribute("data-theme", "light");
+  await junk.close();
+});
+
+test("the approved logo stays legible on dark: it sits on the ivory plate", async ({ browser, baseURL }) => {
+  const ctx = await browser.newContext();
+  await ctx.addCookies([{ name: "theme", value: "dark", url: baseURL! }]);
+  const page = await ctx.newPage();
+  await page.goto(`${baseURL}/`);
+  const plate = page.locator(".brand-plaque").first();
+  expect(await plate.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(247, 244, 237)");
+  await ctx.close();
 });
 
 for (const path of [
@@ -81,6 +125,8 @@ for (const path of [
   "/notifications",
   "/notifications/settings",
   "/admin/community",
+  // Design reference (administrators only)
+  "/design/icons",
   "/admin/moderation",
 ]) {
   test(`signed-out visitors are sent to sign-in from ${path}`, async ({ page }) => {

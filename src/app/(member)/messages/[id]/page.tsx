@@ -29,7 +29,12 @@ export default async function ConversationPage({ params }: PageProps<"/messages/
         <ArrowLeft className="size-4" aria-hidden="true" /> Messages
       </Link>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[1.6rem] font-bold leading-tight">{page.other_name}</h1>
+        <h1 className="flex min-w-0 items-center gap-3 font-display text-[1.625rem] font-semibold leading-tight">
+          <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted text-lg ring-1 ring-border">
+            {page.other_name.charAt(0).toUpperCase()}
+          </span>
+          <span className="min-w-0 break-words">{page.other_name}</span>
+        </h1>
         <div className="flex flex-wrap items-start gap-2">
           <ToggleForm
             action={muteAction}

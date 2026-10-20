@@ -47,10 +47,10 @@ export default async function RecurringPage({ searchParams }: PageProps<"/admin/
       {error ? <Alert tone="error" title="Recurring gifts couldn't be loaded." /> : !rows.length ? <EmptyState title="No recurring gifts in this list" /> : (
         <ul className="space-y-2">
           {rows.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-4">
+            <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-4">
               <span>
                 <span className="block font-semibold">{c.donor} · {formatCents(c.amount_cents)} {FREQUENCY_LABEL[c.frequency].toLowerCase()}</span>
-                <span className="block text-[0.95rem] text-text-secondary">
+                <span className="block text-meta text-text-secondary">
                   {c.fund_name} · started {formatDate(c.created_at, settings.timezone)} · {c.payments_count} received
                   {c.next_payment_at ? ` · next ${formatDate(c.next_payment_at, settings.timezone)}` : ""}
                 </span>

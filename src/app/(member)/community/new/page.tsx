@@ -80,9 +80,9 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
           <ul className="space-y-2">
             {categories.map((c) => (
               <li key={c.id}>
-                <Link href={`/community/new?category=${c.id}`} className="block rounded-card bg-surface px-5 py-4 hover:bg-surface-muted">
+                <Link href={`/community/new?category=${c.id}`} className="block rounded-card border border-border bg-surface px-5 py-4 hover:bg-surface-muted">
                   <span className="block font-semibold">{c.name}</span>
-                  {c.description ? <span className="block text-[0.95rem] text-text-secondary">{c.description}</span> : null}
+                  {c.description ? <span className="block text-meta text-text-secondary">{c.description}</span> : null}
                   <span className="mt-1 block text-sm text-text-secondary">Church-wide: all approved members can read it</span>
                 </Link>
               </li>

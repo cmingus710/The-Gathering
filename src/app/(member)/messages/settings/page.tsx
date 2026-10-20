@@ -50,7 +50,7 @@ export default async function MessageSettingsPage() {
             {blocked?.length ? (
               <ul className="space-y-2">
                 {blocked.map((b) => (
-                  <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3">
+                  <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3">
                     <span className="font-semibold">{b.name}</span>
                     <BlockToggle profileId={b.id} name={b.name} blocked path="/messages/settings" />
                   </li>
@@ -60,7 +60,7 @@ export default async function MessageSettingsPage() {
               <EmptyState title="You haven't blocked anyone" />
             )}
           </section>
-          <section aria-labelledby="privacy-heading" className="space-y-2 text-[0.95rem] text-text-secondary">
+          <section aria-labelledby="privacy-heading" className="space-y-2 text-meta text-text-secondary">
             <SectionHeading id="privacy-heading">How messages are protected</SectionHeading>
             <p>Only you and the other person can read a conversation. Messages are protected by access controls on our servers; they are not end-to-end encrypted.</p>
             <p>Church administrators can&apos;t browse messages. If you report messages, moderators see only the messages you select.</p>

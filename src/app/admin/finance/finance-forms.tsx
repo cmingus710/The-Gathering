@@ -255,7 +255,7 @@ export function SettingsForm({ initial, readOnly }: { initial: SettingsValues; r
         <TextAreaField label="Acknowledgment message" name="acknowledgment" maxLength={1000} hint="Included in every gift acknowledgment email. Avoid tax language unless it has been approved." defaultValue={v.acknowledgment} error={err.acknowledgment} />
         <fieldset className="space-y-4 rounded-card border border-border p-4">
           <legend className="px-1 font-semibold">Annual statement details</legend>
-          <p className="text-[0.95rem] text-text-secondary">
+          <p className="text-meta text-text-secondary">
             Statements stay in draft (watermarked, not available to members) until these are entered from the church&apos;s approved
             records and marked approved. Don&apos;t enter wording that hasn&apos;t been approved.
           </p>
@@ -267,7 +267,7 @@ export function SettingsForm({ initial, readOnly }: { initial: SettingsValues; r
             <input type="checkbox" name="approved" defaultChecked={initial.approved} className="mt-1 size-5 accent-primary" />
             <span>
               <span className="font-semibold">These statement details and wording are approved by the church</span>
-              <span className="block text-[0.95rem] text-text-secondary">Members can download statements only when this is checked.</span>
+              <span className="block text-meta text-text-secondary">Members can download statements only when this is checked.</span>
             </span>
           </label>
         </fieldset>

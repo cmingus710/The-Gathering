@@ -1,11 +1,11 @@
-import { BellOff, MessageCircle, PenSquare, Settings } from "lucide-react";
+import { BellOff, PenSquare, Settings } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CountPill } from "@/components/community/notification-bell";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -48,16 +48,19 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
             </Alert>
           ) : null}
           {data.items.length ? (
-            <ul className="space-y-2">
+            <ul className={rowListClass}>
               {data.items.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/messages/${c.id}`} className="flex min-h-16 items-center gap-4 rounded-card bg-surface px-5 py-3 hover:bg-surface-muted">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary" aria-hidden="true">
+                  <Link href={`/messages/${c.id}`} className="flex min-h-16 items-center gap-3.5 px-4 py-3 transition-colors hover:bg-surface-muted/60 sm:px-5">
+                    <span
+                      className={`flex size-11 shrink-0 items-center justify-center rounded-full font-display text-lg font-semibold ${c.unread ? "bg-primary-soft text-primary ring-2 ring-accent/60" : "bg-surface-muted text-text"}`}
+                      aria-hidden="true"
+                    >
                       {c.other_name.charAt(0).toUpperCase()}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block truncate ${c.unread ? "font-bold" : "font-semibold"}`}>{c.other_name}</span>
-                      <span className="block truncate text-[0.95rem] text-text-secondary">
+                      <span className={`block truncate text-title ${c.unread ? "font-bold" : "font-semibold"}`}>{c.other_name}</span>
+                      <span className="block truncate text-meta text-text-secondary">
                         {c.last_from_me ? "You sent the last message" : "They sent the last message"} · {relativeTime(c.last_message_at)}
                         {c.blocked ? " · Blocked" : ""}
                       </span>
@@ -74,7 +77,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/message
               ))}
             </ul>
           ) : (
-            <EmptyState icon={<MessageCircle className="size-6" aria-hidden="true" />} title="No conversations yet">
+            <EmptyState glyph="messages" title="No conversations yet">
               {data.eligible ? "Start one with New message, or from a group's member list." : null}
             </EmptyState>
           )}

@@ -59,7 +59,7 @@ export default async function GiftPage({ params }: PageProps<"/giving/[id]">) {
         {p.refunds.length ? (
           <div>
             <h2 className="font-semibold">Refunds</h2>
-            <ul className="mt-1 text-[0.95rem]">
+            <ul className="mt-1 text-meta">
               {p.refunds.map((r) => (
                 <li key={r.id}>
                   {formatCents(r.amount_cents)} · {formatDate(r.date, settings.timezone)} · {r.status === "succeeded" ? "Refunded" : r.status}

@@ -45,7 +45,7 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
         <Alert tone="warning" title="No funds are open for giving right now." />
       ) : (
         <>
-          <p className="mb-6 flex items-start gap-2 text-[0.95rem] text-text-secondary">
+          <p className="mb-6 flex items-start gap-2 text-meta text-text-secondary">
             <HandCoins className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
             {viewer ? (
               <span>
@@ -66,7 +66,7 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
             )}
           </p>
           <GiveForm funds={config.funds} minCents={config.min_amount_cents} maxCents={config.max_amount_cents} formToken={randomUUID()} />
-          <p className="mt-6 flex items-start gap-2 text-[0.95rem] text-text-secondary">
+          <p className="mt-6 flex items-start gap-2 text-meta text-text-secondary">
             <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             Payment is handled securely by Stripe. The church never sees or stores your card details. Gift amounts are private and never
             appear in community areas of the app.

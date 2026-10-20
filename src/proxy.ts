@@ -19,6 +19,7 @@ const PROTECTED_PREFIXES = [
   "/groups",
   "/messages",
   "/notifications",
+  "/design",
 ];
 
 export async function proxy(request: NextRequest) {

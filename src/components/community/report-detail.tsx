@@ -32,7 +32,7 @@ export function ReportDetailView({ report, tz }: { report: ReportDetail; tz: str
         </p>
         {report.details ? <p className="text-text-secondary">&ldquo;{report.details}&rdquo;</p> : null}
         {report.resolution ? (
-          <p className="text-[0.95rem]">
+          <p className="text-meta">
             <span className="font-semibold">Resolution:</span> {report.resolution} ({report.resolved_by}, {report.resolved_at ? exactTime(report.resolved_at, tz) : ""})
           </p>
         ) : null}
@@ -69,7 +69,7 @@ export function ReportDetailView({ report, tz }: { report: ReportDetail; tz: str
           <Alert tone="info" title="The captured evidence was cleared under the retention policy." />
         )}
         {report.is_message ? (
-          <p className="mt-3 flex items-center gap-2 text-[0.95rem] text-text-secondary">
+          <p className="mt-3 flex items-center gap-2 text-meta text-text-secondary">
             <Lock className="size-4" aria-hidden="true" /> Only the selected messages are shown. The rest of the conversation stays private.
           </p>
         ) : null}
@@ -79,7 +79,7 @@ export function ReportDetailView({ report, tz }: { report: ReportDetail; tz: str
         <section aria-labelledby="actions-heading">
           <SectionHeading id="actions-heading">Content actions</SectionHeading>
           <Card className="space-y-3">
-            <p className="text-[0.95rem]">
+            <p className="text-meta">
               Current state: <strong>{report.current.status}</strong>
               {report.current.locked ? " · locked" : ""}.{" "}
               {report.current.status === "visible" || report.current.status === "hidden" ? (
@@ -131,7 +131,7 @@ export function ReportDetailView({ report, tz }: { report: ReportDetail; tz: str
 
       <section aria-labelledby="log-heading">
         <SectionHeading id="log-heading">Activity on this report</SectionHeading>
-        <ul className="space-y-1 text-[0.95rem]">
+        <ul className="space-y-1 text-meta">
           {report.log.map((l, i) => (
             <li key={i}>
               <time dateTime={l.at}>{exactTime(l.at, tz)}</time> · {l.actor} · {l.action}

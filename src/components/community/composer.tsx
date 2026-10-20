@@ -13,7 +13,7 @@ type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
 /** Who will see a post, shown before posting. */
 export function AudienceNotice({ audience, place }: { audience: "church" | "group"; place: string }) {
   return (
-    <p className="flex items-start gap-2 rounded-card border border-border bg-surface-muted px-4 py-3 text-[0.95rem]">
+    <p className="flex items-start gap-2 rounded-card border border-border bg-surface-muted px-4 py-3 text-meta">
       {audience === "group" ? <Lock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" /> : <Globe className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />}
       <span>
         {audience === "group" ? (

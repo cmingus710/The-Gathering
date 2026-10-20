@@ -26,7 +26,7 @@ export default async function NewMessagePage() {
       ) : (
         <Card>
           <RecipientSearch />
-          <p className="mt-6 text-[0.95rem] text-text-secondary">
+          <p className="mt-6 text-meta text-text-secondary">
             Members who aren&apos;t listed in the directory can still be messaged from a group you share, if their settings allow it.
           </p>
         </Card>

@@ -70,7 +70,7 @@ export function useUnsavedChanges(formRef: RefObject<HTMLFormElement | null>, sa
 /** Small persistent indicator, announced politely when it appears. */
 export function UnsavedNotice({ dirty }: { dirty: boolean }) {
   return (
-    <p role="status" className="min-h-6 text-[0.95rem] font-semibold text-primary">
+    <p role="status" className="min-h-6 text-meta font-semibold text-primary">
       {dirty ? "You have unsaved changes." : ""}
     </p>
   );

@@ -38,9 +38,9 @@ export default async function GroupReportsPage({ params, searchParams }: PagePro
         <ul className="space-y-2">
           {reports.map((r) => (
             <li key={r.id}>
-              <Link href={`/groups/${id}/manage/reports/${r.id}`} className="block rounded-card bg-surface px-5 py-4 hover:bg-surface-muted">
+              <Link href={`/groups/${id}/manage/reports/${r.id}`} className="block rounded-card border border-border bg-surface px-5 py-4 hover:bg-surface-muted">
                 <span className="block font-semibold">{REPORT_REASONS.find((x) => x.value === r.reason)?.label ?? r.reason}</span>
-                <span className="block text-[0.95rem] text-text-secondary">
+                <span className="block text-meta text-text-secondary">
                   {r.target_type === "thread" ? "Discussion" : "Reply"} by {r.reported} · {relativeTime(r.created_at)}
                 </span>
               </Link>

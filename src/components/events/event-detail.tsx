@@ -33,7 +33,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
               <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
               <span>
                 <span className="font-semibold">{formatWhen(o)}</span>
-                {!o.all_day ? <span className="block text-[0.95rem] text-text-secondary">Times are shown in the event&apos;s time zone ({o.timezone.replace(/_/g, " ")}).</span> : null}
+                {!o.all_day ? <span className="block text-meta text-text-secondary">Times are shown in the event&apos;s time zone ({o.timezone.replace(/_/g, " ")}).</span> : null}
               </span>
             </p>
             {o.location_name || o.location_address ? (
@@ -47,7 +47,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[0.95rem] font-semibold text-primary underline underline-offset-2"
+                      className="text-meta font-semibold text-primary underline underline-offset-2"
                     >
                       Open in Maps<span className="sr-only"> (opens in a new tab)</span>
                     </a>
@@ -114,7 +114,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
         </div>
         <aside className="space-y-4" aria-label="Registration and calendar">
           {o.rsvp_enabled && !canceled ? (
-            <p className="text-[0.95rem] text-text-secondary">Registration closes {formatDeadline(o.rsvp_closes_at, o.timezone)}.</p>
+            <p className="text-meta text-text-secondary">Registration closes {formatDeadline(o.rsvp_closes_at, o.timezone)}.</p>
           ) : null}
           {aside}
         </aside>

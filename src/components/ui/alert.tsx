@@ -47,7 +47,7 @@ export function Alert({
   const t = tones[tone];
   const role = live ? (tone === "error" ? "alert" : "status") : undefined;
   return (
-    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex gap-3 rounded-card border px-4 py-3", t.box, className)}>
+    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex gap-3 rounded-tile border px-4 py-3", t.box, className)}>
       <span className="mt-0.5 shrink-0">{t.icon}</span>
       <div className="min-w-0 space-y-1">
         {title ? (
@@ -58,7 +58,7 @@ export function Alert({
         ) : (
           <span className="sr-only">{t.label}: </span>
         )}
-        {children ? <div className="text-[0.98rem]">{children}</div> : null}
+        {children ? <div className="text-meta">{children}</div> : null}
       </div>
     </div>
   );

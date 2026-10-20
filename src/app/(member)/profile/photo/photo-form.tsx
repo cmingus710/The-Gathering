@@ -144,7 +144,7 @@ export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; 
         <MemberAvatar name={name} photoUrl={photoUrl} size="lg" />
         <div className="space-y-1">
           <p className="font-semibold">{hasPhoto ? "Current photo" : "No photo yet"}</p>
-          <p className="text-[0.95rem] text-text-secondary">
+          <p className="text-meta text-text-secondary">
             {hasPhoto ? (shared ? "Shown to approved members." : "Hidden from other members.") : "Members see your initials."}{" "}
             <Link href="/profile/privacy" className="font-semibold text-primary underline underline-offset-2">
               Privacy
@@ -158,7 +158,7 @@ export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; 
           <label htmlFor="photo" className="block font-semibold">
             {hasPhoto ? "Choose a new photo" : "Choose a photo"}
           </label>
-          <p id="photo-hint" className="text-[0.95rem] text-text-secondary">
+          <p id="photo-hint" className="text-meta text-text-secondary">
             PNG, JPEG, or WebP, at least 128 × 128 pixels. You can position it before saving.
           </p>
           <input
@@ -170,7 +170,7 @@ export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; 
             aria-describedby="photo-hint"
             aria-invalid={state.fieldErrors?.photo ? true : undefined}
             onChange={(e) => choose(e.currentTarget.files?.[0])}
-            className="block w-full text-[0.95rem] file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-full file:border-0 file:bg-surface-muted file:px-4 file:font-semibold file:text-text"
+            className="block w-full text-meta file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-full file:border-0 file:bg-surface-muted file:px-4 file:font-semibold file:text-text"
           />
         </div>
 

@@ -203,6 +203,12 @@ export default async function AdminDashboard() {
           </Card>
         ) : null}
       </div>
+      <p className="mt-8 text-meta text-text-secondary">
+        Design system:{" "}
+        <Link href="/design/icons" className="font-semibold text-primary hover:underline">
+          icon reference
+        </Link>
+      </p>
     </>
   );
 }

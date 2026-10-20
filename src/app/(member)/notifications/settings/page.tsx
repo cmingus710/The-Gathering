@@ -51,7 +51,7 @@ export default async function NotificationSettingsPage() {
             {settings.mutes.length ? (
               <ul className="space-y-2">
                 {settings.mutes.map((m) => (
-                  <li key={`${m.type}:${m.id}`} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3">
+                  <li key={`${m.type}:${m.id}`} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3">
                     <span>
                       <span className="block font-semibold">{m.label ?? "No longer available"}</span>
                       <span className="block text-sm text-text-secondary">{m.type === "thread" ? "Discussion" : m.type === "group" ? "Group" : "Conversation"}</span>
@@ -61,7 +61,7 @@ export default async function NotificationSettingsPage() {
                 ))}
               </ul>
             ) : (
-              <p className="rounded-card bg-surface px-5 py-4 text-text-secondary">Nothing is muted. Use Mute on a discussion, group, or conversation.</p>
+              <p className="rounded-card border border-border bg-surface px-5 py-4 text-text-secondary">Nothing is muted. Use Mute on a discussion, group, or conversation.</p>
             )}
           </section>
         </div>

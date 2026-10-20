@@ -24,7 +24,7 @@ export function MonthGrid({ month, days, byDay, today }: { month: string; days: 
       <thead>
         <tr>
           {WEEKDAY_SHORT.map((d, i) => (
-            <th key={d} scope="col" className="pb-1 text-left text-sm font-bold uppercase tracking-wider text-text-secondary">
+            <th key={d} scope="col" className="pb-1 pl-1.5 text-left text-eyebrow font-semibold text-text-secondary">
               <abbr title={WEEKDAY_LONG[i]} className="no-underline">
                 {d}
               </abbr>
@@ -42,9 +42,9 @@ export function MonthGrid({ month, days, byDay, today }: { month: string; days: 
               return (
                 <td
                   key={day}
-                  className={`h-28 rounded-control p-1.5 align-top ${inMonth ? "bg-surface" : "bg-surface/40"} ${isToday ? "ring-2 ring-primary" : ""}`}
+                  className={`h-28 rounded-control border p-1.5 align-top ${inMonth ? "border-border bg-surface" : "border-transparent bg-surface-muted/50"} ${isToday ? "ring-2 ring-primary" : ""}`}
                 >
-                  <div className={`mb-1 text-sm font-bold ${inMonth ? "text-text" : "text-text-secondary"}`}>
+                  <div className={`mb-1 text-meta font-semibold tabular-nums ${isToday ? "text-primary" : inMonth ? "text-text" : "text-text-secondary"}`}>
                     <span aria-hidden="true">{Number(day.slice(8))}</span>
                     <span className="sr-only">
                       {dayLabel(day)}
@@ -57,7 +57,7 @@ export function MonthGrid({ month, days, byDay, today }: { month: string; days: 
                         <Link
                           href={`/events/${o.id}`}
                           className={`block truncate rounded px-1.5 py-0.5 text-xs font-semibold hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-primary ${
-                            o.status === "canceled" ? "text-text-secondary line-through" : "bg-primary-soft text-text"
+                            o.status === "canceled" ? "text-text-secondary line-through" : "border-l-2 border-accent bg-primary-soft text-text"
                           }`}
                         >
                           {o.status === "canceled" ? <span className="sr-only">Canceled: </span> : null}

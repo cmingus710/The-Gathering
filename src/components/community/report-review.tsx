@@ -72,7 +72,7 @@ export function RestrictForm({ profileId, name, reportId }: { profileId: string;
         </SelectField>
       </div>
       <TextAreaField label="Reason (shown to the member)" name="reason" required minLength={3} maxLength={500} rows={2} />
-      <p className="text-[0.95rem] text-text-secondary">
+      <p className="text-meta text-text-secondary">
         This affects only community participation for {name}. It doesn&apos;t change church membership, the directory, giving, or events. Only membership
         administrators can suspend membership.
       </p>

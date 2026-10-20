@@ -66,9 +66,9 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
                       <span className="font-semibold">{inv.invited_by_name}</span> invited you to join{" "}
                       <span className="font-semibold">{label}</span>.
                     </p>
-                    <p className="text-[0.95rem] text-text-secondary">Open until {formatDate(inv.expires_at, settings.timezone)}.</p>
+                    <p className="text-meta text-text-secondary">Open until {formatDate(inv.expires_at, settings.timezone)}.</p>
                     {household ? (
-                      <p className="text-[0.95rem] text-text-secondary">To accept, leave your current household first.</p>
+                      <p className="text-meta text-text-secondary">To accept, leave your current household first.</p>
                     ) : null}
                     <RespondButtons invitationId={inv.id} householdLabel={label} />
                   </Card>
@@ -115,7 +115,7 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[0.95rem] text-text-secondary">
+            <p className="mt-3 text-meta text-text-secondary">
               Members see your household on your directory profile only if you{" "}
               <Link href="/profile/privacy" className="font-semibold text-primary underline underline-offset-2">
                 share it
@@ -126,7 +126,7 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
 
           <Card>
             <SectionHeading>Invite an adult</SectionHeading>
-            <p className="mb-3 text-[0.95rem] text-text-secondary">
+            <p className="mb-3 text-meta text-text-secondary">
               Search the directory for someone you live with. They&apos;ll see the invitation in the app. No email is sent, and
               invitations expire after 14 days.
             </p>
@@ -158,7 +158,7 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
                         <span className="truncate font-semibold">{c.displayName}</span>
                       </span>
                       {invited.has(c.id) ? (
-                        <span className="text-[0.95rem] text-text-secondary">Invited</span>
+                        <span className="text-meta text-text-secondary">Invited</span>
                       ) : (
                         <InviteButton inviteeId={c.id} name={c.displayName} />
                       )}
@@ -179,7 +179,7 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
                   <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <span>
                       <span className="font-semibold">{i.invitee_name}</span>
-                      <span className="block text-[0.95rem] text-text-secondary">Open until {formatDate(i.expires_at, settings.timezone)}</span>
+                      <span className="block text-meta text-text-secondary">Open until {formatDate(i.expires_at, settings.timezone)}</span>
                     </span>
                     <RevokeButton invitationId={i.id} name={i.invitee_name} />
                   </li>

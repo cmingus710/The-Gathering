@@ -164,7 +164,7 @@ export function Conversation({ initial, timezone }: { initial: ConversationPage;
             Show earlier messages
           </Button>
         ) : (
-          <span className="text-sm text-text-secondary">{messages.length ? "Start of your conversation" : ""}</span>
+          <span className="text-meta text-text-secondary">{messages.length ? "Start of your conversation" : ""}</span>
         )}
         {selecting ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -179,15 +179,15 @@ export function Conversation({ initial, timezone }: { initial: ConversationPage;
           </Button>
         ) : null}
       </div>
-      {selecting ? <p className="text-[0.95rem] text-text-secondary">Choose the messages to report (up to 20). Moderators see only those messages.</p> : null}
+      {selecting ? <p className="text-meta text-text-secondary">Choose the messages to report (up to 20). Moderators see only those messages.</p> : null}
 
       {messages.length === 0 && pending.length === 0 ? (
-        <p className="rounded-card bg-surface px-5 py-6 text-center text-text-secondary">No messages yet. Say hello.</p>
+        <p className="rounded-card border border-border bg-surface px-5 py-6 text-center text-text-secondary">No messages yet. Say hello.</p>
       ) : (
         <div className="space-y-5">
           {days.map((d) => (
             <section key={d.day} aria-label={d.day}>
-              <h2 className="mb-2 text-center text-xs font-bold uppercase tracking-wider text-text-secondary">{d.day}</h2>
+              <h2 className="mb-2 text-center text-[0.8125rem] font-semibold text-text-secondary">{d.day}</h2>
               <ol className="space-y-2">
                 {d.items.map((m) => (
                   <li key={m.id} className={cn("flex", m.mine ? "justify-end" : "justify-start")}>
@@ -202,7 +202,7 @@ export function Conversation({ initial, timezone }: { initial: ConversationPage;
                           onChange={(e) => setSelected((s) => (e.target.checked ? [...s, m.id] : s.filter((x) => x !== m.id)))}
                         />
                       ) : null}
-                      <div className={cn("rounded-2xl px-4 py-2.5", m.mine ? "bg-cta text-on-cta" : "bg-surface text-text")}>
+                      <div className={cn("rounded-[1.125rem] px-4 py-2.5", m.mine ? "rounded-br-md bg-cta text-on-cta" : "rounded-bl-md border border-border bg-surface text-text shadow-(--elev-card)")}>
                         <p className="sr-only">{m.mine ? "You:" : `${initial.other_name}:`}</p>
                         <p className="whitespace-pre-wrap break-words">{m.body}</p>
                         <p className={cn("mt-1 text-xs", m.mine ? "text-on-cta/70" : "text-text-secondary")}>
@@ -254,7 +254,7 @@ export function Conversation({ initial, timezone }: { initial: ConversationPage;
       <div ref={endRef} />
 
       {canSend ? (
-        <form onSubmit={onSubmit} className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-card border border-border bg-surface p-3 lg:bottom-4">
+        <form onSubmit={onSubmit} className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-10 rounded-card border border-border bg-surface p-3 shadow-(--elev-lift) lg:bottom-4">
           <label htmlFor="message-input" className="sr-only">
             Message {initial.other_name}
           </label>

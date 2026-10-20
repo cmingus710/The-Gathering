@@ -52,7 +52,7 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
 
       <article aria-labelledby="thread-title" className="space-y-4">
         <header>
-          <p className="mb-2 flex flex-wrap items-center gap-2 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">
+          <p className="mb-2 flex flex-wrap items-center gap-2 text-meta font-semibold text-text-secondary">
             {thread.audience === "group" ? (
               <span className="inline-flex items-center gap-1 text-primary">
                 <Lock className="size-3.5" aria-hidden="true" /> Private group discussion · {thread.group?.name}
@@ -71,11 +71,11 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
               </span>
             ) : null}
           </p>
-          <h1 id="thread-title" className={`text-[1.75rem] font-bold leading-tight sm:text-[2rem] ${deleted ? "italic text-text-secondary" : ""}`}>
+          <h1 id="thread-title" className={`font-display text-[1.75rem] font-semibold leading-tight sm:text-[2rem] ${deleted ? "italic text-text-secondary" : ""}`}>
             {deleted ? "This discussion was deleted by its author" : thread.title}
           </h1>
           {!deleted ? (
-            <p className="mt-2 text-[0.95rem] text-text-secondary">
+            <p className="mt-2 text-meta text-text-secondary">
               {thread.author ?? "Former member"} ·{" "}
               <time dateTime={thread.created_at} title={exactTime(thread.created_at, tz)}>
                 {relativeTime(thread.created_at)}
@@ -135,14 +135,14 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
 
         {thread.can_moderate && !deleted ? (
           <Card>
-            <h2 className="mb-3 text-[0.95rem] font-bold uppercase tracking-[0.08em]">Moderation</h2>
+            <h2 className="mb-3 text-[1.0625rem] font-semibold">Moderation</h2>
             <ThreadModeration threadId={thread.id} pinned={thread.pinned} locked={thread.locked} status={thread.status} />
           </Card>
         ) : null}
       </article>
 
       <section aria-labelledby="replies-heading" className="mt-10">
-        <h2 id="replies-heading" className="mb-3 text-[0.95rem] font-bold uppercase tracking-[0.08em]">
+        <h2 id="replies-heading" className="mb-3 text-[1.0625rem] font-semibold">
           {thread.reply_count === 1 ? "1 reply" : `${thread.reply_count} replies`}
         </h2>
         {thread.posts.length ? (
@@ -162,7 +162,7 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
             ))}
           </ol>
         ) : (
-          <p className="rounded-card bg-surface px-5 py-4 text-text-secondary">No replies yet.</p>
+          <p className="rounded-card border border-border bg-surface px-5 py-4 text-text-secondary">No replies yet.</p>
         )}
         {thread.has_more ? (
           <div className="mt-4">

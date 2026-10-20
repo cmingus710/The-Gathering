@@ -1,7 +1,7 @@
 "use client";
 
-import { Bell, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { Icon } from "@/components/icons/icon";
 import { cn } from "@/components/ui/cn";
 import { useCommunityRealtime } from "./realtime-provider";
 
@@ -12,7 +12,7 @@ export function CountPill({ count, className }: { count: number; className?: str
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex min-w-5 items-center justify-center rounded-full bg-cta px-1.5 text-[0.7rem] font-bold leading-5 text-on-cta ring-2 ring-background",
+        "inline-flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-primary px-1 text-[0.6875rem] font-bold tabular-nums leading-none text-on-primary ring-2 ring-background",
         className,
       )}
     >
@@ -30,11 +30,11 @@ export function NotificationBell({ className }: { className?: string }) {
   return (
     <Link
       href="/notifications"
-      className={cn("relative flex size-11 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-muted", className)}
+      className={cn("relative flex size-11 items-center justify-center rounded-full text-text transition-colors hover:bg-surface-muted", className)}
       aria-label={label("Notifications", counts.notifications)}
     >
-      <Bell className="size-5" aria-hidden="true" />
-      <CountPill count={counts.notifications} className="absolute -right-1 -top-1" />
+      <Icon name="notifications" className="size-6" />
+      <CountPill count={counts.notifications} className="absolute right-0.5 top-0.5" />
     </Link>
   );
 }
@@ -44,11 +44,11 @@ export function MessagesLink({ className }: { className?: string }) {
   return (
     <Link
       href="/messages"
-      className={cn("relative flex size-11 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-muted", className)}
+      className={cn("relative flex size-11 items-center justify-center rounded-full text-text transition-colors hover:bg-surface-muted", className)}
       aria-label={label("Messages", counts.messages)}
     >
-      <MessageCircle className="size-5" aria-hidden="true" />
-      <CountPill count={counts.messages} className="absolute -right-1 -top-1" />
+      <Icon name="messages" className="size-6" />
+      <CountPill count={counts.messages} className="absolute right-0.5 top-0.5" />
     </Link>
   );
 }

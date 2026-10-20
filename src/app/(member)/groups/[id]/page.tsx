@@ -10,7 +10,7 @@ import { ToggleForm } from "@/components/community/toggle-form";
 import { EventListItem } from "@/components/events/event-list-item";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState, SectionHeading } from "@/components/ui/card";
+import { Card, EmptyState, SectionHeading, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { signGroupImages, tryCommunityRpc } from "@/lib/community/queries";
 import type { GroupDetail, Roster, ThreadPage } from "@/lib/community/types";
@@ -48,7 +48,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
       <h1 className="sr-only">{group.name}</h1>
       <GroupCardView group={group} imageUrl={group.image_path ? images.get(group.image_path) : null}>
         {group.is_member && group.leaders?.length ? (
-          <p className="text-[0.95rem]">
+          <p className="text-meta">
             <span className="text-text-secondary">Led by </span>
             {group.leaders.join(", ")}
             {group.member_count != null ? <span className="text-text-secondary"> · {group.member_count === 1 ? "1 member" : `${group.member_count} members`}</span> : null}
@@ -91,7 +91,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
           ) : (
             <p className="text-text-secondary">This group joins by invitation from a leader.</p>
           )}
-          <p className="mt-4 text-[0.95rem] text-text-secondary">Discussions, the member list, and group events are visible only to members.</p>
+          <p className="mt-4 text-meta text-text-secondary">Discussions, the member list, and group events are visible only to members.</p>
         </Card>
       ) : (
         <div className="mt-8 space-y-10">
@@ -120,7 +120,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
             {!threads ? (
               <Alert tone="error" title="Discussions couldn't be loaded right now." />
             ) : allThreads.length ? (
-              <ul className="space-y-2">
+              <ul className={rowListClass}>
                 {allThreads.map((t) => (
                   <li key={t.id}>
                     <ThreadRow thread={t} />
@@ -150,13 +150,13 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
           <section aria-labelledby="members-heading">
             <SectionHeading id="members-heading">Members</SectionHeading>
             {roster ? (
-              <ul className="divide-y divide-border rounded-card bg-surface">
+              <ul className="divide-y divide-border rounded-card border border-border bg-surface">
                 {roster.members.map((m) => (
                   <li key={m.id} className="flex min-h-14 flex-wrap items-center justify-between gap-3 px-5 py-3">
                     <span>
                       <span className="font-semibold">{m.name}</span>
                       {m.me ? <span className="text-text-secondary"> (you)</span> : null}
-                      {m.role === "leader" ? <span className="ml-2 text-sm font-bold uppercase tracking-wider text-primary">Leader</span> : null}
+                      {m.role === "leader" ? <span className="ml-2 text-meta font-semibold text-primary">Leader</span> : null}
                     </span>
                     {!m.me && m.can_message ? <StartConversationButton recipientId={m.id} name={m.name} icon={<MessageCircle className="size-4" aria-hidden="true" />} /> : null}
                   </li>
@@ -165,7 +165,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
             ) : (
               <Alert tone="error" title="The member list couldn't be loaded." />
             )}
-            <p className="mt-2 text-[0.95rem] text-text-secondary">Only names are shown here. Contact details stay private unless someone shares them in the directory.</p>
+            <p className="mt-2 text-meta text-text-secondary">Only names are shown here. Contact details stay private unless someone shares them in the directory.</p>
           </section>
 
           {group.status === "active" ? <LeaveGroupButton groupId={id} isLeader={group.my_role === "leader"} /> : null}

@@ -72,13 +72,13 @@ export default async function AdminEventsPage({ searchParams }: PageProps<"/admi
         <ul className="space-y-2">
           {rows.map((r) => (
             <li key={r.id}>
-              <Link href={`/admin/events/${r.id}`} className="block rounded-card bg-surface px-5 py-4 hover:bg-surface-muted">
+              <Link href={`/admin/events/${r.id}`} className="block rounded-card border border-border bg-surface px-5 py-4 hover:bg-surface-muted">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[1.05rem] font-semibold">{r.title}</span>
+                  <span className="text-title font-semibold">{r.title}</span>
                   <SeriesStatusBadge status={r.status} scheduled={r.status === "published" && !!r.publish_at && new Date(r.publish_at) > now} />
                   <AudienceBadge audience={r.audience} />
                 </div>
-                <p className="text-[0.95rem] text-text-secondary">
+                <p className="text-meta text-text-secondary">
                   {r.next_start ? `Next: ${formatDateTime(r.next_start, r.timezone)}` : r.first_start ? `Started ${formatDateTime(r.first_start, r.timezone)}` : "No dates"}
                   {r.recurrence !== "none" ? ` · ${r.occurrences} dates` : ""}
                   {r.category ? ` · ${r.category}` : ""}

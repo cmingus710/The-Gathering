@@ -43,12 +43,12 @@ export default async function AdminGroupsPage() {
       ) : groups.length ? (
         <ul className="space-y-2">
           {groups.map((g) => (
-            <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-4">
+            <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-4">
               <div className="min-w-0">
                 <Link href={`/groups/${g.id}/manage`} className="font-semibold hover:underline">
                   {g.name}
                 </Link>
-                <p className="flex flex-wrap gap-x-3 text-[0.95rem] text-text-secondary">
+                <p className="flex flex-wrap gap-x-3 text-meta text-text-secondary">
                   <span>{g.status === "archived" ? "Archived" : "Active"}</span>
                   <span className="inline-flex items-center gap-1">
                     {g.visibility === "hidden" ? <EyeOff className="size-3.5" aria-hidden="true" /> : null}

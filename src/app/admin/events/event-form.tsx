@@ -45,8 +45,8 @@ export type EventFormValues = {
   coverUrl: string | null;
 };
 
-const fieldset = "space-y-4 rounded-card bg-surface p-5 sm:p-6";
-const legend = "mb-1 text-[0.95rem] font-bold uppercase tracking-[0.08em]";
+const fieldset = "space-y-4 rounded-card border border-border bg-surface p-5 sm:p-6";
+const legend = "mb-1 text-[1.0625rem] font-semibold";
 
 type Props = {
   initial: EventFormValues;
@@ -99,7 +99,7 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
       <FormMessage state={state} />
       {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
       {published ? (
-        <p className="rounded-card border border-primary/50 bg-primary-soft p-4 text-[0.95rem]">
+        <p className="rounded-card border border-primary/50 bg-primary-soft p-4 text-meta">
           This event is published. Changing its date, time, or place emails everyone registered for affected dates. Wording changes don&apos;t send email.
         </p>
       ) : null}

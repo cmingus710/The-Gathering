@@ -4,11 +4,11 @@ import { buttonClasses } from "@/components/ui/button";
 
 export function PublicHeader({ churchName, iconUrl, signedIn }: { churchName: string; iconUrl: string; signedIn: boolean }) {
   return (
-    <header className="bg-background">
+    <header className="bg-(--header-bg)">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <IconBadge src={iconUrl} />
-          <span className="text-lg font-bold">{churchName}</span>
+          <span className="font-display text-lg font-semibold">{churchName}</span>
         </Link>
         {signedIn ? (
           <Link href="/home" className={buttonClasses("secondary", "sm")}>

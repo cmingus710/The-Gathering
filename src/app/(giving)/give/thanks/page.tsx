@@ -39,14 +39,14 @@ export default async function ThanksPage({ searchParams }: PageProps<"/give/than
       {status.state === "confirmed" ? (
         <Card className="text-center">
           <CircleCheck className="mx-auto size-12 text-success" aria-hidden="true" />
-          <h1 className="mt-3 text-2xl font-bold">Thank you for your gift</h1>
+          <h1 className="mt-3 font-display text-2xl font-semibold">Thank you for your gift</h1>
           {summary ? <p className="mt-2 text-lg">{summary}</p> : null}
           <p className="mt-2 text-text-secondary">Your gift has been received. An acknowledgment is on its way to your email.</p>
         </Card>
       ) : status.state === "processing" ? (
         <Card className="text-center">
           <Clock className="mx-auto size-12 text-primary" aria-hidden="true" />
-          <h1 className="mt-3 text-2xl font-bold">Thank you — we&apos;re confirming your gift</h1>
+          <h1 className="mt-3 font-display text-2xl font-semibold">Thank you — we&apos;re confirming your gift</h1>
           {summary ? <p className="mt-2 text-lg">{summary}</p> : null}
           <p className="mt-2 text-text-secondary">
             Your payment provider is still confirming this payment. Some payment methods take a few days. You&apos;ll receive an email once it&apos;s received.

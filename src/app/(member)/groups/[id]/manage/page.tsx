@@ -42,11 +42,11 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
           {roster?.requests?.length ? (
             <ul className="space-y-2">
               {roster.requests.map((r) => (
-                <li key={r.id} className="space-y-2 rounded-card bg-surface px-5 py-4">
+                <li key={r.id} className="space-y-2 rounded-card border border-border bg-surface px-5 py-4">
                   <p>
                     <span className="font-semibold">{r.name}</span> <span className="text-sm text-text-secondary">· {relativeTime(r.created_at)}</span>
                   </p>
-                  {r.message ? <p className="text-[0.95rem] text-text-secondary">&ldquo;{r.message}&rdquo;</p> : null}
+                  {r.message ? <p className="text-meta text-text-secondary">&ldquo;{r.message}&rdquo;</p> : null}
                   <DecideRequest requestId={r.id} groupId={id} name={r.name} />
                 </li>
               ))}
@@ -65,7 +65,7 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
             {roster?.invitations?.length ? (
               <ul className="mt-3 space-y-2">
                 {roster.invitations.map((i) => (
-                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3">
+                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3">
                     <span>
                       <span className="font-semibold">{i.name}</span>
                       <span className="block text-sm text-text-secondary">Invited · expires {new Date(i.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric" })}</span>
@@ -81,13 +81,13 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
         <section aria-labelledby="roster-heading">
           <SectionHeading id="roster-heading">Members</SectionHeading>
           {roster ? (
-            <ul className="divide-y divide-border rounded-card bg-surface">
+            <ul className="divide-y divide-border rounded-card border border-border bg-surface">
               {roster.members.map((m) => (
                 <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                   <span>
                     <span className="font-semibold">{m.name}</span>
                     {m.me ? <span className="text-text-secondary"> (you)</span> : null}
-                    {m.role === "leader" ? <span className="ml-2 text-sm font-bold uppercase tracking-wider text-primary">Leader</span> : null}
+                    {m.role === "leader" ? <span className="ml-2 text-meta font-semibold text-primary">Leader</span> : null}
                     <span className="block text-sm text-text-secondary">Joined {relativeTime(m.joined_at)}</span>
                   </span>
                   {!m.me ? <MemberControls groupId={id} profileId={m.id} name={m.name} role={m.role} isAdmin={roster.is_admin} /> : null}
@@ -97,7 +97,7 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
           ) : (
             <Alert tone="error" title="The member list couldn't be loaded." />
           )}
-          <p className="mt-2 text-[0.95rem] text-text-secondary">
+          <p className="mt-2 text-meta text-text-secondary">
             Leaders can remove members. Appointing or removing leaders is done by a community administrator; a group always keeps at least one leader unless it&apos;s
             archived.
           </p>
@@ -113,7 +113,7 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
             <SectionHeading id="reports-heading" action={<ButtonLink href={`/groups/${id}/manage/reports`} size="sm" variant="secondary" icon={<Flag className="size-4" aria-hidden="true" />}>All reports</ButtonLink>}>
               Reports in this group
             </SectionHeading>
-            <p className="rounded-card bg-surface px-5 py-4">
+            <p className="rounded-card border border-border bg-surface px-5 py-4">
               {reports.length ? `${reports.length} open ${reports.length === 1 ? "report" : "reports"} to review.` : "No open reports."}{" "}
               <span className="text-text-secondary">Reports about a group leader go to the church&apos;s community moderators instead.</span>
             </p>

@@ -3,65 +3,197 @@
 @import "@fontsource-variable/source-serif-4/index.css";
 
 /*
- * The Gathering · shared design tokens (dark interface).
+ * The Gathering · shared design tokens.
  * Source of truth, mirrored in src/lib/theme/tokens.ts where contrast is
- * verified by unit tests. Do not add a theme editor.
+ * verified by unit tests for both themes. Do not add a theme editor.
  *
- * Brand palette (approved; unchanged): gold #AD8C53, charcoal #363430,
- * ivory #F7F4ED, sand #EAE3D5, deep gold #80642F, olive #52664D, clay #A14538.
+ * Approved palette (unchanged): gold #AD8C53, charcoal #363430, ivory #F7F4ED,
+ * white #FFFFFF, sand #EAE3D5, deep gold #80642F, warm gray #716B61,
+ * olive #52664D, clay #A14538.
  *
- * Usage rules on the dark interface
- * - primary (brand gold) is the accent: links, active states, focus rings,
- *   section actions. Never put gold text on surface-muted (4.4:1).
- * - cta (ivory) is the main button fill, with charcoal text.
- * - The logo and icon keep their original colours on an ivory plaque, because
- *   the charcoal artwork would disappear on dark backgrounds.
+ * Themes
+ * - Light is the default. Dark applies with data-theme="dark" on any element
+ *   (the root, or a preview panel), and data-theme="system" follows the OS.
+ *   The root attribute comes from the "theme" cookie on the server, so the
+ *   first paint is already in the right theme (no flash, no script).
+ *
+ * Usage rules
+ * - primary is the accessible accent for text, links, active states, and focus
+ *   rings: deep gold on light, a lifted gold on dark.
+ * - accent is the original gold #AD8C53: icon highlights, rules, motifs. It is
+ *   never used for small text on light surfaces (under 3:1).
+ * - cta is the main button fill: charcoal on light, ivory on dark.
+ * - The charcoal artwork of the logo sits on an ivory plate in dark mode
+ *   (--mark-plate) instead of being recoloured.
  */
 @theme {
   /* Approved brand palette */
   --color-brand-gold: #ad8c53;
   --color-brand-charcoal: #363430;
   --color-ivory: #f7f4ed;
+  --color-white: #ffffff;
   --color-sand: #eae3d5;
   --color-deep-gold: #80642f;
+  --color-warm-gray: #716b61;
   --color-olive: #52664d;
   --color-clay: #a14538;
 
-  /* Semantic tokens for the dark interface */
-  --color-background: #121110;
-  --color-surface: #22201e;
-  --color-surface-muted: #2e2c29;
-
-  --color-primary: #ad8c53;
-  --color-primary-hover: #c4a46c;
-  --color-primary-soft: #2a261f;
-  --color-on-primary: #1c1b19;
-
-  --color-cta: #f7f4ed;
-  --color-cta-hover: #eae3d5;
-  --color-on-cta: #1c1b19;
-
-  --color-text: #f7f4ed;
-  --color-text-secondary: #b3ac9f;
-
-  --color-border: #33312d;
-  --color-border-strong: #7f796e;
-
-  --color-success: #9db794;
-  --color-success-soft: #1d261c;
-  --color-danger: #e59484;
-  --color-danger-hover: #eeab9e;
-  --color-danger-soft: #2d1b18;
+  /* Semantic tokens: light theme (default) */
+  --color-background: #f7f4ed;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1ece2;
+  --color-surface-raised: #ffffff;
+  --color-primary: #80642f;
+  --color-primary-hover: #664f24;
+  --color-primary-soft: #f3ebdb;
+  --color-on-primary: #ffffff;
+  --color-accent: #ad8c53;
+  --color-cta: #363430;
+  --color-cta-hover: #24221f;
+  --color-on-cta: #f7f4ed;
+  --color-text: #363430;
+  --color-text-secondary: #6b655b;
+  --color-border: #e6decf;
+  --color-border-strong: #8f887b;
+  --color-success: #4a5d45;
+  --color-success-soft: #edf1e9;
+  --color-danger: #a14538;
+  --color-danger-hover: #86372c;
+  --color-danger-soft: #f8ece9;
+  --color-on-danger: #ffffff;
 
   --font-sans: "Source Sans 3 Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, "Times New Roman", serif;
 
-  --radius-control: 0.875rem;
-  --radius-card: 1.25rem;
+  /* Type scale (rem, so text resizing and zoom are preserved) */
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.3;
+  --text-meta: 0.9375rem;
+  --text-meta--line-height: 1.45;
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.35;
+  --text-display: 1.75rem;
+  --text-display--line-height: 1.15;
+
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-tile: 0.875rem;
+
+  --ease-gentle: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-:root {
+/* Theme-scoped values that are not colour utilities. */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --mark-plate: transparent;
+  --mark-plate-ring: transparent;
+  --mark-img: 92%;
+  --icon-fill: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  --motif: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  --header-bg: color-mix(in srgb, var(--color-background) 88%, transparent);
+  --elev-card: 0 1px 2px rgb(54 52 48 / 0.06), 0 1px 0 rgb(54 52 48 / 0.02);
+  --elev-lift: 0 6px 20px -8px rgb(54 52 48 / 0.22), 0 1px 2px rgb(54 52 48 / 0.06);
+  --elev-bar: 0 -1px 0 rgb(54 52 48 / 0.04), 0 10px 30px -12px rgb(54 52 48 / 0.28);
+}
+
+/* Light values again, so a light panel nested in a dark page is light too. */
+[data-theme="light"] {
+  --color-background: #f7f4ed;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1ece2;
+  --color-surface-raised: #ffffff;
+  --color-primary: #80642f;
+  --color-primary-hover: #664f24;
+  --color-primary-soft: #f3ebdb;
+  --color-on-primary: #ffffff;
+  --color-cta: #363430;
+  --color-cta-hover: #24221f;
+  --color-on-cta: #f7f4ed;
+  --color-text: #363430;
+  --color-text-secondary: #6b655b;
+  --color-border: #e6decf;
+  --color-border-strong: #8f887b;
+  --color-success: #4a5d45;
+  --color-success-soft: #edf1e9;
+  --color-danger: #a14538;
+  --color-danger-hover: #86372c;
+  --color-danger-soft: #f8ece9;
+  --color-on-danger: #ffffff;
+}
+
+/* --theme-dark-tokens: mirrored in tokens.ts (palettes.dark) */
+[data-theme="dark"] {
+  --color-background: #141311;
+  --color-surface: #1f1d1b;
+  --color-surface-muted: #2a2825;
+  --color-surface-raised: #26241f;
+  --color-primary: #c9aa72;
+  --color-primary-hover: #dabf8c;
+  --color-primary-soft: #2d2820;
+  --color-on-primary: #1c1b19;
+  --color-accent: #ad8c53;
+  --color-cta: #f7f4ed;
+  --color-cta-hover: #eae3d5;
+  --color-on-cta: #1c1b19;
+  --color-text: #f7f4ed;
+  --color-text-secondary: #b8b1a4;
+  --color-border: #36332f;
+  --color-border-strong: #827c71;
+  --color-success: #a3bc99;
+  --color-success-soft: #1e271d;
+  --color-danger: #e8998a;
+  --color-danger-hover: #f0b0a4;
+  --color-danger-soft: #2e1c19;
+  --color-on-danger: #1c1b19;
+}
+[data-theme="dark"] {
   color-scheme: dark;
+  --mark-plate: #f7f4ed;
+  --mark-plate-ring: rgb(173 140 83 / 0.35);
+  --mark-img: 70%;
+  --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  --motif: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
+  --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
+  --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
+  --elev-bar: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+}
+/* System preference: same values as dark, applied only when the OS asks. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --color-background: #141311;
+    --color-surface: #1f1d1b;
+    --color-surface-muted: #2a2825;
+    --color-surface-raised: #26241f;
+    --color-primary: #c9aa72;
+    --color-primary-hover: #dabf8c;
+    --color-primary-soft: #2d2820;
+    --color-on-primary: #1c1b19;
+    --color-cta: #f7f4ed;
+    --color-cta-hover: #eae3d5;
+    --color-on-cta: #1c1b19;
+    --color-text: #f7f4ed;
+    --color-text-secondary: #b8b1a4;
+    --color-border: #36332f;
+    --color-border-strong: #827c71;
+    --color-success: #a3bc99;
+    --color-success-soft: #1e271d;
+    --color-danger: #e8998a;
+    --color-danger-hover: #f0b0a4;
+    --color-danger-soft: #2e1c19;
+    --color-on-danger: #1c1b19;
+    color-scheme: dark;
+    --mark-plate: #f7f4ed;
+    --mark-plate-ring: rgb(173 140 83 / 0.35);
+    --mark-img: 70%;
+    --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
+    --motif: color-mix(in srgb, var(--color-accent) 22%, transparent);
+    --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
+    --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
+    --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
+    --elev-bar: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+  }
 }
 
 html {
@@ -74,13 +206,26 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 1.0625rem;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+/* Theme-scoped panels (icon reference) paint their own canvas. */
+[data-theme] {
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 h1,
 h2,
 h3 {
   text-wrap: balance;
+}
+
+/* Selected feature headings use the serif. */
+.font-display {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
 }
 
 /* Visible keyboard focus everywhere; mouse clicks don't show the ring. */
@@ -106,7 +251,47 @@ h3 {
   top: 1rem;
 }
 
-/* Formatted announcement bodies (rendered from the sanitized Markdown subset). */
+/* Approved artwork plates (see components/brand/logo.tsx). */
+.brand-mark,
+.brand-plaque {
+  background-color: var(--mark-plate);
+  box-shadow: 0 0 0 1px var(--mark-plate-ring);
+}
+
+/* Interactive surfaces: a quiet lift on hover, a press, never motion-heavy. */
+.interactive {
+  transition:
+    background-color 160ms var(--ease-gentle),
+    border-color 160ms var(--ease-gentle),
+    box-shadow 160ms var(--ease-gentle),
+    transform 120ms var(--ease-gentle);
+}
+.interactive:hover {
+  border-color: var(--color-border-strong);
+}
+.interactive:active {
+  transform: scale(0.985);
+}
+
+/* Custom icon system (src/components/icons). */
+:is(.g-icon, .g-icon-tile) .g-accent {
+  color: var(--color-accent);
+}
+:is(.g-icon, .g-icon-tile) .g-fill {
+  fill: var(--icon-fill);
+}
+.g-icon .g-fill {
+  opacity: 0;
+  transition: opacity 160ms var(--ease-gentle);
+}
+.g-icon[data-active="true"] .g-fill {
+  opacity: 1;
+}
+.g-icon[data-active="true"] .g-accent {
+  color: var(--color-primary);
+}
+
+/* Formatted announcement and discussion bodies (sanitized Markdown subset). */
 .prose-gathering {
   max-width: 68ch;
   overflow-wrap: anywhere;
@@ -143,9 +328,10 @@ h3 {
   padding-left: 1.4em;
 }
 .prose-gathering blockquote {
-  border-left: 3px solid var(--color-brand-gold);
+  border-left: 3px solid var(--color-accent);
   padding-left: 1em;
   color: var(--color-text);
+  font-family: var(--font-serif);
   font-style: italic;
 }
 .prose-gathering hr {
@@ -162,16 +348,18 @@ h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .interactive:active {
+    transform: none;
+  }
 }
 
-/* Horizontal card rails (announcements on Home). */
-.rail {
-  scrollbar-width: none;
-  scroll-snap-type: x mandatory;
+/* Bottom sheet (More menu) slides up; reduced motion makes it instant. */
+dialog.sheet[open] {
+  animation: sheet-in 200ms var(--ease-gentle);
 }
-.rail::-webkit-scrollbar {
-  display: none;
-}
-.rail > * {
-  scroll-snap-align: start;
+@keyframes sheet-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
 }

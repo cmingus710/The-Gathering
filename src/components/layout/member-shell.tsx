@@ -1,22 +1,28 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { IconBadge } from "@/components/brand/logo";
+import { IconBadge, LogoPlaque } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/community/notification-bell";
 import { CommunityRealtimeProvider } from "@/components/community/realtime-provider";
+import { ThemeControl } from "@/components/theme/theme-control";
+import { cn } from "@/components/ui/cn";
 import type { UnreadCounts } from "@/lib/community/types";
 import { getSupabasePublicConfig } from "@/lib/env";
 import { displayName, type Viewer } from "@/lib/auth/viewer";
 import type { ChurchSettings } from "@/lib/settings/queries";
+import { getThemePreference } from "@/lib/theme/server";
 import { MobileTabBar, SidebarNav } from "./member-nav";
 import { SignOutButton } from "./sign-out-button";
 
-/** Round initial avatar linking to the profile. */
-function Avatar({ viewer, className = "size-10" }: { viewer: Viewer; className?: string }) {
+/** Initial avatar linking to the profile. */
+function Avatar({ viewer, className = "size-9" }: { viewer: Viewer; className?: string }) {
   const initial = displayName(viewer).trim().charAt(0).toUpperCase() || "?";
   return (
     <Link
       href="/profile"
-      className={`flex ${className} shrink-0 items-center justify-center rounded-full bg-primary-soft text-lg font-bold text-primary ring-1 ring-primary/40`}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-surface-muted font-display text-[1.0625rem] font-semibold text-text ring-1 ring-border transition-colors hover:ring-border-strong",
+        className,
+      )}
     >
       <span aria-hidden="true">{initial}</span>
       <span className="sr-only">Your profile</span>
@@ -24,7 +30,7 @@ function Avatar({ viewer, className = "size-10" }: { viewer: Viewer; className?:
   );
 }
 
-export function MemberShell({
+export async function MemberShell({
   viewer,
   settings,
   counts,
@@ -36,49 +42,57 @@ export function MemberShell({
   children: ReactNode;
 }) {
   const supabase = getSupabasePublicConfig();
+  const theme = await getThemePreference();
   return (
     <CommunityRealtimeProvider memberId={viewer.id} supabaseUrl={supabase?.url ?? null} supabaseKey={supabase?.publishableKey ?? null} initialCounts={counts}>
-    <div className="min-h-dvh lg:flex">
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
+      <div className="min-h-dvh lg:flex">
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
 
-      <aside className="hidden w-72 shrink-0 flex-col border-r border-border bg-background lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <Link href="/home" className="flex items-center gap-3 px-6 pb-6 pt-7">
-          <IconBadge src={settings.iconUrl} className="size-11" />
-          <span className="text-lg font-bold leading-tight">{settings.churchName}</span>
-        </Link>
-        <div className="flex-1 overflow-y-auto px-3">
-          <SidebarNav showAdmin={viewer.isAdmin} />
-        </div>
-        <div className="border-t border-border px-3 py-4">
-          <div className="flex items-center gap-3 px-3 pb-2">
-            <Avatar viewer={viewer} className="size-9" />
-            <p className="min-w-0 truncate text-sm text-text-secondary">
-              Signed in as <span className="font-semibold text-text">{displayName(viewer)}</span>
-            </p>
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh">
+          <Link href="/home" className="mx-4 mb-2 mt-5 flex justify-center rounded-card" aria-label={`${settings.churchName} home`}>
+            <LogoPlaque src={settings.logoUrl} alt="" className="w-full px-4 py-3" logoClassName="w-[6.5rem]" />
+          </Link>
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            <SidebarNav showAdmin={viewer.isAdmin} />
           </div>
-          <SignOutButton />
-        </div>
-      </aside>
+          <div className="space-y-3 border-t border-border px-3 py-3">
+            <div className="flex items-center gap-3 px-1">
+              <Avatar viewer={viewer} />
+              <p className="min-w-0 flex-1 truncate text-meta">
+                <span className="sr-only">Signed in as </span>
+                <span className="font-semibold text-text">{displayName(viewer)}</span>
+              </p>
+            </div>
+            <ThemeControl current={theme} compact />
+            <SignOutButton className="min-h-10 rounded-tile px-3 text-text-secondary hover:text-text" />
+          </div>
+        </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 bg-background/90 backdrop-blur lg:hidden">
-          <div className="grid h-16 grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2 px-4">
-            <Avatar viewer={viewer} />
-            <Link href="/home" className="truncate text-center text-lg font-bold">
-              {settings.churchName}
-            </Link>
-            <NotificationBell />
-          </div>
-        </header>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 pb-32 pt-4 outline-none sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">
-          {children}
-        </main>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 bg-(--header-bg) backdrop-blur-md lg:hidden">
+            <div className="flex h-14 items-center justify-between gap-2 px-3 pt-[env(safe-area-inset-top)] sm:px-5">
+              <Link href="/home" className="flex min-h-11 items-center rounded-full pr-1" aria-label={`${settings.churchName} home`}>
+                <IconBadge src={settings.iconUrl} className="size-10" />
+              </Link>
+              <div className="flex items-center gap-1">
+                <NotificationBell />
+                <Avatar viewer={viewer} className="ml-1 size-9" />
+              </div>
+            </div>
+          </header>
+          <main
+            id="main"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-3 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:px-10 lg:pb-14 lg:pt-10"
+          >
+            {children}
+          </main>
+        </div>
+
+        <MobileTabBar showAdmin={viewer.isAdmin} signOut={<SignOutButton className="rounded-tile px-3" />} appearance={<ThemeControl current={theme} />} />
       </div>
-
-      <MobileTabBar showAdmin={viewer.isAdmin} signOut={<SignOutButton />} />
-    </div>
     </CommunityRealtimeProvider>
   );
 }

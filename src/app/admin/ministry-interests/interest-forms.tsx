@@ -33,7 +33,7 @@ export function InterestRow({ id, label, sortOrder, active, members }: { id: str
         <TextField id={`label-${id}`} label="Name" name="label" maxLength={60} defaultValue={v.label ?? label} error={state.fieldErrors?.label} />
         <TextField id={`order-${id}`} label="Order" name="sortOrder" inputMode="numeric" defaultValue={v.sortOrder ?? String(sortOrder)} error={state.fieldErrors?.sortOrder} />
       </div>
-      <p className="text-[0.95rem] text-text-secondary">
+      <p className="text-meta text-text-secondary">
         {members === 1 ? "Chosen by 1 member" : `Chosen by ${members} members`}
         {active ? "" : " · Archived (hidden from members)"}
       </p>

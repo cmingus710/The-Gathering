@@ -52,11 +52,11 @@ export function PrivacyForm({ initial }: { initial: Record<string, boolean> }) {
       {/* Choices stay editable (and are kept) while hidden, so turning the listing back on restores them. */}
       <div className={listed ? "space-y-6" : "space-y-6 opacity-70"}>
         {!listed ? (
-          <p className="text-[0.95rem] text-text-secondary">While you&apos;re hidden, none of these details are shown, whatever is ticked.</p>
+          <p className="text-meta text-text-secondary">While you&apos;re hidden, none of these details are shown, whatever is ticked.</p>
         ) : null}
         <Card>
           <fieldset>
-            <legend className="mb-3 text-[0.95rem] font-bold uppercase tracking-[0.08em]">Shared unless you turn them off</legend>
+            <legend className="mb-3 text-[1.0625rem] font-semibold">Shared unless you turn them off</legend>
             <div className="space-y-4">
               {SHARED.map((f) => (
                 <CheckboxField key={f.key} name={f.key} label={f.label} hint={f.hint} defaultChecked={checked(f.key)} />
@@ -67,7 +67,7 @@ export function PrivacyForm({ initial }: { initial: Record<string, boolean> }) {
 
         <Card>
           <fieldset>
-            <legend className="mb-3 text-[0.95rem] font-bold uppercase tracking-[0.08em]">Hidden unless you share them</legend>
+            <legend className="mb-3 text-[1.0625rem] font-semibold">Hidden unless you share them</legend>
             <div className="space-y-4">
               {PRIVATE.map((f) => (
                 <CheckboxField key={f.key} name={f.key} label={f.label} hint={f.hint} defaultChecked={checked(f.key)} />

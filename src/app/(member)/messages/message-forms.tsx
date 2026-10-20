@@ -52,7 +52,7 @@ export function RecipientSearch() {
       {shown?.length ? (
         <ul className="space-y-2">
           {shown.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3">
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3">
               <span className="font-semibold">{p.name}</span>
               <StartConversationButton recipientId={p.id} name={p.name} />
             </li>
@@ -129,7 +129,7 @@ export function DmAllowForm({ current }: { current: "members" | "shared_groups" 
             <input type="radio" name="allow" value={o.value} defaultChecked={current === o.value} className="mt-1 size-5 accent-primary" />
             <span>
               <span className="block font-semibold">{o.label}</span>
-              <span className="block text-[0.95rem] text-text-secondary">{o.hint}</span>
+              <span className="block text-meta text-text-secondary">{o.hint}</span>
             </span>
           </label>
         ))}

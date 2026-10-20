@@ -1,15 +1,18 @@
-import { ChevronRight, Eye, HandCoins, Home, ImageIcon, KeyRound, ShieldCheck, UserPen } from "lucide-react";
+import { ChevronRight, Eye, ImageIcon, KeyRound, ShieldCheck, UserPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Icon } from "@/components/icons/icon";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { ThemeControl } from "@/components/theme/theme-control";
 import { MemberAvatar } from "@/components/profile/member-avatar";
 import { Alert } from "@/components/ui/alert";
 import { Badge, MembershipBadge } from "@/components/ui/badge";
-import { Card, ListRow, PageHeader, SectionHeading } from "@/components/ui/card";
+import { Card, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { displayName, requireApprovedMember } from "@/lib/auth/viewer";
 import { signPhotoUrls } from "@/lib/profile/photos";
 import { getMyHouseholdInvitations, getProfileDetails } from "@/lib/profile/queries";
 import { requireClient } from "@/lib/supabase/server";
+import { getThemePreference } from "@/lib/theme/server";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -30,11 +33,11 @@ export default async function ProfilePage() {
   return (
     <>
       <PageHeader title="Your profile" />
-      <Card className="mb-6 flex items-center gap-4">
+      <Card className="mb-6 flex items-center gap-4 sm:max-w-md">
         <MemberAvatar name={name} photoUrl={photoUrl} size="md" />
         <div className="min-w-0">
-          <p className="truncate text-xl font-bold">{name}</p>
-          <p className="text-[0.95rem] text-text-secondary">
+          <p className="truncate font-display text-xl font-semibold">{name}</p>
+          <p className="text-meta text-text-secondary">
             {details?.directory_listed === false ? "Hidden from the member directory" : "Listed in the member directory"}
           </p>
         </div>
@@ -48,37 +51,48 @@ export default async function ProfilePage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
-        <section aria-labelledby="profile-sections" className="space-y-2">
-          <h2 id="profile-sections" className="sr-only">
-            Profile settings
-          </h2>
-          <ListRow href="/profile/edit" icon={<UserPen className="size-6" aria-hidden="true" />} label="Edit profile details" description="Name, contact details, address, birthday, interests" trailing={chevron} />
-          <ListRow href="/profile/photo" icon={<ImageIcon className="size-6" aria-hidden="true" />} label="Profile photo" description={details?.photo_path ? "Replace or remove your photo" : "Add a photo (optional)"} trailing={chevron} />
-          <ListRow href="/profile/privacy" icon={<ShieldCheck className="size-6" aria-hidden="true" />} label="Directory privacy" description="Choose what other members can see" trailing={chevron} />
-          <ListRow href="/profile/preview" icon={<Eye className="size-6" aria-hidden="true" />} label="Preview my directory profile" description="See exactly what other members see" trailing={chevron} />
-          <ListRow href="/profile/household" icon={<Home className="size-6" aria-hidden="true" />} label="Household" description="Connect with adults you live with" trailing={chevron} />
-          <ListRow href="/giving" icon={<HandCoins className="size-6" aria-hidden="true" />} label="My giving" description="Gift history, recurring gifts, and statements" trailing={chevron} />
-        </section>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-6">
+          <section aria-labelledby="profile-sections">
+            <SectionHeading id="profile-sections">Profile and directory</SectionHeading>
+            <ul className={rowListClass}>
+              <li><ListRow plain href="/profile/edit" icon={<UserPen className="size-5" aria-hidden="true" />} label="Edit profile details" description="Name, contact details, address, birthday, interests" trailing={chevron} /></li>
+              <li><ListRow plain href="/profile/photo" icon={<ImageIcon className="size-5" aria-hidden="true" />} label="Profile photo" description={details?.photo_path ? "Replace or remove your photo" : "Add a photo (optional)"} trailing={chevron} /></li>
+              <li><ListRow plain href="/profile/privacy" icon={<ShieldCheck className="size-5" aria-hidden="true" />} label="Directory privacy" description="Choose what other members can see" trailing={chevron} /></li>
+              <li><ListRow plain href="/profile/preview" icon={<Eye className="size-5" aria-hidden="true" />} label="Preview my directory profile" description="See exactly what other members see" trailing={chevron} /></li>
+              <li><ListRow plain href="/profile/household" icon={<Icon name="home" className="size-5" />} label="Household" description="Connect with adults you live with" trailing={chevron} /></li>
+            </ul>
+          </section>
+          <section aria-labelledby="profile-more">
+            <SectionHeading id="profile-more">Giving and notifications</SectionHeading>
+            <ul className={rowListClass}>
+              <li><ListRow plain href="/giving" icon={<Icon name="giving" className="size-5" />} label="My giving" description="Gift history, recurring gifts, and statements" trailing={chevron} /></li>
+              <li><ListRow plain href="/notifications/settings" icon={<Icon name="notifications" className="size-5" />} label="Notification settings" description="What reaches you, and how" trailing={chevron} /></li>
+              {viewer.isAdmin ? (
+                <li><ListRow plain href="/admin" icon={<Icon name="admin" className="size-5" />} label="Administration" description="Areas your role covers" trailing={chevron} /></li>
+              ) : null}
+            </ul>
+          </section>
+        </div>
 
         <div className="space-y-6">
           <Card>
             <SectionHeading as="h2">Account</SectionHeading>
             <dl className="space-y-3">
               <div>
-                <dt className="text-sm font-semibold text-text-secondary">Sign-in email</dt>
+                <dt className="text-meta font-semibold text-text-secondary">Sign-in email</dt>
                 <dd className="break-all">{viewer.email}</dd>
-                <dd className="text-sm text-text-secondary">Never shown in the directory.</dd>
+                <dd className="text-meta text-text-secondary">Never shown in the directory.</dd>
               </div>
               <div>
-                <dt className="text-sm font-semibold text-text-secondary">Membership</dt>
+                <dt className="text-meta font-semibold text-text-secondary">Membership</dt>
                 <dd className="mt-1">
                   <MembershipBadge status={viewer.status} />
                 </dd>
               </div>
               {roleNames.length ? (
                 <div>
-                  <dt className="text-sm font-semibold text-text-secondary">Roles</dt>
+                  <dt className="text-meta font-semibold text-text-secondary">Roles</dt>
                   <dd className="mt-1 flex flex-wrap gap-1.5">
                     {roleNames.map((r) => (
                       <Badge key={r}>{r}</Badge>
@@ -87,6 +101,10 @@ export default async function ProfilePage() {
                 </div>
               ) : null}
             </dl>
+          </Card>
+          <Card>
+            <ThemeControl current={await getThemePreference()} />
+            <p className="mt-2 text-meta text-text-secondary">Saved on this device.</p>
           </Card>
           <Card>
             <SectionHeading as="h2">Security</SectionHeading>

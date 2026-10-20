@@ -11,7 +11,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
         <LogoPlaque src={settings.logoUrl} alt={settings.churchName} logoClassName="w-32 sm:w-40" priority />
       </Link>
       <main id="main" className="w-full max-w-md">
-        <div className="rounded-card bg-surface p-6 sm:p-8">{children}</div>
+        <div className="rounded-card border border-border bg-surface p-6 sm:p-8">{children}</div>
       </main>
     </div>
   );

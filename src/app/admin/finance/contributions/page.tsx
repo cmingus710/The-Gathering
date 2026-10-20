@@ -117,9 +117,9 @@ export default async function ContributionsPage({ searchParams }: PageProps<"/ad
         <EmptyState title="No contributions match these filters" />
       ) : (
         <>
-          <p className="mb-2 text-[0.95rem] text-text-secondary">{result.total} record(s)</p>
-          <div className="overflow-x-auto rounded-card bg-surface">
-            <table className="w-full min-w-[56rem] text-left text-[0.95rem]">
+          <p className="mb-2 text-meta text-text-secondary">{result.total} record(s)</p>
+          <div className="overflow-x-auto rounded-card border border-border bg-surface">
+            <table className="w-full min-w-[56rem] text-left text-meta">
               <thead className="border-b border-border text-sm text-text-secondary">
                 <tr>
                   {["Date", "Donor", "Fund", "Method", "Status", "Amount", "Refunded", "Fee", "Net"].map((h, i) => (
@@ -162,7 +162,7 @@ export default async function ContributionsPage({ searchParams }: PageProps<"/ad
           {pages > 1 ? (
             <nav aria-label="Pages" className="mt-4 flex items-center justify-between">
               {page > 1 ? <ButtonLink href={`/admin/finance/contributions?${qs}&page=${page - 1}`} variant="secondary" size="sm">Previous</ButtonLink> : <span />}
-              <span className="text-[0.95rem] text-text-secondary">
+              <span className="text-meta text-text-secondary">
                 Page {page} of {pages}
               </span>
               {page < pages ? <ButtonLink href={`/admin/finance/contributions?${qs}&page=${page + 1}`} variant="secondary" size="sm">Next</ButtonLink> : <span />}

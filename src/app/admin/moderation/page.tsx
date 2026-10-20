@@ -51,14 +51,14 @@ export default async function ModerationPage({ searchParams }: PageProps<"/admin
             <ul className="space-y-2">
               {reports.map((r) => (
                 <li key={r.id}>
-                  <Link href={`/admin/moderation/${r.id}`} className="block rounded-card bg-surface px-5 py-4 hover:bg-surface-muted">
+                  <Link href={`/admin/moderation/${r.id}`} className="block rounded-card border border-border bg-surface px-5 py-4 hover:bg-surface-muted">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{REPORT_REASONS.find((x) => x.value === r.reason)?.label ?? r.reason}</span>
                       <Badge tone="info">{r.place}</Badge>
                       {r.involves_group_leader ? <Badge tone="danger">About a group leader</Badge> : null}
                       {r.status === "reviewing" ? <Badge tone="warning">In review</Badge> : null}
                     </span>
-                    <span className="block text-[0.95rem] text-text-secondary">
+                    <span className="block text-meta text-text-secondary">
                       {r.target_type === "message" ? `${r.items} ${r.items === 1 ? "message" : "messages"}` : r.target_type === "thread" ? "Discussion" : "Reply"} by {r.reported} ·{" "}
                       {relativeTime(r.created_at)}
                     </span>
@@ -76,12 +76,12 @@ export default async function ModerationPage({ searchParams }: PageProps<"/admin
           {restrictions?.length ? (
             <ul className="space-y-2">
               {restrictions.map((r) => (
-                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3">
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3">
                   <span>
                     <span className="block font-semibold">
                       {r.name} · {r.scope === "all" ? "posting and messaging" : r.scope}
                     </span>
-                    <span className="block text-[0.95rem] text-text-secondary">
+                    <span className="block text-meta text-text-secondary">
                       {r.reason} · by {r.by} · {r.ends_at ? `until ${exactTime(r.ends_at, tz)}` : "until lifted"}
                     </span>
                   </span>
@@ -90,14 +90,14 @@ export default async function ModerationPage({ searchParams }: PageProps<"/admin
               ))}
             </ul>
           ) : (
-            <p className="rounded-card bg-surface px-5 py-4 text-text-secondary">No active restrictions. Restrictions are applied from a report.</p>
+            <p className="rounded-card border border-border bg-surface px-5 py-4 text-text-secondary">No active restrictions. Restrictions are applied from a report.</p>
           )}
         </section>
 
         <section aria-labelledby="log-heading">
           <SectionHeading id="log-heading">Recent moderation activity</SectionHeading>
           {log?.length ? (
-            <ul className="space-y-1 text-[0.95rem]">
+            <ul className="space-y-1 text-meta">
               {log.map((l, i) => (
                 <li key={i}>
                   <time dateTime={l.at}>{exactTime(l.at, tz)}</time> · {l.actor} · {l.action}

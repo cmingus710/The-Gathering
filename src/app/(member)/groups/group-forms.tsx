@@ -218,7 +218,7 @@ function PeoplePicker({
       {shown?.length ? (
         <ul className="space-y-2">
           {shown.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface-muted px-4 py-3">
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface-muted px-4 py-3">
               <span className="font-semibold">{p.name}</span>
               {render(p)}
             </li>
@@ -320,7 +320,7 @@ export function GroupDetailsForm({
           hint="Meeting time and place, what to bring. Only active members see this."
         />
       ) : (
-        <p className="text-[0.95rem] text-text-secondary">The members-only details are visible to the group&apos;s members, so they aren&apos;t shown here.</p>
+        <p className="text-meta text-text-secondary">The members-only details are visible to the group&apos;s members, so they aren&apos;t shown here.</p>
       )}
       {isAdmin ? (
         <SelectField label="Visibility" name="visibility" value={visibility} onChange={(e) => setVisibility(e.target.value as "discoverable" | "hidden")}>
@@ -346,7 +346,7 @@ export function GroupDetailsForm({
           }}
           className="block w-full text-sm"
         />
-        <p id="group-image-hint" className="text-[0.95rem] text-text-secondary">
+        <p id="group-image-hint" className="text-meta text-text-secondary">
           JPEG, PNG, or WebP up to 4 MB. It&apos;s resized and its location data removed. Visible to anyone who can see the group.
         </p>
         {tooLarge ? <p role="alert" className="text-sm text-danger">That file is over 4 MB. Choose a smaller image.</p> : null}

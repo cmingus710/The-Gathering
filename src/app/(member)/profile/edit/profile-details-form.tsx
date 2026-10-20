@@ -106,7 +106,7 @@ export function ProfileDetailsForm({
 
       <Card className="space-y-5">
         <SectionHeading>Address</SectionHeading>
-        <p className="-mt-2 text-[0.95rem] text-text-secondary">
+        <p className="-mt-2 text-meta text-text-secondary">
           Street address: <Shared on={visibility.street} /> City and state: <Shared on={visibility.city} />
         </p>
         <TextField label="Street address" name="streetAddress" autoComplete="street-address" optional defaultValue={v.streetAddress} error={err.streetAddress} />
@@ -132,7 +132,7 @@ export function ProfileDetailsForm({
           <legend className="font-semibold">
             Birthday <span className="font-normal text-text-secondary">(optional, month and day only)</span>
           </legend>
-          <p className="text-[0.95rem] text-text-secondary">
+          <p className="text-meta text-text-secondary">
             No year is collected. <Shared on={visibility.birthday} />
           </p>
           <div className="mt-2 grid grid-cols-2 gap-4 sm:max-w-sm">
@@ -159,7 +159,7 @@ export function ProfileDetailsForm({
           <legend className="font-semibold">
             Ministry interests <span className="font-normal text-text-secondary">(optional)</span>
           </legend>
-          <p className="text-[0.95rem] text-text-secondary">
+          <p className="text-meta text-text-secondary">
             {interests.length ? <Shared on={visibility.interests} /> : "The church hasn't added any options yet."}
           </p>
           {interests.length ? (
@@ -174,7 +174,7 @@ export function ProfileDetailsForm({
               ))}
             </ul>
           ) : null}
-          {err.interests ? <p className="mt-1 text-[0.95rem] font-medium text-danger">{err.interests[0]}</p> : null}
+          {err.interests ? <p className="mt-1 text-meta font-medium text-danger">{err.interests[0]}</p> : null}
         </fieldset>
       </Card>
 

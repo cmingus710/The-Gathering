@@ -1,72 +1,55 @@
 "use client";
 
-import { Download, Ellipsis, ShieldCheck, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { cn } from "@/components/ui/cn";
-import { SoonPill } from "@/components/ui/badge";
-import { MEMBER_NAV, MOBILE_PRIMARY_KEYS, isActivePath, type NavItem } from "@/lib/navigation";
+import { useEffect, useRef, type ReactNode } from "react";
 import { NavCount } from "@/components/community/notification-bell";
-import { NavIcon } from "./nav-icon";
+import { Icon } from "@/components/icons/icon";
+import { cn } from "@/components/ui/cn";
+import { MEMBER_NAV, MOBILE_PRIMARY_KEYS, NAV_SECTIONS, isActivePath, type NavItem, type NavSection } from "@/lib/navigation";
 
-const available = MEMBER_NAV.filter((i): i is Extract<NavItem, { status: "available" }> => i.status === "available");
+type Available = Extract<NavItem, { status: "available" }>;
+const available = MEMBER_NAV.filter((i): i is Available => i.status === "available");
 const upcoming = MEMBER_NAV.filter((i): i is Extract<NavItem, { status: "upcoming" }> => i.status === "upcoming");
+const inSection = (items: Available[], section: NavSection) => items.filter((i) => i.section === section);
 
-function linkClass(active: boolean) {
+function rowClass(active: boolean) {
   return cn(
-    "flex min-h-11 items-center gap-3 rounded-full px-4 py-2 font-semibold transition-colors",
-    active ? "bg-surface-muted text-text" : "text-text-secondary hover:bg-surface hover:text-text",
+    "group flex min-h-11 items-center gap-3 rounded-tile px-3 py-1.5 font-semibold transition-colors",
+    active ? "bg-primary-soft text-text" : "text-text-secondary hover:bg-surface-muted hover:text-text",
   );
 }
 
-/** Desktop sidebar links. */
-export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
-  const pathname = usePathname();
+function NavRow({ item, pathname }: { item: Available; pathname: string }) {
+  const active = isActivePath(pathname, item.href);
   return (
-    <nav aria-label="Main" className="space-y-6">
-      <ul className="space-y-1">
-        {available.map((item) => {
-          const active = isActivePath(pathname, item.href);
-          return (
-            <li key={item.key}>
-              <Link href={item.href} className={linkClass(active)} aria-current={active ? "page" : undefined}>
-                <NavIcon name={item.icon} />
-                {item.label}
-                {item.count ? <NavCount kind={item.count} /> : null}
-              </Link>
-            </li>
-          );
-        })}
-        {showAdmin ? (
-          <li>
-            <Link href="/admin" className={linkClass(pathname.startsWith("/admin"))}>
-              <ShieldCheck className="size-5" aria-hidden="true" />
-              Administration
-            </Link>
-          </li>
-        ) : null}
-      </ul>
-      <UpcomingList />
-    </nav>
+    <Link href={item.href} className={rowClass(active)} aria-current={active ? "page" : undefined}>
+      <Icon name={item.icon} active={active} className="size-6" />
+      <span className="min-w-0 flex-1 break-words leading-tight">{item.label}</span>
+      {item.count ? <NavCount kind={item.count} /> : null}
+    </Link>
   );
 }
 
-function UpcomingList() {
+function SectionLabel({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <section aria-labelledby="upcoming-heading">
-      <h2 id="upcoming-heading" className="px-4 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">
-        Coming later
-      </h2>
-      <ul className="mt-2 space-y-0.5">
+    <h2 id={id} className="px-3 pb-1 text-eyebrow font-semibold text-text-secondary">
+      {children}
+    </h2>
+  );
+}
+
+function UpcomingList({ idPrefix }: { idPrefix: string }) {
+  return (
+    <section aria-labelledby={`${idPrefix}-upcoming`}>
+      <SectionLabel id={`${idPrefix}-upcoming`}>Coming later</SectionLabel>
+      <ul className="space-y-0.5">
         {upcoming.map((item) => (
-          <li key={item.key} className="flex min-h-10 items-center justify-between gap-2 px-4 text-text-secondary">
-            <span className="flex items-center gap-3">
-              <NavIcon name={item.icon} />
-              {item.label}
-            </span>
-            <SoonPill />
-            <span className="sr-only">(coming soon)</span>
+          <li key={item.key} className="flex min-h-10 items-center gap-3 px-3 text-text-secondary">
+            <Icon name={item.icon} className="size-5 opacity-80" />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            <span className="sr-only">(not available yet)</span>
           </li>
         ))}
       </ul>
@@ -74,12 +57,46 @@ function UpcomingList() {
   );
 }
 
-/** Phone tab bar: a small primary set plus a More sheet. */
-export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signOut: React.ReactNode }) {
+/** Desktop sidebar links, grouped into the same sections as the phone More menu. */
+export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
+  const pathname = usePathname();
+  return (
+    <nav aria-label="Main" className="space-y-5">
+      {NAV_SECTIONS.map((section) => (
+        <section key={section.key} aria-labelledby={`side-${section.key}`}>
+          <SectionLabel id={`side-${section.key}`}>{section.label}</SectionLabel>
+          <ul className="space-y-0.5">
+            {inSection(available, section.key).map((item) => (
+              <li key={item.key}>
+                <NavRow item={item} pathname={pathname} />
+              </li>
+            ))}
+            {section.key === "you" && showAdmin ? (
+              <li>
+                <Link href="/admin" className={rowClass(false)}>
+                  <Icon name="admin" className="size-6" />
+                  Administration
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </section>
+      ))}
+      <UpcomingList idPrefix="side" />
+    </nav>
+  );
+}
+
+/**
+ * Phone tab bar: four primary destinations plus More. Docked to the bottom
+ * edge with safe-area padding; the page reserves the same height.
+ */
+export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: boolean; signOut: ReactNode; appearance: ReactNode }) {
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const primary = available.filter((i) => (MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
+  const primary = MOBILE_PRIMARY_KEYS.map((k) => available.find((i) => i.key === k)!).filter(Boolean);
   const secondary = available.filter((i) => !(MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
+  const moreActive = secondary.some((i) => isActivePath(pathname, i.href)) || pathname === "/install";
 
   useEffect(() => {
     dialogRef.current?.close();
@@ -87,36 +104,42 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
 
   const tab = (active: boolean) =>
     cn(
-      "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[0.75rem] font-semibold transition-colors",
-      active ? "bg-surface-muted text-text" : "text-text-secondary hover:text-text",
+      "relative flex min-h-[3.75rem] flex-1 flex-col items-center justify-center gap-1 rounded-tile px-1 pt-1 text-[0.75rem] leading-none transition-colors",
+      active ? "font-bold text-text" : "font-semibold text-text-secondary hover:text-text",
     );
+  const indicator = (active: boolean) =>
+    active ? <span aria-hidden="true" className="absolute inset-x-[30%] top-0 h-[3px] rounded-b-full bg-accent" /> : null;
 
   return (
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-full border border-border bg-surface/95 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-raised/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-(--elev-bar) backdrop-blur-md lg:hidden"
       >
-        <ul className="flex gap-1">
+        <ul className="mx-auto flex max-w-lg">
           {primary.map((item) => {
             const active = isActivePath(pathname, item.href);
             return (
               <li key={item.key} className="flex flex-1">
-                <Link href={item.href} className={cn(tab(active), "relative")} aria-current={active ? "page" : undefined}>
-                  <NavIcon name={item.icon} className={cn("size-[22px]", active && "text-primary")} />
-                  {item.label === "Announcements" ? "News" : item.label}
-                  {item.count ? (
-                    <span className="absolute right-[18%] top-1.5">
-                      <NavCount kind={item.count} />
-                    </span>
-                  ) : null}
+                <Link href={item.href} className={tab(active)} aria-current={active ? "page" : undefined}>
+                  {indicator(active)}
+                  <span className="relative">
+                    <Icon name={item.icon} active={active} className="size-6" />
+                    {item.count ? (
+                      <span className="absolute -right-2.5 -top-1.5">
+                        <NavCount kind={item.count} />
+                      </span>
+                    ) : null}
+                  </span>
+                  {item.shortLabel ?? item.label}
                 </Link>
               </li>
             );
           })}
           <li className="flex flex-1">
-            <button type="button" className={tab(false)} aria-haspopup="dialog" onClick={() => dialogRef.current?.showModal()}>
-              <Ellipsis className="size-[22px]" aria-hidden="true" />
+            <button type="button" className={tab(moreActive)} aria-haspopup="dialog" onClick={() => dialogRef.current?.showModal()}>
+              {indicator(moreActive)}
+              <Icon name="more" active={moreActive} className="size-6" />
               More
             </button>
           </li>
@@ -126,66 +149,69 @@ export function MobileTabBar({ showAdmin, signOut }: { showAdmin: boolean; signO
       <dialog
         ref={dialogRef}
         aria-labelledby="more-menu-title"
-        className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-[1.75rem] border-t border-border bg-surface p-0 text-text backdrop:bg-black/60 lg:hidden"
+        className="sheet fixed inset-x-0 bottom-0 top-auto m-0 max-h-[88dvh] w-full max-w-none overflow-y-auto rounded-t-[1.5rem] border-t border-border bg-surface p-0 text-text shadow-(--elev-lift) backdrop:bg-black/45 lg:hidden"
         onClick={(e) => {
           if (e.target === dialogRef.current) dialogRef.current?.close();
         }}
       >
-        <div className="px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 id="more-menu-title" className="text-xl font-bold">
+        <div className="px-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
+          <div aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-border-strong/50" />
+          <div className="mb-2 flex items-center justify-between px-3">
+            <h2 id="more-menu-title" className="font-display text-xl font-semibold">
               More
             </h2>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
-              className="flex size-11 items-center justify-center rounded-full hover:bg-surface-muted"
+              className="-mr-2 flex size-11 items-center justify-center rounded-full text-text-secondary hover:bg-surface-muted hover:text-text"
             >
               <X className="size-5" aria-hidden="true" />
               <span className="sr-only">Close menu</span>
             </button>
           </div>
-          <ul className="space-y-1">
-            {secondary.map((item) => (
-              <li key={item.key}>
-                <Link href={item.href} className={linkClass(isActivePath(pathname, item.href))}>
-                  <NavIcon name={item.icon} />
-                  {item.label}
-                  {item.count ? <NavCount kind={item.count} /> : null}
-                </Link>
-              </li>
-            ))}
+          <div className="space-y-4">
+            {NAV_SECTIONS.map((section) => {
+              const items = inSection(secondary, section.key);
+              if (!items.length && !(section.key === "you")) return null;
+              return (
+                <section key={section.key} aria-labelledby={`more-${section.key}`}>
+                  <SectionLabel id={`more-${section.key}`}>{section.label}</SectionLabel>
+                  <ul className="grid grid-cols-2 gap-1">
+                    {items.map((item) => (
+                      <li key={item.key} className="min-w-0">
+                        <NavRow item={item} pathname={pathname} />
+                      </li>
+                    ))}
+                    {section.key === "you" ? (
+                      <li className="min-w-0">
+                        <Link href="/install" className={rowClass(pathname === "/install")}>
+                          <Download className="size-6 p-0.5" aria-hidden="true" />
+                          <span className="min-w-0 truncate">Install app</span>
+                        </Link>
+                      </li>
+                    ) : null}
+                  </ul>
+                </section>
+              );
+            })}
             {showAdmin ? (
-              <li>
-                <Link href="/admin" className={linkClass(false)}>
-                  <ShieldCheck className="size-5" aria-hidden="true" />
-                  Administration
+              <section aria-labelledby="more-admin">
+                <SectionLabel id="more-admin">Administration</SectionLabel>
+                <Link href="/admin" className={rowClass(false)}>
+                  <Icon name="admin" className="size-6" />
+                  Open administration
                 </Link>
-              </li>
+              </section>
             ) : null}
-            <li>
-              <Link href="/install" className={linkClass(pathname === "/install")}>
-                <Download className="size-5" aria-hidden="true" />
-                Add to Home Screen
-              </Link>
-            </li>
-            <li>{signOut}</li>
-          </ul>
-          <div className="mt-5 border-t border-border pt-4">
-            <h3 className="px-4 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">Coming later</h3>
-            <ul className="mt-2 space-y-2">
-              {upcoming.map((item) => (
-                <li key={item.key} className="flex min-h-12 items-center gap-3 rounded-card bg-surface-muted px-4 text-text">
-                  <NavIcon name={item.icon} className="size-5" />
-                  <span className="flex-1 font-semibold">{item.label}</span>
-                  <span className="rounded-md bg-background px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">Soon</span>
-                  <span className="sr-only">(coming soon)</span>
-                </li>
-              ))}
-            </ul>
+            <div className="px-3">{appearance}</div>
+            <div className="border-t border-border pt-3">{signOut}</div>
+            <div className="border-t border-border pt-3">
+              <UpcomingList idPrefix="more" />
+            </div>
           </div>
         </div>
       </dialog>
     </>
   );
 }
+

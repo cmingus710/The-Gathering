@@ -63,13 +63,13 @@ export default async function GroupsPage({ searchParams }: PageProps<"/groups">)
                         </ButtonLink>
                       ) : g.my_request ? (
                         <div className="space-y-2">
-                          <p className="text-[0.95rem] font-semibold">Request sent. Waiting for a leader.</p>
+                          <p className="text-meta font-semibold">Request sent. Waiting for a leader.</p>
                           <WithdrawRequestButton groupId={g.id} />
                         </div>
                       ) : g.accepts_requests ? (
                         <RequestJoinForm groupId={g.id} name={g.name} />
                       ) : (
-                        <p className="text-[0.95rem] text-text-secondary">Joins by invitation from a leader.</p>
+                        <p className="text-meta text-text-secondary">Joins by invitation from a leader.</p>
                       )}
                     </GroupCardView>
                   </li>

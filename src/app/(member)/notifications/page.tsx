@@ -55,10 +55,10 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
                   <Icon className="mt-1 size-5 shrink-0 text-primary" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <Link href={`/notifications/open/${n.id}`} prefetch={false} className="font-semibold hover:underline">
-                      {!n.read ? <span className="mr-2 inline-block rounded-md bg-cta px-1.5 text-xs font-bold uppercase tracking-wider text-on-cta">New</span> : null}
+                      {!n.read ? <span className="mr-2 inline-block rounded-md bg-cta px-1.5 text-[0.8125rem] font-semibold text-on-cta">New</span> : null}
                       {n.title}
                     </Link>
-                    {n.reason ? <p className="text-[0.95rem] text-text-secondary">Reason: {n.reason}</p> : null}
+                    {n.reason ? <p className="text-meta text-text-secondary">Reason: {n.reason}</p> : null}
                     <p className="text-sm text-text-secondary">
                       <time dateTime={n.created_at}>{relativeTime(n.created_at)}</time>
                     </p>

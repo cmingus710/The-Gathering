@@ -4,7 +4,7 @@ import { cn } from "./cn";
 
 const control =
   "block w-full rounded-control border bg-surface px-4 py-2.5 text-base text-text min-h-12 " +
-  "placeholder:text-text-secondary transition-colors " +
+  "placeholder:text-text-secondary transition-colors hover:border-text-secondary " +
   "focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-secondary";
 
@@ -39,13 +39,13 @@ function Chrome({
         {optional ? <span className="ml-1.5 font-normal text-text-secondary">(optional)</span> : null}
       </label>
       {hint ? (
-        <p id={`${id}-hint`} className="text-[0.95rem] text-text-secondary">
+        <p id={`${id}-hint`} className="text-meta text-text-secondary">
           {hint}
         </p>
       ) : null}
       {children}
       {message ? (
-        <p id={`${id}-error`} className="flex items-start gap-1.5 text-[0.95rem] font-medium text-danger">
+        <p id={`${id}-error`} className="flex items-start gap-1.5 text-meta font-medium text-danger">
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
             <span className="sr-only">Error: </span>
@@ -166,7 +166,7 @@ export function CheckboxField({
           {label}
         </label>
         {hint ? (
-          <p id={`${fieldId}-hint`} className="text-[0.95rem] text-text-secondary">
+          <p id={`${fieldId}-hint`} className="text-meta text-text-secondary">
             {hint}
           </p>
         ) : null}

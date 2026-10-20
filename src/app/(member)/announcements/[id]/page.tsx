@@ -34,9 +34,9 @@ export default async function AnnouncementPage({ params }: PageProps<"/announcem
           </time>
         ) : null}
       </div>
-      <h1 className="text-[2rem] font-bold leading-tight">{announcement.title}</h1>
+      <h1 className="font-display text-[2rem] font-semibold leading-tight">{announcement.title}</h1>
             {announcement.imageUrl ? (
-        <img src={announcement.imageUrl} alt={announcement.image_alt ?? ""} className="mt-6 w-full rounded-card bg-surface-muted object-cover" />
+        <img src={announcement.imageUrl} alt={announcement.image_alt ?? ""} className="mt-6 w-full rounded-card border border-border bg-surface-muted object-cover" />
       ) : null}
       <MarkdownBody source={announcement.body} className="mt-6 text-[1.075rem]" />
     </article>

@@ -46,7 +46,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
       {(Object.keys(CATEGORY_INFO) as NotificationCategory[]).map((c) => (
         <fieldset key={c} className="space-y-3 border-b border-border pb-5 last:border-0">
           <legend className="font-bold">{CATEGORY_INFO[c].label}</legend>
-          <p className="text-[0.95rem] text-text-secondary">{CATEGORY_INFO[c].hint}</p>
+          <p className="text-meta text-text-secondary">{CATEGORY_INFO[c].hint}</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <CheckboxField name={`${c}.in_app`} label="In the app" defaultChecked={prefs[c].in_app} disabled={c === "moderation"} />
             {c === "events" ? null : (
@@ -188,7 +188,7 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
 
   return (
     <div className="space-y-4">
-      <p role="status" className="text-[0.95rem]">
+      <p role="status" className="text-meta">
         {message}
       </p>
       {!publicKey ? (
@@ -214,7 +214,7 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
       {devices.length ? (
         <ul className="space-y-2">
           {devices.map((d) => (
-            <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface-muted px-4 py-3">
+            <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface-muted px-4 py-3">
               <span>
                 <span className="block font-semibold">{d.label ?? "A device"}</span>
                 <span className="block text-sm text-text-secondary">Added {new Date(d.created_at).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>

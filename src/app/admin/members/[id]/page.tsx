@@ -109,7 +109,7 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
               <Alert tone="info" title="Roles can be assigned after the member is approved." live={false} />
             ) : (
               <>
-                <p className="mb-2 text-[0.95rem] text-text-secondary">
+                <p className="mb-2 text-meta text-text-secondary">
                   Roles grant administrative access. Membership status is separate: a suspended member loses all role access.
                 </p>
                 <RoleControls userId={member.id} roles={roles ?? []} assigned={(assigned ?? []).map((r) => r.role_key)} />
@@ -133,7 +133,7 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
               <span className="text-text-secondary">No decision recorded, so messaging is off.</span>
             )}
           </p>
-          <p className="mb-4 text-[0.95rem] text-text-secondary">
+          <p className="mb-4 text-meta text-text-secondary">
             Messaging is for adults only and stays off until a membership administrator confirms it here. Every change is recorded in the audit log. You can&apos;t
             change your own.
           </p>
@@ -157,9 +157,9 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
                 <div className="space-y-1">
                   <DirectoryBadge status={member.membership_status} listed={details.directory_listed} />
                   {member.membership_status !== "approved" ? (
-                    <p className="text-[0.95rem] text-text-secondary">Not shown in the directory until approved.</p>
+                    <p className="text-meta text-text-secondary">Not shown in the directory until approved.</p>
                   ) : null}
-                  <p className="text-[0.95rem] text-text-secondary">
+                  <p className="text-meta text-text-secondary">
                     Shares:{" "}
                     {[
                       details.show_photo && "photo",

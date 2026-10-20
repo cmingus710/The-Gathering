@@ -27,7 +27,7 @@ export function AdminProfileForm({ userId, initial, hasPhoto, isSelf }: { userId
     <form ref={formRef} action={action} noValidate className="space-y-5">
       <FormMessage state={state} />
       {isSelf ? <Alert tone="info" title="This is your own profile. You can also edit it from your member profile." live={false} /> : null}
-      <p className="text-[0.95rem] text-text-secondary">
+      <p className="text-meta text-text-secondary">
         Correct details only at the member&apos;s request or to fix an error. Each save is recorded in the audit log by field
         name (never the values).
       </p>

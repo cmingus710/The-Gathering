@@ -63,7 +63,7 @@ export default async function GivingPage() {
                           </div>
                           <Badge tone={c.status === "past_due" ? "danger" : live ? "success" : "neutral"}>{COMMITMENT_STATUS[c.status] ?? c.status}</Badge>
                         </div>
-                        <p className="text-[0.95rem] text-text-secondary">
+                        <p className="text-meta text-text-secondary">
                           {c.next_payment_at
                             ? `Next gift: ${formatDate(c.next_payment_at, settings.timezone)}`
                             : c.canceled_at
@@ -89,12 +89,12 @@ export default async function GivingPage() {
               <ul className="space-y-2">
                 {giving.payments.map((p) => (
                   <li key={p.id}>
-                    <Link href={`/giving/${p.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-3 rounded-card bg-surface px-5 py-3 hover:bg-surface-muted">
+                    <Link href={`/giving/${p.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-5 py-3 hover:bg-surface-muted">
                       <span>
                         <span className="block font-semibold">
                           {formatCents(p.amount_cents)} · {p.fund_name}
                         </span>
-                        <span className="block text-[0.95rem] text-text-secondary">
+                        <span className="block text-meta text-text-secondary">
                           {formatDate(p.date, settings.timezone)} · {p.source === "stripe" ? (p.frequency && p.frequency !== "one_time" ? FREQUENCY_LABEL[p.frequency] : "Online") : p.source === "cash" ? "Cash" : "Check"}
                           {p.refunded_cents > 0 ? ` · ${formatCents(p.refunded_cents)} refunded` : ""}
                         </span>
@@ -135,7 +135,7 @@ export default async function GivingPage() {
           <section aria-labelledby="claim-heading">
             <SectionHeading id="claim-heading">Add a gift you made as a guest</SectionHeading>
             <Card>
-              <p className="mb-4 text-[0.95rem] text-text-secondary">
+              <p className="mb-4 text-meta text-text-secondary">
                 If you gave without signing in using {viewer.email}, enter the gift reference from that gift&apos;s acknowledgment
                 email. Gifts are never added just because an email address matches.
               </p>

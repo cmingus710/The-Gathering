@@ -20,8 +20,8 @@ type Summary = Record<string, number> & {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-card bg-surface p-5">
-      <p className="text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">{label}</p>
+    <div className="rounded-card border border-border bg-surface p-5">
+      <p className="text-meta font-semibold text-text-secondary">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
       {hint ? <p className="mt-1 text-sm text-text-secondary">{hint}</p> : null}
     </div>

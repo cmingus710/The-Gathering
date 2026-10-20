@@ -47,9 +47,9 @@ export function IconMark({ src = DEFAULT_ICON.src, alt = "", className }: { src?
 }
 
 /**
- * The full logo on an ivory plaque. The dark interface would swallow the
- * charcoal lettering, so the artwork sits on the approved ivory instead of
- * being recoloured.
+ * The full logo on its theme plate: bare on the light theme, on an ivory
+ * plaque in dark mode (the charcoal lettering would disappear on dark
+ * surfaces), never recoloured.
  */
 export function LogoPlaque({
   src,
@@ -65,17 +65,20 @@ export function LogoPlaque({
   priority?: boolean;
 }) {
   return (
-    <div className={cn("inline-flex items-center justify-center rounded-[1.75rem] bg-ivory px-7 py-6", className)}>
+    <div className={cn("brand-plaque inline-flex items-center justify-center rounded-card px-6 py-5", className)}>
       <FullLogo src={src} alt={alt} className={logoClassName} priority={priority} />
     </div>
   );
 }
 
-/** The icon mark inside an ivory circle, for compact headers on dark surfaces. */
+/**
+ * The symbol for compact headers: bare on light, inside an ivory disc on dark.
+ * Decorative unless alt is given.
+ */
 export function IconBadge({ src, alt = "", className }: { src?: string; alt?: string; className?: string }) {
   return (
-    <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-ivory", className)}>
-      <IconMark src={src} alt={alt} className="h-[72%] w-auto" />
+    <span className={cn("brand-mark inline-flex size-10 shrink-0 items-center justify-center rounded-full", className)}>
+      <IconMark src={src} alt={alt} className="h-(--mark-img) w-auto" />
     </span>
   );
 }

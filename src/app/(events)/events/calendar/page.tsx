@@ -47,12 +47,12 @@ export default async function CalendarSettingsPage() {
         <div className="space-y-6">
           <Card className="space-y-4">
             <SectionHeading as="h2">Private calendar subscription</SectionHeading>
-            <p className="text-[0.95rem] text-text-secondary">
+            <p className="text-meta text-text-secondary">
               Subscribe once and the events you&apos;re registered for appear in your calendar app, including changes and cancellations.
               Calendar apps check for updates on their own schedule (often every few hours; Google Calendar can take up to a day).
             </p>
             <Alert tone="warning" title="Keep this link private" live={false}>
-              <p className="flex gap-2 text-[0.95rem]">
+              <p className="flex gap-2 text-meta">
                 <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 Anyone who has the link can read the details of the events in it. If you shared it by mistake, create a new link.
               </p>
@@ -67,7 +67,7 @@ export default async function CalendarSettingsPage() {
           {publicFeed ? (
             <Card className="space-y-2">
               <SectionHeading as="h2">Church calendar</SectionHeading>
-              <p className="text-[0.95rem] text-text-secondary">All public events. Anyone can subscribe:</p>
+              <p className="text-meta text-text-secondary">All public events. Anyone can subscribe:</p>
               <p className="break-all font-mono text-sm">{`${siteUrl}/api/calendar/public`}</p>
             </Card>
           ) : null}

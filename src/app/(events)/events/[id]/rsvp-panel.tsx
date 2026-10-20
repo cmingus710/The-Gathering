@@ -41,12 +41,12 @@ export function RsvpPanel({ occurrenceId, state, position, spotsLeft, canRegiste
           {state === "canceled" ? <RsvpBadge state="canceled" /> : null}
           {["confirmed", "waitlisted", "full", "waitlist", "closed"].includes(state) ? <RsvpBadge state={state} position={position} /> : null}
           {state === "waitlisted" ? (
-            <p className="mt-2 text-[0.95rem] text-text-secondary">
+            <p className="mt-2 text-meta text-text-secondary">
               If a place opens, you&apos;ll be registered automatically (your place is then confirmed) and we&apos;ll email you.
             </p>
           ) : null}
           {state === "open" && spotsLeft !== null ? (
-            <p className="text-[0.95rem] text-text-secondary">
+            <p className="text-meta text-text-secondary">
               {spotsLeft} {spotsLeft === 1 ? "place" : "places"} left
             </p>
           ) : null}
@@ -83,7 +83,7 @@ export function RsvpPanel({ occurrenceId, state, position, spotsLeft, canRegiste
           </ConfirmDialog>
         ) : null}
         {state === "confirmed" ? (
-          <p className="flex items-center gap-2 text-[0.95rem] text-success">
+          <p className="flex items-center gap-2 text-meta text-success">
             <CircleCheck className="size-4" aria-hidden="true" /> A confirmation was emailed to you.
           </p>
         ) : null}

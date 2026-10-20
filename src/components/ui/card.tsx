@@ -1,41 +1,49 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { SpotIcon } from "@/components/icons/icon";
+import type { IconName } from "@/lib/icons";
 import { cn } from "./cn";
 
+/** Restrained surface for forms and grouped content. */
 export function Card({ className, ...rest }: ComponentProps<"div">) {
-  return <div className={cn("rounded-card bg-surface p-5 sm:p-6", className)} {...rest} />;
+  return <div className={cn("rounded-card border border-border bg-surface p-5 shadow-(--elev-card) sm:p-6", className)} {...rest} />;
 }
 
-/** Uppercase section label with an optional gold action link on the right. */
+/** Sentence-case section heading with an optional action on the right. */
 export function SectionHeading({
   children,
   id,
   action,
   as: Tag = "h2",
+  description,
 }: {
   children: ReactNode;
   id?: string;
   action?: ReactNode;
   as?: "h2" | "h3";
+  description?: ReactNode;
 }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <Tag id={id} className="text-[0.95rem] font-bold uppercase tracking-[0.08em] text-text">
-        {children}
-      </Tag>
+    <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+      <div className="min-w-0">
+        <Tag id={id} className="text-[1.125rem] font-semibold leading-snug text-text">
+          {children}
+        </Tag>
+        {description ? <p className="text-meta text-text-secondary">{description}</p> : null}
+      </div>
       {action}
     </div>
   );
 }
 
-/** "VIEW ALL >" style link used beside section headings. */
+/** "View all ›" link beside section headings. Omit it when there is nothing to view. */
 export function SectionLink({ href, children, label }: { href: string; children: ReactNode; label?: string }) {
   return (
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex min-h-11 items-center gap-1 text-sm font-bold uppercase tracking-[0.08em] text-primary hover:text-primary-hover"
+      className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-meta font-semibold text-primary transition-colors hover:bg-primary-soft hover:text-primary-hover"
     >
       {children}
       <ChevronRight className="size-4" aria-hidden="true" />
@@ -55,20 +63,23 @@ export function PageHeader({
   eyebrow?: ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-3 sm:mb-8">
       <div className="min-w-0 max-w-2xl">
-        {eyebrow ? <p className="mb-1 text-sm font-bold uppercase tracking-[0.08em] text-text-secondary">{eyebrow}</p> : null}
-        <h1 className="text-[1.75rem] font-bold leading-tight text-text sm:text-[2rem]">{title}</h1>
-        {description ? <p className="mt-2 text-text-secondary">{description}</p> : null}
+        {eyebrow ? <p className="mb-1 text-meta font-semibold text-text-secondary">{eyebrow}</p> : null}
+        <h1 className="font-display text-display font-semibold text-text sm:text-[2.125rem]">{title}</h1>
+        {description ? <p className="mt-1.5 max-w-[60ch] text-text-secondary">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>
   );
 }
 
+/** Container for compact rows (conversations, threads, categories): one surface, hairline dividers. */
+export const rowListClass = "divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-(--elev-card)";
+
 /**
- * Rounded list row: leading icon, label, optional trailing detail
- * (duration, badge, check). Renders as a link when href is given.
+ * Compact row: leading icon, label, optional trailing detail (time, badge,
+ * chevron). Renders as a link when href is given.
  */
 export function ListRow({
   icon,
@@ -77,6 +88,7 @@ export function ListRow({
   trailing,
   href,
   className,
+  plain = false,
 }: {
   icon?: ReactNode;
   label: ReactNode;
@@ -84,20 +96,26 @@ export function ListRow({
   trailing?: ReactNode;
   href?: string;
   className?: string;
+  /** Inside a rowListClass container: no own border or radius. */
+  plain?: boolean;
 }) {
   const body = (
     <>
-      {icon ? <span className="flex size-7 shrink-0 items-center justify-center text-text">{icon}</span> : null}
+      {icon ? <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text">{icon}</span> : null}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[1.05rem] font-semibold text-text">{label}</span>
-        {description ? <span className="block truncate text-[0.95rem] text-text-secondary">{description}</span> : null}
+        <span className="block truncate text-title font-semibold text-text">{label}</span>
+        {description ? <span className="block truncate text-meta text-text-secondary">{description}</span> : null}
       </span>
-      {trailing ? <span className="shrink-0 text-[0.95rem] text-text-secondary">{trailing}</span> : null}
+      {trailing ? <span className="shrink-0 text-meta text-text-secondary">{trailing}</span> : null}
     </>
   );
-  const classes = cn("flex min-h-16 items-center gap-4 rounded-card bg-surface px-5 py-3", className);
+  const classes = cn(
+      "flex min-h-14 items-center gap-3.5 px-4 py-2.5",
+      plain ? "bg-transparent" : "rounded-tile border border-border bg-surface",
+      className,
+    );
   return href ? (
-    <Link href={href} className={cn(classes, "transition-colors hover:bg-surface-muted")}>
+    <Link href={href} className={cn(classes, plain ? "transition-colors hover:bg-surface-muted/60" : "interactive hover:bg-surface-muted/60")}>
       {body}
     </Link>
   ) : (
@@ -105,23 +123,38 @@ export function ListRow({
   );
 }
 
+/**
+ * Compact empty state: a small illustration, a short title, one helpful line,
+ * and an optional action (for example an administrator-only setup link).
+ */
 export function EmptyState({
   icon,
+  glyph,
   title,
   children,
   action,
+  className,
 }: {
   icon?: ReactNode;
+  /** Custom illustration from the icon set (preferred over icon). */
+  glyph?: IconName;
   title: ReactNode;
   children?: ReactNode;
   action?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-card px-5 py-12 text-center">
-      {icon ? <div className="mb-3 flex size-12 items-center justify-center text-text-secondary">{icon}</div> : null}
-      <p className="text-lg font-bold text-text-secondary">{title}</p>
-      {children ? <div className="mx-auto mt-1 max-w-sm text-text-secondary">{children}</div> : null}
-      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
+    <div className={cn("flex items-center gap-4 rounded-card border border-dashed border-border px-4 py-4 sm:px-5", className)}>
+      {glyph ? (
+        <SpotIcon name={glyph} className="size-12" />
+      ) : icon ? (
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text-secondary">{icon}</span>
+      ) : null}
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-text">{title}</p>
+        {children ? <div className="text-meta text-text-secondary">{children}</div> : null}
+        {action ? <div className="mt-2.5 flex flex-wrap gap-2">{action}</div> : null}
+      </div>
     </div>
   );
 }

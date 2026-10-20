@@ -28,7 +28,7 @@ export default async function PhotoPage() {
       ) : (
         <Card>
           <PhotoForm name={displayName(viewer)} photoUrl={photoUrl} hasPhoto={!!details.photo_path} shared={details.show_photo && details.directory_listed} />
-          <p className="mt-6 border-t border-border pt-4 text-[0.95rem] text-text-secondary">
+          <p className="mt-6 border-t border-border pt-4 text-meta text-text-secondary">
             Photos are stored privately and shown only to signed-in approved members (and only if you share your photo). Each
             photo is resized and its hidden data, such as location, is removed. A replaced or removed photo is deleted; links
             already opened on someone&apos;s screen stop working within {Math.round(PHOTO_URL_TTL_SECONDS / 60)} minutes.

@@ -48,8 +48,8 @@ export function PostItem({
   const editRef = useRef<HTMLDivElement>(null);
 
   return (
-    <article id={`post-${post.id}`} tabIndex={-1} aria-label={post.author ? `Reply from ${post.author}` : "Reply"} className="rounded-card bg-surface p-5 outline-none focus-visible:ring-2 focus-visible:ring-primary">
-      <header className="mb-2 flex flex-wrap items-baseline gap-x-2 text-[0.95rem]">
+    <article id={`post-${post.id}`} tabIndex={-1} aria-label={post.author ? `Reply from ${post.author}` : "Reply"} className="rounded-card border border-border bg-surface p-5 outline-none focus-visible:ring-2 focus-visible:ring-primary">
+      <header className="mb-2 flex flex-wrap items-baseline gap-x-2 text-meta">
         <span className="font-semibold">{post.author ?? (post.status === "deleted" ? "Deleted" : "Former member")}</span>
         <time dateTime={post.created_at} title={exact} className="text-text-secondary">
           {when}
@@ -80,7 +80,7 @@ export function PostItem({
         </div>
       ) : (
         <>
-          {post.status === "hidden" ? <p className="mb-2 text-sm font-bold uppercase tracking-wider text-danger">Hidden by a moderator (only moderators see this)</p> : null}
+          {post.status === "hidden" ? <p className="mb-2 text-meta font-semibold text-danger">Hidden by a moderator (only moderators see this)</p> : null}
           {html ? <div className="prose-gathering break-words" dangerouslySetInnerHTML={{ __html: html }} /> : null}
         </>
       )}

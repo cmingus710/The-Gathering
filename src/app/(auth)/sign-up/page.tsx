@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Create an account" };
 export default function SignUpPage() {
   return (
     <>
-      <h1 className="text-2xl font-bold">Create your account</h1>
+      <h1 className="font-display text-2xl font-semibold">Create your account</h1>
       <p className="mt-1 text-text-secondary">
         After you verify your email, a church administrator will review your account before member areas open.
       </p>

@@ -15,7 +15,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
         {children}
       </main>
       <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-[0.95rem] text-text-secondary sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-meta text-text-secondary sm:px-6">
           <p>© {new Date().getFullYear()} {settings.churchName}</p>
           <a href="/install" className="font-semibold text-primary underline-offset-2 hover:underline">
             Add the app to your Home Screen
