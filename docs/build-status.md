@@ -8,7 +8,7 @@ Last updated: 2026-10-26 · Phase 8 branch `phase-8/bible-reading-journals` (als
 
 Phase 8 code is complete and verified locally. It starts from the head of `phase-7/teaching-media` (`71728f2`), the newest integrated work, which already includes `main`; nothing was duplicated or lost. None of the earlier PRs is merged, so PR #13 into `main` also shows their commits; merge them in order first (or retarget). Production builds stay paused; giving stays in Stripe test mode. Phase 9 hasn't started.
 
-**The hosted database is not yet migrated for Phase 8.** The six operator scripts are ready and rehearsed; the owner runs them in the SQL editor (they're too large to pass through the SQL connector safely). Until then, the preview's Bible and journal pages show "couldn't be loaded" and the home card is simply absent.
+**The hosted database is migrated for Phase 8 (2026-10-20).** The owner ran the six operator scripts in the SQL editor; the migration history lists `20261026000100`…`000600`, and `supabase/tests/bible-fingerprint.sql` on the hosted project matches the fresh-build digests in all 16 categories. Next: import the WEB and ASV texts (Admin → Bible sources) and run the hosted walkthrough below.
 
 Guides: [bible-sources.md](bible-sources.md) (translations, sources, rights, imports, PDFs), [reading-plan-guide.md](reading-plan-guide.md) (administration, CSV import, correction and versioning policy), [bible-reading-guide.md](bible-reading-guide.md) (members), [journal-privacy.md](journal-privacy.md) (privacy, export, deletion, retention). Design: [architecture.md](architecture.md#bible-reading-plans-scripture-reader-and-journals-phase-8).
 
