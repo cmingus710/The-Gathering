@@ -8,7 +8,7 @@ Each phase is built, verified, and reviewed before the next begins.
 | 2 | Membership and directory | **Built** (PR #5, awaiting review) |
 | 3 | Giving and contributions | **Built**, Stripe test mode (PR #6, awaiting review) |
 | 4 | Events and calendars | **Built** (PR into `main`, stacked on #5 and #6, awaiting review) |
-| 5 | Community, groups, messaging, and notifications | **Built** (draft PR #8, stacked on #7); hosted database steps 2–5 pending |
+| 5 | Community, groups, messaging, and notifications | **Built** (draft PR #8, stacked on #7); hosted database applied; walkthrough pending |
 | 6 | Prayer and care | Planned |
 | 7 | Teaching and media | Planned |
 | 8 | Bible reading and journals | Planned |

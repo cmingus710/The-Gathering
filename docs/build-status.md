@@ -10,7 +10,7 @@ Phase 5 code is complete on `phase-5/community-messaging`, branched from the hea
 
 Preview: `https://the-gathering-git-phase-5-community-messaging-paint-by-number.vercel.app` (deployment `dpl_ACmcScwVYkDXLvDfrBncxpVgr2UZ`, Ready).
 
-**The hosted database is only partly migrated** (step 1 of 5; see below). Until the owner runs steps 2–5, community pages on the preview show "couldn't be loaded" states, and the hosted walkthrough has not been done.
+**The hosted database is fully migrated** (all five Phase 5 migrations, 2026-10-20) and matches the local build. The hosted walkthrough has not been done yet.
 
 Guides: [community-moderation-guide.md](community-moderation-guide.md), [messaging-privacy-guide.md](messaging-privacy-guide.md), [notifications.md](notifications.md). Design: [architecture.md](architecture.md#community-groups-messaging-and-notifications-phase-5).
 
@@ -50,12 +50,13 @@ Lint (zero warnings), typecheck, production build, **359 Vitest tests** (30 file
 | Preview build `711d9c7` (`dpl_ACmcScwVYkDXLvDfrBncxpVgr2UZ`) | Ready |
 | Signed-out `/community` → sign-in, `private, no-cache, no-store` (fetched through Vercel's share link) | Pass |
 | Migration step 1 (`20261022000100_community_schema`) via connector | **Applied 2026-10-19**: history row recorded under the repository version, 28 community tables, 24 helpers |
-| Migration steps 2–5 | **Not applied.** Step 2 timed out in the connector without reaching the database (verified nothing changed). Owner runs `supabase/manual/2026-10-22-apply-community-2.sql` … `-5.sql` in the SQL editor |
-| Scheduler extension (`2026-10-22-community-scheduler.sql`, designated URL = Phase 5 branch) | Not run (needs steps 2–5) |
+| Migration steps 2–5 | **Applied 2026-10-20** by the owner in the SQL editor (step 2 had timed out in the connector without reaching the database). History: `20261022000100`…`000500`, all `created_by = phase-5` |
+| Scheduler extension (`2026-10-22-community-scheduler.sql`) | **Run 2026-10-20.** `events.settings.job_url` = the Phase 5 branch URL; `events-worker` cron job active; `events.call_worker()` now also runs `community.tick()`. The Phase 4 preview is no longer the designated deployment |
 | `EVENTS_JOB_SECRET` for branch `phase-5/community-messaging` | Not set (it exists only for `phase-4/events-calendar`); community email/push delivery from this preview waits on it |
 | VAPID keys for web push | Not set; push is off on the preview (in-app and email unaffected) |
-| Fingerprint after the owner's run | Expect `supabase/tests/community-fingerprint.sql` to match the rehearsal: bucket 1 b30312be · column 233 4907293b · constraint 170 84cd4267 · function 124 976aac81 · function_grant 119 4244a591 · index 98 312126a7 · policy 4 0af60a8f · rls 28 1d13c1ca · schema_acl 1 2b42cc9d · seed_capability 2 be6ee9da · seed_category 4 454934f6 · seed_role 3 2b62cb2d · seed_role_capability 2 080caec3 · seed_settings 1 fcb0122a · trigger 3 5e7129c1 |
-| Hosted walkthrough with test accounts | **Not done** (blocked on steps 2–5) |
+| Fingerprint (`supabase/tests/community-fingerprint.sql`) | **Pass: hosted equals the rehearsal and a fresh build in all 15 categories**: bucket 1 b30312be · column 233 4907293b · constraint 170 84cd4267 · function 124 976aac81 · function_grant 119 4244a591 · index 98 312126a7 · policy 4 0af60a8f · rls 28 1d13c1ca · schema_acl 1 2b42cc9d · seed_capability 2 be6ee9da · seed_category 4 454934f6 · seed_role 3 2b62cb2d · seed_role_capability 2 080caec3 · seed_settings 1 fcb0122a · trigger 3 5e7129c1 |
+| Security advisor after Phase 5 | Reviewed: Phase 5 adds only expected notices: `community_job` executable by `anon` (HMAC-signed, like `events_job` and `giving_ingest`), `community` tables with RLS and no policies (never exposed), and signed-in definer functions that recheck access. Pre-existing: `pg_net` in `public` (Phase 4 scheduler), leaked-password protection off |
+| Hosted walkthrough with test accounts | **Not done** |
 | Web push on a device | Not done |
 
 ### Hosted walkthrough plan (after steps 2–5)
