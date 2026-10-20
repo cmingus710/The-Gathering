@@ -102,6 +102,15 @@ The home launcher uses the supplied dimensional tiles (19 square PNGs, 1254 px, 
 - With more rows than fit, the grid scrolls inside a bounded area: three rows on phones, two on short screens and desktop, at most about 60% of the viewport, plus 40% of the next row as a cue. Edge fades and a small gold cue show there is more.
 - Scrolling only goes vertically and hands off to the page at either end (no overscroll containment). Every tile is in the tab order; a focused tile is scrolled clear of the fades (`scroll-padding`). Reduced motion removes the lift and smooth scrolling.
 
+## Section pages and hubs
+
+The home tiles carry through to each section, so the app doesn't drop to plain text after the launcher.
+
+- **`SectionHero`** (`src/components/ui/section-hero.tsx`) is the header of a section's main page: the section's home tile (same artwork, same shadow) on the greeting banner's surface, the serif title with the short gold rule, the description, and actions aligned with the text. It takes `PageHeader`'s props plus `art` and `glyph`. Used on Directory, Events, Community, Messages, Groups, Give, News, Notifications, Prayer, Devotionals, Sunday lessons, Podcasts, Church reading, Music, Gallery, Bible reading, Teaching & media, and My Journal. Profile keeps its avatar card. Detail pages, forms, and admin pages keep the plain `PageHeader`.
+- **`TileGrid`** (`src/components/ui/tile-grid.tsx`) shows a hub's sections as dimensional tiles with the launcher's columns, labels, hover, and focus, but never scrolls on its own. Used for the Teaching & media sections and Bible reading's "Yours".
+- Entries without supplied artwork (Teaching & media, My Journal, Bookmarks & highlights) use their glyph on a neutral tile, the launcher's missing-art fallback. Supplying artwork for them later only needs the image and an `art` name.
+- The sidebar, the admin area, and list rows keep the line icons.
+
 ## Navigation
 
 - **Phone dock:** Home, Events, Community, Messages, and More, on a slim floating surface: smoked glass on dark, translucent ivory on light, a solid surface where `backdrop-filter` is unsupported or reduced transparency is requested.

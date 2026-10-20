@@ -50,7 +50,7 @@ export function SectionHero({
         </div>
       </div>
       {description ? <p className="mt-3 max-w-[60ch] text-text-secondary sm:hidden">{description}</p> : null}
-      {actions ? <div className="mt-4 flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="mt-4 flex flex-wrap gap-2 sm:pl-32">{actions}</div> : null}
     </header>
   );
 }
