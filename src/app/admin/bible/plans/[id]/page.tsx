@@ -74,6 +74,43 @@ export default async function AdminPlanPage({ params, searchParams }: PageProps<
   const retired = plan.day_list.filter((d) => d.retired_at);
   const notice = typeof sp.notice === "string" ? NOTICES[sp.notice] : undefined;
 
+  const importCard =
+    draft && canEdit ? (
+      <Card id="import">
+        <SectionHeading
+          as="h2"
+          description={`Import many days at once from an Excel workbook (.xlsx) or a CSV file. Put one ${plan.mode === "calendar" ? "date" : "day"} per row with its passages; the first sheet is read.`}
+        >
+          Import from a spreadsheet
+        </SectionHeading>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <ButtonLink href={`/admin/bible/template?mode=${plan.mode}&format=xlsx`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
+            Excel template ({plan.mode === "calendar" ? "dated" : "numbered days"})
+          </ButtonLink>
+          <ButtonLink href={`/admin/bible/template?mode=${plan.mode}`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
+            CSV template
+          </ButtonLink>
+        </div>
+        <ImportForm planId={plan.id} />
+        {plan.imports.length ? (
+          <ul className="mt-4 space-y-1 text-meta text-text-secondary">
+            {plan.imports.map((i) => (
+              <li key={i.id}>
+                {i.status === "previewed" ? (
+                  <Link href={`/admin/bible/plans/${plan.id}/import/${i.id}`} className="font-semibold text-primary hover:underline">
+                    Preview: {i.file_name}
+                  </Link>
+                ) : (
+                  `${i.file_name}: ${i.status}`
+                )}{" "}
+                · {i.rows} days{i.errors ? `, ${i.errors} problems` : ""}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </Card>
+    ) : null;
+
   return (
     <>
       <p className="mb-4">
@@ -128,7 +165,17 @@ export default async function AdminPlanPage({ params, searchParams }: PageProps<
                 ))}
               </ol>
             ) : (
-              <p className="text-text-secondary">No days yet. Add them one by one or import a CSV.</p>
+              <p className="text-text-secondary">
+                No days yet. Add them one by one, or{" "}
+                {importCard ? (
+                  <a href="#import" className="font-semibold text-primary hover:underline">
+                    import them all from an Excel or CSV file
+                  </a>
+                ) : (
+                  "import them from a spreadsheet"
+                )}
+                .
+              </p>
             )}
             {retired.length ? (
               <details className="mt-3">
@@ -144,6 +191,8 @@ export default async function AdminPlanPage({ params, searchParams }: PageProps<
             ) : null}
           </section>
 
+          {!current.length ? importCard : null}
+
           {(draft && canEdit) || (!draft && canPublish && plan.status === "published") ? (
             <Card>
               <SectionHeading as="h2">Add a day</SectionHeading>
@@ -151,41 +200,7 @@ export default async function AdminPlanPage({ params, searchParams }: PageProps<
             </Card>
           ) : null}
 
-          {draft && canEdit ? (
-            <Card>
-              <SectionHeading
-                as="h2"
-                description={`Import many days at once from an Excel workbook (.xlsx) or a CSV file. Put one ${plan.mode === "calendar" ? "date" : "day"} per row with its passages; the first sheet is read.`}
-              >
-                Import from a spreadsheet
-              </SectionHeading>
-              <div className="mb-4 flex flex-wrap gap-2">
-                <ButtonLink href={`/admin/bible/template?mode=${plan.mode}&format=xlsx`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
-                  Excel template ({plan.mode === "calendar" ? "dated" : "numbered days"})
-                </ButtonLink>
-                <ButtonLink href={`/admin/bible/template?mode=${plan.mode}`} variant="ghost" size="sm" icon={<Download className="size-4" aria-hidden="true" />}>
-                  CSV template
-                </ButtonLink>
-              </div>
-              <ImportForm planId={plan.id} />
-              {plan.imports.length ? (
-                <ul className="mt-4 space-y-1 text-meta text-text-secondary">
-                  {plan.imports.map((i) => (
-                    <li key={i.id}>
-                      {i.status === "previewed" ? (
-                        <Link href={`/admin/bible/plans/${plan.id}/import/${i.id}`} className="font-semibold text-primary hover:underline">
-                          Preview: {i.file_name}
-                        </Link>
-                      ) : (
-                        `${i.file_name}: ${i.status}`
-                      )}{" "}
-                      · {i.rows} days{i.errors ? `, ${i.errors} problems` : ""}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </Card>
-          ) : null}
+          {current.length ? importCard : null}
 
           <section aria-labelledby="changes">
             <SectionHeading id="changes">Change log</SectionHeading>
