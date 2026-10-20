@@ -18,6 +18,8 @@ export type EventOccurrence = {
   description: string;
   cover_path: string | null;
   cover_alt: string | null;
+  /** Dedicated homepage banner (20261023000100); absent before that migration. */
+  home_banner?: { path: string; alt: string; focus_x: number; focus_y: number } | null;
   category: { id: string; name: string } | null;
   audience: Audience;
   timezone: string;

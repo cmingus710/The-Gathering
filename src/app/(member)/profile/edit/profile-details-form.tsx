@@ -178,7 +178,7 @@ export function ProfileDetailsForm({
         </fieldset>
       </Card>
 
-      <div className="sticky bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex flex-wrap items-center gap-4 rounded-card border border-border bg-background/95 p-3 backdrop-blur lg:bottom-4">
+      <div className="sticky bottom-(--dock-clearance) z-10 flex flex-wrap items-center gap-4 rounded-card border border-border bg-background/95 p-3 backdrop-blur lg:bottom-4">
         <SubmitButton pendingText="Saving…">Save profile</SubmitButton>
         <Link href="/profile/privacy" className="font-semibold text-primary hover:underline">
           Choose what&apos;s shared

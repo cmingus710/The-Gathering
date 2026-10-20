@@ -90,7 +90,6 @@
   --mark-plate-ring: transparent;
   --mark-img: 92%;
   --icon-fill: color-mix(in srgb, var(--color-accent) 20%, transparent);
-  --motif: color-mix(in srgb, var(--color-accent) 30%, transparent);
   --header-bg: color-mix(in srgb, var(--color-background) 88%, transparent);
   --elev-card: 0 1px 2px rgb(54 52 48 / 0.06), 0 1px 0 rgb(54 52 48 / 0.02);
   --elev-lift: 0 6px 20px -8px rgb(54 52 48 / 0.22), 0 1px 2px rgb(54 52 48 / 0.06);
@@ -153,7 +152,6 @@
   --mark-plate-ring: rgb(173 140 83 / 0.35);
   --mark-img: 70%;
   --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
-  --motif: color-mix(in srgb, var(--color-accent) 22%, transparent);
   --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
   --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
   --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
@@ -188,11 +186,66 @@
     --mark-plate-ring: rgb(173 140 83 / 0.35);
     --mark-img: 70%;
     --icon-fill: color-mix(in srgb, var(--color-accent) 28%, transparent);
-    --motif: color-mix(in srgb, var(--color-accent) 22%, transparent);
     --header-bg: color-mix(in srgb, var(--color-background) 86%, transparent);
     --elev-card: 0 1px 0 rgb(255 255 255 / 0.03);
     --elev-lift: 0 10px 28px -10px rgb(0 0 0 / 0.6);
     --elev-bar: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+  }
+}
+
+/*
+ * Home surfaces (greeting, launcher tiles, Coming up, floating dock). Kept
+ * apart from the colour tokens above; same light / dark / system rules.
+ */
+:root,
+[data-theme="light"] {
+  --hero-bg: linear-gradient(112deg, #fffdf8 0%, #f8f0e1 48%, #ecdcb8 100%);
+  --hero-border: rgb(173 140 83 / 0.38);
+  --hero-shadow: 0 1px 2px rgb(54 52 48 / 0.05), 0 12px 32px -18px rgb(128 100 47 / 0.45);
+  --emblem-opacity: 0.13;
+  --dock-bg: rgb(255 253 248 / 0.8);
+  --dock-solid: #fffdf8;
+  --dock-border: rgb(54 52 48 / 0.1);
+  --dock-shadow: 0 14px 34px -14px rgb(54 52 48 / 0.42), 0 2px 6px -2px rgb(54 52 48 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --dock-active-bg: linear-gradient(180deg, rgb(173 140 83 / 0.2), rgb(173 140 83 / 0.1));
+  --dock-active-border: rgb(128 100 47 / 0.35);
+  --dock-active-text: #6e5426;
+  --tile-shadow: drop-shadow(0 6px 10px rgb(54 52 48 / 0.18));
+  --tile-shadow-hover: drop-shadow(0 10px 16px rgb(54 52 48 / 0.24));
+  --brand-halo: transparent;
+}
+[data-theme="dark"] {
+  --hero-bg: linear-gradient(112deg, #1c1a17 0%, #27221b 46%, #4a3c27 100%);
+  --hero-border: rgb(201 170 114 / 0.3);
+  --hero-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --emblem-opacity: 0.16;
+  --dock-bg: rgb(30 28 25 / 0.72);
+  --dock-solid: #1f1d1b;
+  --dock-border: rgb(247 244 237 / 0.1);
+  --dock-shadow: 0 16px 36px -10px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --dock-active-bg: linear-gradient(180deg, rgb(201 170 114 / 0.26), rgb(173 140 83 / 0.12));
+  --dock-active-border: rgb(201 170 114 / 0.42);
+  --dock-active-text: #dabf8c;
+  --tile-shadow: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+  --tile-shadow-hover: drop-shadow(0 12px 20px rgb(0 0 0 / 0.55));
+  --brand-halo: radial-gradient(closest-side, rgb(247 244 237 / 0.16), transparent);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --hero-bg: linear-gradient(112deg, #1c1a17 0%, #27221b 46%, #4a3c27 100%);
+    --hero-border: rgb(201 170 114 / 0.3);
+    --hero-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --emblem-opacity: 0.16;
+    --dock-bg: rgb(30 28 25 / 0.72);
+    --dock-solid: #1f1d1b;
+    --dock-border: rgb(247 244 237 / 0.1);
+    --dock-shadow: 0 16px 36px -10px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --dock-active-bg: linear-gradient(180deg, rgb(201 170 114 / 0.26), rgb(173 140 83 / 0.12));
+    --dock-active-border: rgb(201 170 114 / 0.42);
+    --dock-active-text: #dabf8c;
+    --tile-shadow: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+    --tile-shadow-hover: drop-shadow(0 12px 20px rgb(0 0 0 / 0.55));
+    --brand-halo: radial-gradient(closest-side, rgb(247 244 237 / 0.16), transparent);
   }
 }
 
@@ -361,5 +414,253 @@ dialog.sheet[open] {
   from {
     transform: translateY(16px);
     opacity: 0;
+  }
+}
+
+/*
+ * Home launcher (src/components/home/launcher.tsx). Columns follow the
+ * launcher's own width in rem, so enlarged text gets fewer, wider columns:
+ * 2 below 19.5rem (narrow phones), 3 on phones, then 4–6 on wider screens.
+ * Art is capped at 7rem so it never stretches across wide screens.
+ */
+.launcher {
+  container-type: inline-size;
+  position: relative;
+}
+.launcher-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Scrolling hands off to the page at either end: no overscroll containment. */
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-accent) 45%, transparent) transparent;
+  /* Keeps a focused tile clear of the edge fades. */
+  scroll-padding-block: 1.75rem 2.5rem;
+  /* Room for focus rings and the hover lift inside the clipped area. */
+  padding: 0.375rem 0.25rem 0.25rem;
+  margin: -0.375rem -0.25rem -0.25rem;
+}
+.launcher[data-bounded] .launcher-scroll {
+  --fade-top: 1.75rem;
+  --fade-bottom: 2.5rem;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+}
+.launcher[data-bounded][data-at-start] .launcher-scroll {
+  --fade-top: 0px;
+}
+.launcher[data-bounded][data-at-end] .launcher-scroll {
+  --fade-bottom: 0px;
+}
+/* Scroll cue below the menu (never on top of a tile); hidden at the end. */
+.launcher-more {
+  display: none;
+}
+.launcher[data-bounded] .launcher-more {
+  display: block;
+  width: 2.25rem;
+  height: 0.25rem;
+  margin: 0.5rem auto 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  transition: opacity 160ms var(--ease-gentle);
+}
+.launcher[data-bounded][data-at-end] .launcher-more {
+  opacity: 0.25;
+}
+.launcher-grid {
+  --launcher-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--launcher-cols), minmax(0, 1fr));
+  gap: 0.875rem 0.5rem;
+}
+@container (max-width: 19.5rem) {
+  .launcher-grid {
+    --launcher-cols: 2;
+  }
+}
+@container (min-width: 36rem) {
+  .launcher-grid {
+    --launcher-cols: 4;
+  }
+}
+@container (min-width: 46rem) {
+  .launcher-grid {
+    --launcher-cols: 5;
+  }
+}
+@container (min-width: 56rem) {
+  .launcher-grid {
+    --launcher-cols: 6;
+  }
+}
+.launcher-tile {
+  display: flex;
+  min-height: 2.75rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-card);
+  padding: 0.25rem 0.125rem 0.375rem;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.launcher-art {
+  position: relative;
+  display: block;
+  width: min(84%, 7rem);
+  aspect-ratio: 1;
+  filter: var(--tile-shadow);
+  transition:
+    transform 160ms var(--ease-gentle),
+    filter 160ms var(--ease-gentle);
+}
+.launcher-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+/* Shown only if a supplied artwork is missing: the original tile glyph. */
+.launcher-fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+.launcher-label {
+  max-width: 100%;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (hover: hover) {
+  .launcher-tile:hover .launcher-art {
+    transform: translateY(-2px);
+    filter: var(--tile-shadow-hover);
+  }
+}
+.launcher-tile:active .launcher-art {
+  transform: scale(0.96);
+}
+.launcher-tile:focus-visible {
+  outline-offset: 0;
+}
+
+/* Greeting banner: charcoal to muted gold, fine border, emblem at the right. */
+.home-hero {
+  background: var(--hero-bg);
+  border: 1px solid var(--hero-border);
+  box-shadow: var(--hero-shadow);
+}
+.home-emblem {
+  opacity: var(--emblem-opacity);
+}
+
+/* Header symbol on dark: a faint warm halo lifts the charcoal figures (the artwork itself is unchanged). */
+.brand-halo {
+  background: var(--brand-halo);
+}
+
+/*
+ * Coming up banner. The overlay and calendar leaf stay dark in both themes:
+ * they sit on photography, so ivory text keeps its contrast either way.
+ */
+.coming-up {
+  background: #1c1a17;
+  color: #f7f4ed;
+  border: 1px solid rgb(201 170 114 / 0.28);
+}
+.coming-up-scrim {
+  background:
+    linear-gradient(90deg, rgb(20 18 16 / 0.94) 0%, rgb(20 18 16 / 0.82) 38%, rgb(20 18 16 / 0.35) 72%, rgb(20 18 16 / 0.15) 100%),
+    linear-gradient(0deg, rgb(20 18 16 / 0.35), transparent 60%);
+}
+.coming-up-branded {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgb(173 140 83 / 0.38), transparent 55%),
+    linear-gradient(112deg, #1c1a17 0%, #2a241c 55%, #3f3323 100%);
+}
+.coming-up-leaf {
+  background: rgb(20 18 16 / 0.58);
+  border: 1px solid rgb(201 170 114 / 0.4);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 8px 20px -10px rgb(0 0 0 / 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.coming-up-arrow {
+  background: rgb(20 18 16 / 0.55);
+  border: 1px solid rgb(247 244 237 / 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition:
+    background-color 160ms var(--ease-gentle),
+    transform 160ms var(--ease-gentle);
+}
+.coming-up:hover .coming-up-arrow {
+  background: rgb(173 140 83 / 0.45);
+}
+.coming-up:hover .coming-up-photo {
+  transform: scale(1.02);
+}
+.coming-up-photo {
+  transition: transform 400ms var(--ease-gentle);
+}
+
+/*
+ * Floating dock (phones and small tablets). Smoked glass on dark,
+ * translucent ivory on light; a solid surface where blur isn't supported.
+ * The page reserves --dock-clearance, and focus scrolling keeps the same
+ * margin (scroll-padding) so nothing focused ends up behind the dock.
+ */
+:root {
+  --dock-clearance: calc(6rem + env(safe-area-inset-bottom));
+}
+@media (max-width: 1023.98px) {
+  html {
+    scroll-padding-bottom: var(--dock-clearance);
+    scroll-padding-top: 4.5rem;
+  }
+}
+.dock {
+  background: var(--dock-solid);
+  border: 1px solid var(--dock-border);
+  box-shadow: var(--dock-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .dock {
+    background: var(--dock-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .dock {
+    background: var(--dock-solid);
+  }
+}
+.dock-active {
+  background: var(--dock-active-bg);
+  box-shadow: inset 0 0 0 1px var(--dock-active-border);
+  color: var(--dock-active-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher-tile:hover .launcher-art,
+  .launcher-tile:active .launcher-art,
+  .coming-up:hover .coming-up-photo {
+    transform: none;
   }
 }

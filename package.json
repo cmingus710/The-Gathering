@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/generate-menu-icons.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -12,7 +13,8 @@
     "test:db": "vitest run tests/db",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "admin:bootstrap": "node scripts/bootstrap-super-admin.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "menu:icons": "node scripts/generate-menu-icons.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-sans-3": "^5.3.1",

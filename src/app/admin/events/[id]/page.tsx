@@ -13,6 +13,7 @@ import { signCoverUrls } from "@/lib/events/images";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/time";
 import { EventForm } from "../event-form";
+import { HomeBannerForm } from "../home-banner-form";
 import { allTimeZones, seriesToForm, type AdminSeries } from "../series";
 import { StatusControls } from "./status-controls";
 
@@ -33,7 +34,9 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
   ]);
   const s = data as AdminSeries | null;
   if (!s) notFound();
-  const covers = await signCoverUrls(supabase, [s.cover_path]);
+  const covers = await signCoverUrls(supabase, [s.cover_path, s.home_banner_path]);
+  const bannerReady = "home_banner_path" in s;
+  const bannerUrl = s.home_banner_path ? (covers.get(s.home_banner_path) ?? null) : null;
   const now = new Date();
   const upcoming = s.occurrences.filter((o) => new Date(o.ends_at) > now);
   const hasRegistrations = upcoming.some((o) => o.confirmed + o.waitlisted > 0);
@@ -86,6 +89,27 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
           <Card>
             <SectionHeading as="h2">Status</SectionHeading>
             <StatusControls id={s.id} status={s.status} timezone={s.timezone} hasRegistrations={hasRegistrations} />
+          </Card>
+          <Card id="homepage-banner">
+            <SectionHeading
+              as="h2"
+              description="Shown in “Coming up” on the member home page when this is the next event. Without one, the cover image is used, then the church-wide default (Event settings)."
+            >
+              Homepage banner
+            </SectionHeading>
+            {!bannerReady ? (
+              <Alert tone="warning" title="Banner images need the latest database update." live={false}>
+                Apply migration 20261023000100 (supabase/manual/2026-10-23-apply-home-banner.sql).
+              </Alert>
+            ) : editable || s.home_banner_path ? (
+              <HomeBannerForm
+                scope="event"
+                id={s.id}
+                current={s.home_banner_path ? { url: bannerUrl, alt: s.home_banner_alt ?? "", focusX: s.home_banner_focus_x ?? 50, focusY: s.home_banner_focus_y ?? 50 } : null}
+              />
+            ) : (
+              <p className="text-text-secondary">Canceled and archived events can&apos;t take a new banner.</p>
+            )}
           </Card>
           <Card>
             <SectionHeading as="h2">Dates and registrations</SectionHeading>

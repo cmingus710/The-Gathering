@@ -24,7 +24,19 @@ Group-only events are not available yet: there is no group model until Phase 5. 
 7. **Cancel** (whole event) or **Cancel this date only**: the record stays, the calendar shows it as canceled, calendar feeds publish the cancellation, and registered and waitlisted people are emailed. Canceled events can't be edited; archive them when you're done.
 8. **Unpublish** is only possible while nobody is registered (otherwise cancel, so people are told). **Archive** hides an event everywhere but keeps the record.
 
-### Recurring events
+### Homepage "Coming up" banner
+
+The member home page features the **next** event the member can see (canceled dates and timed events already under way are skipped; an all-day or multi-day event stays until its last day ends). Its banner image is chosen in this order:
+
+1. The event's own **homepage banner**: **Admin → Events → (event) → Homepage banner** (right-hand column).
+2. The event's **cover image** (the Image section of the event form).
+3. The church-wide **default banner**: **Admin → Events → Settings → Default Coming up banner**.
+4. A branded charcoal-and-gold background (no image).
+
+Both banner controls take a wide PNG, JPEG, or WebP (at least 960 px across, up to 4 MB), which is re-encoded without metadata. Each needs an image description for screen readers. Click the image (or use the two sliders) to set the **focal point** that stays visible when the banner is cropped; the Phone and Desktop previews show the result. **Replace image** swaps the file; **Remove banner** deletes it. Banner changes never email registrants or change calendar feeds.
+
+Banners are private: an event's banner is visible only to people who can see that event, and the default only to approved members. The date leaf, title, and time are drawn by the app from the event itself, so never put dates or text in the image.
+
 
 - Daily, weekly (chosen weekdays), or monthly (same date, or "the first/second/third/fourth/last <weekday>"), every 1 to 12 periods, ending on a date (up to two years) or after a number of dates (up to 200).
 - Times are local to the event's time zone: a weekly 9:00 AM gathering stays at 9:00 AM through daylight-saving changes.

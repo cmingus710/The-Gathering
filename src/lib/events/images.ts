@@ -43,3 +43,26 @@ export async function signCoverUrls(supabase: SupabaseClient, paths: Array<strin
   for (const item of data ?? []) if (item.path && item.signedUrl && !item.error) out.set(item.path, item.signedUrl);
   return out;
 }
+
+/**
+ * Homepage "Coming up" banners: same validation and metadata removal as
+ * covers, but wide (at least 960 px across) and kept up to 2000×1200 so
+ * they stay sharp across a desktop banner. The focal point is stored
+ * separately, so the image itself is never cropped.
+ */
+export async function processHomeBanner(file: File, folder: string): Promise<ProcessedCover> {
+  const check = await validateImageFile(file, { maxBytes: MAX_UPLOAD_BYTES, minSize: 320, maxSize: 8000, label: "banner image" });
+  if (!check.ok) return check;
+  if (check.width < 960) return { ok: false, message: "The banner image must be at least 960 pixels wide." };
+  try {
+    const bytes = await sharp(check.bytes, { limitInputPixels: 8000 * 8000, failOn: "error" })
+      .rotate()
+      .resize(2000, 1200, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+    if (bytes.byteLength > 2 * 1024 * 1024) return { ok: false, message: "That image is too detailed to store. Try a smaller or simpler one." };
+    return { ok: true, bytes, path: `${folder}/${randomBytes(12).toString("base64url")}.webp` };
+  } catch {
+    return { ok: false, message: "We couldn't read that image. Try a different file." };
+  }
+}

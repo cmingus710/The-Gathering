@@ -84,23 +84,44 @@ Reserved icons are only drawn. Unfinished modules are shown only as "Coming late
 
 Small utility glyphs (chevrons, pins, locks, sun and moon) still come from `lucide-react`.
 
+## Home menu artwork
+
+The home launcher uses the supplied dimensional tiles (19 square PNGs, 1254 px, listed in `assets/menu/icon-manifest.json`, stored in `assets/brand/source/<name>.png`). They are never recoloured, cropped, or labelled: each tile already carries its own coloured background, and the label is HTML underneath.
+
+- `npm run menu:icons` (also run before every build) writes WebP copies at 96, 160, 240, and 336 px to `public/images/menu/optimized/` and lists them in `src/lib/home/menu-art.generated.ts`. Unchanged sources are skipped by content hash. `-- --check` lists any missing artwork.
+- Tiles load through `srcset`, so a phone tile downloads a 3–16 KB WebP instead of a 2 MB PNG. The originals stay outside `public/`.
+- A missing artwork falls back to the original `TileIcon` glyph on a neutral tile.
+- The dock uses the supplied small glyphs (`home`, `events`, `community`, `messages`, `more`), inlined in `src/components/icons/dock-glyphs.tsx` so they take the theme colour.
+
+## Home launcher
+
+`src/lib/home/launcher.ts` is the shared configuration. Each entry has a stable `id`, `label`, `art`, fallback `glyph`, `order`, `status`, and optional `requires` (capabilities), `feature` (for example `giving`), and `count` (unread badge). Adding a module is one entry; the layout adapts.
+
+- Only `available` entries the viewer may open are shown. `upcoming` entries (Prayer, Podcasts, Lessons, Bible, Devotionals, Memory verses, Youth) document what plugs in later and are never links. Administration is never a tile.
+- Columns follow the launcher's own width in rem (container queries): 2 below 19.5rem (narrow phones, or large text), 3 on phones, 4 to 6 on wider screens. Art is capped at 7rem.
+- With more rows than fit, the grid scrolls inside a bounded area: three rows on phones, two on short screens and desktop, at most about 60% of the viewport, plus 40% of the next row as a cue. Edge fades and a small gold cue show there is more.
+- Scrolling only goes vertically and hands off to the page at either end (no overscroll containment). Every tile is in the tab order; a focused tile is scrolled clear of the fades (`scroll-padding`). Reduced motion removes the lift and smooth scrolling.
+
 ## Navigation
 
-- **Phone tab bar:** Home, Events, Community, Messages, and More. Profile is always one tap away from the header avatar.
-  - The bar is docked to the bottom edge, with a top border, a soft shadow, and safe-area padding.
-  - The active tab gets a gold indicator, a selected icon, and bold text. Tabs are 60 px tall.
-  - The page reserves `6rem + safe area` at the bottom, so content and sticky composers never sit under the bar.
+- **Phone dock:** Home, Events, Community, Messages, and More, on a slim floating surface: smoked glass on dark, translucent ivory on light, a solid surface where `backdrop-filter` is unsupported or reduced transparency is requested.
+  - The active tab gets a gold capsule. Labels stay visible, and Messages carries its unread badge.
+  - The dock floats above the safe area. The page reserves `--dock-clearance` (`6rem` + safe area) below its content, and `scroll-padding-bottom` keeps focused elements clear of it. Sticky form bars use the same token.
 - **More sheet:** sections for Church life, Connect, You, and Administration (administrators only), then Appearance, Sign out, and Coming later.
 - **Desktop sidebar:** the same sections, with the approved full logo at the top and the theme control and sign-out at the bottom.
 - **Floating controls:** there are none in the app. The Next.js dev indicator is turned off (`devIndicators: false`) because it covered the tab bar.
 
 ## Home
 
-1. Welcome panel: the date, a serif greeting, the next gathering (from church settings), and the gathering-arc motif. The motif is an original abstract figure, not the symbol.
-2. Quick access, in a three-column grid: Directory, Events, Community, Messages (with live unread count), Groups, and Give when online giving is configured (News otherwise).
-3. Upcoming events (next 60 days, up to 3). The first is a date-led featured card with its cover image when one exists.
-4. Announcements: the latest in an editorial layout, plus two compact lines.
-5. Gathering times and the address, as an information panel.
-6. Coming later: modules from later phases, labelled as not available. This is also where Bible reading, devotional, and lesson content will plug in.
+Matches the approved home design (`docs/design/home-mockup.webp`).
 
-"View all" appears only when there is something to view. Empty states are short and compact. Setup actions (create an event, post an announcement, add gathering times) appear only to people holding the matching capability.
+1. **Header (phones):** the approved symbol (unchanged, with a faint warm halo on dark) and the church name in the serif, then notifications and the profile avatar.
+2. **Greeting banner:** charcoal to muted gold with a fine gold border, the date line, "Good morning/afternoon/evening, <preferred name>" in the church time zone, a short gold rule, and the approved symbol oversized at low opacity on the right. Long names wrap at a smaller size.
+3. **Launcher** (above).
+4. **Coming up:** the next event the member can see, as an image-led banner with a calendar leaf built in HTML (month, day, weekday from the event's own date and time zone), the title, time, and place, and a round arrow. Images fall back from the event's homepage banner to its cover to the church-wide default to a branded background; see events-guide.md. With no event, a compact branded strip with no date.
+5. **Life at The Gathering:** the latest announcement, image-led when it has an image and text-led otherwise, plus up to two compact lines. The heading chevron opens all announcements.
+6. **Gathering times** with the next one marked.
+
+On desktop, Coming up and Gathering times share the wider column and Life at sits beside them.
+
+"Coming later" moved off the home page: upcoming modules stay listed in the More sheet and sidebar, and in the launcher configuration.

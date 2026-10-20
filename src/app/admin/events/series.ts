@@ -9,6 +9,11 @@ export type AdminSeries = {
   description: string;
   cover_path: string | null;
   cover_alt: string | null;
+  /** Homepage banner (absent before migration 20261023000100). */
+  home_banner_path?: string | null;
+  home_banner_alt?: string | null;
+  home_banner_focus_x?: number;
+  home_banner_focus_y?: number;
   category_id: string | null;
   audience: "public" | "members" | "group";
   group_id: string | null;

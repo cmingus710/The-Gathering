@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { IconBadge, LogoPlaque } from "@/components/brand/logo";
+import { IconMark, LogoPlaque } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/community/notification-bell";
 import { CommunityRealtimeProvider } from "@/components/community/realtime-provider";
 import { ThemeControl } from "@/components/theme/theme-control";
@@ -14,13 +14,13 @@ import { MobileTabBar, SidebarNav } from "./member-nav";
 import { SignOutButton } from "./sign-out-button";
 
 /** Initial avatar linking to the profile. */
-function Avatar({ viewer, className = "size-9" }: { viewer: Viewer; className?: string }) {
+function Avatar({ viewer, className = "size-9 bg-surface-muted text-[1.0625rem] ring-border" }: { viewer: Viewer; className?: string }) {
   const initial = displayName(viewer).trim().charAt(0).toUpperCase() || "?";
   return (
     <Link
       href="/profile"
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-surface-muted font-display text-[1.0625rem] font-semibold text-text ring-1 ring-border transition-colors hover:ring-border-strong",
+        "flex shrink-0 items-center justify-center rounded-full font-display font-semibold text-text ring-1 transition-colors hover:ring-border-strong",
         className,
       )}
     >
@@ -71,21 +71,26 @@ export async function MemberShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 bg-(--header-bg) backdrop-blur-md lg:hidden">
-            <div className="flex h-14 items-center justify-between gap-2 px-3 pt-[env(safe-area-inset-top)] sm:px-5">
-              <Link href="/home" className="flex min-h-11 items-center rounded-full pr-1" aria-label={`${settings.churchName} home`}>
-                <IconBadge src={settings.iconUrl} className="size-10" />
+          <header className="sticky top-0 z-30 bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-md lg:hidden">
+            <div className="flex h-16 items-center justify-between gap-2 px-3 sm:px-5">
+              <Link href="/home" className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label={`${settings.churchName} home`}>
+                <span className="brand-halo flex size-11 shrink-0 items-center justify-center rounded-full">
+                  <IconMark src={settings.iconUrl} className="h-10 w-auto" />
+                </span>
+                <span aria-hidden="true" className="truncate font-display text-[1.375rem] font-semibold leading-none text-text">
+                  {settings.churchName}
+                </span>
               </Link>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <NotificationBell />
-                <Avatar viewer={viewer} className="ml-1 size-9" />
+                <Avatar viewer={viewer} className="size-11 bg-surface-raised text-[1.125rem] ring-border-strong/50" />
               </div>
             </div>
           </header>
           <main
             id="main"
             tabIndex={-1}
-            className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-3 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:px-10 lg:pb-14 lg:pt-10"
+            className="mx-auto w-full max-w-3xl flex-1 px-4 pb-(--dock-clearance) pt-3 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:px-10 lg:pb-14 lg:pt-10"
           >
             {children}
           </main>

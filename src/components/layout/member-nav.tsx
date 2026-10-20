@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import { NavCount } from "@/components/community/notification-bell";
+import { DockGlyph, type DockGlyphName } from "@/components/icons/dock-glyphs";
 import { Icon } from "@/components/icons/icon";
 import { cn } from "@/components/ui/cn";
 import { MEMBER_NAV, MOBILE_PRIMARY_KEYS, NAV_SECTIONS, isActivePath, type NavItem, type NavSection } from "@/lib/navigation";
@@ -88,8 +89,11 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
 }
 
 /**
- * Phone tab bar: four primary destinations plus More. Docked to the bottom
- * edge with safe-area padding; the page reserves the same height.
+ * Phone dock: four primary destinations plus More, on a slim floating
+ * surface (smoked glass on dark, translucent ivory on light, solid where
+ * blur is unsupported) above the safe area. The page reserves
+ * --dock-clearance below its content, and focus scrolling keeps the same
+ * margin, so the dock never covers the last content, form actions, or focus.
  */
 export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: boolean; signOut: ReactNode; appearance: ReactNode }) {
   const pathname = usePathname();
@@ -104,43 +108,39 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
 
   const tab = (active: boolean) =>
     cn(
-      "relative flex min-h-[3.75rem] flex-1 flex-col items-center justify-center gap-1 rounded-tile px-1 pt-1 text-[0.75rem] leading-none transition-colors",
-      active ? "font-bold text-text" : "font-semibold text-text-secondary hover:text-text",
+      "relative flex min-h-[3.25rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
+      active ? "dock-active font-bold" : "font-semibold text-text-secondary hover:text-text",
     );
-  const indicator = (active: boolean) =>
-    active ? <span aria-hidden="true" className="absolute inset-x-[30%] top-0 h-[3px] rounded-b-full bg-accent" /> : null;
 
   return (
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-raised/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-(--elev-bar) backdrop-blur-md lg:hidden"
+        className="dock fixed inset-x-3 bottom-[max(0.625rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg rounded-[1.75rem] p-1 sm:inset-x-6 lg:hidden"
       >
-        <ul className="mx-auto flex max-w-lg">
+        <ul className="flex gap-0.5">
           {primary.map((item) => {
             const active = isActivePath(pathname, item.href);
             return (
-              <li key={item.key} className="flex flex-1">
+              <li key={item.key} className="flex min-w-0 flex-1">
                 <Link href={item.href} className={tab(active)} aria-current={active ? "page" : undefined}>
-                  {indicator(active)}
                   <span className="relative">
-                    <Icon name={item.icon} active={active} className="size-6" />
+                    <DockGlyph name={item.key as DockGlyphName} className="size-[1.375rem]" />
                     {item.count ? (
                       <span className="absolute -right-2.5 -top-1.5">
                         <NavCount kind={item.count} />
                       </span>
                     ) : null}
                   </span>
-                  {item.shortLabel ?? item.label}
+                  <span className="max-w-full truncate pt-0.5">{item.shortLabel ?? item.label}</span>
                 </Link>
               </li>
             );
           })}
-          <li className="flex flex-1">
+          <li className="flex min-w-0 flex-1">
             <button type="button" className={tab(moreActive)} aria-haspopup="dialog" onClick={() => dialogRef.current?.showModal()}>
-              {indicator(moreActive)}
-              <Icon name="more" active={moreActive} className="size-6" />
-              More
+              <DockGlyph name="more" className="size-[1.375rem]" />
+              <span className="max-w-full truncate pt-0.5">More</span>
             </button>
           </li>
         </ul>
