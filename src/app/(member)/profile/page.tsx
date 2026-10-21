@@ -1,4 +1,4 @@
-import { ChevronRight, Eye, ImageIcon, KeyRound, ShieldCheck, UserPen } from "lucide-react";
+import { ChevronRight, Eye, ImageIcon, KeyRound, LogIn, ShieldCheck, UserPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icons/icon";
@@ -111,6 +111,10 @@ export default async function ProfilePage() {
             <Link href="/reset-password" className="flex min-h-11 items-center gap-3 rounded-control px-3 font-semibold text-primary hover:bg-primary-soft">
               <KeyRound className="size-5" aria-hidden="true" />
               Change password
+            </Link>
+            <Link href="/profile/sign-in-methods" className="flex min-h-11 items-center gap-3 rounded-control px-3 font-semibold text-primary hover:bg-primary-soft">
+              <LogIn className="size-5" aria-hidden="true" />
+              Sign-in methods
             </Link>
             <SignOutButton />
           </Card>
