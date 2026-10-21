@@ -10,6 +10,7 @@ import { EmbedPlayer } from "./embed-player";
 import { EpisodePlayer } from "./episode-player";
 import { itemCover } from "./item-card";
 import { NativeVideo } from "./native-video";
+import { ShowArt } from "./podcast";
 import { ShowMoreText } from "./show-more-text";
 import { BookmarkButton } from "./toggles";
 
@@ -182,6 +183,49 @@ export function PodcastEpisodeCard({
           <span className="sr-only">: {entry.title}</span>
         </Link>
       </div>
+    </section>
+  );
+}
+
+/**
+ * An external show added by its Apple Podcasts or Spotify link only (no
+ * feed episodes to list): the provider's official player sits in the card,
+ * as on the show page. The provider controls its own playback; the app
+ * unloads a tapped player when another one starts.
+ */
+export function ProviderShowCard({ show, urls, eager, member }: { show: Show; urls: Map<string, string>; eager: boolean; member: boolean }) {
+  const ref = parseProviderRefString(show.provider_ref);
+  if (!ref) return null;
+  const headingId = `show-${show.id}`;
+  const providerName = ref.provider === "spotify" ? "Spotify" : "Apple Podcasts";
+  const meta = [show.author || "Podcast", providerName].filter(Boolean);
+  return (
+    <section aria-labelledby={headingId} className="space-y-4 rounded-card border border-border bg-surface p-4 shadow-(--elev-card) sm:p-5">
+      <div className="flex gap-4">
+        <ShowArt show={show} urls={urls} className="size-20 sm:size-24" />
+        <div className="min-w-0 flex-1 space-y-1 py-0.5">
+          <p className="text-[0.8125rem] font-semibold text-text-secondary [overflow-wrap:anywhere]">{meta.join(" · ")}</p>
+          <h2 id={headingId} className="font-display text-xl font-semibold leading-snug text-text text-balance [overflow-wrap:anywhere]">
+            {show.title}
+          </h2>
+        </div>
+      </div>
+      {show.description ? <ShowMoreText text={show.description} /> : null}
+      <EmbedPlayer
+        autoload
+        eager={eager}
+        title={`${show.title} on ${providerName}`}
+        embed={providerEmbed(ref)}
+        actions={
+          <>
+            {member ? <BookmarkButton type="show" id={show.id} saved={show.bookmarked} label={show.title} /> : null}
+            <Link href={`/podcasts/shows/${show.id}`} className={QUIET_LINK}>
+              Show details <ChevronRight className="size-4" aria-hidden="true" />
+              <span className="sr-only">: {show.title}</span>
+            </Link>
+          </>
+        }
+      />
     </section>
   );
 }
