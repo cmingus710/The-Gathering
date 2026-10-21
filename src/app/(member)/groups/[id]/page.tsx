@@ -108,11 +108,9 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
             <SectionHeading
               id="discussions-heading"
               action={
-                group.status === "active" ? (
-                  <ButtonLink href={`/community/new?group=${id}`} size="sm" icon={<PenSquare className="size-4" aria-hidden="true" />}>
-                    New discussion
-                  </ButtonLink>
-                ) : null
+                <ButtonLink href={`/community?group=${id}`} size="sm" icon={<PenSquare className="size-4" aria-hidden="true" />}>
+                  {group.status === "active" ? "Open group feed" : "Read group feed"}
+                </ButtonLink>
               }
             >
               Group discussions (private)
