@@ -4,6 +4,7 @@ import { FeaturedItem } from "@/components/media/featured-item";
 import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
+import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { coverPaths, isUuid, isYmd } from "@/lib/media/format";
 import { listItems } from "@/lib/media/pages";
@@ -48,7 +49,11 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
 
   return (
     <>
-      <PageHeader title="Sunday lessons" description="Watch, listen, and read lessons from Sunday gatherings." />
+      <PageHeader
+        title="Sunday lessons"
+        description="Watch, listen, and read lessons from Sunday gatherings."
+        actions={viewer.member ? <ButtonLink href="/lessons/workbooks" variant="secondary" size="sm">My workbooks</ButtonLink> : null}
+      />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/lessons" /></div> : null}
       {!list.ok ? <Alert tone="error" title="Lessons couldn't be loaded right now." className="mb-6" /> : null}
       {top ? (
