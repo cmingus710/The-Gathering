@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, validationErrorState, type FormState } from "@/lib/forms";
@@ -111,4 +112,65 @@ export async function restoreBrandAssetAction(_prev: FormState, formData: FormDa
   if (previous) await supabase.storage.from("branding").remove([previous]);
   revalidatePath("/", "layout");
   return { status: "success", message: `The approved ${asset} is back in use.` };
+}
+
+// Membership approval notifications (settings.manage; the database re-checks).
+
+const recipientSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, "Enter an email address.")
+    .max(254, "That email address is too long.")
+    .pipe(z.email("Enter one valid email address, like name@example.com.")),
+});
+
+function alertError(error: { code?: string; message?: string }, fallback: string): string {
+  // The database's own messages for these codes are written for administrators.
+  if (error.code && ["22023", "23505", "P0002"].includes(error.code) && error.message) return error.message;
+  if (error.code === "42501") return "You don't have permission to change membership approval notifications.";
+  return fallback;
+}
+
+export async function setMembershipAlertsEnabledAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.settingsManage, "/admin/settings");
+  const enabled = formData.get("enabled") === "on";
+  const supabase = await createClient();
+  if (!supabase) return errorState(UNAVAILABLE);
+  const { error } = await supabase.rpc("membership_alert_set_enabled", { p_enabled: enabled });
+  if (error) return errorState(alertError(error, "The setting couldn't be saved. Please try again."));
+  revalidatePath("/admin/settings");
+  return {
+    status: "success",
+    message: enabled ? "Membership approval notifications are on." : "Membership approval notifications are off.",
+  };
+}
+
+export async function addMembershipAlertRecipientAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.settingsManage, "/admin/settings");
+  const values = formValues(formData);
+  const parsed = recipientSchema.safeParse({ email: formData.get("email") ?? "" });
+  if (!parsed.success) return validationErrorState(parsed.error, values);
+  const supabase = await createClient();
+  if (!supabase) return errorState(UNAVAILABLE, { values });
+  const { error } = await supabase.rpc("membership_alert_add_recipient", { p_email: parsed.data.email });
+  if (error) {
+    const message = alertError(error, "The recipient couldn't be added. Please try again.");
+    return { status: "error", message, fieldErrors: { email: [message] }, values };
+  }
+  revalidatePath("/admin/settings");
+  return { status: "success", message: `${parsed.data.email} was added.` };
+}
+
+export async function removeMembershipAlertRecipientAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.settingsManage, "/admin/settings");
+  const id = String(formData.get("id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return errorState("That recipient couldn't be found.");
+  const supabase = await createClient();
+  if (!supabase) return errorState(UNAVAILABLE);
+  const { error } = await supabase.rpc("membership_alert_remove_recipient", { p_id: id });
+  if (error) return errorState(alertError(error, "The recipient couldn't be removed. Please try again."));
+  revalidatePath("/admin/settings");
+  return { status: "success", message: "Recipient removed." };
 }

@@ -123,6 +123,8 @@ for (const path of [
   "/admin",
   "/admin/members",
   "/admin/settings",
+  // The "Review membership request" link in approval alerts.
+  "/admin/members/00000000-0000-0000-0000-000000000000",
   // Phase 2
   "/directory",
   "/directory/00000000-0000-0000-0000-000000000000",

@@ -8,7 +8,14 @@ import { renderCommunityEmail } from "./emails";
  * job, over "community.<op>.<timestamp>.<payload>" so a signature for one
  * job can never be replayed against the other.
  */
-export type CommunityJobOp = "tick" | "email_claim" | "email_result" | "push_claim" | "push_result";
+export type CommunityJobOp =
+  | "tick"
+  | "email_claim"
+  | "email_result"
+  | "push_claim"
+  | "push_result"
+  | "membership_alert_claim"
+  | "membership_alert_result";
 export type CommunityJob = <T = unknown>(op: CommunityJobOp, payload: Record<string, unknown>) => Promise<T>;
 
 export class CommunityJobError extends Error {

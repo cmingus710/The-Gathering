@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/redirects";
+import { deliverApprovalAlertsNow } from "@/lib/membership/server";
 import { createClient } from "@/lib/supabase/server";
 
 const OTP_TYPES: EmailOtpType[] = ["signup", "email", "recovery", "invite", "email_change", "magiclink"];
@@ -30,6 +31,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (!ok) return redirectTo("/sign-in?error=link");
+  // A first verification queues a membership approval alert in the database
+  // (it happens there, so a repeated or failed request here changes nothing).
+  // Send it after the redirect; the scheduler retries anything left over.
+  // A future Google/Apple callback that lands here via `code` is covered too.
+  if (type !== "recovery") after(deliverApprovalAlertsNow);
   const next = safeNextPath(url.searchParams.get("next"), "/account-status");
   if (type === "recovery" || next === "/reset-password") return redirectTo("/reset-password");
   return redirectTo(next === "/account-status" ? "/account-status?verified=1" : next);

@@ -18,7 +18,7 @@ const ANON = [
   "media_items", "media_job", "media_public_artwork", "media_public_episode_audio", "media_public_feed", "media_public_hit",
   "media_search", "media_series", "media_show", "media_shows", "media_transcript",
 ];
-const APP_SCHEMAS = ["public", "community", "events", "giving", "media", "prayer", "bible", "journal", "memory", "youth"];
+const APP_SCHEMAS = ["public", "community", "events", "giving", "media", "prayer", "bible", "journal", "memory", "youth", "membership"];
 
 describeDb("function EXECUTE baseline", () => {
   let db: TestDb;
