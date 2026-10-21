@@ -10,6 +10,7 @@ import { completeProfileSchema, forgotPasswordSchema, resetPasswordSchema, signI
 import { errorState, formValues, validationErrorState, type FormState } from "@/lib/forms";
 import { authConfirmUrl } from "@/lib/site-url";
 import { registrationEnvironment } from "@/lib/membership/alerts";
+import { settleOwnApprovalAlert } from "@/lib/membership/server";
 import { createClient } from "@/lib/supabase/server";
 
 const UNAVAILABLE = "Sign-in is temporarily unavailable because the membership service isn't configured. Please contact the church office.";
@@ -153,5 +154,7 @@ export async function completeProfileAction(_prev: FormState, formData: FormData
     .update({ full_name: parsed.data.fullName, preferred_name: parsed.data.preferredName })
     .eq("id", userData.user.id);
   if (error) return errorState("We couldn't save your name. Please try again.", { values });
+  // The approval alert for a new Google/Apple account waited for this name.
+  await settleOwnApprovalAlert(supabase);
   redirect(safeNextPath(formData.get("next")));
 }

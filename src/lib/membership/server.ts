@@ -1,9 +1,11 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { after } from "next/server";
 import { getCommunityJob } from "@/lib/community/server";
 import { getEventsConfig, getMailer } from "@/lib/events/server";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { getSiteUrl } from "@/lib/site-url";
-import { deliverApprovalAlerts, type ApprovalAlertDeps } from "./alerts";
+import { deliverApprovalAlerts, registrationEnvironment, type ApprovalAlertDeps } from "./alerts";
 
 /**
  * Same secret, sender, and allowlist as community email. Outside production
@@ -38,5 +40,22 @@ export async function deliverApprovalAlertsNow() {
     await deliverApprovalAlerts(deps, { rounds: 1, limit: 20 });
   } catch (err) {
     console.error("[membership] immediate approval alert delivery failed", { error: (err as Error)?.name });
+  }
+}
+
+/**
+ * For a Google/Apple sign-up, whose alert the database queued (and held)
+ * before the app saw the account: refreshes the applicant name, marks the
+ * alert as a test outside production, and releases it for sending. Only ever
+ * touches the signed-in person's own unsent alert. Never throws.
+ */
+export async function settleOwnApprovalAlert(supabase: SupabaseClient) {
+  try {
+    const { data, error } = await supabase.rpc("membership_alert_settle_own", {
+      p_test: registrationEnvironment() !== "production",
+    });
+    if (!error && data === true) after(deliverApprovalAlertsNow);
+  } catch (err) {
+    console.error("[membership] approval alert settle failed", { error: (err as Error)?.name });
   }
 }

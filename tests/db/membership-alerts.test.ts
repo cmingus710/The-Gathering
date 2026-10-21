@@ -297,4 +297,87 @@ describeDb("membership approval alerts", () => {
       expect((await claim(false)).map((c) => c.profile_id)).toEqual([prod]);
     });
   });
+
+  describe("Google/Apple sign-ups", () => {
+    // What Supabase Auth inserts for a new provider account (simulated row).
+    const socialUser = async (email: string, provider: "google" | "apple", meta: object = {}) =>
+      (
+        await db.raw<{ id: string }>(
+          "insert into auth.users (email, raw_user_meta_data, raw_app_meta_data, email_confirmed_at) values ($1, $2, $3, now()) returning id",
+          [email, JSON.stringify(meta), JSON.stringify({ provider, providers: [provider] })],
+        )
+      )[0].id;
+    const settle = (id: string, test: boolean) => rpc<boolean>(as(id), "membership_alert_settle_own", [test]);
+    const held = async (id: string) =>
+      (await db.raw<{ held: boolean }>(
+        `select bool_and(d.next_attempt_at > now()) as held from membership.alert_deliveries d
+           join membership.approval_alerts a on a.id = d.alert_id where a.profile_id = $1`,
+        [id],
+      ))[0].held;
+
+    beforeEach(async () => {
+      await db.raw("update membership.alert_deliveries set status = 'skipped' where status in ('pending', 'failed', 'sending')");
+      await configure(["first@example.test"]);
+    });
+
+    it("holds the alert until the app settles it, then sends it with the name", async () => {
+      const id = await socialUser("ruth@gmail.example", "google", { full_name: "Ruth Example" });
+      expect(await alertFor(id)).toMatchObject({ source: "verified_at_signup", test: false, recipients: 1 });
+      expect(await held(id)).toBe(true);
+      expect(await db.raw<{ due: boolean }>("select community.has_due_work() as due")).toEqual([{ due: false }]);
+      expect(await claim(false)).toEqual([]);
+
+      expect(await settle(id, false)).toBe(true);
+      const sent = await claim(false);
+      expect(sent.map((c) => [c.profile_id, c.name])).toEqual([[id, "Ruth Example"]]);
+      expect(await settle(id, true)).toBe(false); // too late once a send started: can't hide it now
+      expect(await alertFor(id)).toMatchObject({ test: false });
+    });
+
+    it("picks up the name an Apple account gives after sign-in", async () => {
+      const id = await socialUser("x7k2q9@privaterelay.appleid.com", "apple");
+      expect(await alertFor(id)).toMatchObject({ applicant_name: "" });
+      await db.query(as(id), "update public.profiles set full_name = 'Boaz Example' where id = $1", [id]);
+      expect(await settle(id, false)).toBe(true);
+      expect((await claim(false)).map((c) => c.name)).toEqual(["Boaz Example"]);
+    });
+
+    it("turns a preview sign-up into a test alert that production never sends", async () => {
+      const id = await socialUser("preview.google@gmail.example", "google", { full_name: "Preview Person" });
+      expect(await settle(id, true)).toBe(true);
+      expect(await alertFor(id)).toMatchObject({ test: true });
+      expect(await claim(false)).toEqual([]);
+      expect(await settle(id, false)).toBe(true); // a later call can't make it real again
+      expect(await alertFor(id)).toMatchObject({ test: true });
+      expect((await claim(true)).map((c) => c.profile_id)).toEqual([id]);
+    });
+
+    it("only ever touches the caller's own alert", async () => {
+      const victim = await socialUser("victim@gmail.example", "google", { full_name: "Victim" });
+      const other = await socialUser("other@gmail.example", "google", { full_name: "Other" });
+      expect(await settle(other, true)).toBe(true); // its own
+      expect(await alertFor(victim)).toMatchObject({ test: false });
+      expect(await held(victim)).toBe(true);
+      await expect(rpc(anon, "membership_alert_settle_own", [true])).rejects.toThrow(/permission denied/);
+      expect(await settle(member, true)).toBe(false); // an approved member has nothing to settle
+    });
+
+    it("sends anyway when the hold runs out (the app never called back)", async () => {
+      const id = await socialUser("abandoned@privaterelay.appleid.com", "apple");
+      await db.raw(
+        `update membership.alert_deliveries set next_attempt_at = now() - interval '1 second'
+          where alert_id = (select id from membership.approval_alerts where profile_id = $1)`,
+        [id],
+      );
+      expect((await claim(false)).map((c) => [c.profile_id, c.name])).toEqual([[id, ""]]);
+    });
+
+    it("doesn't hold email registrations or accounts that carry a registration environment", async () => {
+      const email = await db.createAuthUser("plain@example.test", { verified: false });
+      await verify(email);
+      expect(await held(email)).toBe(false);
+      const tagged = await socialUser("tagged@gmail.example", "google", { registration_environment: "production", full_name: "T" });
+      expect(await held(tagged)).toBe(false);
+    });
+  });
 });

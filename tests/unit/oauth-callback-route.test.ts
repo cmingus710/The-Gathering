@@ -7,6 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  */
 const exchangeCodeForSession = vi.fn();
 const profile = vi.fn();
+const settle = vi.fn();
+
+vi.mock("@/lib/membership/server", () => ({ settleOwnApprovalAlert: (...args: unknown[]) => settle(...args) }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
@@ -28,10 +31,15 @@ describe("OAuth callback route", () => {
   beforeEach(() => {
     exchangeCodeForSession.mockReset();
     profile.mockReset();
+    settle.mockReset();
+    vi.stubEnv("VERCEL_ENV", "production");
     exchangeCodeForSession.mockResolvedValue({ data: { user: { id: "u1" }, session: {} }, error: null });
     profile.mockResolvedValue({ data: { full_name: "Ruth Example", membership_status: "pending" } });
   });
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+  });
 
   it("sends a successful sign-in to the requested page on the same origin", async () => {
     const r = await callback("code=abc&provider=google&next=%2Fprayer");
@@ -100,6 +108,31 @@ describe("OAuth callback route", () => {
     );
     expect(conflict.location?.pathname).toBe("/profile/sign-in-methods");
     expect(conflict.location?.searchParams.get("oauth_error")).toBe("conflict");
+  });
+
+  describe("membership approval alert", () => {
+    it("releases a named pending account's alert in production", async () => {
+      await callback("code=abc&provider=google");
+      expect(settle).toHaveBeenCalledTimes(1);
+    });
+    it("waits for the name step in production when there's no name (Apple)", async () => {
+      profile.mockResolvedValue({ data: { full_name: "", membership_status: "pending" } });
+      await callback("code=abc&provider=apple");
+      expect(settle).not.toHaveBeenCalled();
+    });
+    it("settles (as a test) right away on a preview, name or not", async () => {
+      vi.stubEnv("VERCEL_ENV", "preview");
+      profile.mockResolvedValue({ data: { full_name: "", membership_status: "pending" } });
+      await callback("code=abc&provider=apple");
+      expect(settle).toHaveBeenCalledTimes(1);
+    });
+    it("leaves approved and suspended accounts alone", async () => {
+      for (const membership_status of ["approved", "suspended"]) {
+        profile.mockResolvedValue({ data: { full_name: "Ruth", membership_status } });
+        await callback("code=abc&provider=google");
+      }
+      expect(settle).not.toHaveBeenCalled();
+    });
   });
 
   it("ignores an unknown provider value", async () => {
