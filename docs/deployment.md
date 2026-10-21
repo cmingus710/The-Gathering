@@ -24,7 +24,7 @@ Released 2026-10-20 (owner decision; shared Supabase project with the previews, 
 
 **Since then (checked 2026-10-21, Phase 11):** production serves `main` at `5add6de` (the owner's brand SVG upload) as `dpl_8FFrU3WNeR5yzpMfGRzo8df4t4ky`. The hosted database already has the Phase 10 migrations, so production runs Phase 9 code on the Phase 10 schema until PR #16 is merged.
 
-**Phase 12 release (2026-10-21):** production serves `main` at `25b7087` (PR #21) as `dpl_CTXKrfaWCtHeyKghujruGDDJa3ns`. Hosted database at 55 migrations (`20261030000100` applied first). Vercel Authentication now protects every deployment except custom domains, so preview URLs need a Vercel login. `GIVING_WEBHOOK_HOST` is set for Production; the webhook domain still has to be moved from the Phase 3 branch to Production. Details: [phase-12-launch.md](phase-12-launch.md#release-record-2026-10-21).
+**Phase 12 release (2026-10-21):** production serves `main` at `25b7087` (PR #21) as `dpl_CTXKrfaWCtHeyKghujruGDDJa3ns`. Hosted database at 55 migrations (`20261030000100` applied first). Vercel Authentication now protects every deployment except custom domains, so preview URLs need a Vercel login. `GIVING_WEBHOOK_HOST` is set for Production and `giving-webhooks.gathering.church` is assigned to Production (Stripe test webhooks now reach production; a resent test event returned 200). Details: [phase-12-launch.md](phase-12-launch.md#release-record-2026-10-21).
 
 **To pause production again:** set the Ignored Build Step back to
 

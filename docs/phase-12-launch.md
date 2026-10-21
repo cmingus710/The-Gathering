@@ -202,6 +202,8 @@ Authorized by the owner. Done in this order; each step verified.
 | Smoke checks (signed out) | `/` 200 with the barn photo, three icons, Join us (times, address, email); `/report-problem` → sign-in with `private, no-store`; `/give` shows "Testing only: no real money is taken" |
 | Errors and scheduling | No runtime errors since the deploy; `events-worker` 6/6 succeeded in the 30 minutes around the deploy |
 
-**Still to do:** assign `giving-webhooks.gathering.church` to Production in Vercel → Domains (the API tools here can't change a domain's branch), then check that a Stripe test event is delivered; signed-in smoke checks with the test accounts; take a backup including Storage files (Pro daily backups don't include files); phone checks D1–D10.
+| Webhook domain moved to Production (owner, Vercel → Domains) | `giving-webhooks.gathering.church` has no branch (Production). Any path but the webhook returns 404 `Not found`; `GET /api/stripe/webhook` 405. A test event resent from the Stripe sandbox destination returned **200**. The route verifies the signature before it can return 200, so production's `STRIPE_WEBHOOK_SECRET` matches; the resent event was already processed, so no new row was written |
+
+**Still to do:** signed-in smoke checks with the test accounts; take a backup including Storage files (Pro daily backups don't include files); phone checks D1–D10.
 
 Rollback: promote `dpl_8FFrU3WNeR5yzpMfGRzo8df4t4ky` (`5add6de`); the new table can stay.
