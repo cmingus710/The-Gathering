@@ -3,8 +3,11 @@ import { HandCoins, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { PageHeader } from "@/components/ui/card";
+import { CampaignCard } from "@/components/giving/campaign-card";
+import { PageHeader, SectionHeading } from "@/components/ui/card";
 import { displayName, getViewer } from "@/lib/auth/viewer";
+import { signCampaignImages } from "@/lib/giving/campaign-images";
+import type { PublicCampaign } from "@/lib/giving/campaigns";
 import { getGivingServer } from "@/lib/giving/server";
 import { createClient } from "@/lib/supabase/server";
 import { GiveForm } from "./give-form";
@@ -18,9 +21,13 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
   const viewer = viewerResult.state === "signed-in" ? viewerResult.viewer : null;
   const available = getGivingServer() !== null;
   let config: PublicConfig | null = null;
+  let campaigns: PublicCampaign[] = [];
+  let images = new Map<string, string>();
   if (supabase) {
-    const { data } = await supabase.rpc("giving_public_config");
-    config = (data as PublicConfig | null) ?? null;
+    const [configResult, campaignResult] = await Promise.all([supabase.rpc("giving_public_config"), supabase.rpc("giving_campaigns")]);
+    config = (configResult.data as PublicConfig | null) ?? null;
+    campaigns = (campaignResult.data as PublicCampaign[] | null) ?? [];
+    images = await signCampaignImages(supabase, campaigns.map((c) => c.image_path));
   }
 
   return (
@@ -70,6 +77,21 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
               </span>
             )}
           </p>
+          {campaigns.length ? (
+            <section aria-labelledby="campaigns-heading" className="mb-8">
+              <SectionHeading id="campaigns-heading" description="Give toward a specific goal. Campaign gifts go to the fund shown and count toward the total.">
+                Campaigns
+              </SectionHeading>
+              <ul className="grid gap-4 sm:grid-cols-2">
+                {campaigns.map((c) => (
+                  <CampaignCard key={c.id} campaign={c} imageUrl={c.image_path ? images.get(c.image_path) : null} />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {campaigns.length ? (
+            <h2 className="mb-3 text-[1.125rem] font-semibold leading-snug text-text">Give to a fund</h2>
+          ) : null}
           <GiveForm funds={config.funds} minCents={config.min_amount_cents} maxCents={config.max_amount_cents} formToken={randomUUID()} />
           <p className="mt-6 flex items-start gap-2 text-meta text-text-secondary">
             <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
