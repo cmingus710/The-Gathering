@@ -204,6 +204,10 @@ function requestOnce(
       url,
       {
         method: "GET",
+        // A private agent, never the global one: Node's environment proxy
+        // support (NODE_USE_ENV_PROXY with HTTP(S)_PROXY) lives on the global
+        // agents and would send the request to the proxy, skipping this lookup.
+        agent: new lib.Agent({ keepAlive: false }),
         lookup: lookup as unknown as typeof dnsLookup,
         headers: {
           "user-agent": "TheGatheringFeedReader/1.0 (+https://www.gathering.church)",
