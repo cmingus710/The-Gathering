@@ -50,6 +50,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases
 - [docs/build-status.md](docs/build-status.md): what is done and verified, and what still needs external setup
+- [docs/phase-12-launch.md](docs/phase-12-launch.md): release candidate, pilot procedure, release and rollback steps, issue log, device checks
 - [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md): feature status, release blockers, and validation results
 - [docs/administrator-guide.md](docs/administrator-guide.md): everyday administration, with links to the detailed guides
 - [docs/pilot-launch-runbook.md](docs/pilot-launch-runbook.md): adult pilot, release, and rollback

@@ -180,3 +180,11 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script (optional):** `supabase/manual/2026-10-29-apply-grant-baseline.sql`, one transaction, preflight requires `20261028001000`, refuses ("Nothing was changed") if any grant would change. **Rehearsed:** on a hosted-like stage it applied with no grant change and recorded `phase-11`; on new-project defaults it refused (364 functions would change); a rerun stopped at the preflight. The script embeds the migration verbatim.
 - **Not applied to hosted.** No other migration changed; no applied migration was edited.
 - **Recovery script:** `supabase/manual/recovery-scheduler.sql` re-creates `events.call_worker()` (identical to hosted, md5 `1796361f`), the production `job_url`, and the cron job after a rebuild; rehearsed in a rolled-back transaction. Not for routine use.
+
+## Phase 12 (2026-10-30)
+
+- **New:** `20261030000100_problem_reports`, additive only: table `public.problem_reports` (RLS on, no grants to `anon` or `authenticated`) and three `SECURITY DEFINER` functions granted to `authenticated` only: `problem_report_submit` (approved adult members; validates and re-strips the page path; 5 per hour through `community.rate_limit`), `admin_problem_reports` and `admin_problem_report_set_status` (super administrators). No existing object is altered; no applied migration was edited. The anon grant baseline is unchanged (29).
+- **Operator script:** `supabase/manual/2026-10-30-apply-problem-reports.sql`, one transaction, preflight requires `20261028001000` and refuses a second run, post-check refuses if the table or functions would be reachable without signing in, history row `created_by = phase-12`. Independent of the optional Phase 11 grant-baseline script.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from the 54 hosted migrations with their history rows and without `20261029000100` (the hosted stage), the script applied; a rerun stopped at the preflight. A local Supabase stack (PostgreSQL 17.11) built from all 56 files ran the signed-in walkthrough.
+- **Compatibility:** production code (`5add6de`) never references the new objects, so the migration can be applied before the merge, and a code rollback leaves an unused table.
+- **Not applied to hosted** (hosted has 54 versions, checked 2026-10-21).

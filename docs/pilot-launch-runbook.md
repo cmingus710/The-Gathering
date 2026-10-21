@@ -39,7 +39,7 @@ Use the dedicated test accounts only (an administrator and an approved member; a
 - **Who:** 5–10 adults the church already trusts, including one person who uses a screen reader or large text if possible, and at least one Android and one iPhone user. No children, no youth accounts, no guardians.
 - **How they join:** they register themselves at `www.gathering.church`; an administrator approves each one. (No bulk invitations exist, and none should be sent.)
 - **What to tell them:** this is a trial; giving is a test (no real money) or hidden; notifications come in the app and by email, not as phone pop-ups; don't post anything confidential while testing.
-- **Feedback route:** one place only, e.g. a shared email address or a form the church already uses. Ask for: what they tried, what happened, the page address, phone model, and a screenshot. An administrator collects reports twice a week and files each confirmed problem as a GitHub issue.
+- **Feedback route:** **More → Report a problem** in the app (Phase 12). Reports reach super administrators only, at Admin → Problem reports. Ask testers to include what they tried, what happened, and their phone model; the form records the page path itself (never the query string). Tester checklist: [pilot-checklist.md](pilot-checklist.md). Launch steps for Phase 12: [phase-12-launch.md](phase-12-launch.md).
 
 ## Features that stay disabled during the pilot
 

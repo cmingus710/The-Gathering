@@ -1,6 +1,22 @@
 # Build status
 
-Last updated: 2026-10-21 · Phase 11 branch `claude/quirky-dirac-k63ji2`, based on `main` (`5add6de`) with PR #17 and PR #16 merged in · PR into `main` (not merged)
+Last updated: 2026-10-21 · Phase 12 branch `claude/gifted-knuth-j22tsl`, based on `main` (`5add6de`) with PRs #17, #16, #20 (Phase 11), #18, #19, and the mobile-shell branch merged in · PR into `main` (not merged)
+
+## Phase 12: Controlled pilot and production launch
+
+No new modules. Phase 12 combined the open work into one release candidate, verified the welcome page, Music players, and phone shell in a browser, added a private **Report a problem** action for the pilot, fixed the defects the walkthrough found, and wrote the launch runbook. Everything: [phase-12-launch.md](phase-12-launch.md). Tester checklist: [pilot-checklist.md](pilot-checklist.md).
+
+**Nothing was merged, deployed to production, applied to the hosted database, or sent to anyone.** Hosted checks were read-only.
+
+- **Added:** Report a problem (member form, Admin → Problem reports for super administrators), migration `20261030000100_problem_reports` with `supabase/manual/2026-10-30-apply-problem-reports.sql`; "Testing only" notice on Give.
+- **Fixed:** dropdowns that changed value after a validation error (`SelectField`); `/profile` wider than phone screens.
+- **Verified locally:** lint, typecheck, builds; Vitest 793/793 (64 files, serial); Playwright signed-out 324/324; signed-in walkthrough 43 passed (01–05, local Supabase on PostgreSQL 17.11).
+- **Not done:** hosted signed-in walkthrough and physical-device checks (need the owner).
+- **Blockers (owner):** Pro plan and backup, preview protection, giving webhook decision, church settings. See [phase-12-launch.md](phase-12-launch.md#issue-log).
+
+---
+
+# Phase 11 build status
 
 ## Phase 11: Release readiness, verification, and polish
 
