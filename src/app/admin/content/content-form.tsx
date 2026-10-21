@@ -3,7 +3,9 @@
 import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useId, useMemo, useState } from "react";
+import type { ImageChoice } from "@/app/admin/media/picker-actions";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
+import { CoverImageField } from "@/components/media/cover-image-field";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -70,6 +72,7 @@ export function ContentForm({
   );
   const [links, setLinks] = useState<string[]>(item?.links.map((l) => l.id) ?? []);
   const [linkPick, setLinkPick] = useState("");
+  const [cover, setCover] = useState<ImageChoice | null>(null);
 
   const attachments = useMemo(
     () =>
@@ -83,7 +86,13 @@ export function ContentForm({
   const allAssets = [...data.assets.audio, ...data.assets.video, ...data.assets.document];
   const chosenVideo = data.assets.video.find((a) => a.id === video);
   const externalChosen = chosenVideo?.kind === "external_video";
-  const notPublicOk = audience === "public" ? [audio, video, ...docs.map((d) => d.asset_id)].map((id) => allAssets.find((a) => a.id === id)).filter((a) => a && !a.public_ok && a.kind !== "external_video") : [];
+  const notPublicOk: Array<{ title: string }> =
+    audience === "public"
+      ? [
+          ...[audio, video, ...docs.map((d) => d.asset_id)].map((id) => allAssets.find((a) => a.id === id)).filter((a) => a && !a.public_ok && a.kind !== "external_video").map((a) => a!),
+          ...(cover && !cover.public_ok ? [{ title: `${cover.title} (cover image)` }] : []),
+        ]
+      : [];
   const peopleLabel = PEOPLE_LABEL[kind];
   const people = item?.people ?? [];
   const live = item && item.status !== "draft";
@@ -326,25 +335,19 @@ export function ContentForm({
           </Section>
         ) : null}
 
-        <Section title="Cover image">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField label="Image" name="cover_asset_id" defaultValue={v?.cover_asset_id ?? item?.cover_asset_id ?? ""} optional>
-              <option value="">None</option>
-              {data.assets.image.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.title}
-                </option>
-              ))}
-            </SelectField>
-            <TextField
-              label="Image description"
-              name="cover_alt"
-              maxLength={500}
-              defaultValue={v?.cover_alt ?? item?.cover_alt ?? ""}
-              optional
-              hint="Leave empty to use the description saved with the image."
-            />
-          </div>
+        <Section title="Cover image" description="Upload a new image or choose one from the media library. The cover changes when you save.">
+          {/* Keeps its own state across a failed save; starts over from the saved cover after a successful one. */}
+          <CoverImageField
+            key={item?.updated_at ?? "new"}
+            name="cover_asset_id"
+            defaultAssetId={item?.cover_asset_id}
+            altName="cover_alt"
+            defaultAlt={item?.cover_alt ?? ""}
+            canUpload={data.options.can_manage_media && !readOnly}
+            maxUploadMb={data.imageMaxMb}
+            saveLabel={item ? "Save changes" : "Save draft"}
+            onChange={setCover}
+          />
         </Section>
 
         <Section title="Organize" description="Helps members find it in the archive and search.">
@@ -481,7 +484,7 @@ export function ContentForm({
           ) : null}
           {audience === "public" && notPublicOk.length ? (
             <Alert tone="info" title="Some files stay members-only.">
-              {notPublicOk.map((a) => a!.title).join(", ")} {notPublicOk.length === 1 ? "isn't" : "aren't"} approved for public use, so visitors won&apos;t get{" "}
+              {notPublicOk.map((a) => a.title).join(", ")} {notPublicOk.length === 1 ? "isn't" : "aren't"} approved for public use, so visitors won&apos;t get{" "}
               {notPublicOk.length === 1 ? "it" : "them"}. A media manager can approve files in the library.
             </Alert>
           ) : null}

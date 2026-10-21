@@ -8,7 +8,7 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
 import { deleteTopicAction, savePersonAction } from "../actions";
-import type { AssetChoice, Taxonomy } from "../editor-data";
+import type { Taxonomy } from "../editor-data";
 import { SeriesForm } from "./series-form";
 
 export const metadata: Metadata = { title: "Series, people, topics" };
@@ -17,12 +17,10 @@ export default async function TaxonomyPage({ searchParams }: PageProps<"/admin/c
   const viewer = await requireAnyCapability([CAPABILITIES.contentEdit, CAPABILITIES.contentPublish], "/admin/content/library");
   const sp = await searchParams;
   const supabase = await requireClient();
-  const [tax, images] = await Promise.all([
-    supabase.rpc("media_admin_taxonomy"),
-    supabase.rpc("media_admin_assets", { p_kind: "image", p_status: "ready", p_q: null, p_limit: 100, p_offset: 0 }),
-  ]);
+  const [tax, mediaSettings] = await Promise.all([supabase.rpc("media_admin_taxonomy"), supabase.rpc("media_admin_settings")]);
   const t = (tax.data ?? { series: [], people: [], topics: [] }) as Taxonomy;
-  const covers = ((images.data as { items: AssetChoice[] } | null)?.items ?? []) as AssetChoice[];
+  const imageMaxMb = (mediaSettings.data as { image_max_mb?: number } | null)?.image_max_mb;
+  const canUpload = viewer.capabilities.has(CAPABILITIES.mediaManage);
   const canEdit = viewer.capabilities.has(CAPABILITIES.contentEdit);
   const canDeleteTopics = viewer.capabilities.has(CAPABILITIES.contentPublish);
 
@@ -48,14 +46,14 @@ export default async function TaxonomyPage({ searchParams }: PageProps<"/admin/c
                 <summary className="cursor-pointer font-semibold">
                   {s.title} <span className="font-normal text-text-secondary">· {s.items} item(s){s.archived ? " · archived" : ""}</span>
                 </summary>
-                <div className="mt-3">{canEdit ? <SeriesForm series={s} covers={covers} /> : null}</div>
+                <div className="mt-3">{canEdit ? <SeriesForm series={s} canUpload={canUpload} imageMaxMb={imageMaxMb} /> : null}</div>
               </details>
             ))}
             {canEdit ? (
               <details className="rounded-tile border border-dashed border-border p-3" open={!t.series.length}>
                 <summary className="cursor-pointer font-semibold text-primary">Add a series</summary>
                 <div className="mt-3">
-                  <SeriesForm series={null} covers={covers} />
+                  <SeriesForm series={null} canUpload={canUpload} imageMaxMb={imageMaxMb} />
                 </div>
               </details>
             ) : null}
