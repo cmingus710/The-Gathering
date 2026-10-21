@@ -21,6 +21,9 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `API_BIBLE_KEY` (any name you choose) | Vercel (server, sensitive) | Only for an API.Bible translation | The church's API.Bible key. The translation stores only this variable's **name**. Not needed for stored-text translations such as the WEB. See [bible-sources.md](bible-sources.md#apibible-configuration). |
 | `API_BIBLE_BASE_URL` | Vercel (server) | Optional | API.Bible base URL (default `https://rest.api.bible/v1`); only the provider's own https hosts are accepted. |
 | `CRON_SECRET` | Vercel Production (later) | Optional | Only if a Vercel cron should also call `GET /api/jobs/events` after release |
+| `AUTH_OAUTH_PROVIDERS` | Vercel (server) | Optional | `google`, `apple`, or `google,apple`: which "Continue with…" buttons may show. Each also needs the provider enabled in Supabase. See [social-login-setup.md](social-login-setup.md). |
+| `AUTH_IDENTITY_LINKING` | Vercel (server) | Optional | `on` to let members connect Google/Apple from Profile → Sign-in methods (needs "Allow manual linking" in Supabase) |
+| `AUTH_ALLOWED_ORIGINS` | Vercel Production (server) | Optional | Extra production origins sign-in may return to, comma-separated (each also in Supabase Redirect URLs) |
 | `TEST_DATABASE_URL` | Local / CI | For DB tests | Postgres superuser URL. The tests create and drop a throwaway database. |
 
 ## 2. Supabase
@@ -124,6 +127,7 @@ For a new project, run `supabase link --project-ref <ref> && supabase db push`, 
    The app always sends a `redirectTo` of `<site>/auth/confirm?next=…`, which is why the templates append with `&`.
 4. **Password policy (recommended):** minimum length 10. The app also enforces 10 characters with a letter and a digit.
 5. **Rate limits:** keep the defaults. The app shows a friendly "too many attempts" message.
+6. **Google and Apple sign-in (optional):** off until configured. Exact steps, callback URLs, and Apple secret renewal are in [social-login-setup.md](social-login-setup.md).
 
 ### Realtime (Phase 5)
 

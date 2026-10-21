@@ -56,3 +56,13 @@ export const profileSchema = z.object({
     .refine((v) => v === "" || /^[0-9+().\-\s]{7,40}$/.test(v), "Enter a phone number using digits, spaces, and + ( ) - only.")
     .transform((v) => v || null),
 });
+
+/** Name collected after Google/Apple sign-in when the provider didn't share one. */
+export const completeProfileSchema = z.object({
+  fullName: z.string().trim().min(1, "Enter your name.").max(120, "Use 120 characters or fewer."),
+  preferredName: z
+    .string()
+    .trim()
+    .max(60, "Use 60 characters or fewer.")
+    .transform((v) => v || null),
+});

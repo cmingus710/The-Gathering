@@ -15,6 +15,8 @@ export type Viewer = {
   accountKind: AccountKind;
   capabilities: ReadonlySet<Capability>;
   isAdmin: boolean;
+  /** Sign-in methods on the account ("email", "google", "apple"), from Supabase Auth. */
+  authProviders: readonly string[];
 };
 
 export type ViewerResult =
@@ -71,6 +73,9 @@ export const getViewer = cache(async (): Promise<ViewerResult> => {
       capabilities,
       // The database grants youth accounts no capabilities; this keeps the UI consistent.
       isAdmin: profile.membership_status === "approved" && profile.account_kind !== "youth" && canAccessAdmin(capabilities),
+      authProviders: Array.isArray(userData.user.app_metadata?.providers)
+        ? (userData.user.app_metadata.providers as unknown[]).filter((p): p is string => typeof p === "string")
+        : [],
     },
   };
 });
