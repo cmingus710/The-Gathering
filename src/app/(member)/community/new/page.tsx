@@ -30,7 +30,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
   }
 
   const back = (
-    <Link href={groupId ? `/groups/${groupId}` : categoryId ? `/community/c/${categoryId}` : "/community"} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
+    <Link href={groupId ? `/groups/${groupId}` : categoryId ? `/community?category=${categoryId}` : "/community"} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" /> Back
     </Link>
   );

@@ -82,6 +82,11 @@ export async function createThreadAction(_prev: FormState, formData: FormData): 
     : await supabase.rpc("community_thread_create", args);
   if (error) return errorState(dbErrorMessage(error, "Your discussion couldn't be posted. Your text is still here; please try again."), { values });
   revalidatePath("/community", "layout");
+  // From the feed composer: back to that feed, where the new post is first.
+  const returnTo = String(formData.get("returnTo") ?? "");
+  if (/^\/community(\?(category|group)=[0-9a-f-]{36})?$/.test(returnTo)) {
+    redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}posted=${data as string}`);
+  }
   redirect(`/community/t/${data as string}?posted=1`);
 }
 

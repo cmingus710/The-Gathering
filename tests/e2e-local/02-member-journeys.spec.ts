@@ -96,8 +96,8 @@ test("community: a reply notifies the author in the app, and the notice opens th
   } else {
     await other.goto(threadUrl);
   }
-  await other.getByRole("textbox", { name: "Your reply" }).fill("[TEST] Synthetic reply");
-  await other.getByRole("button", { name: "Post reply" }).click();
+  await other.getByRole("textbox", { name: "Write a comment" }).fill("[TEST] Synthetic reply");
+  await other.getByRole("button", { name: "Post comment" }).click();
   await expect(other.getByText("[TEST] Synthetic reply")).toBeVisible();
 
   await expect.poll(() => unread(member), { timeout: 15_000 }).toBeGreaterThan(before);

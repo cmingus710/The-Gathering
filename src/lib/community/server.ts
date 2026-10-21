@@ -33,7 +33,7 @@ export function getCommunityJob(): CommunityJob | null {
   });
 }
 
-function getPushSender(): PushSender | null {
+export function getPushSender(): PushSender | null {
   const config = getPushConfig();
   if (!config) return null;
   return async (subscription, payload) => {

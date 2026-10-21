@@ -229,3 +229,42 @@ export const REACTIONS: Array<{ kind: ReactionKind; label: string; emoji: string
   { kind: "pray", label: "Praying", emoji: "🙏" },
   { kind: "amen", label: "Amen", emoji: "🙌" },
 ];
+
+/** One original post in the Community feed (community_feed / community_feed_post). */
+export type FeedPost = ThreadCard & {
+  body: string | null;
+  edited_at: string | null;
+  audience: "church" | "group";
+  group_archived: boolean;
+  reactions: Reactions | null;
+  comment_count: number;
+  attachments: Attachment[];
+  can_moderate: boolean;
+  can_reply: boolean;
+  muted: boolean;
+};
+
+export type FeedCursor = { at: string; id: string };
+
+export type FeedPage = {
+  items: FeedPost[];
+  pinned: Array<{ id: string; title: string; author: string | null; created_at: string }>;
+  can_post: boolean;
+  next_cursor: FeedCursor | null;
+};
+
+/** A reply shown as a comment, with its photos and videos. */
+export type Comment = Post & { attachments: Attachment[] };
+
+export type CommentPage = {
+  items: Comment[];
+  count: number;
+  target_found: boolean;
+  can_moderate: boolean;
+  can_reply: boolean;
+  next_cursor: FeedCursor | null;
+};
+
+/** Feed shapes with their text already rendered by the safe community renderer. */
+export type RenderedPost = FeedPost & { html: string | null };
+export type RenderedComment = Comment & { html: string | null };

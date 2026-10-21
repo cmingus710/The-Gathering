@@ -820,7 +820,8 @@ describeDb("community: forum, groups, messages, moderation, notifications", () =
       const t = await newThread(m1, { title: "Click-through synthetic" });
       await rpc(as(m3), "community_reply", [t, "A reply", null]);
       const n = (await notifs(m1)).find((x) => String(x.title).includes("Click-through synthetic"))!;
-      expect(await rpc(as(m1), "community_notification_open", [n.id])).toBe(`/community/t/${t}`);
+      // Reply notifications link to the post with that comment revealed.
+      expect(await rpc(as(m1), "community_notification_open", [n.id])).toMatch(new RegExp(`^/community/t/${t}\\?comment=[0-9a-f-]{36}$`));
       await rpc(as(m3), "community_reply", [t, "Another", null]);
       const n2 = (await notifs(m1)).find((x) => String(x.title).includes("Click-through synthetic") && !x.read)!;
       await rpc(as(moderator), "community_mod_thread", [t, "hide", "Synthetic", null]);

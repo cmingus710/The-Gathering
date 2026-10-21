@@ -9,9 +9,10 @@
  * - API routes, auth routes, Supabase requests, and other origins are not
  *   intercepted at all.
  * - Push messages (Phase 5) carry only generic text and an
- *   /notifications/open/<id> link; the app rechecks access on click.
+ *   /notifications/open/<id> link; the app rechecks access on click. A test
+ *   push from the settings page opens /notifications/settings.
  */
-const VERSION = "v3";
+const VERSION = "v4";
 const STATIC_CACHE = `gathering-static-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/brand/gathering-icon.webp", "/brand/gathering-icon.png", "/icons/icon-192.png"];
@@ -75,7 +76,7 @@ self.addEventListener("push", (event) => {
   }
   const title = typeof data.title === "string" && data.title ? data.title.slice(0, 80) : "The Gathering";
   const body = typeof data.body === "string" ? data.body.slice(0, 160) : "You have a new notification.";
-  const url = typeof data.url === "string" && /^\/notifications\/open\/[0-9a-f-]{36}$/.test(data.url) ? data.url : "/notifications";
+  const url = typeof data.url === "string" && (/^\/notifications\/open\/[0-9a-f-]{36}$/.test(data.url) || data.url === "/notifications/settings") ? data.url : "/notifications";
   event.waitUntil(
     self.registration.showNotification(title, {
       body,

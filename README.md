@@ -54,6 +54,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/phase-12-launch.md](docs/phase-12-launch.md): release candidate, pilot procedure, release and rollback steps, issue log, device checks
 - [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md): feature status, release blockers, and validation results
 - [docs/administrator-guide.md](docs/administrator-guide.md): everyday administration, with links to the detailed guides
+- [docs/membership-approval-alerts.md](docs/membership-approval-alerts.md): emailing designated administrators when a new member is waiting for approval
 - [docs/pilot-launch-runbook.md](docs/pilot-launch-runbook.md): adult pilot, release, and rollback
 - [docs/operations-recovery.md](docs/operations-recovery.md): scheduler, backups, recovery, and who investigates
 - [docs/design-system.md](docs/design-system.md): tokens, light/dark themes, the custom icon set, navigation, and the home layout
