@@ -1,5 +1,43 @@
 # Build status
 
+Last updated: 2026-10-21 · Phase 11 branch `claude/quirky-dirac-k63ji2`, based on `main` (`5add6de`) with PR #17 and PR #16 merged in · PR into `main` (not merged)
+
+## Phase 11: Release readiness, verification, and polish
+
+### Summary
+
+No new modules: Phase 11 checked what is actually deployed and configured, fixed the defects it found, verified the app signed in through a browser against the real migrations, rehearsed recovery, and wrote the administrator guide and pilot plan. Full matrix, blockers, and actions: [phase-11-release-readiness.md](phase-11-release-readiness.md). Guides: [administrator-guide.md](administrator-guide.md), [pilot-launch-runbook.md](pilot-launch-runbook.md), [operations-recovery.md](operations-recovery.md).
+
+**Nothing was merged, deployed to production, or written to the hosted database.** Hosted checks were read-only SQL, advisors, and Vercel metadata. Giving stays in Stripe test mode; no youth policy was approved; no one was invited.
+
+### Fixed
+
+| Fix | Files |
+| --- | --- |
+| SSRF check bypassed when Node uses an HTTP proxy (the reported "HTTP 503" in `safe-fetch.test.ts` was the proxy answering because the address check never ran) | `src/lib/media/safe-fetch.ts` (+ regression test) |
+| Markdown link `"/\t/evil.example"` treated as same-site | `src/lib/announcements/markdown.ts` (+ tests) |
+| Function grants not reproducible from migrations (a rebuilt project let anon call ~160 more functions); new migration, no-op on hosted | `supabase/migrations/20261029000100_function_grant_baseline.sql`, `supabase/manual/2026-10-29-apply-grant-baseline.sql`, `tests/db/grants.test.ts`, shim |
+| Clock-dependent tests (a care-opportunity date that would expire 2026-11-01; an ambiguous fall-back-hour reminder) and PR #17 merged | `tests/db/prayer.test.ts`, `tests/db/events.test.ts`, `tests/db/memory.test.ts` |
+| Mobile and navigation polish; confirmations for five irreversible actions | composer, dock, admin nav, page header, shells, member controls, gallery, saved, Bible sources, topics |
+| Local seed couldn't sign in with real Supabase Auth | `supabase/seed.sql` |
+| Recovery tools | `scripts/storage-backup.mjs`, `supabase/manual/recovery-scheduler.sql` |
+
+### Verified locally
+
+Lint (zero warnings), typecheck, production build; **765 Vitest tests** (62 files, serial; database tests against PostgreSQL 16 built from all 55 migrations), and the same suite under a faked clock at 11 instants around UTC/Chicago/New York midnights and both 2026–27 DST changes; **322 Playwright signed-out tests** (desktop and Pixel 7); **35 signed-in walkthrough checks** (`tests/e2e-local`, real local Supabase Auth, PostgREST, Storage, and Mailpit): registration and email verification, pending restrictions, approval, sign-out, password reset, suspension and reinstatement, role grant and confirmed removal, directory opt-out, community post/reply/notification/report with inert markup, prayer audiences, events with RSVP and .ics, giving's not-configured state, youth gate closed, 25-route smoke, axe WCAG 2.2 A/AA on 27 routes (0 violations), 320 px and 200 % text, keyboard, reduced motion, service-worker caches. **Recovery rehearsal** (disposable local stack): database and Storage files backed up, deleted, restored with identical row counts (46 tables) and file hashes; the walkthrough then passed on the restored database.
+
+### Hosted (read-only)
+
+54 migrations (all of Phase 10); production `main` `5add6de` (Phase 9 code on the Phase 10 schema); scheduler 288/288 runs in 24 h to production, outboxes clean; grants equal the new baseline; Free plan (no backups); previews public and sharing the database, Auth, Storage, and email with production; Stripe test webhooks routed to the Phase 3 preview; no VAPID keys. **Not done:** signed-in hosted walkthrough (no credentials; production domain blocked from this environment) and physical-device checks.
+
+### Release blockers
+
+Backups (Free plan), previews writing to production, giving webhooks on a preview, production code behind the schema, hosted signed-in walkthrough. Details and the order to clear them: [phase-11-release-readiness.md](phase-11-release-readiness.md#release-blockers).
+
+---
+
+# Phase 10 build status
+
 Last updated: 2026-10-28 · Phase 10 branch `phase-10/youth-families` (also pushed as `claude/gracious-gauss-im5ojt`), based on the Phase 9 head and then merged with `main` after PR #15 · draft PR [#16](https://github.com/cmingus710/The-Gathering/pull/16) into `main` (not merged)
 
 ## Phase 10: Youth ministry and families

@@ -5,17 +5,18 @@ Each phase is built, verified, and reviewed before the next begins.
 | # | Phase | Status |
 | --- | --- | --- |
 | 1 | Foundation, branding, authentication, and administration | **Merged** (device checks outstanding) |
-| 2 | Membership and directory | **Built** (PR #5, awaiting review) |
-| 3 | Giving and contributions | **Built**, Stripe test mode (PR #6, awaiting review) |
-| 4 | Events and calendars | **Built** (PR into `main`, stacked on #5 and #6, awaiting review) |
-| 5 | Community, groups, messaging, and notifications | **Built** (draft PR #8, stacked on #7); hosted database applied; walkthrough pending |
-| 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted database applied; walkthrough pending |
-| 7 | Teaching and media | **Built** (PR into `main`, stacked on Phase 6); hosted database applied; walkthrough pending |
+| 2 | Membership and directory | **Merged** (PR #14) |
+| 3 | Giving and contributions | **Merged** (PR #14), Stripe test mode |
+| 4 | Events and calendars | **Merged** (PR #14) |
+| 5 | Community, groups, messaging, and notifications | **Merged** (PR #14); hosted database applied; web push keys not set |
+| 6 | Prayer and care | **Merged** (PR #14); hosted database applied |
+| 7 | Teaching and media | **Merged** (PR #14); hosted database applied |
 | 8 | Bible reading and journals | **Merged** (PR #14 with Phases 2–7); hosted database applied, including the `000700` follow-up |
-| 9 | Memory verses | **Merged** (PR #15); hosted database applied; database-level hosted walkthrough passed; signed-in browser walkthrough pending |
-| 10 | Youth and families | **Built** (PR into `main`); hosted database scripts ready, not yet applied; policy-gated features off until the church approves a policy |
-| 11 | Ministry tools and connected experience | Planned |
-| 12 | Launch readiness | Planned |
+| 9 | Memory verses | **Merged** (PR #15), **in production** since 2026-10-20; hosted database applied |
+| 10 | Youth and families | **Built** (PR #16, not merged); hosted database **applied** (steps 1–10, 2026-10-21); policy-gated features off until the church approves a policy |
+| 11 | Release readiness, verification, and polish | **Built** (PR into `main`, includes #16 and #17); see [phase-11-release-readiness.md](phase-11-release-readiness.md) |
+| 12 | Phone push and ministry tools | Planned |
+| 13 | Attachments, Lesson Studio, Follow Along | Planned |
 
 ## Hooks already in place for later phases
 

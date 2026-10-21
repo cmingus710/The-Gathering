@@ -2,7 +2,7 @@
 
 The church community app for The Gathering: a mobile-first, installable web app for members and administrators.
 
-**Status:** Phase 1 (foundation, branding, authentication, and administration). See [docs/build-status.md](docs/build-status.md).
+**Status:** Phases 1–9 in production at `www.gathering.church` (giving in Stripe test mode); Phase 10 (youth, policy-gated) and Phase 11 (release readiness) in review. See [docs/build-status.md](docs/build-status.md) and [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md).
 
 ## Stack
 
@@ -40,6 +40,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 | `npm test` | Unit tests; also runs the RLS integration tests when `TEST_DATABASE_URL` is set |
 | `npm run test:db` | Database authorization tests only (needs `TEST_DATABASE_URL`) |
 | `npm run test:e2e` | Playwright browser tests (run `npm run build` first) |
+| `npx playwright test -c playwright.local.config.ts` | Signed-in walkthrough against a local Supabase stack (see the readiness doc) |
 | `npm run brand:assets` | Regenerate web/PWA icons from `assets/brand/source` |
 | `npm run admin:bootstrap -- <email>` | One-time appointment of the first super administrator |
 
@@ -49,4 +50,8 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases
 - [docs/build-status.md](docs/build-status.md): what is done and verified, and what still needs external setup
+- [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md): feature status, release blockers, and validation results
+- [docs/administrator-guide.md](docs/administrator-guide.md): everyday administration, with links to the detailed guides
+- [docs/pilot-launch-runbook.md](docs/pilot-launch-runbook.md): adult pilot, release, and rollback
+- [docs/operations-recovery.md](docs/operations-recovery.md): scheduler, backups, recovery, and who investigates
 - [docs/design-system.md](docs/design-system.md): tokens, light/dark themes, the custom icon set, navigation, and the home layout

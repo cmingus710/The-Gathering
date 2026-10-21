@@ -576,7 +576,7 @@ The logo and icon keep their original colours on an ivory plaque or circle, beca
 
 ## PWA and caching
 
-- `manifest.webmanifest`: name "The Gathering", standalone, dark (#121110) theme and background, `any` and `maskable` icons at 192 and 512.
+- `manifest.webmanifest`: name "The Gathering", standalone, ivory (#F7F4ED) theme and background, `any` and `maskable` icons at 192 and 512.
 - Icons are generated from the supplied icon artwork by `scripts/generate-brand-assets.mjs`. They're square and not pre-rounded, and the maskable versions are verified to stay inside the 80% safe zone.
 - `public/sw.js` caches only `/_next/static/*`, `/brand/*`, `/icons/*`, and `offline.html`. Navigations are network-only, with a generic offline page, and nothing private is ever stored.
 - Sign-out is a POST that clears Supabase cookies and sends `Clear-Site-Data: "cache"`.

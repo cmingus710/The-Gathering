@@ -22,6 +22,8 @@ Released 2026-10-20 (owner decision; shared Supabase project with the previews, 
 4. Supabase Auth Site URL set to `https://www.gathering.church`, with `https://www.gathering.church/**` added to the redirect URLs (preview entries kept).
 5. Scheduler: `events.settings.job_url` moved from the Phase 7 preview to `https://www.gathering.church/api/jobs/events`. A database-signed test request returned **200** (events, community, media, prayer, and memory ticks), so production's `EVENTS_JOB_SECRET` matches `events.secrets`. Previews no longer receive scheduler requests.
 
+**Since then (checked 2026-10-21, Phase 11):** production serves `main` at `5add6de` (the owner's brand SVG upload) as `dpl_8FFrU3WNeR5yzpMfGRzo8df4t4ky`. The hosted database already has the Phase 10 migrations, so production runs Phase 9 code on the Phase 10 schema until PR #16 is merged.
+
 **To pause production again:** set the Ignored Build Step back to
 
 ```sh
@@ -41,7 +43,20 @@ and, if needed, roll back to an earlier production deployment in Vercel.
 | `EMAIL_FROM` | ✅ set | ✅ set | e.g. `The Gathering <hello@verified-domain>` |
 | `EVENTS_JOB_SECRET`, `MEDIA_RATE_SECRET` | ✅ set | ✅ set | Sensitive; same value as `events.secrets('job')` for the job secret |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Phase 3 branch | ✅ set (test mode) | Sensitive; see giving-setup.md |
+| `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | ✅ set | — | The webhook host `giving-webhooks.gathering.church` is assigned to the `phase-3/giving-contributions` branch, so Stripe test webhooks are processed by that preview, not production |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | — | — | Not set anywhere, so web push is off |
+| `CRON_SECRET` | — | — | Not set (the job route's optional GET trigger is unused; the database scheduler signs POSTs) |
 | `SUPABASE_SECRET_KEY` | never | never | Operator scripts only |
+
+## What previews share with production
+
+Every preview uses the **same** Supabase project (database, Auth users, Storage), the same Resend key and sender, and the same job secret as production, and Deployment Protection is off. So on any preview URL:
+
+- registering creates a real production account, and approving it emails a real person;
+- posting, RSVPs, prayers, and uploads land in production data and can notify real members;
+- only the scheduler is production-only (`events.settings.job_url`).
+
+Until previews are protected or moved to their own Supabase project, test on previews only with the dedicated test accounts, `[TEST]` content, and email addresses you control, and clean up afterwards. Pushing a feature branch creates only a preview; merging to `main` deploys production.
 
 ## Branch workflow
 

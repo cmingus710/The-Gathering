@@ -24,7 +24,6 @@ function inDays(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-let eventPath = "";
 
 test("events: an administrator creates and publishes a members event with RSVP", async ({ browser }) => {
   const admin = await as(browser, ADMIN);
@@ -37,7 +36,6 @@ test("events: an administrator creates and publishes a members event with RSVP",
   await admin.getByLabel("Members register (RSVP) for this event").check();
   await admin.getByRole("button", { name: "Save as draft" }).click();
   await admin.waitForURL(/\/admin\/events\/[0-9a-f-]{36}/);
-  eventPath = new URL(admin.url()).pathname;
   await admin.getByRole("button", { name: /^Publish/ }).first().click();
   const dialog = admin.getByRole("dialog");
   if (await dialog.count()) await dialog.getByRole("button", { name: /^Publish/ }).last().click();
