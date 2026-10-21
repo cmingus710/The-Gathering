@@ -5,6 +5,8 @@ import { deliverEventEmails, verifyJobSignature } from "@/lib/events/jobs";
 import { getDeliveryDeps, getEventsConfig } from "@/lib/events/server";
 import { refreshDueFeeds } from "@/lib/media/feeds";
 import { getMediaJob } from "@/lib/media/server";
+import { deliverApprovalAlerts } from "@/lib/membership/alerts";
+import { getApprovalAlertDeps } from "@/lib/membership/server";
 import { getChurchSettings } from "@/lib/settings/queries";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +31,8 @@ function bearerOk(header: string | null, secret: string | undefined): boolean {
  * CRON_SECRET) can drive it too after a production release. Safe to call
  * from several places: reminders are deduplicated and each message is
  * claimed by exactly one sender. Since Phase 7 it also refreshes external
- * podcast feeds that are due (each show is leased while it is fetched).
+ * podcast feeds that are due (each show is leased while it is fetched), and
+ * sends membership approval alerts.
  */
 async function run() {
   const { settings } = await getChurchSettings();
@@ -50,6 +53,17 @@ async function run() {
         communityResult = { error: "failed" };
       }
     }
+    // Membership approval alerts (one message per recipient; retries only unsent ones).
+    let approvalAlerts: unknown = null;
+    const alerts = getApprovalAlertDeps(settings);
+    if (alerts) {
+      try {
+        approvalAlerts = await deliverApprovalAlerts(alerts, { rounds: 5, limit: 20 });
+      } catch (err) {
+        console.error("[membership] approval alert delivery failed", { error: (err as Error)?.name });
+        approvalAlerts = { error: "failed" };
+      }
+    }
     // Phase 7: external podcast feeds due for their scheduled refresh.
     let feeds: unknown = null;
     const media = getMediaJob();
@@ -61,7 +75,7 @@ async function run() {
         feeds = { error: "failed" };
       }
     }
-    return json({ tick, sent, community: communityResult, feeds });
+    return json({ tick, sent, community: communityResult, approvalAlerts, feeds });
   } catch (err) {
     console.error("[events] job failed", { error: (err as Error)?.name });
     return json({ error: "failed" }, 500);

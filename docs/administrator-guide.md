@@ -24,9 +24,10 @@ The short version of every administrative job, with links to the detailed guides
 2. Open a person, check you know them, then **Approve**. The page tells you whether the welcome email was sent. If it says no email was sent, tell the person yourself.
 3. **Decline** (pending) or **Suspend** (approved) asks you to confirm. Suspended people lose member access on their next page load; nothing is deleted. **Reinstate** restores it.
 4. **Roles** on the same page: **Assign** takes effect on the person's next page load. **Remove** asks you to confirm. Every change is in the audit log. You can't change your own status, and the last super administrator can't be removed.
-5. Give each person only the roles they need. Common pairs: *Membership administrator* (approvals), *Content editor/publisher* (teaching), *Event coordinator*, *Community moderator*, *Prayer moderator*, *Gallery moderator*, *Finance viewer/administrator*.
-6. **Direct messaging** is off for everyone until an administrator confirms the person is an adult (Members → person → Direct messaging).
-7. Correcting someone's profile records which fields changed (not the values) in the audit log.
+5. Optional: to be emailed when someone new is waiting, a super administrator lists recipients under **Church settings → Membership approval notifications** ([membership-approval-alerts.md](membership-approval-alerts.md)).
+6. Give each person only the roles they need. Common pairs: *Membership administrator* (approvals), *Content editor/publisher* (teaching), *Event coordinator*, *Community moderator*, *Prayer moderator*, *Gallery moderator*, *Finance viewer/administrator*.
+7. **Direct messaging** is off for everyone until an administrator confirms the person is an adult (Members → person → Direct messaging).
+8. Correcting someone's profile records which fields changed (not the values) in the audit log.
 
 ## Church settings and announcements
 

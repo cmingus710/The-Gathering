@@ -6,6 +6,7 @@ import { safeNextPath } from "@/lib/auth/redirects";
 import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "@/lib/auth/schemas";
 import { errorState, formValues, validationErrorState, type FormState } from "@/lib/forms";
 import { authConfirmUrl } from "@/lib/site-url";
+import { registrationEnvironment } from "@/lib/membership/alerts";
 import { createClient } from "@/lib/supabase/server";
 
 const UNAVAILABLE = "Sign-in is temporarily unavailable because the membership service isn't configured. Please contact the church office.";
@@ -23,8 +24,11 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     password: parsed.data.password,
     options: {
       emailRedirectTo: authConfirmUrl("/account-status"),
-      // Only the display name is accepted; the database ignores anything else.
-      data: { full_name: parsed.data.fullName },
+      // Only the display name is copied to the profile; the database ignores
+      // anything else. registration_environment keeps a preview sign-up's
+      // approval alert away from production recipients (it can only suppress
+      // the registrant's own alert).
+      data: { full_name: parsed.data.fullName, registration_environment: registrationEnvironment() },
     },
   });
   if (error) return errorState(authErrorMessage(error), { values });

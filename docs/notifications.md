@@ -22,6 +22,8 @@ Prayer moderator actions on your request or comment appear under Moderator actio
 
 Giving never creates a community notification.
 
+Membership approval alerts (email to designated administrators when a new account is ready for approval) aren't member notifications; they have their own recipient list in Church settings and their own outbox. See [membership-approval-alerts.md](membership-approval-alerts.md).
+
 Members change these at **Notifications → Settings**: in-app on/off (moderation can't be turned off), email off / right away / daily summary / weekly summary (messages: off or right away only), push on/off per category, quiet hours with a time zone, and mutes (discussion, group, or conversation).
 
 ## Rules that keep notifications safe

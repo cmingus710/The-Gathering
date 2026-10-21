@@ -6,6 +6,7 @@ import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { DEFAULT_TIMEZONE } from "@/lib/time";
 import { BrandAssetForm } from "./branding-form";
+import { MembershipAlertsSection } from "./membership-alerts";
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Church settings" };
@@ -41,6 +42,7 @@ export default async function SettingsPage() {
               <BrandAssetForm asset="icon" currentUrl={settings.iconUrl} isDefault={!settings.iconPath} />
             </div>
           </Card>
+          <MembershipAlertsSection timeZone={settings.timezone} />
         </div>
       )}
     </>
