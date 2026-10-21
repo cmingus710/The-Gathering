@@ -221,7 +221,7 @@ Lint (zero warnings), typecheck, production build (every route dynamic), **707 V
 | Branches pushed | `phase-9/scripture-memory` and `claude/phase-9-scripture-memory-ns026j` |
 | Preview build `16ec916` (`dpl_3Ajd1vk74hXuwJ9tnjBw4BBXXd1C`) | **Ready**: `https://the-gathering-o1072onrg-paint-by-number.vercel.app` (Vercel Authentication required) |
 | Signed-out `/memory/review` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
-| Production deploys from `main` | Unchanged (paused); nothing merged by this phase |
+| Production deploys from `main` | Released after the merge: production builds unpaused and `main` deployed to `www.gathering.church` on 2026-10-20; scheduler now targets production ([deployment.md](deployment.md#production-is-live)) |
 | Hosted migration history | **Applied** (owner, SQL editor): 44 versions, latest `20261027000500`; memory fingerprint equal to a fresh build in all 15 categories |
 
 ### Hosted walkthrough (database level, 2026-10-20)
