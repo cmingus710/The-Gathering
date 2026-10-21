@@ -12,18 +12,18 @@ Each phase is built, verified, and reviewed before the next begins.
 | 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted database applied; walkthrough pending |
 | 7 | Teaching and media | **Built** (PR into `main`, stacked on Phase 6); hosted database applied; walkthrough pending |
 | 8 | Bible reading and journals | **Merged** (PR #14 with Phases 2–7); hosted database applied, including the `000700` follow-up |
-| 9 | Memory verses | **Built** (draft PR #15); hosted database scripts ready, not yet applied |
-| 10 | Youth and families | Planned |
+| 9 | Memory verses | **Built** (draft PR #15); hosted database applied (fingerprint matches) |
+| 10 | Youth and families | **Built** (PR into `main`, stacked on #15); hosted database scripts ready, not yet applied; policy-gated features off until the church approves a policy |
 | 11 | Ministry tools and connected experience | Planned |
 | 12 | Launch readiness | Planned |
 
 ## Hooks already in place for later phases
 
 - **Navigation:** later modules can be listed as "Coming later" (not links) in `src/lib/navigation.ts`. A module becomes a link by switching its `status` to `available` and adding its route.
-- **Roles:** `youth_leader` (`youth.lead`) stays reserved for Phase 10. `group_leader` stays reserved and unused: Phase 5 assigns group leadership per group instead.
+- **Roles:** `youth_leader` (`youth.lead`) is assignable since Phase 10 (plus a per-group assignment). `group_leader` stays reserved and unused: Phase 5 assigns group leadership per group instead.
 - **Profiles:** directory, household, and advanced profile fields were added in Phase 2 (see build-status.md).
 - **Groups (Phase 5, done):** `events.group_member()` now checks real group membership, the `series_groups_unavailable` constraint is replaced, and the event form has a group selector.
 - **Bible (Phase 8, done):** the Bible tile is live with the supplied art. Canonical books use USFM codes (`bible.books`, `src/lib/bible/books.ts`, names identical to Phase 7's scripture references).
 - **Memory verses (Phase 9, done):** passages are captured from the Phase 8 stored-text source as versioned snapshots (translation + reference + content hash) so practice is always scored against the exact wording; Phase 13 (attachments, Lesson Studio, Follow Along) is untouched.
-- **Youth and families (Phase 10):** memory progress is keyed by profile, so a verified child profile can own its own; challenges use adult-only group membership today, leaving room for a guardian-approved family challenge type. The kids presentation is display-only and must never be read as an age or permission (see memory-privacy.md).
+- **Youth and families (Phase 10, done):** child profiles are records, not logins; their guardian-recorded practice lives in `youth.practice_*` and moves into the youth's own memory history at activation. Challenges stay adult-only (no family challenge type yet). Phase 11 can build on `youth.guardian_can`, `youth.is_leader`, and the policy settings; Phase 12 phone push reuses the generic `youth` notification text; Phase 13 (attachments, Lesson Studio, Follow Along) is untouched.
 - **Phone push (Phase 12):** teaching and gallery notices use the existing web push and email; native phone push is Phase 12.

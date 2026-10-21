@@ -73,6 +73,17 @@ The schema is in `supabase/migrations/` and must be applied in filename order:
 42. `20261027000300_memory_practice.sql` (Phase 9)
 43. `20261027000400_memory_challenges.sql` (Phase 9)
 44. `20261027000500_memory_notifications.sql` (Phase 9)
+45. `20261028000100_youth_event_audience.sql` (Phase 10)
+46. `20261028000200_youth_schema.sql` (Phase 10)
+47. `20261028000300_youth_access.sql` (Phase 10)
+48. `20261028000400_youth_family.sql` (Phase 10)
+49. `20261028000500_youth_accounts.sql` (Phase 10)
+50. `20261028000600_youth_groups_events.sql` (Phase 10)
+51. `20261028000700_youth_communication_learning.sql` (Phase 10)
+52. `20261028000800_youth_media_consent.sql` (Phase 10)
+53. `20261028000900_youth_notifications.sql` (Phase 10)
+
+Phase 10 (youth and families) migrations each have a one-transaction operator script, `supabase/manual/2026-10-28-apply-youth-<1-9>.sql` (2–63 KB, under the SQL editor limit), with a preflight (step 1 needs `20261027000500`; each later step needs the one before; none runs twice). Step 1 only adds the `youth` event audience (an enum value can't be used in the transaction that adds it), so it must be its own run. No environment variables and no scheduler change: youth reminders run inside the existing `community.tick()`. They create the private `youth` bucket (child avatars). Then assign the youth and family roles at Administration → Members (explicit only, even for super administrators) and approve a policy before any policy-gated feature works ([youth-family-admin-guide.md](youth-family-admin-guide.md#first-time-setup)). `supabase/tests/youth-fingerprint.sql` compares the hosted result with a fresh build (expected digests in [migration-history.md](migration-history.md#phase-10-2026-10-28)).
 
 Phase 9 (scripture memory) migrations each have a one-transaction operator script, `supabase/manual/2026-10-27-apply-memory-<1-5>.sql` (17–87 KB), with a preflight (step 1 needs `20261026000700`; each later step needs the one before; none runs twice). Run them in order in the SQL editor. No environment variables and no scheduler change: memory reminders and challenge milestones run inside the existing `community.tick()`. They create the private `memory` bucket. Then assign **Memory verse editor** / **Memory verse publisher** at Administration → Members, and authorize group leaders at Administration → Memory verses if wanted ([memory-admin-guide.md](memory-admin-guide.md)). Memory practice needs an active stored-text translation (the WEB). `supabase/tests/memory-fingerprint.sql` compares the hosted result with a fresh build (expected digests in [migration-history.md](migration-history.md#phase-9-2026-10-27)).
 
