@@ -53,9 +53,17 @@ export async function recordManualAction(_prev: FormState, formData: FormData): 
   await requireCapability(CAPABILITIES.financeRecord, "/admin/finance/manual");
   const m = manualArgs(formData);
   if ("error" in m) return m.error!;
+  const campaign = optionalUuid.safeParse(formData.get("campaignId") ?? "");
+  if (!campaign.success) return errorState("Choose a campaign from the list.", { values: m.values, fieldErrors: { campaignId: ["Choose a campaign from the list."] } });
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values: m.values });
-  const { data, error } = await supabase.rpc("finance_record_manual", m.args);
+  // A campaign gift goes to the campaign's fund (set in the database), so p_fund isn't sent.
+  const { p_token, p_profile, p_donor_name, p_received_on, p_amount_cents, p_method, p_check_reference, p_note } = m.args;
+  const { data, error } = campaign.data
+    ? await supabase.rpc("finance_record_campaign_gift", {
+        p_token, p_campaign: campaign.data, p_profile, p_donor_name, p_received_on, p_amount_cents, p_method, p_check_reference, p_note,
+      })
+    : await supabase.rpc("finance_record_manual", m.args);
   if (error) return errorState(dbErrorMessage(error), { values: m.values });
   const r = data as { payment_id: string; duplicate: boolean };
   revalidatePath("/admin/finance", "layout");

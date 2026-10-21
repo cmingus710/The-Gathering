@@ -23,27 +23,31 @@ export function GiveForm({
   minCents,
   maxCents,
   formToken,
+  campaign,
 }: {
   funds: Array<{ id: string; name: string; description: string | null }>;
   minCents: number;
   maxCents: number;
   formToken: string;
+  /** Giving to a campaign: its fund is preselected and locked (the database checks it again). */
+  campaign?: { id: string; title: string; fundId: string; fundName: string };
 }) {
   const [state, action] = useActionState(startGiveAction, initialFormState);
   const v = state.values ?? {};
   const [amount, setAmount] = useState(v.amount ?? "50");
   const [frequency, setFrequency] = useState<Frequency>((v.frequency as Frequency) ?? "one_time");
-  const [fundId, setFundId] = useState(v.fundId ?? funds[0].id);
+  const [fundId, setFundId] = useState(campaign ? campaign.fundId : (v.fundId ?? funds[0].id));
   const amountId = useId();
   const cents = parseDollarsToCents(amount);
   const inRange = cents !== null && cents >= minCents && cents <= maxCents;
-  const fund = funds.find((f) => f.id === fundId);
+  const fund = campaign ? { name: campaign.fundName } : funds.find((f) => f.id === fundId);
   const amountError = state.fieldErrors?.amount?.[0] ?? (amount && cents === null ? "Enter an amount in dollars, like 25 or 25.50." : null);
 
   return (
     <form action={action} noValidate className="space-y-6">
       <FormMessage state={state} />
       <input type="hidden" name="formToken" value={formToken} />
+      {campaign ? <input type="hidden" name="campaignId" value={campaign.id} /> : null}
 
       <Card>
         <fieldset>
@@ -106,33 +110,43 @@ export function GiveForm({
         </fieldset>
       </Card>
 
-      <Card>
-        <fieldset>
-          <legend className="mb-3 text-lg font-bold">Fund</legend>
-          <div className="space-y-2">
-            {funds.map((f) => (
-              <label
-                key={f.id}
-                className={cn(
-                  "flex min-h-14 cursor-pointer items-start gap-3 rounded-card border p-4 has-focus-visible:outline-3 has-focus-visible:outline-primary",
-                  fundId === f.id ? "border-primary bg-primary-soft" : "border-border bg-surface hover:bg-surface-muted",
-                )}
-              >
-                <input type="radio" name="fundId" value={f.id} checked={fundId === f.id} onChange={() => setFundId(f.id)} className="mt-1 size-5 accent-primary" />
-                <span>
-                  <span className="block font-semibold">{f.name}</span>
-                  {f.description ? <span className="block text-meta text-text-secondary">{f.description}</span> : null}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </Card>
+      {campaign ? (
+        <Card>
+          <input type="hidden" name="fundId" value={campaign.fundId} />
+          <p className="text-lg font-bold">Fund</p>
+          <p className="mt-1">
+            Gifts to <span className="font-semibold">{campaign.title}</span> go to the <span className="font-semibold">{campaign.fundName}</span> fund.
+          </p>
+        </Card>
+      ) : (
+        <Card>
+          <fieldset>
+            <legend className="mb-3 text-lg font-bold">Fund</legend>
+            <div className="space-y-2">
+              {funds.map((f) => (
+                <label
+                  key={f.id}
+                  className={cn(
+                    "flex min-h-14 cursor-pointer items-start gap-3 rounded-card border p-4 has-focus-visible:outline-3 has-focus-visible:outline-primary",
+                    fundId === f.id ? "border-primary bg-primary-soft" : "border-border bg-surface hover:bg-surface-muted",
+                  )}
+                >
+                  <input type="radio" name="fundId" value={f.id} checked={fundId === f.id} onChange={() => setFundId(f.id)} className="mt-1 size-5 accent-primary" />
+                  <span>
+                    <span className="block font-semibold">{f.name}</span>
+                    {f.description ? <span className="block text-meta text-text-secondary">{f.description}</span> : null}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </Card>
+      )}
 
       <div className="rounded-card border border-primary/50 bg-primary-soft p-5" aria-live="polite">
         <p className="text-meta font-semibold text-text-secondary">Your gift</p>
         <p className="mt-1 text-xl font-bold">
-          {inRange ? formatCents(cents!) : "—"} · {FREQUENCY_LABEL[frequency]} · {fund?.name}
+          {inRange ? formatCents(cents!) : "—"} · {FREQUENCY_LABEL[frequency]} · {campaign ? `${campaign.title} (${campaign.fundName})` : fund?.name}
         </p>
         <p className="mt-1 text-meta text-text-secondary">You&apos;ll confirm payment on Stripe&apos;s secure checkout page.</p>
       </div>
