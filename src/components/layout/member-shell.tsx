@@ -72,16 +72,25 @@ export async function MemberShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-md lg:hidden">
-            <div className="flex h-16 items-center justify-between gap-2 px-3 sm:px-5">
-              <Link href="/home" className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label={`${settings.churchName} home`}>
+            {/*
+              The church name is never truncated: the wordmark scales with the
+              viewport (full size from 400px up) and, only if it still can't
+              fit (very large text), wraps onto a second line.
+            */}
+            <div className="flex min-h-16 items-center justify-between gap-2 px-3 sm:px-5">
+              <Link
+                href="/home"
+                className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full pr-1 min-[375px]:gap-2.5"
+                aria-label={`${settings.churchName} home`}
+              >
                 <span className="brand-halo flex size-11 shrink-0 items-center justify-center rounded-full">
-                  <IconMark src={settings.iconUrl} className="h-10 w-auto" />
+                  <IconMark src={settings.iconUrl} className="h-10 w-auto shrink-0" />
                 </span>
-                <span aria-hidden="true" className="truncate font-display text-[1.375rem] font-semibold leading-none text-text">
+                <span aria-hidden="true" className="header-wordmark min-w-0 font-display font-semibold text-text">
                   {settings.churchName}
                 </span>
               </Link>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex shrink-0 items-center gap-1 min-[375px]:gap-1.5">
                 <NotificationBell />
                 <Avatar viewer={viewer} className="size-11 bg-surface-raised text-[1.125rem] ring-border-strong/50" />
               </div>
