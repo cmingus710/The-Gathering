@@ -2,11 +2,13 @@
 
 /* eslint-disable @next/next/no-img-element -- object-URL and signed-URL previews */
 import { useActionState, useEffect, useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ORDINALS, REMINDER_CHOICES, WEEKDAYS } from "@/lib/events/format";
 import { MAX_COVER_BYTES } from "@/lib/events/limits";
+import { scheduleHints } from "@/lib/events/schedule-hints";
 import { initialFormState, type FormState } from "@/lib/forms";
 import { saveEventAction } from "./actions";
 
@@ -87,6 +89,11 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
   const [audience, setAudience] = useState<EventFormValues["audience"]>((str("audience") || "members") as EventFormValues["audience"]);
   const [monthlyMode, setMonthlyMode] = useState(str("monthlyMode") || "day");
   const [endMode, setEndMode] = useState(str("endMode") || "until");
+  // Tracked only for the repeat warnings; the inputs stay uncontrolled.
+  const [startDate, setStartDate] = useState(str("startDate"));
+  const [repeatEvery, setRepeatEvery] = useState(str("interval") || "1");
+  const [weekdays, setWeekdays] = useState(nums("weekdays"));
+  const hints = scheduleHints({ recurrence, interval: repeatEvery, startDate, weekdays });
   const [preview, setPreview] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
   const [tooLarge, setTooLarge] = useState(false);
@@ -174,7 +181,7 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
         </SelectField>
         <CheckboxField name="allDay" label="All-day event" checked={allDay} onChange={(e) => setAllDay(e.currentTarget.checked)} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField label={recurrence === "none" ? "Date" : "First date"} name="startDate" type="date" required defaultValue={str("startDate")} error={fe.startDate} />
+          <TextField label={recurrence === "none" ? "Date" : "First date"} name="startDate" type="date" required defaultValue={str("startDate")} onChange={(e) => setStartDate(e.currentTarget.value)} error={fe.startDate} />
           {!allDay ? <TextField label="Start time" name="startTime" type="time" required defaultValue={str("startTime")} error={fe.startTime} /> : <input type="hidden" name="startTime" value="" />}
           <TextField
             label={allDay ? "Last day" : "End date"}
@@ -207,6 +214,7 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
               name="interval"
               inputMode="numeric"
               defaultValue={str("interval") || "1"}
+              onChange={(e) => setRepeatEvery(e.currentTarget.value.trim())}
               error={fe.interval}
               className="max-w-xs"
             />
@@ -217,7 +225,17 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
                 <div className="mt-2 flex flex-wrap gap-3">
                   {WEEKDAYS.map((d, i) => (
                     <label key={d} className="flex min-h-11 items-center gap-2">
-                      <input type="checkbox" name="weekdays" value={i} defaultChecked={nums("weekdays").includes(i)} className="size-5 accent-primary" />
+                      <input
+                        type="checkbox"
+                        name="weekdays"
+                        value={i}
+                        defaultChecked={nums("weekdays").includes(i)}
+                        onChange={(e) => {
+                          const on = e.currentTarget.checked;
+                          setWeekdays((prev) => (on ? [...prev, i] : prev.filter((x) => x !== i)));
+                        }}
+                        className="size-5 accent-primary"
+                      />
                       {d}
                     </label>
                   ))}
@@ -247,6 +265,13 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
                   ) : null}
                 </div>
               </fieldset>
+            ) : null}
+            {hints.length ? (
+              <Alert tone="warning" title="Check the repeat settings">
+                {hints.map((h) => (
+                  <p key={h}>{h}</p>
+                ))}
+              </Alert>
             ) : null}
             <fieldset>
               <legend className="font-semibold">Ends</legend>
