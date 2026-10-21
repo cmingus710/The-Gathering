@@ -205,3 +205,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - no API table grants on `giving`, `media`, `community`, or `journal`
 
   The query is `supabase/tests/phase13-fingerprint.sql`.
+
+## Membership approval alerts (2026-11-01)
+
+- **New:** `20261101000100_membership_approval_alerts`, additive: private schema `membership` (four tables, RLS on, no API grants), two triggers on `auth.users` that only queue rows (`on_auth_user_verified_alert` on insert when already confirmed, `on_auth_user_verified_alert_update` when `email_confirmed_at` is first set; failures are warnings), four `SECURITY DEFINER` settings functions granted to `authenticated` and checking `settings.manage`. Replaces `public.community_job` (same operations plus `membership_alert_claim` / `membership_alert_result`; grants unchanged) and `community.has_due_work` (same checks plus `membership.has_due_alerts()`). Anon baseline unchanged (32). Alerts start off with no recipients. See [membership-approval-alerts.md](membership-approval-alerts.md).
+- **Operator script:** `supabase/manual/2026-11-01-apply-membership-alerts.sql`, one transaction, preflight requires `20261031000400` and refuses a second run, post-checks that nothing in `membership` is reachable through the API and that alerts start off, history row `created_by = membership-alerts`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from the 60 earlier migrations with their history rows, the script applied; a rerun stopped at the preflight.
+- **Not applied to hosted.**
