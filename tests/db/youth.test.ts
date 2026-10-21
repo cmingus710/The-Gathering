@@ -742,6 +742,8 @@ describeDb("Youth ministry and families", () => {
       await fails(as(famAdmin), "youth_admin_transition_complete", [t.id, "complete transition"], /must confirm/);
       await fails(as(youthUser), "youth_transition_confirm", [t.id, "yes"], /this is my account/);
       await rpc(as(youthUser), "youth_transition_confirm", [t.id, "this is my account"]);
+      // The administrator who started it can't also complete it.
+      await fails(as(famAdmin), "youth_admin_transition_complete", [t.id, "complete transition"], /different family administrator/);
       await rpc(as(famAdmin2), "youth_admin_transition_complete", [t.id, "complete transition"]);
       const p = await db.raw<{ account_kind: string; membership_status: string }>("select account_kind, membership_status from public.profiles where id = $1", [youthUser]);
       expect(p[0]).toEqual({ account_kind: "adult", membership_status: "approved" });

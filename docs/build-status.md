@@ -8,7 +8,7 @@ Last updated: 2026-10-28 · Phase 10 branch `phase-10/youth-families` (also push
 
 Phase 10 code is complete and verified locally (database, unit, build, and signed-out browser checks). It started from `phase-9/scripture-memory` (PR #15 was open at the time) and, once #15 was merged, merged `main` (docs-only conflicts resolved), so nothing was duplicated or lost.
 
-**Production status changed during this phase (not by this phase):** another session recorded that `main` (Phase 9) was released to `www.gathering.church` on 2026-10-20 with production builds unpaused and the scheduler moved to production (commit `f40d85c` on `claude/phase-9-scripture-memory-ns026j`, not in `main`). This phase didn't change any Vercel or production setting and didn't merge anything. Because the hosted Supabase project now serves production, **the Phase 10 migrations have not been applied there**; they need the owner's explicit go-ahead (they change shared checks such as `is_approved_member` and the community notification functions that production uses). Giving stays in Stripe test mode.
+**Production status changed during this phase (not by this phase):** another session recorded that `main` (Phase 9) was released to `www.gathering.church` on 2026-10-20 with production builds unpaused and the scheduler moved to production (commit `f40d85c` on `claude/phase-9-scripture-memory-ns026j`, not in `main`). This phase didn't change any Vercel or production setting and didn't merge anything. Because the hosted Supabase project now serves production, the Phase 10 migrations waited for the owner's explicit go-ahead (they change shared checks such as `is_approved_member` and the community notification functions that production uses). With that go-ahead, step 1 was applied through the connector and the owner ran steps 2–9 in the SQL editor on 2026-10-21 (the connector couldn't commit larger schema changes); the hosted youth fingerprint equals the expected digests in all 14 categories. **Follow-up step 10** (a fix found by the hosted walkthrough, below) still needs to be run. Giving stays in Stripe test mode.
 
 **Policy-gated features are off** until the church approves a youth policy (see below). Everything else works for authorized staff and verified guardians once the migrations are applied.
 
@@ -83,29 +83,29 @@ Lint (zero warnings), typecheck, production build (every route dynamic; 23 new r
 | Branches pushed | `phase-10/youth-families` and `claude/gracious-gauss-im5ojt` |
 | Preview build `25a033b` (`dpl_7WdsnGMS389LybLWMZUS1n2uDAiE`) | **Ready**: `https://the-gathering-q6qd03qd5-paint-by-number.vercel.app`, branch alias `https://the-gathering-git-phase-10-youth-families-paint-by-number.vercel.app` (Vercel Authentication required) |
 | Signed-out `/youth/family` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
-| Hosted migration history (read-only, 2026-10-21) | 44 versions, latest `20261027000500`; no `youth` schema. **Phase 10 not applied** (needs owner go-ahead; hosted is production's database) |
+| Hosted migration history (2026-10-21) | Steps 1–9 applied (`20261028000100`…`000900`, `created_by = phase-10`): step 1 through the connector, 2–9 by the owner in the SQL editor. **Step 10 (`20261028001000`) not applied yet** |
+| Hosted `youth-fingerprint.sql` after steps 1–9 | Equal to the expected digests in all 14 categories (column 369, constraint 317, function 201, function_grant 183, index 169, rls 37, schema_acl, seeds, storage, trigger 20, type) |
 | Hosted Phase 9 fingerprint (read-only) | Equal to a fresh build in all 15 categories |
 | Production | Not touched by this phase (another session released Phase 9 on 2026-10-20) |
-| Hosted signed-in walkthrough with synthetic families | **Not done** (needs the migrations) |
+| Hosted database-level walkthrough with synthetic families (2026-10-21) | **Pass, with one defect found and fixed in step 10** (see below). Browser sign-in walkthrough not done |
 
-### Hosted walkthrough plan (after the scripts)
+### Hosted walkthrough (database level, 2026-10-21)
 
-With authorized adult test accounts only (A: super administrator; P1/P2: policy admins; F1/F2: family admins; L1/L2: leaders; G1/G2: guardians; H: G1's household member; Y: a fresh test sign-up for a youth account) and only `[TEST]` synthetic child profiles, never real children:
+Run against the hosted project after steps 1–9, as four scenarios. Each ran inside **one transaction that ended in `rollback`**, so no synthetic user, child, group, event, form, photo, consent, notification, or audit row was ever committed. Nothing reached the email or push queue, no roles or settings changed, and there was nothing to clean up. The synthetic users had `@example.invalid` addresses, all names were `[TEST] WT …`, and there were no real children. Each user was created inside the transaction, approved, given only the roles under test, and then acted as `authenticated` with JWT claims.
 
-1. Run scripts 1–9; run `youth-fingerprint.sql` and the earlier fingerprints against a fresh build.
-2. A assigns the roles. P1 drafts a `[TEST]` policy; P2 approves (then later a version enabling accounts, discussions, sharing, transition for the test only).
-3. G1 requests to link `[TEST] Child`; F1 verifies with chosen permissions; H confirms nothing is visible. G2 requests; F2 verifies with fewer permissions.
-4. Ministry admin creates a `[TEST]` group, assigns L1/L2, enrolls test children; forms admin publishes a `[TEST]` form and makes a draft `[TEST]` event youth-only with capacity 1 and a waitlist; designates L1.
-5. G1 grants consent, adds an emergency contact (`555-01xx`), registers; G2 can't; second child waitlists; cancel promotes. Publish a material form change; check renewal notices and organizer view; withdraw.
-6. L1 opens logistics (logged); L2 can't. Announcement to guardians (allowlisted email, generic text).
-7. Photo: upload a `[TEST]` photo to an album linked to the event, link the child, approval blocked, consent, approve, withdraw → hidden + review.
-8. Youth account: F1 records eligibility and test birth date; G1 invites Y's email; Y signs up, confirms, activates; check the youth shell, adult pages redirect, journal privacy, sharing off/on, discussion reply, report about L1 → only safeguarding sees it.
-9. Transition test account; confirm guardians lose access and no DM eligibility.
-10. Clean up: archive `[TEST]` children, groups, forms; revoke test guardianships/invitations; delete the test event and album; restore the policy to the church's chosen version (or retire test versions by approving a defaults version); remove temporary roles (audited).
+| Scenario | Checks (all passed unless noted) |
+| --- | --- |
+| Policy and guardianship | Defaults off before approval; youth tables not readable directly; policy drafter can't approve their own draft, a second policy admin can; super administrator has no implicit youth access; verified guardian sees the child, an unrelated adult gets "Not found"; restriction hides the child from the guardian; family log holds no names |
+| Groups, events, forms, logistics | Youth leader role required to lead; last-leader rule; youth event visible to the guardian, not to an unrelated adult; registration needs current consent, then an emergency contact; registration confirmed; a material form change requires renewal (1) and the old version is refused; a non-personnel leader can't see logistics, designated personnel can; the test phone number appears in no audit or notification row |
+| Youth account, discussions, reports | An existing adult account can't redeem an invitation; invited youth activates (`active`); youth account fails adult checks (`is_approved_member`/`has_capability` false); no DMs; can't change own account type; discussions need two leaders and three enrolled children (a two-child group was correctly refused); youth posts; guardian reads but can't post; unrelated adult refused; a report about a leader is invisible to that leader and visible to safeguarding; posting stops when supervision drops below the policy |
+| Photo consent, adult transition | Approval blocked without consent; public-use consent refused while the policy doesn't offer it; approval with consent; withdrawal hides the photo and opens a review; transition needs the youth's confirmation; guardian access ends; account becomes adult/approved; no DM eligibility granted. **Defect:** the family administrator who *started* a transition could also complete it (docs promise a different administrator). Fixed in `20261028001000_youth_transition_second_admin`, with a DB test and corrected admin page text |
+
+**Not covered on hosted:** a signed-in browser walkthrough (no test credentials in this environment), email delivery, and storage uploads.
 
 ### Known limitations (Phase 10)
 
-- **Hosted database not migrated**, so no signed-in hosted walkthrough.
+- **Step 10 must be run on hosted** (`supabase/manual/2026-10-28-apply-youth-10.sql`). Until then, the administrator who starts an adult transition can also complete it. Transitions also need a policy that allows them, and none is approved on hosted.
+- **No signed-in browser walkthrough on hosted** (database-level walkthrough only).
 - **Guardian practice UI** offers read & repeat, flashcards, and "say it" (self-check). The database supports all six Phase 9 activities for child profiles; missing words, word order, and typing aren't in the guardian UI yet.
 - **Youth event covers and the /events list:** youth events appear in the Youth area and family dashboard, not in the general events list, month view, or home banner (those use the audience rule directly); youth event cover images aren't shown.
 - **Youth accounts get no email/push or Realtime** (adult-only by design); they see announcements in the Youth area.

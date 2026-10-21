@@ -206,8 +206,8 @@ export default async function AdminChildPage({ params }: PageProps<"/admin/youth
                     <YouthForm op="transition_complete" hidden={{ id: c.transition.id }} submit="Complete transition" variant="danger-outline">
                       <p className="text-meta text-text-secondary">
                         Guardian access ends, youth groups and upcoming youth places end, learning history stays. Direct messaging is not granted: a
-                        membership administrator decides that separately. Directory listing stays off until they choose it. Someone other than the person
-                        who started it may complete it.
+                        membership administrator decides that separately. Directory listing stays off until they choose it. A family administrator other
+                        than the one who started it must complete it.
                       </p>
                       <TextField label='Type "complete transition" to confirm' name="confirm" autoComplete="off" required />
                     </YouthForm>
