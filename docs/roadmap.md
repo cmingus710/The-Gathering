@@ -12,8 +12,8 @@ Each phase is built, verified, and reviewed before the next begins.
 | 6 | Prayer and care | **Built** (PR into `main`, stacked on the home redesign and Phases 2–5); hosted database applied; walkthrough pending |
 | 7 | Teaching and media | **Built** (PR into `main`, stacked on Phase 6); hosted database applied; walkthrough pending |
 | 8 | Bible reading and journals | **Merged** (PR #14 with Phases 2–7); hosted database applied, including the `000700` follow-up |
-| 9 | Memory verses | **Built** (draft PR #15); hosted database applied (fingerprint matches) |
-| 10 | Youth and families | **Built** (PR into `main`, stacked on #15); hosted database scripts ready, not yet applied; policy-gated features off until the church approves a policy |
+| 9 | Memory verses | **Merged** (PR #15); hosted database applied; database-level hosted walkthrough passed; signed-in browser walkthrough pending |
+| 10 | Youth and families | **Built** (PR into `main`); hosted database scripts ready, not yet applied; policy-gated features off until the church approves a policy |
 | 11 | Ministry tools and connected experience | Planned |
 | 12 | Launch readiness | Planned |
 
