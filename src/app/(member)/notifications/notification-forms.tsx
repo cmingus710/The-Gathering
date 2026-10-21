@@ -9,7 +9,7 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { MySettings, NotificationCategory } from "@/lib/community/types";
 import { initialFormState } from "@/lib/forms";
-import { markReadAction, pushSubscribeAction, pushUnsubscribeAction, saveQuietHoursAction, savePrefsAction } from "./actions";
+import { markReadAction, pushSubscribeAction, pushTestAction, pushUnsubscribeAction, saveQuietHoursAction, savePrefsAction } from "./actions";
 
 export function MarkReadButton({ id, label }: { id?: string; label: string }) {
   const [state, action] = useActionState(markReadAction, initialFormState);
@@ -119,21 +119,60 @@ function deviceLabel(): string {
   return `${os} · ${browser}`;
 }
 
+type PushSupport = "checking" | "unsupported" | "needs-install" | "denied" | "ready";
+
+const PERMISSION_LABEL: Record<NotificationPermission, string> = { granted: "Allowed", denied: "Blocked", default: "Not asked yet" };
+
+function isIos() {
+  return /iPhone|iPad/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function subscriptionInput(sub: PushSubscription) {
+  const json = sub.toJSON();
+  return { endpoint: sub.endpoint, p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "", label: deviceLabel() };
+}
+
+/** How to allow notifications again after they were blocked, for the browser in use. */
+function DeniedHelp({ ios }: { ios: boolean }) {
+  return (
+    <div className="space-y-2 text-text-secondary">
+      <p>Notifications are blocked for this app on this device. The app can&apos;t ask again, so allow them in settings, then reopen the app and return here:</p>
+      {ios ? (
+        <ol className="list-decimal space-y-1 pl-6">
+          <li>Open the iPhone <span className="font-semibold">Settings</span> app and tap <span className="font-semibold">Notifications</span>.</li>
+          <li>Find <span className="font-semibold">The Gathering</span> in the list and turn on <span className="font-semibold">Allow Notifications</span>.</li>
+          <li>If it isn&apos;t listed, delete the app from your Home Screen, add it again from Safari, and turn notifications on here.</li>
+        </ol>
+      ) : (
+        <ul className="list-disc space-y-1 pl-6">
+          <li><span className="font-semibold">Chrome or Edge:</span> select the icon left of the address (or ⋮ → App info in the installed app) → Site settings → Notifications → Allow.</li>
+          <li><span className="font-semibold">Android installed app:</span> long-press the app icon → App info → Notifications → on.</li>
+          <li><span className="font-semibold">Safari on Mac:</span> Safari → Settings → Websites → Notifications → set this site to Allow (installed apps: System Settings → Notifications).</li>
+          <li><span className="font-semibold">Firefox:</span> select the lock icon → clear the blocked notifications permission, then reload.</li>
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /**
  * Web push opt-in. Asks for permission only when the member presses the
  * button (never on page load). Delivery is best effort: in-app and email
  * remain the reliable channels.
  */
-export function PushDevices({ publicKey, devices }: { publicKey: string | null; devices: MySettings["push_devices"] }) {
-  const [support, setSupport] = useState<"checking" | "unsupported" | "needs-install" | "denied" | "ready">("checking");
+export function PushDevices({ publicKey, devices, pushCategories }: { publicKey: string | null; devices: MySettings["push_devices"]; pushCategories?: number }) {
+  const [support, setSupport] = useState<PushSupport>("checking");
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+  const [ios, setIos] = useState(false);
   const [subscribed, setSubscribed] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"enable" | "disable" | "test" | null>(null);
 
   useEffect(() => {
     (async () => {
       const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone === true;
-      const ios = /iPhone|iPad/.test(navigator.userAgent);
+      const ios = isIos();
+      setIos(ios);
       if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
         setSupport(ios && !standalone ? "needs-install" : "unsupported");
         return;
@@ -142,6 +181,7 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
         setSupport("needs-install");
         return;
       }
+      setPermission(Notification.permission);
       if (Notification.permission === "denied") {
         setSupport("denied");
         return;
@@ -155,32 +195,52 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
 
   async function enable() {
     if (!publicKey) return;
-    setBusy(true);
+    setBusy("enable");
     setMessage(null);
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setSupport(permission === "denied" ? "denied" : "ready");
-        setMessage("Notifications weren't allowed. You can change this in your browser settings.");
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      if (result !== "granted") {
+        setSupport(result === "denied" ? "denied" : "ready");
+        setMessage("Notifications weren't allowed on this device.");
         return;
       }
-      const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register("/sw.js"));
+      const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register("/sw.js", { scope: "/" }));
       await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToBytes(publicKey) });
-      const json = sub.toJSON();
-      const result = await pushSubscribeAction({ endpoint: sub.endpoint, p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "", label: deviceLabel() });
-      setMessage(result.message);
-      if (result.ok) setSubscribed(sub.endpoint);
+      const saved = await pushSubscribeAction(subscriptionInput(sub));
+      setMessage(saved.message);
+      if (saved.ok) setSubscribed(sub.endpoint);
       else await sub.unsubscribe();
     } catch {
       setMessage("Push notifications couldn't be turned on in this browser.");
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function sendTest() {
+    setBusy("test");
+    setMessage(null);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      if (!sub) {
+        setSubscribed(null);
+        setMessage("This device isn't subscribed any more. Turn notifications on again.");
+        return;
+      }
+      const result = await pushTestAction(subscriptionInput(sub));
+      setMessage(result.message);
+    } catch {
+      setMessage("The test couldn't be sent right now.");
+    } finally {
+      setBusy(null);
     }
   }
 
   async function disableHere() {
-    setBusy(true);
+    setBusy("disable");
     try {
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
@@ -191,12 +251,39 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
       setSubscribed(null);
       setMessage("Push notifications are off for this device.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
+  const status =
+    support === "checking" || !publicKey
+      ? null
+      : support === "unsupported"
+        ? "Not supported in this browser"
+        : support === "needs-install"
+          ? "Needs the Home Screen app"
+          : support === "denied"
+            ? "Blocked in device settings"
+            : subscribed
+              ? "On for this device"
+              : "Off for this device";
+
   return (
     <div className="space-y-4">
+      {status ? (
+        <dl className="grid gap-x-6 gap-y-1 text-meta sm:grid-cols-[auto_1fr]">
+          <dt className="font-semibold">This device</dt>
+          <dd>{status}</dd>
+          {permission ? (
+            <>
+              <dt className="font-semibold">Permission</dt>
+              <dd>{PERMISSION_LABEL[permission]}</dd>
+            </>
+          ) : null}
+          <dt className="font-semibold">Your devices</dt>
+          <dd>{devices.length === 1 ? "1 device" : `${devices.length} devices`} turned on</dd>
+        </dl>
+      ) : null}
       <p role="status" className="text-meta">
         {message}
       </p>
@@ -205,21 +292,38 @@ export function PushDevices({ publicKey, devices }: { publicKey: string | null; 
       ) : support === "checking" ? null : support === "unsupported" ? (
         <p className="text-text-secondary">This browser doesn&apos;t support push notifications. You&apos;ll still get them in the app and by email.</p>
       ) : support === "needs-install" ? (
-        <p className="text-text-secondary">
-          On iPhone and iPad, push notifications work after you add the app to your Home Screen (iOS 16.4 or later) and open it from there.{" "}
-          <a href="/install" className="font-semibold text-primary underline">How to install</a>
-        </p>
+        <div className="space-y-2 text-text-secondary">
+          <p>On iPhone and iPad, push notifications work only in the app added to your Home Screen (iOS 16.4 or later), not in a Safari tab:</p>
+          <ol className="list-decimal space-y-1 pl-6">
+            <li>In Safari, tap the Share button (the square with an arrow), then <span className="font-semibold">Add to Home Screen</span> → Add.</li>
+            <li>Open The Gathering from its Home Screen icon and sign in.</li>
+            <li>Come back to this page and tap <span className="font-semibold">Turn on for this device</span>.</li>
+          </ol>
+          <a href="/install" className="font-semibold text-primary underline">
+            Install help
+          </a>
+        </div>
       ) : support === "denied" ? (
-        <p className="text-text-secondary">Notifications are blocked for this site in your browser settings. Allow them there, then return here.</p>
+        <DeniedHelp ios={ios} />
       ) : subscribed ? (
-        <Button variant="secondary" size="sm" onClick={disableHere} loading={busy} loadingText="Turning off…">
-          Turn off on this device
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button size="sm" onClick={sendTest} loading={busy === "test"} disabled={busy !== null} loadingText="Sending…">
+            Send a test to this device
+          </Button>
+          <Button variant="secondary" size="sm" onClick={disableHere} loading={busy === "disable"} disabled={busy !== null} loadingText="Turning off…">
+            Turn off on this device
+          </Button>
+        </div>
       ) : (
-        <Button size="sm" onClick={enable} loading={busy} loadingText="Turning on…">
+        <Button size="sm" onClick={enable} loading={busy === "enable"} loadingText="Turning on…">
           Turn on for this device
         </Button>
       )}
+      {publicKey && subscribed && pushCategories === 0 ? (
+        <p className="text-meta text-text-secondary">
+          Push is off for every category, so only tests arrive. Choose <span className="font-semibold">Push on my devices</span> under What you hear about.
+        </p>
+      ) : null}
       {devices.length ? (
         <ul className="space-y-2">
           {devices.map((d) => (

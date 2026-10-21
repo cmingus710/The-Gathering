@@ -80,7 +80,7 @@ export default async function NotificationSettingsPage() {
           <section aria-labelledby="push-heading">
             <SectionHeading id="push-heading">Push notifications</SectionHeading>
             <Card>
-              <PushDevices publicKey={push?.publicKey ?? null} devices={settings.push_devices} />
+              <PushDevices publicKey={push?.publicKey ?? null} devices={settings.push_devices} pushCategories={Object.values(settings.prefs).filter((p) => p?.push).length} />
             </Card>
           </section>
           <section aria-labelledby="mutes-heading">

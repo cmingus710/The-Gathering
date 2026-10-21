@@ -44,7 +44,7 @@ and, if needed, roll back to an earlier production deployment in Vercel.
 | `EVENTS_JOB_SECRET`, `MEDIA_RATE_SECRET` | ✅ set | ✅ set | Sensitive; same value as `events.secrets('job')` for the job secret |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GIVING_INGEST_SECRET` | Phase 3 branch | ✅ set (test mode) | Sensitive; see giving-setup.md |
 | `GIVING_WEBHOOK_HOST`, `GIVING_EMAIL_ALLOWLIST` | ✅ set | — | The webhook host `giving-webhooks.gathering.church` is assigned to the `phase-3/giving-contributions` branch, so Stripe test webhooks are processed by that preview, not production |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | — | — | Not set anywhere, so web push is off |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | — | — | Not set anywhere (checked 2026-10-21), so web push is off. Setup: [notifications.md](notifications.md#web-push-optional) |
 | `CRON_SECRET` | — | — | Not set (the job route's optional GET trigger is unused; the database scheduler signs POSTs) |
 | `SUPABASE_SECRET_KEY` | never | never | Operator scripts only |
 
