@@ -1,6 +1,6 @@
 # Phase 13: requested features and experience improvements
 
-Branch `claude/inspiring-sagan-jlwim7`, based on `main` at `25b7087` (Phase 12 merged). **Not merged, not deployed, no hosted migration applied, live giving not enabled, nobody notified.**
+Branch `claude/inspiring-sagan-jlwim7`, based on `main` at `25b7087` (Phase 12 merged). **The four hosted migrations were applied by the owner on 2026-10-21 and verified (below). Not merged, not deployed, live giving not enabled, nobody notified.**
 
 Detailed pages: [campaigns](campaigns.md) · [reading: Kindle and Audible](reading-kindle-audible.md) · [settings, phone navigation, notifications, contact links](settings-navigation-notifications.md) · [forum attachments](forum-attachments.md) · [lesson builder and workbook](lessons-workbook.md) · [member guide](member-guide.md).
 
@@ -113,6 +113,15 @@ Nothing below has been done; each step needs the owner's go-ahead.
 2. **Storage:** one new private bucket (`campaign-images`, WebP, 2 MB), created by the campaigns script. Forum files use the existing `media-uploads` (originals, deleted after processing) and `media` (`community/…`) buckets. Nothing is deleted automatically: abandoned forum uploads and removed attachments are listed at **Administration → Moderation → Attachment cleanup** for a moderator to delete.
 3. **No new environment variables or secrets.** Stripe stays in test mode; live keys are still refused.
 4. **Youth:** no youth policy changed. Workbooks, campaigns, forum attachments, and book progress need an approved adult account. Youth still only see public lessons, with no workbook.
+
+### Hosted verification (2026-10-21)
+
+The owner ran the four scripts. A read-only check through the Supabase connector found the following:
+- The migration history has 59 versions, including `20261031000100`…`000400`.
+- A Phase 13 digest (columns, constraints, row-level security, table grants, function bodies and grants, triggers, buckets, storage policies, and the anon-executable function list) is identical to a fresh build from the repository. The expected values are in [migration-history.md](../migration-history.md#phase-13-2026-10-31).
+- None of the new tables have API grants, and signed-out callers can run exactly the 32 reviewed functions.
+
+What's left before release: merge and deploy, then a signed-in check on production with test accounts.
 
 ## 5. Known limits and follow-ups
 

@@ -6,7 +6,7 @@ Last updated: 2026-10-21 · Phase 13 branch `claude/inspiring-sagan-jlwim7`, bas
 
 Everything: [phase-13/README.md](phase-13/README.md) (audit matrix, final status, verification, release steps, limits). Member guide: [phase-13/member-guide.md](phase-13/member-guide.md).
 
-**Nothing was merged, deployed, applied to the hosted database, or sent to anyone. Stripe stays in test mode.**
+**Hosted migrations applied by the owner and verified (2026-10-21). Nothing merged, deployed, or sent to anyone. Stripe stays in test mode.**
 
 - **Added:**
   - Fundraising campaigns with a progress meter (`20261031000100`).
@@ -27,7 +27,7 @@ Everything: [phase-13/README.md](phase-13/README.md) (audit matrix, final status
   - 71/71 signed-in Chromium journey checks at phone, tablet, and desktop sizes.
   - Hosted-apply scripts rehearsed in both orders.
 - **Not done:** preview deployment and hosted checks, physical iPhone/Android and installed-PWA checks, real Stripe/Storage/Kindle/Audible behaviour.
-- **Owner actions:** approve the release, back up, run the four `supabase/manual/2026-10-31-apply-*.sql` scripts, then deploy. See [phase-13/README.md](phase-13/README.md#4-release-boundaries-and-setup).
+- **Owner actions:** ~~run the four `supabase/manual/2026-10-31-apply-*.sql` scripts~~ (done and verified 2026-10-21), then merge and deploy. See [phase-13/README.md](phase-13/README.md#4-release-boundaries-and-setup).
 
 ---
 
