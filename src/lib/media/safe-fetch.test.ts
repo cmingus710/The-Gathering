@@ -1,4 +1,5 @@
 import http from "node:http";
+import https from "node:https";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { checkFetchUrl, isPublicAddress, safeFetch } from "./safe-fetch";
 
@@ -100,6 +101,40 @@ describe("safeFetch", () => {
         ],
       }),
     ).rejects.toMatchObject({ code: "blocked_address" });
+  });
+
+  it("keeps the address check when the process routes requests through a proxy", async () => {
+    // Reproduces an environment with NODE_USE_ENV_PROXY + HTTP(S)_PROXY: the
+    // global agents send every request to a proxy, which resolves the host
+    // itself. Without a dedicated agent the lookup never ran and the proxy's
+    // own answer (HTTP 503 in the reported failure) came back instead.
+    let proxyHits = 0;
+    const proxy = http.createServer((_req, res) => {
+      proxyHits++;
+      res.writeHead(503);
+      res.end();
+    });
+    proxy.on("connect", (_req, socket) => {
+      proxyHits++;
+      socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+    });
+    await new Promise<void>((r) => proxy.listen(0, "127.0.0.1", () => r()));
+    const proxyUrl = `http://127.0.0.1:${(proxy.address() as { port: number }).port}`;
+    const savedHttp = http.globalAgent;
+    const savedHttps = https.globalAgent;
+    type ProxyAgentOptions = http.AgentOptions & { proxyEnv?: Record<string, string> };
+    http.globalAgent = new http.Agent({ proxyEnv: { HTTP_PROXY: proxyUrl, HTTPS_PROXY: proxyUrl } } as ProxyAgentOptions);
+    https.globalAgent = new https.Agent({ proxyEnv: { HTTP_PROXY: proxyUrl, HTTPS_PROXY: proxyUrl } } as ProxyAgentOptions);
+    try {
+      const internal = async () => [{ address: "127.0.0.1", family: 4 }];
+      await expect(safeFetch("http://rebind.example/feed", { resolve: internal })).rejects.toMatchObject({ code: "blocked_address" });
+      await expect(safeFetch("https://rebind.example/feed", { resolve: internal })).rejects.toMatchObject({ code: "blocked_address" });
+      expect(proxyHits).toBe(0);
+    } finally {
+      http.globalAgent = savedHttp;
+      https.globalAgent = savedHttps;
+      await new Promise<void>((r) => proxy.close(() => r()));
+    }
   });
 
   it("fetches, follows safe redirects, and enforces size, time, redirect, and encoding limits", async (ctx) => {
