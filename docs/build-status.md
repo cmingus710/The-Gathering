@@ -1,6 +1,6 @@
 # Build status
 
-Last updated: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also pushed as `claude/phase-9-scripture-memory-ns026j`), based on `main` after PR #14 (Phases 2–8, member redesign, sign-in redesign) plus the Phase 8 follow-up `b93b514` (`20261026000700`, already applied on the hosted project but not yet in `main`) · merged into `main` by PR [#15](https://github.com/cmingus710/The-Gathering/pull/15) (production builds still paused)
+Last updated: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also pushed as `claude/phase-9-scripture-memory-ns026j`), based on `main` after PR #14 (Phases 2–8, member redesign, sign-in redesign) plus the Phase 8 follow-up `b93b514` (`20261026000700`, already applied on the hosted project but not yet in `main`) · merged into `main` by PR [#15](https://github.com/cmingus710/The-Gathering/pull/15) · **production released 2026-10-20** at `www.gathering.church` (see [deployment.md](deployment.md#production-is-live))
 
 ## Phase 9: Scripture memory and practice
 
@@ -89,7 +89,7 @@ Lint (zero warnings), typecheck, production build (every route dynamic), **707 V
 | Branches pushed | `phase-9/scripture-memory` and `claude/phase-9-scripture-memory-ns026j` |
 | Preview build `16ec916` (`dpl_3Ajd1vk74hXuwJ9tnjBw4BBXXd1C`) | **Ready**: `https://the-gathering-o1072onrg-paint-by-number.vercel.app` (Vercel Authentication required) |
 | Signed-out `/memory/review` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
-| Production deploys from `main` | Unchanged (paused); nothing merged by this phase |
+| Production deploys from `main` | Released after the merge: production builds unpaused and `main` deployed to `www.gathering.church` on 2026-10-20; scheduler now targets production ([deployment.md](deployment.md#production-is-live)) |
 | Hosted migration history | **Applied** (owner, SQL editor): 44 versions, latest `20261027000500`; memory fingerprint equal to a fresh build in all 15 categories |
 
 ### Hosted walkthrough (database level, 2026-10-20)
