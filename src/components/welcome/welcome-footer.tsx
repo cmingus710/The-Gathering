@@ -33,6 +33,11 @@ export function WelcomeFooter({ settings }: { settings: ChurchSettings }) {
             Add the app to your Home Screen
           </a>
         </li>
+        <li>
+          <a href="/privacy" className={footerLink}>
+            Privacy policy
+          </a>
+        </li>
       </ul>
     </footer>
   );

@@ -116,6 +116,10 @@ export default async function ProfilePage() {
               <LogIn className="size-5" aria-hidden="true" />
               Sign-in methods
             </Link>
+            <Link href="/privacy" className="flex min-h-11 items-center gap-3 rounded-control px-3 font-semibold text-primary hover:bg-primary-soft">
+              <ShieldCheck className="size-5" aria-hidden="true" />
+              Privacy policy
+            </Link>
             <SignOutButton />
           </Card>
         </div>
