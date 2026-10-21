@@ -105,6 +105,7 @@ All local; nothing hosted was written.
 | Playwright signed-out suite (`npm run test:e2e`, unconfigured build, desktop + Pixel 7) | **324 / 324** |
 | Local signed-in walkthrough (`tests/e2e-local` 01–05, real Supabase Auth/PostgREST/Storage/Mailpit on PostgreSQL 17.11, desktop + Pixel 7) | **43 passed, 0 failed**, 21 skipped by design (single-project tests) |
 | Automated accessibility (axe WCAG 2.2 A/AA) | 0 serious/critical on the Phase 11 routes plus the welcome page, Report a problem, and Problem reports |
+| Hosted preview, signed out (`dpl_AGipfk7vnSHyY1AEcW2EmtCv9nob`, commit `170bd28`, read-only GETs) | `/` 200: barn photo, three icons, Sign in → `/sign-in`, Create an account → `/sign-up`, no gathering/contact sections (hosted settings empty); `/brand/welcome/share-life.svg` 200 `image/svg+xml`; `/report-problem` → sign-in with `private, no-store`; security headers present |
 | Hosted signed-in walkthrough | **Not run** (no test credentials here; production domain unreachable from this environment) |
 | Physical devices | **Not run** (needs you; see [Device checks](#real-device-checks)) |
 
