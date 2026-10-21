@@ -6,6 +6,7 @@ import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { inspectPdf, PDF_MAX_BYTES, PdfError } from "@/lib/bible/pdf";
+import { listApiBibles, type BibleListResult } from "@/lib/bible/source";
 import { formatFromName, parseSourceFile } from "@/lib/bible/source-import";
 import { CsvError } from "@/lib/bible/csv";
 import { bibleUploadToken, downloadBibleObject, removeBibleObjects } from "@/lib/bible/storage";
@@ -79,6 +80,12 @@ export async function saveTranslationAction(_prev: FormState, formData: FormData
   revalidatePath("/admin/bible", "layout");
   if (!id) redirect(`/admin/bible/sources/${(data as { id: string }).id}`);
   return { status: "success", message: "Saved." };
+}
+
+/** The Bibles the named key can use, for choosing an API.Bible Bible ID. */
+export async function listApiBiblesAction(credentialEnv: string): Promise<BibleListResult> {
+  await requireCapability(CAPABILITIES.bibleManage, "/admin/bible/sources");
+  return listApiBibles(String(credentialEnv ?? "").trim());
 }
 
 export async function translationStatusAction(_prev: FormState, formData: FormData): Promise<FormState> {

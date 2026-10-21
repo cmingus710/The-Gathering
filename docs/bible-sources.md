@@ -104,9 +104,9 @@ Nothing is ever repaired, guessed, or filled in. If a line is wrong, fix the fil
 
 ## API.Bible configuration
 
-1. Get a key from API.Bible for the church's application and plan, and the Bible ID of the licensed translation.
-2. In Vercel, add the key as a **sensitive** environment variable (for example `API_BIBLE_KEY`) for the environments that should read it. Optional: `API_BIBLE_BASE_URL` (only `https://rest.api.bible/...` or `https://api.scripture.api.bible/...` are accepted; anything else disables the source).
-3. Add the translation with source **API.Bible**, the Bible ID, and the **name** of the variable (never the key). The key stays on the server; requests go only to the provider's hosts (fixed allowlist, no redirects, public addresses only, 8-second limit).
+1. Get a key from API.Bible for the church's application and plan. The key decides which Bibles it can read (the ones the church has permission for).
+2. In Vercel, add the key as a **sensitive** environment variable (for example `API_BIBLE_KEY`) for the environments that should read it, and redeploy. Optional: `API_BIBLE_BASE_URL` (only `https://rest.api.bible/...` or `https://api.scripture.api.bible/...` are accepted; anything else disables the source).
+3. **Add a translation** → source **API.Bible** → keep (or type) the **name** of the variable (never the key) → **Show the Bibles this key can use**. This asks API.Bible's `GET /v1/bibles` and lists each Bible with its `bible_id` (e.g. `de4e12af7f28f599-01`). **Use this** fills the Bible ID, code, name, and language; check them, add the copyright and attribution wording the license requires, and save. Repeat for each licensed translation. The Bible ID is always the `bible_id`, never the shorter DBL ID (`de4e12af7f28f599`), which several editions share. The key stays on the server; requests go only to the provider's hosts (fixed allowlist, no redirects, public addresses only, 8-second limit).
 4. Confirm the terms (FUMS, notices, caching, verse limits) and check passages on a preview before activating.
 
 Caching: when the translation allows it, a copy is kept in the server's memory (per instance) for at most the configured days, keyed by translation, text version, and passage. It is never written to the database and never reused for another translation. When the provider is down or the key is missing, members see "This passage isn't available right now"; nothing else is shown in its place.

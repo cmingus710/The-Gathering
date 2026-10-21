@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiBibleBase, apiBiblePassageId, apiBiblePassageUrl, parseApiBiblePassage } from "./api-bible";
-import { clearTextCache, resolveText, type Fetcher } from "./source";
+import { apiBibleBase, apiBiblePassageId, apiBiblePassageUrl, codeFromAbbreviation, parseApiBibleList, parseApiBiblePassage } from "./api-bible";
+import { clearTextCache, listApiBibles, resolveText, type Fetcher } from "./source";
 import type { ProviderConfig } from "./types";
 
 /**
@@ -89,5 +89,44 @@ describe("resolveText", () => {
     await resolveText({ ...tr, id: "22222222-2222-2222-2222-222222222222" }, null, cached, range, fetcher);
     await resolveText({ ...tr, text_version: 1 }, null, cached, range, fetcher);
     expect(fetcher).toHaveBeenCalledTimes(5); // another translation or version never reuses it
+  });
+});
+
+describe("API.Bible list of Bibles", () => {
+  const list = {
+    data: [
+      { id: "de4e12af7f28f599-01", dblId: "de4e12af7f28f599", name: "King James (Authorised) Version", nameLocal: "King James Version", abbreviation: "engKJV", abbreviationLocal: "KJV", description: "Ecumenical", descriptionLocal: "Ecumenical", language: { id: "eng", name: "English", nameLocal: "English" } },
+      { id: "../bad", name: "Skipped" },
+      { id: "9879dbb7cfe39e4d-04", name: "A Synthetic Bible", abbreviation: "SYN" },
+    ],
+  };
+
+  it("keeps each bible_id with its display fields and skips unusable ids", () => {
+    expect(parseApiBibleList(list)).toEqual([
+      { id: "9879dbb7cfe39e4d-04", name: "A Synthetic Bible", abbreviation: "SYN", language: "", languageName: "", description: "" },
+      { id: "de4e12af7f28f599-01", name: "King James Version", abbreviation: "KJV", language: "eng", languageName: "English", description: "Ecumenical" },
+    ]);
+    expect(() => parseApiBibleList({ data: {} })).toThrow();
+    expect(codeFromAbbreviation("KJV")).toBe("KJV");
+    expect(codeFromAbbreviation("nvi-pt")).toBe("NVI-PT");
+    expect(codeFromAbbreviation("X")).toBe("");
+  });
+
+  it("asks GET /bibles with the named key and reports problems without details", async () => {
+    process.env.TEST_API_BIBLE_KEY = "synthetic-key";
+    delete process.env.API_BIBLE_BASE_URL;
+    try {
+      const fetcher = vi.fn(async () => ({ status: 200, url: "", headers: {}, body: Buffer.from(JSON.stringify(list)) })) as unknown as Fetcher;
+      const r = await listApiBibles("TEST_API_BIBLE_KEY", fetcher);
+      expect(r.status === "ok" && r.bibles.map((b) => b.id)).toEqual(["9879dbb7cfe39e4d-04", "de4e12af7f28f599-01"]);
+      expect(vi.mocked(fetcher).mock.calls[0][0]).toBe("https://rest.api.bible/v1/bibles");
+      expect(vi.mocked(fetcher).mock.calls[0][1]).toMatchObject({ headers: { "api-key": "synthetic-key" }, maxRedirects: 0 });
+      const denied = vi.fn(async () => ({ status: 401, url: "", headers: {}, body: Buffer.from("") })) as unknown as Fetcher;
+      expect(await listApiBibles("TEST_API_BIBLE_KEY", denied)).toEqual({ status: "unavailable", reason: "rejected" });
+      expect(await listApiBibles("MISSING_KEY_SETTING", fetcher)).toEqual({ status: "unavailable", reason: "not_configured" });
+      expect(await listApiBibles("lowercase; rm", fetcher)).toEqual({ status: "unavailable", reason: "not_configured" });
+    } finally {
+      delete process.env.TEST_API_BIBLE_KEY;
+    }
   });
 });

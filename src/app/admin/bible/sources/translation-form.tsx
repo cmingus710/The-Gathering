@@ -1,11 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { codeFromAbbreviation, type ApiBibleSummary } from "@/lib/bible/api-bible";
+import type { BibleListResult } from "@/lib/bible/source";
 import { initialFormState } from "@/lib/forms";
-import { saveTranslationAction, translationStatusAction } from "./actions";
+import { listApiBiblesAction, saveTranslationAction, translationStatusAction } from "./actions";
 
 export type AdminTranslation = {
   id: string;
@@ -48,7 +52,11 @@ export function TranslationForm({ t }: { t: AdminTranslation | null }) {
   const [state, action] = useActionState(saveTranslationAction, initialFormState);
   const [kind, setKind] = useState<"database" | "api">(t?.source_kind ?? "database");
   const [cache, setCache] = useState(t?.allow_cache ?? false);
+  const [credential, setCredential] = useState(state.values?.credential_env ?? t?.credential_env ?? "API_BIBLE_KEY");
+  // A Bible chosen from the provider's list fills these fields (they remount with it).
+  const [picked, setPicked] = useState<ApiBibleSummary | null>(null);
   const v = (k: string, d: string) => state.values?.[k] ?? d;
+  const pk = picked?.id ?? "";
   return (
     <form action={action} className="space-y-5">
       <FormMessage state={state} />
@@ -57,9 +65,9 @@ export function TranslationForm({ t }: { t: AdminTranslation | null }) {
         {t ? (
           <TextField label="Code" name="code_display" value={t.code} disabled />
         ) : (
-          <TextField label="Code" name="code" required maxLength={16} defaultValue={v("code", "")} hint="Shown beside every passage, e.g. WEB." error={state.fieldErrors?.code} />
+          <TextField key={`code-${pk}`} label="Code" name="code" required maxLength={16} defaultValue={picked ? codeFromAbbreviation(picked.abbreviation) : v("code", "")} hint="Shown beside every passage, e.g. WEB." error={state.fieldErrors?.code} />
         )}
-        <TextField label="Name" name="name" required maxLength={120} defaultValue={v("name", t?.name ?? "")} />
+        <TextField key={`name-${pk}`} label="Name" name="name" required maxLength={120} defaultValue={picked && !t ? picked.name.slice(0, 120) : v("name", t?.name ?? "")} />
       </div>
       {t ? (
         <p className="text-meta text-text-secondary">Source: {t.source_kind === "database" ? "text stored in the app from a reviewed import" : `licensed API (${t.provider})`}.</p>
@@ -70,12 +78,22 @@ export function TranslationForm({ t }: { t: AdminTranslation | null }) {
         </SelectField>
       )}
       {(t?.source_kind ?? kind) === "api" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField label="API.Bible Bible ID" name="provider_ref" defaultValue={v("provider_ref", t?.provider_ref ?? "")} maxLength={64} hint="From the provider's list of Bibles available to your key." />
-          <TextField label="Server setting holding the key" name="credential_env" defaultValue={v("credential_env", t?.credential_env ?? "API_BIBLE_KEY")} maxLength={64} hint="The environment variable NAME in Vercel. Never paste the key here." />
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField
+              key={`ref-${pk}`}
+              label="API.Bible Bible ID"
+              name="provider_ref"
+              defaultValue={picked ? picked.id : v("provider_ref", t?.provider_ref ?? "")}
+              maxLength={64}
+              hint="The bible_id (e.g. de4e12af7f28f599-01), not the shorter DBL ID. Choose it from the list below."
+            />
+            <TextField label="Server setting holding the key" name="credential_env" value={credential} onChange={(e) => setCredential(e.target.value)} maxLength={64} hint="The environment variable NAME in Vercel. Never paste the key here." />
+          </div>
+          <ApiBiblePicker credential={credential} chosen={picked?.id ?? null} onPick={setPicked} />
+        </>
       ) : null}
-      <TextField label="Language" name="language" defaultValue={v("language", t?.language ?? "en")} maxLength={12} />
+      <TextField key={`lang-${pk}`} label="Language" name="language" defaultValue={picked && !t && picked.language ? picked.language : v("language", t?.language ?? "en")} maxLength={12} />
       <TextAreaField label="Attribution shown with passages" name="attribution" rows={2} maxLength={1000} defaultValue={v("attribution", t?.attribution ?? "")} />
       <TextAreaField label="Copyright notice" name="copyright" rows={2} maxLength={2000} defaultValue={v("copyright", t?.copyright ?? "")} hint="The exact wording the license requires, if any." />
       <TextField label="Source link" name="source_url" type="url" optional defaultValue={v("source_url", t?.source_url ?? "")} />
@@ -105,6 +123,58 @@ export function TranslationForm({ t }: { t: AdminTranslation | null }) {
       </fieldset>
       <SubmitButton pendingText="Saving…">{t ? "Save translation" : "Add translation"}</SubmitButton>
     </form>
+  );
+}
+
+const LIST_PROBLEM: Record<Exclude<BibleListResult, { status: "ok" }>["reason"], string> = {
+  not_configured: "That server setting isn't set (or API_BIBLE_BASE_URL isn't an API.Bible address). Add the key in Vercel and redeploy.",
+  rejected: "API.Bible didn't accept the key in that server setting.",
+  outage: "API.Bible couldn't be reached right now. Try again shortly.",
+};
+
+/**
+ * Lists the Bibles the key can use (API.Bible's GET /bibles) so the right
+ * bible_id is chosen rather than typed. Choosing one only fills the form;
+ * nothing is saved until the form is submitted.
+ */
+function ApiBiblePicker({ credential, chosen, onPick }: { credential: string; chosen: string | null; onPick: (b: ApiBibleSummary) => void }) {
+  const [result, setResult] = useState<BibleListResult | null>(null);
+  const [filter, setFilter] = useState("");
+  const [pending, start] = useTransition();
+  const q = filter.trim().toLowerCase();
+  const bibles = result?.status === "ok" ? result.bibles.filter((b) => !q || [b.name, b.abbreviation, b.id, b.languageName].some((x) => x.toLowerCase().includes(q))) : [];
+  return (
+    <div className="space-y-3 rounded-tile border border-border p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button size="sm" variant="secondary" loading={pending} loadingText="Asking API.Bible…" onClick={() => start(async () => setResult(await listApiBiblesAction(credential)))}>
+          {result?.status === "ok" ? "Refresh list" : "Show the Bibles this key can use"}
+        </Button>
+        {result?.status === "ok" ? <span className="text-meta text-text-secondary">{result.bibles.length} available</span> : null}
+      </div>
+      {result && result.status !== "ok" ? <Alert tone="error" title={LIST_PROBLEM[result.reason]} /> : null}
+      {result?.status === "ok" ? (
+        result.bibles.length ? (
+          <>
+            {result.bibles.length > 8 ? <TextField label="Filter" name="bible_filter" value={filter} onChange={(e) => setFilter(e.target.value)} optional autoComplete="off" onKeyDown={(e) => e.key === "Enter" && e.preventDefault()} /> : null}
+            <ul className="max-h-80 divide-y divide-border overflow-y-auto rounded-tile border border-border">
+              {bibles.map((b) => (
+                <li key={b.id} className="flex flex-wrap items-center gap-3 px-3 py-2">
+                  <span className="min-w-0 flex-1">
+                    <span className="font-semibold">{b.abbreviation ? `${b.abbreviation} · ` : ""}{b.name}</span>
+                    <span className="block break-all text-meta text-text-secondary">{[b.languageName, b.description, b.id].filter(Boolean).join(" · ")}</span>
+                  </span>
+                  <Button size="sm" variant={chosen === b.id ? "primary" : "ghost"} onClick={() => onPick(b)} aria-pressed={chosen === b.id}>
+                    {chosen === b.id ? "Chosen" : "Use this"}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="text-meta text-text-secondary">This key has no Bibles yet. Add them to the app in your API.Bible dashboard.</p>
+        )
+      ) : null}
+    </div>
   );
 }
 
