@@ -1,6 +1,139 @@
 # Build status
 
-Last updated: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also pushed as `claude/phase-9-scripture-memory-ns026j`), based on `main` after PR #14 (Phases 2–8, member redesign, sign-in redesign) plus the Phase 8 follow-up `b93b514` (`20261026000700`, already applied on the hosted project but not yet in `main`) · merged into `main` by PR [#15](https://github.com/cmingus710/The-Gathering/pull/15) (production builds still paused)
+Last updated: 2026-10-28 · Phase 10 branch `phase-10/youth-families` (also pushed as `claude/gracious-gauss-im5ojt`), based on the Phase 9 head and then merged with `main` after PR #15 · PR into `main` (not merged)
+
+## Phase 10: Youth ministry and families
+
+### Summary
+
+Phase 10 code is complete and verified locally (database, unit, build, and signed-out browser checks). It started from `phase-9/scripture-memory` (PR #15 was open at the time) and, once #15 was merged, merged `main` (docs-only conflicts resolved), so nothing was duplicated or lost.
+
+**Production status changed during this phase (not by this phase):** another session recorded that `main` (Phase 9) was released to `www.gathering.church` on 2026-10-20 with production builds unpaused and the scheduler moved to production (commit `f40d85c` on `claude/phase-9-scripture-memory-ns026j`, not in `main`). This phase didn't change any Vercel or production setting and didn't merge anything. Because the hosted Supabase project now serves production, **the Phase 10 migrations have not been applied there**; they need the owner's explicit go-ahead (they change shared checks such as `is_approved_member` and the community notification functions that production uses). Giving stays in Stripe test mode.
+
+**Policy-gated features are off** until the church approves a youth policy (see below). Everything else works for authorized staff and verified guardians once the migrations are applied.
+
+Guides: [youth-family-admin-guide.md](youth-family-admin-guide.md) (admin locations, setup, workflows, policy decisions), [guardian-guide.md](guardian-guide.md), [youth-permission-matrix.md](youth-permission-matrix.md), [media-consent-workflow.md](media-consent-workflow.md), [youth-retention.md](youth-retention.md) (retention, deletion, adult transition). Design: [architecture.md](architecture.md#youth-ministry-and-families-phase-10). Migrations: [migration-history.md](migration-history.md#phase-10-2026-10-28).
+
+### What was built and where
+
+| Area | Where |
+| --- | --- |
+| Youth tile live with the supplied Youth art; "Youth & Families" in the menus | home launcher, `src/lib/navigation.ts` |
+| Youth hub: parent/guardian, leader, and administration entry points; announcements. For independent youth: announcements, upcoming events (self-registration only where allowed), groups, learning, link to "who can see what" | `/youth` |
+| Family dashboard: linked children, outstanding forms, upcoming registrations, paused access, request status | `/youth/family`, `/youth/family/request` |
+| Child page (per permission): profile, groups, events with form states, photo consent and history, progress summary, own-account invitation/authorization | `/youth/family/children/<id>` |
+| Child event: form text (versioned), give/decline/withdraw, event details (emergency contact, pickup notes, optional notes), register/cancel/waitlist | `/youth/family/children/<id>/events/<occurrence>` |
+| Practice verses together (recorded on the child): read & repeat, flashcards, say it | `/youth/family/children/<id>/practice` |
+| Group page and supervised discussions (audience shown; report; leader moderation) | `/youth/groups/<id>`, `/youth/discussions/<id>`, `/youth/announcements` |
+| Leading: groups, roster, enrollment, announcements, learning, discussions, reports, event attendee lists, logistics (personnel only) | `/youth/lead/*` |
+| Independent youth: account, sharing choice, adult-transition confirmation; activation with a code | `/youth/account`, `/youth-activate` |
+| **Administration** | **Admin → Youth & families** `/admin/youth` · policy `/admin/youth/policy` · families `/admin/youth/families` (+ `/children/<id>`) · groups `/admin/youth/groups` (+ `/<id>`) · forms `/admin/youth/forms` · youth events `/admin/youth/events` (+ `/<id>`) · photo consent `/admin/youth/media` · safeguarding `/admin/youth/reports` |
+| Existing screens: event editor shows youth events as managed under Youth; gallery approval explains consent links; member admin labels youth accounts | `/admin/events/*`, `/admin/gallery/<id>`, `/admin/members` |
+| Notifications: `youth` category, generic email/push | `/notifications/settings` |
+
+### Permissions by role (summary)
+
+Full matrix: [youth-permission-matrix.md](youth-permission-matrix.md).
+
+| Role | Can | Can't |
+| --- | --- | --- |
+| Verified guardian | Per child, only the permissions chosen at verification: update profile, register, permission forms, photo consent, view progress summary, practice with the child, manage the child's account, receive updates | See other adults' details, youth passwords, journals, answers, confidential prayer/care, giving, unrelated conversations; sign in as an independent youth; verify themselves |
+| Independent youth | Youth area, own learning tools, reply in supervised discussions (policy), self-register only where allowed, choose progress sharing | Any adult feature (directory, messages, community, groups, prayer, care, giving, gallery, admin), change account type or eligibility |
+| Youth leader (+ assignment) | Their groups only: roster (names, participation), enrollment and publishing if granted, start/moderate discussions, attendee lists, logistics when designated | Other groups, contact details, birth dates, guardians' identities, reports about themselves, finance, roles, membership, journals, confidential care |
+| Family administrator | Requests, verification (never own), permissions, pause/revoke, restrict, child profiles, eligibility, invitations, adult transition, history | Policy approval, practice or journal content |
+| Youth ministry admin / forms admin / logistics / consent reviewer / safeguarding / policy admin | Their own areas (see the admin guide) | Anything outside them |
+| Super administrator | Assign the roles (audited) | Any youth/family capability without holding the role |
+
+### Policy decisions still needing church input
+
+Independent youth accounts and who is eligible (in the church's words), any minimum age, guardian authorization of youth accounts, more than one guardian per child, collecting dates of birth, youth self-registration for events, supervised discussions and the number of leaders required, guardian access to discussions, moderated group prayer, progress sharing for independent youth, recording public-use photo consent, adult transition, logistics retention, how guardianship is verified and disputes handled, permission-form wording, event staffing, confidential youth care (no reviewed escalation policy, so not offered), check-in/check-out and pickup authorization (not built), and legal review (for example children's online privacy rules such as COPPA in the US; the amended rule's compliance date was 22 April 2026). Details: [youth-family-admin-guide.md](youth-family-admin-guide.md#policy-decisions-that-need-church-input).
+
+### Disabled until the church approves a policy that allows them
+
+Independent youth accounts (invitation and activation) · youth self-registration for events · supervised discussions and group prayer · guardian reading of discussions · progress sharing for independent youth · public-use photo consent · adult transition · multiple guardians per child · date-of-birth collection · automatic logistics deletion. Youth self-registration *of accounts* and confidential youth care have no path at all.
+
+### Verified locally (no hosted services)
+
+Lint (zero warnings), typecheck, production build (every route dynamic; 23 new routes), **755 Vitest tests** (60 files; 48 in the new `tests/db/youth.test.ts` against PostgreSQL 16 built from all 53 migrations), and **322 Playwright tests** (desktop and Pixel 7; 56 new: signed-out redirects for 28 Phase 10 routes and their `private, no-store` headers). `tests/db/safeupdate.test.ts` covers every Phase 10 function. Earlier suites pass with one expectation updated (the Phase 2 "youth accounts blocked" test now checks that only the youth process changes account kind) and one launcher expectation (the Youth tile is live). One Phase 9 test (`memory.test.ts` › "announces a new weekly verse once") fails only between about 00:00 and 05:00 UTC, on the unmodified Phase 9 code too (UTC vs Chicago date in the test); all 755 passed in a full run earlier on 2026-10-20 (UTC); the latest full run at 00:10 UTC had 754 passing plus that one. Follow-up suggested.
+
+| Area | Proven by tests |
+| --- | --- |
+| Access | `youth` schema closed to clients; pending accounts refused; super administrators hold no youth/family capability implicitly |
+| Policy | Safe defaults until approved; unknown settings, independent accounts without a rule, and prayer without discussions refused; approval needs another person, the phrase, and a reference; one approved version; earlier versions retired and immutable |
+| Guardianship | Household membership never links; requests answer identically whether a child exists and never reveal ids; pending requests open nothing; nobody verifies their own; one guardian unless the policy allows more; per-capability permissions; restriction, suspension, revocation (final); history without values |
+| Child privacy | Not in directory search, event member search, DM recipients, or household displays; birth dates not in audit, history, or notifications; rosters carry names and participation only |
+| Leaders | Need the role and an assignment; last leader protected; only their own group; role removal drops access at once; no finance, membership, or other capability |
+| Events and consent | Youth events hidden from unrelated adults; adult RSVPs refused; general editor can't widen a youth event; consent and emergency contact required; permission per guardian; capacity and waitlist in order with promotion; material change → renewal with notices; wording fix keeps consent; withdrawal recorded, place released, no device fields |
+| Logistics | Only designated personnel; viewing logged with counts; values absent from audit, history, notifications, organizer view, and the event row |
+| Youth accounts | Off until policy; eligibility, recorded birth date, and minimum age required (fail closed); invited sign-ups start as youth and can't be approved as adults; wrong code, unconfirmed email, missing guardian authorization, and existing adult accounts refused; code single-use; policy version and authorizer recorded; child practice moves to the account |
+| Fail closed | Youth accounts: no `is_approved_member`, capabilities, directory, DMs (either direction), prayer, member RSVPs, announcements table, roles; can't change account kind or eligibility; guardians can't act as the youth |
+| Learning and privacy | Guardian practice recorded on the child, never the guardian; journal unreadable by guardian, leader, family admin, super admin; progress summary only when shared, without answers or reflections |
+| Discussions | Only leaders start; prayer needs policy; transparent audience; idempotent posts; guardians read-only by policy; posting stops below leader count; reports about leaders hidden from all leaders of that group and reviewed by safeguarding |
+| Photo consent | "Permission confirmed" needs links; approval blocked until consent; public use refused by default; withdrawal hides and queues; unhide blocked; guardian conflict blocks; known copies tracked |
+| Transition | Policy, both admin confirmations, youth's own confirmation, a second administrator; ends guardianships; keeps learning; no DM eligibility; directory stays off |
+| Revocation | Leaving a group cancels places; guardian suspension drops unread notices and consent weight; youth suspension ends youth and memory access; youth account deletion leaves the child guardian-managed |
+| Notifications | Guardians only in scope; generic email/push; one reminder per child even with overlapping runs; reminder disappears when the place is canceled; request rate limit |
+
+**Not verified in a browser while signed in:** the Youth pages with real data. They need the Phase 10 migrations on a database the app can reach (see Hosted).
+
+### Hosted
+
+| Check | Result |
+| --- | --- |
+| Branches pushed | `phase-10/youth-families` and `claude/gracious-gauss-im5ojt` |
+| Preview build `25a033b` (`dpl_7WdsnGMS389LybLWMZUS1n2uDAiE`) | **Ready**: `https://the-gathering-q6qd03qd5-paint-by-number.vercel.app`, branch alias `https://the-gathering-git-phase-10-youth-families-paint-by-number.vercel.app` (Vercel Authentication required) |
+| Signed-out `/youth/family` → sign-in with `private, no-cache, no-store` (through Vercel's share link) | Pass |
+| Hosted migration history (read-only, 2026-10-21) | 44 versions, latest `20261027000500`; no `youth` schema. **Phase 10 not applied** (needs owner go-ahead; hosted is production's database) |
+| Hosted Phase 9 fingerprint (read-only) | Equal to a fresh build in all 15 categories |
+| Production | Not touched by this phase (another session released Phase 9 on 2026-10-20) |
+| Hosted signed-in walkthrough with synthetic families | **Not done** (needs the migrations) |
+
+### Hosted walkthrough plan (after the scripts)
+
+With authorized adult test accounts only (A: super administrator; P1/P2: policy admins; F1/F2: family admins; L1/L2: leaders; G1/G2: guardians; H: G1's household member; Y: a fresh test sign-up for a youth account) and only `[TEST]` synthetic child profiles, never real children:
+
+1. Run scripts 1–9; run `youth-fingerprint.sql` and the earlier fingerprints against a fresh build.
+2. A assigns the roles. P1 drafts a `[TEST]` policy; P2 approves (then later a version enabling accounts, discussions, sharing, transition for the test only).
+3. G1 requests to link `[TEST] Child`; F1 verifies with chosen permissions; H confirms nothing is visible. G2 requests; F2 verifies with fewer permissions.
+4. Ministry admin creates a `[TEST]` group, assigns L1/L2, enrolls test children; forms admin publishes a `[TEST]` form and makes a draft `[TEST]` event youth-only with capacity 1 and a waitlist; designates L1.
+5. G1 grants consent, adds an emergency contact (`555-01xx`), registers; G2 can't; second child waitlists; cancel promotes. Publish a material form change; check renewal notices and organizer view; withdraw.
+6. L1 opens logistics (logged); L2 can't. Announcement to guardians (allowlisted email, generic text).
+7. Photo: upload a `[TEST]` photo to an album linked to the event, link the child, approval blocked, consent, approve, withdraw → hidden + review.
+8. Youth account: F1 records eligibility and test birth date; G1 invites Y's email; Y signs up, confirms, activates; check the youth shell, adult pages redirect, journal privacy, sharing off/on, discussion reply, report about L1 → only safeguarding sees it.
+9. Transition test account; confirm guardians lose access and no DM eligibility.
+10. Clean up: archive `[TEST]` children, groups, forms; revoke test guardianships/invitations; delete the test event and album; restore the policy to the church's chosen version (or retire test versions by approving a defaults version); remove temporary roles (audited).
+
+### Known limitations (Phase 10)
+
+- **Hosted database not migrated**, so no signed-in hosted walkthrough.
+- **Guardian practice UI** offers read & repeat, flashcards, and "say it" (self-check). The database supports all six Phase 9 activities for child profiles; missing words, word order, and typing aren't in the guardian UI yet.
+- **Youth event covers and the /events list:** youth events appear in the Youth area and family dashboard, not in the general events list, month view, or home banner (those use the audience rule directly); youth event cover images aren't shown.
+- **Youth accounts get no email/push or Realtime** (adult-only by design); they see announcements in the Youth area.
+- **Teaching resources** assigned to a group are openable by youth only when public (members-only items need an adult account).
+- **Photo consent reviewers** need the Gallery moderator role too to see images.
+- **Avatars:** the database, storage policy, and permission checks for child avatars exist; there is no upload form yet (profiles show names).
+- **No check-in/check-out, pickup authorization, or medical records** (by design).
+- **Phone push** remains Phase 12; Lesson Studio, attachments, and Follow Along remain Phase 13.
+
+### Still open from earlier phases
+
+- **Phase 9:** signed-in browser walkthrough (database-level hosted walkthrough passed per `main`); the time-of-day test flake above.
+- **Phase 8:** hosted walkthrough; API.Bible not configured.
+- **Phase 7:** hosted walkthrough, feed refresh, email/push for teaching and gallery, device and provider embed checks (scheduler moved to production per the other session's record).
+- **Phase 6:** hosted walkthrough; prayer/care notification email on hosted.
+- **Phase 5:** hosted walkthrough; VAPID keys not set on previews (push off); push on a device.
+- **Giving on later previews:** Stripe variables are scoped to the Phase 3 branch, so Give shows as not configured.
+- **Phase 4:** .ics import into calendars, private feed subscription, month grid on a phone, screen reader pass.
+- **Phase 3:** hosted dispute "lost"; final statements await church details; Apple Pay/Google Pay on a device; test subscription and open test dispute in the Stripe sandbox.
+- **Phase 2:** device and screen-reader pass of the directory.
+- **Phase 1:** role assignment through the UI, logo/icon replacement upload, installed app on physical devices, VoiceOver/TalkBack.
+- **Design:** `design/section-tiles` is unmerged and not included here.
+
+---
+
+# Phase 9 build status
+
+Recorded: 2026-10-27 · Phase 9 branch `phase-9/scripture-memory` (also pushed as `claude/phase-9-scripture-memory-ns026j`), based on `main` after PR #14 (Phases 2–8, member redesign, sign-in redesign) plus the Phase 8 follow-up `b93b514` (`20261026000700`, already applied on the hosted project but not yet in `main`) · merged into `main` by PR [#15](https://github.com/cmingus710/The-Gathering/pull/15) (production builds still paused)
 
 ## Phase 9: Scripture memory and practice
 
