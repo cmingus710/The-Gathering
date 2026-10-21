@@ -25,7 +25,7 @@ Designated people get one email when a new account first becomes ready for membe
 | An address with an open youth account invitation (youth activation, not membership) | No |
 | The account was approved, declined, or suspended before the email went out | Skipped |
 
-The decision is made in the database (`supabase/migrations/20261101000100_membership_approval_alerts.sql`): a trigger on `auth.users` fires when `email_confirmed_at` goes from empty to set, or when an account is created already confirmed. `membership.approval_alerts` is unique per account, which is what makes "once" hold no matter how often a callback repeats. The trigger never blocks registration or verification: if queueing fails it logs a warning and lets the sign-up continue.
+The decision is made in the database (`supabase/migrations/20261101000300_membership_approval_alerts.sql`): a trigger on `auth.users` fires when `email_confirmed_at` goes from empty to set, or when an account is created already confirmed. `membership.approval_alerts` is unique per account, which is what makes "once" hold no matter how often a callback repeats. The trigger never blocks registration or verification: if queueing fails it logs a warning and lets the sign-up continue.
 
 **Google/Apple sign-in isn't built yet.** No extra hook is needed when it is: Supabase creates provider accounts already confirmed, so the insert trigger queues the alert after the profile trigger has created the pending profile. The provider callback should land on `/auth/confirm` (the `code` exchange) so the alert is sent right away; otherwise the scheduler sends it within about 5 minutes. See "Limits" for previews.
 
@@ -57,7 +57,7 @@ So testing on a preview needs: an address you control on the preview's allowlist
 
 ## Release steps (owner)
 
-Nothing here has been applied to the hosted project.
+**Hosted status (2026-10-21):** the objects are applied but weren't recorded in the migration history, because the migration was first numbered `20261101000100`, a version hosted had already given to `notification_panel`. Run `supabase/manual/2026-11-01-record-membership-alerts.sql` once: it changes nothing except adding the history row for `20261101000300`, and refuses if any function, table, trigger, or grant differs from the repository. Use the apply script below only on a database that doesn't have the `membership` schema yet.
 
 1. Approve and merge the PR.
 2. Apply the migration: run `supabase/manual/2026-11-01-apply-membership-alerts.sql` in the SQL editor. It's additive, runs in one transaction, refuses to run twice, and leaves alerts off. Order doesn't matter relative to the code deploy: old code ignores the new tables, and new code shows "Notification settings couldn't be loaded" until the migration exists.
