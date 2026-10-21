@@ -43,10 +43,13 @@ Totals are computed live from current participation and current practice records
 
 ## Families and youth
 
-There are no child accounts, guardian access, household-wide progress, child rankings, or youth communication in Phase 9. Sharing a household gives no access to anyone's practice. The kids presentation is a display choice on the member's own account. Phase 10 integration points:
+Phase 10 ([youth-permission-matrix.md](youth-permission-matrix.md)). Sharing a household still gives no access to anyone's practice.
 
-- `memory.cards.profile_id` / `memory.attempts.profile_id` already belong to a profile; a verified child profile can own its own progress.
-- Challenges use `community.group_member`, which excludes non-adult accounts; a guardian-approved family challenge type can be added beside `memory.challenges` without changing adult privacy.
+- **Child profiles** (no login): a verified guardian allowed to practice records practice for the child under Youth & Families. It's stored on the child (`youth.practice_*`), never on the guardian's own cards, and other guardians allowed to see progress see summaries only. The kids presentation on a member's own account still records the member's progress.
+- **Independent youth accounts** use Memory verses like any member; their practice is theirs. Guardians see a summary (verses practiced, review-ready verses, days practiced, badge names) only when the church's policy offers sharing and the youth switches it on. Never typed answers, journal entries, or reflections.
+- When a child profile activates its own account, its practice moves into the youth's own history.
+- Leaders, family administrators, and super administrators have no view of anyone's practice. No child leaderboards or rankings exist.
+- Challenges remain adult-only (`community.group_member` excludes youth accounts); no family challenge type was added.
 - `memory.member_settings.presentation` is presentation only and is never read as an age or permission.
 
 ## Retention

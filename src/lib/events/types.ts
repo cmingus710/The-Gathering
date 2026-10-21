@@ -2,7 +2,8 @@
 export type OccurrenceStatus = "scheduled" | "canceled";
 export type SeriesStatus = "draft" | "published" | "canceled" | "archived";
 export type RegistrationStatus = "confirmed" | "waitlisted" | "canceled";
-export type Audience = "public" | "members" | "group";
+/** "youth" events are set up under Youth & families (Phase 10). */
+export type Audience = "public" | "members" | "group" | "youth";
 
 export type EventOccurrence = {
   id: string;

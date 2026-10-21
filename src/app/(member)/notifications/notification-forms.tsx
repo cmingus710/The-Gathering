@@ -42,6 +42,7 @@ const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string 
   gallery: { label: "Photo galleries", hint: "New photos in albums you can see (grouped, a few times a day) and decisions about photos you shared." },
   reading: { label: "Bible reading", hint: "Daily reminders you switch on for a reading plan, and changes to upcoming readings. Email and push only say your reading is ready, never the plan, passage, or your journal." },
   memory: { label: "Memory verses", hint: "Reminders you switch on in Memory verses → Practice settings (a new weekly verse, reviews due, practice, challenge milestones). Email and push never include a verse, your results, or your practice history." },
+  youth: { label: "Youth & Families", hint: "Updates for children you're a verified guardian of (announcements, registrations, permission forms, consent changes, reminders) and, for leaders and reviewers, youth reports. Email and push only say there's an update: never a child's name, an event, or any details." },
 };
 
 export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]; pushAvailable: boolean }) {
@@ -61,7 +62,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
               <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
-                {c === "messages" || c === "care" || c === "reading" || c === "memory" ? null : (
+                {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" ? null : (
                   <>
                     <option value="daily">Daily summary</option>
                     <option value="weekly">Weekly summary</option>

@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { canAccessAdmin, isCapability, type Capability, type MembershipStatus } from "./capabilities";
+import { canAccessAdmin, isCapability, type AccountKind, type Capability, type MembershipStatus } from "./capabilities";
 
 export type Viewer = {
   id: string;
@@ -11,6 +11,8 @@ export type Viewer = {
   preferredName: string | null;
   phone: string | null;
   status: MembershipStatus;
+  /** "youth" for an independent youth account (Phase 10); everything else is "adult". */
+  accountKind: AccountKind;
   capabilities: ReadonlySet<Capability>;
   isAdmin: boolean;
 };
@@ -40,7 +42,7 @@ export const getViewer = cache(async (): Promise<ViewerResult> => {
   const [{ data: profile, error: profileError }, { data: caps, error: capsError }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, preferred_name, phone, membership_status")
+      .select("id, email, full_name, preferred_name, phone, membership_status, account_kind")
       .eq("id", userData.user.id)
       .maybeSingle(),
     supabase.rpc("my_capabilities"),
@@ -65,8 +67,10 @@ export const getViewer = cache(async (): Promise<ViewerResult> => {
       preferredName: profile.preferred_name,
       phone: profile.phone,
       status: profile.membership_status as MembershipStatus,
+      accountKind: profile.account_kind === "youth" ? "youth" : "adult",
       capabilities,
-      isAdmin: profile.membership_status === "approved" && canAccessAdmin(capabilities),
+      // The database grants youth accounts no capabilities; this keeps the UI consistent.
+      isAdmin: profile.membership_status === "approved" && profile.account_kind !== "youth" && canAccessAdmin(capabilities),
     },
   };
 });
@@ -79,12 +83,31 @@ export async function requireSignedIn(next = "/home"): Promise<Viewer> {
   redirect(`/service-unavailable`);
 }
 
-/** Approved members only. Pending and suspended accounts go to the status page. */
+/**
+ * Approved adult members only. Pending and suspended accounts go to the
+ * status page; youth accounts go to the Youth area (every adult-only check in
+ * the database refuses them too).
+ */
 export async function requireApprovedMember(next = "/home"): Promise<Viewer> {
+  const viewer = await requireSignedIn(next);
+  if (viewer.status !== "approved") redirect("/account-status");
+  if (viewer.accountKind === "youth") redirect("/youth");
+  return viewer;
+}
+
+/**
+ * Approved adults and approved youth accounts: the shared learning tools
+ * (Bible reading, journals, memory verses), whose data is owner-only. The
+ * database decides whether a youth account is currently active.
+ */
+export async function requireLearner(next = "/home"): Promise<Viewer> {
   const viewer = await requireSignedIn(next);
   if (viewer.status !== "approved") redirect("/account-status");
   return viewer;
 }
+
+/** The Youth area: approved adults and approved youth accounts. */
+export const requireYouthArea = requireLearner;
 
 /** Approved members holding a specific capability; everyone else is turned away. */
 export async function requireCapability(capability: Capability, next = "/admin"): Promise<Viewer> {

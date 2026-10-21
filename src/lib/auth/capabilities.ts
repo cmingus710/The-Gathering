@@ -1,5 +1,5 @@
 /**
- * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community, Phase 6 prayer and care, Phase 7 teaching and media, Phase 8 Bible reading, Phase 9 scripture memory). The database (public.capabilities,
+ * Capability keys (Phase 1, Phase 3 finance, Phase 4 events, Phase 5 community, Phase 6 prayer and care, Phase 7 teaching and media, Phase 8 Bible reading, Phase 9 scripture memory, Phase 10 youth and families). The database (public.capabilities,
  * public.has_capability) is the source of truth; these constants keep the app
  * code typed. Add a key here only after adding it in a migration.
  */
@@ -46,6 +46,19 @@ export const CAPABILITIES = {
   // practice results or progress.
   memoryManage: "memory.manage",
   memoryPublish: "memory.publish",
+  // Youth and families (Phase 10): explicit roles only (never implied by
+  // super_admin). Leaders act only in the groups they're assigned to; none of
+  // these opens finance, roles, journals, practice answers, or confidential care.
+  youthLead: "youth.lead",
+  youthManage: "youth.manage",
+  youthPublish: "youth.publish",
+  youthEnroll: "youth.enroll",
+  youthForms: "youth.forms",
+  youthLogistics: "youth.logistics",
+  youthMediaConsent: "youth.media_consent",
+  youthSafeguarding: "youth.safeguarding",
+  youthPolicy: "youth.policy",
+  familyVerify: "family.verify",
 } as const;
 
 export type Capability = (typeof CAPABILITIES)[keyof typeof CAPABILITIES];
@@ -79,6 +92,16 @@ export const ADMIN_AREA_CAPABILITIES: readonly Capability[] = [
   CAPABILITIES.bibleManage,
   CAPABILITIES.memoryManage,
   CAPABILITIES.memoryPublish,
+  // youth.lead alone doesn't open administration: leaders work from Youth → Leading.
+  CAPABILITIES.youthManage,
+  CAPABILITIES.youthPublish,
+  CAPABILITIES.youthEnroll,
+  CAPABILITIES.youthForms,
+  CAPABILITIES.youthLogistics,
+  CAPABILITIES.youthMediaConsent,
+  CAPABILITIES.youthSafeguarding,
+  CAPABILITIES.youthPolicy,
+  CAPABILITIES.familyVerify,
 ];
 
 export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {
@@ -86,3 +109,6 @@ export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {
 }
 
 export type MembershipStatus = "pending" | "approved" | "suspended";
+
+/** profiles.account_kind: youth accounts are linked to a child profile (Phase 10). */
+export type AccountKind = "adult" | "youth";

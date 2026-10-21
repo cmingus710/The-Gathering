@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ProgressSummary } from "@/components/bible/progress";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatYmd } from "@/lib/bible/dates";
 import type { DaySummary, Enrollment, PlanCard, Progress } from "@/lib/bible/types";
 import { isUuid } from "@/lib/media/format";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Catch up" };
 export default async function CatchUpPage({ params }: PageProps<"/bible/plans/[id]/catch-up">) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  await requireApprovedMember(`/bible/plans/${id}/catch-up`);
+  await requireLearner(`/bible/plans/${id}/catch-up`);
   const supabase = await requireClient();
   const plan = await supabase.rpc("bible_plan", { p_id: id });
   if (plan.error?.code === "P0002") notFound();

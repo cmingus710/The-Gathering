@@ -32,6 +32,11 @@ src/
     (member)/memory        memory home, assignment, collections, My Verses, practice, review,
                            progress, settings, challenges; /memory/lead for authorized group leaders (Phase 9)
     admin/memory           memory verse collections, assignments, preview, challenges (Phase 9)
+    (member)/youth         Youth home, family dashboard, child pages, events and forms, practice,
+                           groups, discussions, leading, youth account (Phase 10)
+    admin/youth            youth policy, families, groups, forms, youth events, photo consent,
+                           safeguarding (Phase 10)
+    youth-activate         youth account activation with a one-time code (Phase 10)
     admin/           dashboard, members, ministry interests, settings, announcements, audit
     auth/confirm     email-link landing (token_hash or PKCE code)
     auth/sign-out    POST-only sign-out with Clear-Site-Data
@@ -80,9 +85,16 @@ Two independent axes:
 | Bible source manager | `bible.manage` | yes (Phase 8) |
 | Memory verse editor | `memory.manage` | yes (Phase 9) |
 | Memory verse publisher | `memory.manage`, `memory.publish` | yes (Phase 9) |
-| Youth leader | `youth.lead` (reserved) | Phase 10 |
+| Youth leader | `youth.lead` (plus an assignment to each group) | yes, explicit only (Phase 10) |
+| Youth ministry administrator | `youth.manage`, `youth.publish`, `youth.enroll` | yes, explicit only (Phase 10) |
+| Family administrator | `family.verify` | yes, explicit only (Phase 10) |
+| Permission form administrator | `youth.forms` | yes, explicit only (Phase 10) |
+| Youth event logistics | `youth.logistics` | yes, explicit only (Phase 10) |
+| Photo consent reviewer | `youth.media_consent` | yes, explicit only (Phase 10) |
+| Youth safeguarding reviewer | `youth.safeguarding` | yes, explicit only (Phase 10) |
+| Youth policy administrator | `youth.policy` | yes, explicit only (Phase 10) |
 
-`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, or `care.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
+`settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, `care.*`, `youth.*`, or `family.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
 
 ### Enforcement layers (deny by default)
 
@@ -478,6 +490,52 @@ Category `memory` (`memory_weekly_verse`, `memory_review_due`, `memory_practice_
 ### Pages and caching
 
 Members: `/memory`, `/memory/assignment`, `/memory/collections` (+ `/new`, `/<id>`), `/memory/verses` (+ `/add`, `/<id>`), `/memory/practice/<id>`, `/memory/review`, `/memory/progress`, `/memory/settings`, `/memory/challenges/<id>`, `/memory/lead/*` (authorized leaders); the home shows a compact memory card only while a verse is assigned. Staff: `/admin/memory/*` (shared components in `src/components/memory/manage`). `/memory` and `/api/memory/*` are protected, `private, no-store`, and not cached by the service worker.
+
+## Youth ministry and families (Phase 10)
+
+Guides: [youth-family-admin-guide.md](youth-family-admin-guide.md) (administration, admin locations, policy decisions), [guardian-guide.md](guardian-guide.md), [youth-permission-matrix.md](youth-permission-matrix.md), [media-consent-workflow.md](media-consent-workflow.md), [youth-retention.md](youth-retention.md) (retention, deletion, adult transition).
+
+### Storage and access
+
+A private `youth` schema (no Data API exposure, no privileges for `anon`/`authenticated`, RLS on with no policies) reached only through `SECURITY DEFINER` functions: `youth_*` (members, guardians, youth, leaders) and `youth_admin_*` (staff). Every function rechecks the caller; every `UPDATE`/`DELETE` has a `WHERE` clause; `public.youth_*` functions are executable by `authenticated` only.
+
+| Area | Tables |
+| --- | --- |
+| Policy | `policies` (versioned: draft → approved → retired; one approved; JSON settings validated by `youth.policy_settings_problem`; safe defaults in `youth.policy_defaults`) |
+| People | `children` (preferred name, avatar, participation, status, administrative restriction, linked account), `child_private` (date of birth, only when the policy collects it), `eligibility` (per child per policy version) |
+| Guardianship | `guardian_requests`, `guardianships` (per child; status pending/verified/suspended/revoked/ended; eight per-capability permissions, all off until chosen; manual verification method), `family_log` (actions, states, field names only) |
+| Youth accounts | `account_invitations` (hashed one-time code bound to the youth's email, policy version, guardian authorization), `account_records`, `transitions`, `progress_sharing` |
+| Groups | `groups`, `group_leaders` (role, publish, enrollment permissions; last-leader trigger), `enrollments` |
+| Communication | `announcements`, `discussions`, `posts`, `reports` (evidence snapshot, `about_leader`), `moderation_log` |
+| Events | `event_settings` (youth group, what to collect, youth self-registration), `event_personnel`, `forms`, `form_versions` (immutable once published; material flag), `event_forms`, `consents` (decision records; withdrawal recorded), `registrations` (per child; capacity and waitlist), `logistics`, `access_log`, `reminders_sent` |
+| Learning | `learning` (assignments to a group), `practice_cards`, `practice_sessions`, `practice_attempts` (a child profile's guardian-recorded practice) |
+| Photo consent | `media_consents`, `photo_subjects`, `photo_reviews`, `media_reuse` |
+
+### Fail-closed youth accounts
+
+`profiles.account_kind = 'youth'` marks an independent youth account; the Phase 2 constraint that blocked youth accounts is replaced by a trigger that allows account-kind changes (and approval of youth accounts) only inside the youth functions. `is_approved_member()`, `is_super_admin()`, `has_capability()`, and the events "members" audience now require an adult account, so every earlier feature (which already used `community.is_member`, adult-only) refuses youth accounts: directory, households, messages, community, groups, prayer and care, giving, media and gallery, Realtime, administration. Roles can't be granted to youth accounts. Only `bible.is_member` and `memory.is_member` admit an **active** youth account (approved, linked to an active unrestricted child, and the approved policy still allows independent accounts), so youth can use the owner-only learning tools. In the app, `requireApprovedMember()` sends youth accounts to `/youth`; the member layout renders a youth shell for them; adult-only sections have their own guarding layouts; learning pages use `requireLearner()`.
+
+### Guardianship and policy
+
+Only a family administrator verifies a guardianship (never their own), choosing permissions per child and per capability; nothing is inferred from households, names, addresses, or email. Requests never reveal whether a child exists. A restricted child pauses every guardian and youth path. `youth.guardian_can(child, profile, permission)` is the single rule (verified, approved adult, active unrestricted child, permission on). Policy settings come from the approved version or the safe default (`youth.setting`/`youth.flag`); nothing is enabled by default and no age threshold is assumed.
+
+Independent accounts: invitation (family administrator or guardian with *manage account*) → normal Supabase sign-up with that email (sign-ups matching an open invitation start as youth accounts) → email confirmation → `youth_activate(code)`, which requires the policy, current-version eligibility, the policy's minimum age against a recorded date of birth when set, guardian authorization when required, a verified matching email, and a fresh account (never approved, no roles or household). The account records the policy version and authorizing guardian; the child's practice moves into the youth's own memory history. No parallel credentials exist.
+
+### Events, consent, logistics
+
+Youth events are Phase 4 series with `audience = 'youth'` (enum value added alone in `20261028000100`). `events.visible_to` delegates youth events to `youth.event_visible` (group leaders, designated personnel, active youth in the group, guardians allowed to register of enrolled children). Triggers stop adult RSVPs on youth events and stop the general editor from changing a youth event's audience. Registration (`youth.register`) locks the occurrence row, checks enrollment, participation, status, deadline, consent (`youth.consents_ok`), required emergency contact, capacity, and the waitlist; `youth.promote` fills places in queue order, cancelling anyone no longer eligible. `youth.consent_state` accepts a granted decision for the current published version, or an earlier one followed only by non-material versions, made by a guardian still allowed to sign. Logistics are returned only by `youth_logistics_list` to designated personnel (logged in `access_log` with counts) and never appear in descriptions, rosters, feeds, notifications, exports, or audit details.
+
+### Communication and learning
+
+No private messaging exists in the Youth area. Discussions belong to a group, are always visible to its leaders, need the policy plus `discussion_min_leaders` effective leaders and three enrolled children (`youth.supervised`), and only leaders start them. Reports about a leader's content are reviewable only by safeguarding reviewers who don't lead that group (`youth.can_review`). Guardian-led practice reuses Phase 9's `memory.build_setup`, `public_setup`, `session_json`, and scoring functions through `youth.as_session`, recording results on the child.
+
+### Photo consent
+
+`youth.media_state` combines the latest decision of each currently verified guardian (event-specific first); `youth.guard_photo_publication` (trigger on `media.photos`) refuses approving or unhiding a photo whose linked children aren't all *granted*, and refuses "permission confirmed" without links; `youth.media_reconcile` hides affected approved photos and opens reviews whenever consent, guardianship, restriction, or approval changes.
+
+### Notifications
+
+Category `youth` on the Phase 5–9 system (community functions regenerated from the Phase 9 definitions with asserted edits). Recipients are verified guardians (and reviewers for reports); youth accounts get in-app announcements in the Youth area only. `notification_visible` rechecks guardianship, permission, child state, registration, form state, enrollment, and review scope on every read and delivery claim. Email and push are always generic. `youth.tick()` runs inside `community.tick()`: scheduled announcements, one reminder per child per occurrence, invitation expiry, temporary-session and report-evidence cleanup, and logistics deletion only when the policy sets a retention period.
 
 ## Announcements
 

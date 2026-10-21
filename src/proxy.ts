@@ -32,6 +32,9 @@ const PROTECTED_PREFIXES = [
   "/journal",
   // Phase 9: scripture memory (practice, progress, settings, challenges).
   "/memory",
+  // Phase 10: youth and families (child profiles, forms, logistics, discussions).
+  "/youth",
+  "/youth-activate",
 ];
 
 export async function proxy(request: NextRequest) {

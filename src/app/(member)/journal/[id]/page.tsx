@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { deleteEntryAction, entryStatusAction, unlinkEntryAction } from "../actions";
@@ -21,7 +21,7 @@ type Entry = { id: string; title: string; body: string; status: "active" | "arch
 export default async function EntryPage({ params }: PageProps<"/journal/[id]">) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  await requireApprovedMember(`/journal/${id}`);
+  await requireLearner(`/journal/${id}`);
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("journal_entry", { p_id: id });
   if (error?.code === "P0002") notFound();

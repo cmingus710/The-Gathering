@@ -10,7 +10,7 @@ import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@
 import { SelectField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { kindLabel, scheduleLabel } from "@/lib/bible/format";
 import { signBiblePaths } from "@/lib/bible/storage";
 import type { DaySummary, Enrollment, PlanCard, Progress, Translation } from "@/lib/bible/types";
@@ -38,7 +38,7 @@ function Cover({ url, alt }: { url?: string; alt: string | null }) {
 }
 
 export default async function BiblePage() {
-  const viewer = await requireApprovedMember("/bible");
+  const viewer = await requireLearner("/bible");
   const supabase = await requireClient();
   const [{ data, error }, translations] = await Promise.all([supabase.rpc("bible_hub"), supabase.rpc("bible_translations")]);
   const hub = (data ?? { featured: null, enrollments: [], available: [], history: [] }) as Hub;

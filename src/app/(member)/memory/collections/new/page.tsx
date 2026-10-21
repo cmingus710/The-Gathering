@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, PageHeader } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
 import { MyCollectionForm } from "../forms";
@@ -10,7 +10,7 @@ import { MyCollectionForm } from "../forms";
 export const metadata: Metadata = { title: "New collection" };
 
 export default async function NewCollectionPage() {
-  await requireApprovedMember("/memory/collections/new");
+  await requireLearner("/memory/collections/new");
   const supabase = await requireClient();
   const { data } = await supabase.rpc("bible_translations");
   const t = (data as { default_id: string | null; preferred_id: string | null; items: Translation[] } | null) ?? { default_id: null, preferred_id: null, items: [] };

@@ -5,7 +5,7 @@ import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import type { Item } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Current memory verse" };
 type Assignments = { current: Item[]; upcoming: Item[]; recent: Item[] };
 
 export default async function AssignmentPage() {
-  await requireApprovedMember("/memory/assignment");
+  await requireLearner("/memory/assignment");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_assignments");
   const a = (data ?? { current: [], upcoming: [], recent: [] }) as Assignments;

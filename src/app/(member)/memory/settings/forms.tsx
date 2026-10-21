@@ -27,7 +27,7 @@ export function SettingsForm({ settings: s, timezones }: { settings: PracticeSet
           label="Presentation"
           name="presentation"
           defaultValue={s.presentation}
-          hint="Kids presentation uses larger text and buttons, shorter parts, simple instructions, and word choices. It only changes how practice looks: it isn't an age setting and doesn't change anyone's permissions. Practicing with a child on your account records the progress as yours."
+          hint="Kids presentation uses larger text and buttons, shorter parts, simple instructions, and word choices. It only changes how practice looks: it isn't an age setting and doesn't change anyone's permissions. Practicing with a child on your account records the progress as yours; verified guardians can record it for the child instead from Youth & Families."
         >
           <option value="standard">Standard</option>
           <option value="kids">Kids (practicing with a child)</option>

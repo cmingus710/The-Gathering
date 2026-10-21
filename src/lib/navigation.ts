@@ -53,6 +53,8 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },
   // Phase 9: scripture memory; practice results are private to each member.
   { key: "memory", label: "Memory verses", icon: "memory", section: "learn", status: "available", href: "/memory" },
+  // Phase 10: youth ministry, family dashboard, and leading youth groups.
+  { key: "youth", label: "Youth & Families", icon: "youth", section: "church", status: "available", href: "/youth" },
 ];
 
 /**
@@ -161,6 +163,24 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: "memory",
     requires: [],
     anyOf: [CAPABILITIES.memoryManage, CAPABILITIES.memoryPublish],
+  },
+  {
+    key: "youth",
+    label: "Youth & families",
+    href: "/admin/youth",
+    icon: "youth",
+    requires: [],
+    anyOf: [
+      CAPABILITIES.youthManage,
+      CAPABILITIES.youthPublish,
+      CAPABILITIES.youthEnroll,
+      CAPABILITIES.youthForms,
+      CAPABILITIES.youthLogistics,
+      CAPABILITIES.youthMediaConsent,
+      CAPABILITIES.youthSafeguarding,
+      CAPABILITIES.youthPolicy,
+      CAPABILITIES.familyVerify,
+    ],
   },
   {
     key: "prayer",

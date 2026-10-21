@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import type { Card } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -14,7 +14,7 @@ import { requireClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "My Verses" };
 
 export default async function MyVersesPage() {
-  await requireApprovedMember("/memory/verses");
+  await requireLearner("/memory/verses");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_cards");
   const cards = (data ?? { active: [], removed: [] }) as { active: Card[]; removed: Card[] };

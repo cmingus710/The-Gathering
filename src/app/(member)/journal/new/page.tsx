@@ -3,7 +3,7 @@ import Link from "next/link";
 import { JournalEditor } from "@/components/journal/editor";
 import { LinkContext, type EntryLink } from "@/components/journal/link-context";
 import { Alert } from "@/components/ui/alert";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { isBookCode } from "@/lib/bible/books";
 import { formatPassage } from "@/lib/bible/reference";
 import type { Translation } from "@/lib/bible/types";
@@ -21,7 +21,7 @@ const int = (v: string | undefined) => (v && /^\d{1,3}$/.test(v) ? Number(v) : n
  * The link is checked when the first save creates the entry.
  */
 export default async function NewEntryPage({ searchParams }: PageProps<"/journal/new">) {
-  await requireApprovedMember("/journal/new");
+  await requireLearner("/journal/new");
   const sp = await searchParams;
   const supabase = await requireClient();
   let link: Record<string, string | number | null> | null = null;

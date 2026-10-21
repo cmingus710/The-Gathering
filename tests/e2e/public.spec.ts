@@ -198,6 +198,34 @@ for (const path of [
   "/admin/memory/collections/00000000-0000-0000-0000-000000000000",
   "/admin/memory/collections/00000000-0000-0000-0000-000000000000/preview",
   "/admin/memory/challenges/new",
+  // Phase 10 (youth ministry, family dashboard, leaders, youth accounts, administration)
+  "/youth",
+  "/youth/announcements",
+  "/youth/account",
+  "/youth/family",
+  "/youth/family/request",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000/events/00000000-0000-0000-0000-000000000000",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000/practice",
+  "/youth/groups/00000000-0000-0000-0000-000000000000",
+  "/youth/discussions/00000000-0000-0000-0000-000000000000",
+  "/youth/lead",
+  "/youth/lead/reports",
+  "/youth/lead/groups/00000000-0000-0000-0000-000000000000",
+  "/youth/lead/events/00000000-0000-0000-0000-000000000000",
+  "/youth/lead/events/00000000-0000-0000-0000-000000000000/logistics",
+  "/youth-activate",
+  "/admin/youth",
+  "/admin/youth/policy",
+  "/admin/youth/families",
+  "/admin/youth/families/children/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/groups",
+  "/admin/youth/groups/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/forms",
+  "/admin/youth/events",
+  "/admin/youth/events/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/media",
+  "/admin/youth/reports",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -467,4 +495,12 @@ test("memory pages are never publicly cacheable and never cached by the service 
   }
   const sw = await (await request.get("/sw.js")).text();
   for (const p of ["/memory", "/api/memory"]) expect(sw).not.toContain(p);
+});
+
+test("youth and family responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/youth", "/youth/family", "/youth/lead", "/youth-activate", "/admin/youth"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"], path).toContain("private");
+    expect(res.headers()["cache-control"], path).toContain("no-store");
+  }
 });

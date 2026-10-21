@@ -28,7 +28,8 @@ export function RsvpBadge({ state, position }: { state: RsvpState; position?: nu
   }
 }
 
-export function AudienceBadge({ audience }: { audience: "public" | "members" | "group" }) {
+export function AudienceBadge({ audience }: { audience: "public" | "members" | "group" | "youth" }) {
+  if (audience === "youth") return <Badge tone="info" icon={<Users className={ic} aria-hidden="true" />}>Youth group only</Badge>;
   if (audience === "group") return <Badge tone="info" icon={<Users className={ic} aria-hidden="true" />}>Group only</Badge>;
   return audience === "public" ? (
     <Badge tone="info" icon={<Globe className={ic} aria-hidden="true" />}>Public</Badge>
