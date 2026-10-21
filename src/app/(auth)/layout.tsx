@@ -27,6 +27,11 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
           <p className="mt-6 text-center font-serif text-meta tracking-[0.2em] text-text-secondary">
             Faith. Fellowship. Life together.
           </p>
+          <p className="mt-3 text-center text-meta">
+            <a href="/privacy" className="inline-flex min-h-11 items-center text-text-secondary underline underline-offset-4 hover:text-text">
+              Privacy policy
+            </a>
+          </p>
         </footer>
       </div>
     </div>
