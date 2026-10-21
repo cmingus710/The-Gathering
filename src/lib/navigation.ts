@@ -211,6 +211,11 @@ export function adminNavFor(capabilities: ReadonlySet<Capability>): AdminNavItem
   return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)) && (!item.anyOf || item.anyOf.some((c) => capabilities.has(c))));
 }
 
+/** The href of the most specific item matching the path (so /admin/bible/sources isn't also "Reading plans"). */
+export function activeHref(pathname: string, hrefs: readonly string[]): string | undefined {
+  return hrefs.filter((href) => isActivePath(pathname, href)).sort((a, b) => b.length - a.length)[0];
+}
+
 export function isActivePath(pathname: string, href: string): boolean {
   if (href === "/admin" || href === "/home") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);

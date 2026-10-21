@@ -19,6 +19,7 @@ export function SubmitButton({
   className,
   icon,
   formNoValidate,
+  autoFocus,
 }: {
   children: ReactNode;
   pendingText?: string;
@@ -29,6 +30,7 @@ export function SubmitButton({
   className?: string;
   icon?: ReactNode;
   formNoValidate?: boolean;
+  autoFocus?: boolean;
 }) {
   const { pending, data } = useFormStatus();
   const isThisButton = pending && (!name || data?.get(name) === value);
@@ -38,6 +40,7 @@ export function SubmitButton({
       variant={variant}
       size={size}
       name={name}
+      autoFocus={autoFocus}
       value={value}
       className={className}
       icon={icon}

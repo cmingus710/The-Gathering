@@ -38,7 +38,7 @@ export async function YouthShell({ viewer, settings, children }: { viewer: Viewe
         </div>
         <YouthNav />
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl px-4 pb-16 pt-5 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:pt-8">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl px-4 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--player-clearance,0rem))] pt-5 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:pt-8">
         {children}
       </main>
       <footer className="mx-auto max-w-3xl space-y-3 border-t border-border px-4 py-6 sm:px-6">

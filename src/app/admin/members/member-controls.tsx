@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
@@ -37,12 +38,19 @@ export function StatusControls({ userId, status, name, compact = false }: { user
           </Button>
         ) : null}
         {confirming ? (
-          <div role="group" aria-label={`Confirm suspending ${name}`} className="flex w-full flex-wrap items-center gap-2 rounded-control bg-danger-soft p-3">
+          <div
+            role="group"
+            aria-label={status === "pending" ? `Confirm declining ${name}` : `Confirm suspending ${name}`}
+            className="flex w-full flex-wrap items-center gap-2 rounded-control bg-danger-soft p-3"
+          >
             <p className="w-full text-meta">
-              {name} will lose access to member areas until reinstated. Continue?
+              {status === "pending"
+                ? `${name} won't be approved and can't use member areas unless reinstated later. Continue?`
+                : `${name} will lose access to member areas until reinstated. Continue?`}
             </p>
-            <SubmitButton name="status" value="suspended" size="sm" variant="danger" pendingText="Suspending…">
-              Yes, suspend
+            {/* The button that opened this step unmounts, so focus moves here. */}
+            <SubmitButton name="status" value="suspended" size="sm" variant="danger" pendingText={status === "pending" ? "Declining…" : "Suspending…"} autoFocus>
+              {status === "pending" ? "Yes, decline" : "Yes, suspend"}
             </SubmitButton>
             <Button size="sm" variant="secondary" onClick={() => setConfirming(false)}>
               Cancel
@@ -79,15 +87,30 @@ export function RoleControls({
                 </p>
                 <p className="text-meta text-text-secondary">{role.description}</p>
               </div>
-              <form action={action}>
-                <input type="hidden" name="userId" value={userId} />
-                <input type="hidden" name="role" value={role.key} />
-                <input type="hidden" name="op" value={has ? "revoke" : "grant"} />
-                <SubmitButton size="sm" variant={has ? "danger-outline" : "secondary"} pendingText={has ? "Removing…" : "Assigning…"}>
-                  {has ? "Remove" : "Assign"}
-                  <span className="sr-only"> {role.name}</span>
-                </SubmitButton>
-              </form>
+              {has ? (
+                <ConfirmDialog
+                  trigger={
+                    <>
+                      Remove<span className="sr-only"> {role.name}</span>
+                    </>
+                  }
+                  title={`Remove ${role.name}?`}
+                  confirmLabel="Remove role"
+                  formAction={action}
+                  hidden={{ userId, role: role.key, op: "revoke" }}
+                >
+                  Access that comes from this role ends on their next page load. The change is recorded in the audit log.
+                </ConfirmDialog>
+              ) : (
+                <form action={action}>
+                  <input type="hidden" name="userId" value={userId} />
+                  <input type="hidden" name="role" value={role.key} />
+                  <input type="hidden" name="op" value="grant" />
+                  <SubmitButton size="sm" variant="secondary" pendingText="Assigning…">
+                    Assign<span className="sr-only"> {role.name}</span>
+                  </SubmitButton>
+                </form>
+              )}
             </li>
           );
         })}

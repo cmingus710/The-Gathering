@@ -66,8 +66,8 @@ export function PageHeader({
     <header className="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-3 sm:mb-8">
       <div className="min-w-0 max-w-2xl">
         {eyebrow ? <p className="mb-1 text-meta font-semibold text-text-secondary">{eyebrow}</p> : null}
-        <h1 className="font-display text-display font-semibold text-text sm:text-[2.125rem]">{title}</h1>
-        {description ? <p className="mt-1.5 max-w-[60ch] text-text-secondary">{description}</p> : null}
+        <h1 className="font-display text-display font-semibold text-text [overflow-wrap:anywhere] sm:text-[2.125rem]">{title}</h1>
+        {description ? <p className="mt-1.5 max-w-[60ch] text-text-secondary [overflow-wrap:anywhere]">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>

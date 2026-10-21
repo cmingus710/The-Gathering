@@ -174,7 +174,7 @@ export function ChapterReader({
         <div
           role="toolbar"
           aria-label={`Actions for ${label}`}
-          className="sticky bottom-[calc(var(--dock-clearance,5rem)+0.5rem)] z-20 mt-4 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-3 shadow-(--elev-lift) print:hidden"
+          className="sticky bottom-[calc(var(--dock-clearance,5rem)+0.5rem)] z-20 lg:bottom-4 mt-4 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-3 shadow-(--elev-lift) print:hidden"
         >
           <span className="mr-1 font-semibold">{label}</span>
           {HIGHLIGHT_COLORS.map((c) => (

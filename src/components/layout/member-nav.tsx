@@ -42,6 +42,7 @@ function SectionLabel({ id, children }: { id: string; children: ReactNode }) {
 }
 
 function UpcomingList({ idPrefix }: { idPrefix: string }) {
+  if (upcoming.length === 0) return null;
   return (
     <section aria-labelledby={`${idPrefix}-upcoming`}>
       <SectionLabel id={`${idPrefix}-upcoming`}>Coming later</SectionLabel>
@@ -108,7 +109,7 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
 
   const tab = (active: boolean) =>
     cn(
-      "relative flex min-h-[3.25rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
+      "relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
       active ? "dock-active font-bold" : "font-semibold text-text-secondary hover:text-text",
     );
 

@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/components/ui/cn";
-import { isActivePath, type AdminNavItem } from "@/lib/navigation";
+import { activeHref, type AdminNavItem } from "@/lib/navigation";
 import { NavIcon } from "./nav-icon";
 
 export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "sidebar" | "tabs" }) {
   const pathname = usePathname();
+  const current = activeHref(pathname, items.map((i) => i.href));
   if (variant === "tabs") {
     return (
       <nav aria-label="Administration" className="-mx-4 overflow-x-auto px-4">
         <ul className="flex gap-1.5 pb-1">
           {items.map((item) => {
-            const active = isActivePath(pathname, item.href);
+            const active = item.href === current;
             return (
               <li key={item.key}>
                 <Link
@@ -38,7 +39,7 @@ export function AdminNav({ items, variant }: { items: AdminNavItem[]; variant: "
     <nav aria-label="Administration">
       <ul className="space-y-1">
         {items.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = item.href === current;
           return (
             <li key={item.key}>
               <Link

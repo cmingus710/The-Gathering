@@ -66,7 +66,7 @@ export async function MemberShell({
               </p>
             </div>
             <ThemeControl current={theme} compact />
-            <SignOutButton className="min-h-10 rounded-tile px-3 text-text-secondary hover:text-text" />
+            <SignOutButton className="min-h-11 rounded-tile px-3 text-text-secondary hover:text-text" />
           </div>
         </aside>
 

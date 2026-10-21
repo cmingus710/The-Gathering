@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
 import { removeMyPhotoAction, updatePhotoAction } from "@/app/(member)/gallery/actions";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Photo } from "@/lib/media/types";
 
 const STATUS: Record<string, { label: string; tone: "neutral" | "warning" | "danger" | "success" }> = {
@@ -51,12 +52,11 @@ export function MyPhotos({ photos, urls }: { photos: Array<Photo & { album_title
               ) : p.caption ? (
                 <p className="text-meta">{p.caption}</p>
               ) : null}
-              <form action={removeMyPhotoAction}>
-                <input type="hidden" name="id" value={p.id} />
-                <button type="submit" className="min-h-11 text-meta font-semibold text-danger hover:underline">
-                  Remove this photo
-                </button>
-              </form>
+              <div>
+                <ConfirmDialog trigger="Remove this photo" title="Remove this photo?" confirmLabel="Remove photo" formAction={removeMyPhotoAction} hidden={{ id: p.id }}>
+                  The photo and its stored copies are deleted. This can&apos;t be undone.
+                </ConfirmDialog>
+              </div>
             </div>
           </li>
         );

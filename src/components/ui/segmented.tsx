@@ -12,7 +12,7 @@ export function SegmentedTrack({ children, className, label }: { children: React
 
 export function segmentClass(active: boolean) {
   return cn(
-    "inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-meta font-semibold transition-colors",
+    "inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-meta font-semibold transition-colors",
     active ? "bg-surface-raised text-text shadow-(--elev-card) ring-1 ring-border" : "text-text-secondary hover:text-text",
   );
 }

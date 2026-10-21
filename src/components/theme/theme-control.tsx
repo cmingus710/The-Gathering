@@ -44,7 +44,7 @@ export function ThemeControl({ current, className, compact = false }: { current:
             <label
               key={v}
               className={cn(
-                "flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-meta font-semibold transition-colors",
+                "flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-meta font-semibold transition-colors",
                 "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-primary",
                 value === v ? "bg-surface-raised text-text shadow-(--elev-card) ring-1 ring-border" : "text-text-secondary hover:text-text",
               )}

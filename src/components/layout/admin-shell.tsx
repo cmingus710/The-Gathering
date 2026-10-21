@@ -52,7 +52,7 @@ export function AdminShell({ viewer, settings, children }: { viewer: Viewer; set
           </div>
           <AdminNav items={items} variant="tabs" />
         </header>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-6 outline-none sm:px-6 lg:px-10 lg:pt-10">
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--player-clearance,0rem))] pt-6 outline-none sm:px-6 lg:px-10 lg:pt-10">
           {children}
         </main>
       </div>
