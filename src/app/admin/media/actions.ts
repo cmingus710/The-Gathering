@@ -318,7 +318,8 @@ export async function runCleanupAction(formData: FormData): Promise<void> {
   const chosen = new Set(formData.getAll("pick").map(String));
   const assets = [...(c.abandoned ?? []), ...(c.removed ?? [])].filter((a) => chosen.has(`asset:${a.id}`));
   const photos = (c.photos ?? []).filter((p) => chosen.has(`photo:${p.id}`));
-  const orphans = (c.orphans ?? []).filter((o) => chosen.has(`orphan:${o.bucket}:${o.path}`));
+  // Discussion attachments (community/) have their own cleanup in Moderation.
+  const orphans = (c.orphans ?? []).filter((o) => chosen.has(`orphan:${o.bucket}:${o.path}`) && !o.path.startsWith("community/"));
   const doneAssets: string[] = [];
   for (const a of assets) if (await removePaths(supabase, "media", a.paths)) doneAssets.push(a.id);
   const donePhotos: string[] = [];

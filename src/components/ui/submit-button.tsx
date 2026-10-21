@@ -20,6 +20,7 @@ export function SubmitButton({
   icon,
   formNoValidate,
   autoFocus,
+  disabled = false,
 }: {
   children: ReactNode;
   pendingText?: string;
@@ -31,6 +32,8 @@ export function SubmitButton({
   icon?: ReactNode;
   formNoValidate?: boolean;
   autoFocus?: boolean;
+  /** Also disabled while something else on the form isn't ready (for example uploads). */
+  disabled?: boolean;
 }) {
   const { pending, data } = useFormStatus();
   const isThisButton = pending && (!name || data?.get(name) === value);
@@ -47,7 +50,7 @@ export function SubmitButton({
       formNoValidate={formNoValidate}
       loading={isThisButton}
       loadingText={pendingText}
-      disabled={pending}
+      disabled={pending || disabled}
     >
       {children}
     </Button>

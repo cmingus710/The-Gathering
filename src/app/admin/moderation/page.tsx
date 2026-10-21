@@ -33,6 +33,11 @@ export default async function ModerationPage({ searchParams }: PageProps<"/admin
       <PageHeader
         title="Moderation"
         description="Reports from members, community restrictions, and the moderation log. You see only reported content, never whole conversations."
+        actions={
+          <Link href="/admin/moderation/attachments" className="inline-flex min-h-11 items-center rounded-full px-4 font-semibold text-primary hover:underline">
+            Attachment cleanup
+          </Link>
+        }
       />
       <div className="space-y-10">
         <section aria-labelledby="reports-heading">

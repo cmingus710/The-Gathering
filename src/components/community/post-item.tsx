@@ -9,8 +9,9 @@ import { TextAreaField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { LIMITS } from "@/lib/community/format";
-import type { Post } from "@/lib/community/types";
+import type { Attachment, Post } from "@/lib/community/types";
 import { initialFormState, type FormState } from "@/lib/forms";
+import { AttachmentGallery } from "./attachment-gallery";
 import { PostModeration } from "./moderation-controls";
 import { ReactionBar } from "./reaction-bar";
 import { ReportDialog } from "./report-dialog";
@@ -28,6 +29,7 @@ export function PostItem({
   exact,
   canModerate,
   canInteract,
+  attachments,
 }: {
   post: Post;
   html: string | null;
@@ -36,6 +38,8 @@ export function PostItem({
   exact: string;
   canModerate: boolean;
   canInteract: boolean;
+  /** Photos and videos, only when the viewer may see them (rechecked when each file loads). */
+  attachments?: Attachment[];
 }) {
   const [editing, setEditing] = useState(false);
   const [editState, editAction] = useActionState(async (prev: FormState, formData: FormData) => {
@@ -82,6 +86,7 @@ export function PostItem({
         <>
           {post.status === "hidden" ? <p className="mb-2 text-meta font-semibold text-danger">Hidden by a moderator (only moderators see this)</p> : null}
           {html ? <div className="prose-gathering break-words" dangerouslySetInnerHTML={{ __html: html }} /> : null}
+          <AttachmentGallery items={attachments} className="mt-3" />
         </>
       )}
 

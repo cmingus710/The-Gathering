@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
 import { requireApprovedMember } from "@/lib/auth/viewer";
+import { deleteAttachmentFiles, type AttachmentFiles } from "@/lib/community/attachment-files";
+import { ATTACHMENT_LIMITS } from "@/lib/community/attachments";
 import { LIMITS } from "@/lib/community/format";
 import { deliverCommunityNow } from "@/lib/community/server";
 import type { Reactions } from "@/lib/community/types";
@@ -36,6 +38,24 @@ function deliverLater() {
   });
 }
 
+/**
+ * Photos and videos chosen in the composer: ready uploads, in order, with
+ * the description typed for each photo. The database attaches them in the
+ * same transaction as the post, and only the poster's own ready uploads.
+ */
+function attachmentsFrom(formData: FormData): { ids: string[]; alts: string[] } {
+  const ids = formData.getAll("attachmentId").map(String);
+  const alts = formData.getAll("attachmentAlt").map((v) => String(v).trim().slice(0, ATTACHMENT_LIMITS.altMax));
+  const out = { ids: [] as string[], alts: [] as string[] };
+  ids.forEach((id, i) => {
+    if (uuid.safeParse(id).success && !out.ids.includes(id)) {
+      out.ids.push(id);
+      out.alts.push(alts[i] ?? "");
+    }
+  });
+  return out;
+}
+
 const threadSchema = z.object({
   title: z.string().trim().min(3, "Give your discussion a title of at least 3 characters.").max(LIMITS.title, `Keep the title to ${LIMITS.title} characters.`),
   body: z.string().trim().min(1, "Write something to share.").max(LIMITS.thread, `Keep it to ${LIMITS.thread.toLocaleString()} characters.`),
@@ -53,15 +73,13 @@ export async function createThreadAction(_prev: FormState, formData: FormData): 
   const categoryId = optionalUuid.safeParse(formData.get("categoryId") ?? "").data ?? null;
   const groupId = optionalUuid.safeParse(formData.get("groupId") ?? "").data ?? null;
   const clientKey = uuid.safeParse(formData.get("clientKey")).data ?? null;
+  const media = attachmentsFrom(formData);
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE, { values });
-  const { data, error } = await supabase.rpc("community_thread_create", {
-    p_category: categoryId,
-    p_group: groupId,
-    p_title: parsed.data.title,
-    p_body: parsed.data.body,
-    p_client_key: clientKey,
-  });
+  const args = { p_category: categoryId, p_group: groupId, p_title: parsed.data.title, p_body: parsed.data.body, p_client_key: clientKey };
+  const { data, error } = media.ids.length
+    ? await supabase.rpc("community_thread_create_with_media", { ...args, p_attachments: media.ids, p_alts: media.alts })
+    : await supabase.rpc("community_thread_create", args);
   if (error) return errorState(dbErrorMessage(error, "Your discussion couldn't be posted. Your text is still here; please try again."), { values });
   revalidatePath("/community", "layout");
   redirect(`/community/t/${data as string}?posted=1`);
@@ -93,8 +111,10 @@ export async function deleteThreadAction(_prev: FormState, formData: FormData): 
   const back = String(formData.get("back") ?? "/community");
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE);
-  const { error } = await supabase.rpc("community_thread_delete", { p_id: id });
+  const { data, error } = await supabase.rpc("community_thread_delete_with_media", { p_id: id });
   if (error) return errorState(dbErrorMessage(error, "That discussion couldn't be deleted. Please try again."));
+  // Its photos and videos are already unavailable; delete the stored files.
+  await deleteAttachmentFiles(supabase, (data as { files?: AttachmentFiles[] } | null)?.files);
   revalidatePath("/community", "layout");
   redirect(/^\/(community|groups)(\/[A-Za-z0-9/_-]*)?$/.test(back) ? `${back}?deleted=1` : "/community?deleted=1");
 }
@@ -108,13 +128,13 @@ export async function replyAction(_prev: FormState, formData: FormData): Promise
   if (!id) return errorState("That discussion wasn't found.", { values: { body } });
   const parsed = replySchema.safeParse(body);
   if (!parsed.success) return errorState(parsed.error.issues[0].message, { fieldErrors: { body: [parsed.error.issues[0].message] }, values: { body } });
+  const media = attachmentsFrom(formData);
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE, { values: { body } });
-  const { data, error } = await supabase.rpc("community_reply", {
-    p_thread: id,
-    p_body: parsed.data,
-    p_client_key: uuid.safeParse(formData.get("clientKey")).data ?? null,
-  });
+  const args = { p_thread: id, p_body: parsed.data, p_client_key: uuid.safeParse(formData.get("clientKey")).data ?? null };
+  const { data, error } = media.ids.length
+    ? await supabase.rpc("community_reply_with_media", { ...args, p_attachments: media.ids, p_alts: media.alts })
+    : await supabase.rpc("community_reply", args);
   if (error) return errorState(dbErrorMessage(error, "Your reply couldn't be posted. Your text is still here; please try again."), { values: { body } });
   revalidatePath(`/community/t/${id}`);
   deliverLater();
@@ -144,8 +164,9 @@ export async function deleteReplyAction(_prev: FormState, formData: FormData): P
   if (!id || !threadId) return errorState("That reply wasn't found.");
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE);
-  const { error } = await supabase.rpc("community_reply_delete", { p_id: id });
+  const { data, error } = await supabase.rpc("community_reply_delete_with_media", { p_id: id });
   if (error) return errorState(dbErrorMessage(error, "That reply couldn't be deleted."));
+  await deleteAttachmentFiles(supabase, (data as { files?: AttachmentFiles[] } | null)?.files);
   revalidatePath(`/community/t/${threadId}`);
   return { status: "success", message: "Reply deleted." };
 }

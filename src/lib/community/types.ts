@@ -32,6 +32,22 @@ export type Post = {
   reactions: Reactions | null;
 };
 
+/** A photo or video on a discussion or reply (files are served by id through /api/community/attachments). */
+export type Attachment = {
+  id: string;
+  kind: "image" | "video";
+  status: string;
+  alt_text: string;
+  width: number | null;
+  height: number | null;
+  duration: number | null;
+  mime: string;
+  sort_order: number;
+  post_id: string | null;
+};
+
+export type ThreadAttachments = { thread: Attachment[]; posts: Record<string, Attachment[]> };
+
 export type ThreadDetail = ThreadCard & {
   body: string | null;
   edited_at: string | null;

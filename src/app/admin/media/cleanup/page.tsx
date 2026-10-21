@@ -26,6 +26,9 @@ export default async function CleanupPage({ searchParams }: PageProps<"/admin/me
   const supabase = await requireClient();
   const [{ settings }, cand, storage] = await Promise.all([getChurchSettings(), supabase.rpc("media_admin_cleanup_candidates"), supabase.rpc("media_admin_storage")]);
   const c = (cand.data ?? { abandoned: [], removed: [], photos: [], orphans: [] }) as Candidates;
+  // Discussion attachments live under community/ and are reviewed in
+  // Moderation → Attachment cleanup, never as library orphans here.
+  c.orphans = c.orphans.filter((o) => !o.path.startsWith("community/"));
   const usage = storage.data as {
     quota_mb: number;
     buckets: Array<{ bucket: string; objects: number; bytes: number }>;
@@ -121,6 +124,13 @@ export default async function CleanupPage({ searchParams }: PageProps<"/admin/me
         </Card>
         <Card>
           <SectionHeading description="Stored files more than a day old that no record refers to.">Unreferenced files</SectionHeading>
+          <p className="mb-3 text-meta text-text-secondary">
+            Discussion photos and videos are listed separately in{" "}
+            <Link href="/admin/moderation/attachments" className="font-semibold text-primary underline">
+              Attachment cleanup
+            </Link>
+            .
+          </p>
           {c.orphans.length ? (
             <ul className="divide-y divide-border">{c.orphans.map((o) => row(`orphan:${o.bucket}:${o.path}`, o.path, `${o.bucket} · ${formatDateTime(o.created_at, tz)}`))}</ul>
           ) : (
