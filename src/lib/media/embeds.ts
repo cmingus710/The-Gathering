@@ -190,7 +190,8 @@ export function spotifyEmbed(ref: SpotifyRef): Embed {
     openUrl: `https://open.spotify.com/${ref.kind}/${ref.id}`,
     openLabel: "Open in Spotify",
     allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
-    height: ref.kind === "playlist" || ref.kind === "album" || ref.kind === "show" ? 452 : 232,
+    // Spotify's standard full-size embed (cover, controls, and track list) and compact sizes.
+    height: ref.kind === "playlist" || ref.kind === "album" || ref.kind === "show" ? 352 : 152,
   };
 }
 

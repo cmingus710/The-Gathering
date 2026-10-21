@@ -190,6 +190,7 @@ export function ContentDetail({
       {item.kind === "playlist" && item.spotify_id ? (
         <section aria-label="Playlist">
           <EmbedPlayer
+            autoload={!preview}
             title={`${item.title} on Spotify`}
             embed={spotifyEmbed({ provider: "spotify", kind: "playlist", id: item.spotify_id })}
             note="Spotify may play 30-second previews unless you're signed in to Spotify in this browser, and full playback can depend on your Spotify plan and device. Who can find the playlist itself is set in Spotify."

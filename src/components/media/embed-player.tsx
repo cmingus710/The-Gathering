@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Play } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { claimPlayback, registerPlayer, releasePlayback } from "@/lib/media/coordinator";
 import { EMBED_ORIGINS, type Embed } from "@/lib/media/embeds";
@@ -24,9 +24,32 @@ const PROVIDER_NAME: Record<Embed["provider"], string> = {
  * postMessage commands and report when they start; Spotify and Apple embeds
  * are unloaded when another player starts (their position is kept by the
  * provider, not by this app).
+ *
+ * `autoload` shows the player straight away, for pages a member opens in
+ * order to listen (Music). Those players don't report "play", so tapping
+ * into one counts as starting it; when another player starts, one that was
+ * tapped is reloaded (which stops it) and stays on the page.
  */
-export function EmbedPlayer({ embed, title, note }: { embed: Embed; title: string; note?: string | null }) {
-  const [loaded, setLoaded] = useState(false);
+export function EmbedPlayer({
+  embed,
+  title,
+  note,
+  actions,
+  autoload = false,
+  eager = false,
+}: {
+  embed: Embed;
+  title: string;
+  note?: string | null;
+  /** Shown beside the "Open in …" link, in place of the note. */
+  actions?: ReactNode;
+  autoload?: boolean;
+  /** Load at once instead of when scrolled near (the first player on a page). */
+  eager?: boolean;
+}) {
+  const [loaded, setLoaded] = useState(autoload);
+  const [generation, setGeneration] = useState(0);
+  const engaged = useRef(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const id = `embed:${useId()}`;
   const origins = EMBED_ORIGINS[embed.provider] as readonly string[];
@@ -48,11 +71,31 @@ export function EmbedPlayer({ embed, title, note }: { embed: Embed; title: strin
           if (!frame.current) return;
           if (embed.provider === "youtube") post({ event: "command", func: "pauseVideo", args: [] });
           else if (embed.provider === "vimeo") post({ method: "pause" });
-          else setLoaded(false);
+          else if (!autoload) setLoaded(false);
+          else if (engaged.current) {
+            engaged.current = false;
+            setGeneration((g) => g + 1);
+          }
         },
       }),
-    [embed.provider, id, post],
+    [autoload, embed.provider, id, post],
   );
+
+  // Players without a play event: focus moving into the frame means the
+  // member is using it, so it becomes the one playing.
+  useEffect(() => {
+    if (!loaded || embed.provider === "youtube" || embed.provider === "vimeo") return;
+    const onBlur = () =>
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement === frame.current) {
+          engaged.current = true;
+          claimPlayback(id);
+        }
+      }, 0);
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, [embed.provider, id, loaded]);
+
 
   useEffect(() => {
     if (!loaded) {
@@ -89,13 +132,14 @@ export function EmbedPlayer({ embed, title, note }: { embed: Embed; title: strin
       {loaded ? (
         <div className={height ? "overflow-hidden rounded-card" : "aspect-video overflow-hidden rounded-card bg-black"} style={height ? { height } : undefined}>
           <iframe
+            key={generation}
             ref={frame}
             src={embed.src}
             title={title}
             allow={embed.allow}
             sandbox={embed.sandbox}
             referrerPolicy="strict-origin-when-cross-origin"
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
             className="size-full border-0"
             style={height ? { height } : undefined}
             onLoad={onLoad}
@@ -120,7 +164,7 @@ export function EmbedPlayer({ embed, title, note }: { embed: Embed; title: strin
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {note ? <p className="text-[0.8125rem] text-text-secondary">{note}</p> : <span />}
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : note ? <p className="text-[0.8125rem] text-text-secondary">{note}</p> : <span />}
         <a
           href={embed.openUrl}
           target="_blank"
