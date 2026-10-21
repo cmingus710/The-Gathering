@@ -57,7 +57,7 @@ So testing on a preview needs: an address you control on the preview's allowlist
 
 ## Release steps (owner)
 
-Nothing here has been applied to the hosted project.
+**Hosted status (2026-10-21):** the objects are applied but weren't recorded in the migration history, because the migration was first numbered `20261101000100`, a version hosted had already given to `notification_panel`. Run `supabase/manual/2026-11-01-record-membership-alerts.sql` once: it changes nothing except adding the history row for `20261101000300`, and refuses if any function, table, trigger, or grant differs from the repository. Use the apply script below only on a database that doesn't have the `membership` schema yet.
 
 1. Approve and merge the PR.
 2. Apply the migration: run `supabase/manual/2026-11-01-apply-membership-alerts.sql` in the SQL editor. It's additive, runs in one transaction, refuses to run twice, and leaves alerts off. Order doesn't matter relative to the code deploy: old code ignores the new tables, and new code shows "Notification settings couldn't be loaded" until the migration exists.

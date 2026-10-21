@@ -37,6 +37,8 @@ const PROTECTED_PREFIXES = [
   "/youth-activate",
   // Phase 12: problem reports (the reporter's description).
   "/report-problem",
+  // Social sign-in: the name step after Google/Apple sign-in.
+  "/complete-profile",
 ];
 
 export async function proxy(request: NextRequest) {

@@ -7,6 +7,7 @@ import { MembershipBadge } from "@/components/ui/badge";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { telHref } from "@/lib/directory/format";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
+import { isApplePrivateRelay } from "@/lib/auth/oauth";
 import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
@@ -62,7 +63,10 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
       <Link href="/admin/members" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
         <ArrowLeft className="size-4" aria-hidden="true" /> Members
       </Link>
-      <PageHeader title={name} description={member.email} />
+      <PageHeader
+        title={name}
+        description={isApplePrivateRelay(member.email) ? `${member.email} (Apple private relay: it doesn't identify the person)` : member.email}
+      />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionHeading>Membership</SectionHeading>

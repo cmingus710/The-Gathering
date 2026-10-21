@@ -2,21 +2,52 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { ProviderButton } from "@/components/auth/provider-button";
 import { cn } from "@/components/ui/cn";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { PROVIDER_LABEL, type OAuthProvider } from "@/lib/auth/oauth";
 import { PASSWORD_MIN } from "@/lib/auth/schemas";
 import { initialFormState } from "@/lib/forms";
 import {
+  completeProfileAction,
   forgotPasswordAction,
   resendVerificationAction,
   resetPasswordAction,
   signInAction,
   signUpAction,
+  startOAuthAction,
 } from "./actions";
 import { authLinkClass } from "./ui";
+
+/**
+ * "Continue with Google / Apple" above the email form, with an "or" divider.
+ * Renders nothing unless at least one provider is configured.
+ */
+export function SocialSignIn({ providers, next }: { providers: OAuthProvider[]; next: string }) {
+  const [state, action] = useActionState(startOAuthAction, initialFormState);
+  if (!providers.length) return null;
+  return (
+    <div className="space-y-5">
+      <form action={action} className="space-y-3">
+        <FormMessage state={state} />
+        <input type="hidden" name="next" value={next} />
+        {providers.map((p) => (
+          <ProviderButton key={p} provider={p} label={`Continue with ${PROVIDER_LABEL[p]}`} />
+        ))}
+      </form>
+      <div className="flex items-center gap-4" role="separator" aria-label="or">
+        <span aria-hidden="true" className="h-px flex-1 bg-border-strong/50" />
+        <span aria-hidden="true" className="font-serif text-meta tracking-[0.12em] text-text-secondary">
+          or
+        </span>
+        <span aria-hidden="true" className="h-px flex-1 bg-border-strong/50" />
+      </div>
+    </div>
+  );
+}
 
 export function SignInForm({ next }: { next: string }) {
   const [state, action] = useActionState(signInAction, initialFormState);
@@ -171,6 +202,38 @@ export function ResetPasswordForm() {
       />
       <SubmitButton pendingText="Saving…" className="w-full">
         Save new password
+      </SubmitButton>
+    </form>
+  );
+}
+
+export function CompleteProfileForm({ next, suggestedName }: { next: string; suggestedName: string }) {
+  const [state, action] = useActionState(completeProfileAction, initialFormState);
+  const v = state.values ?? {};
+  return (
+    <form action={action} noValidate className="space-y-5">
+      <FormMessage state={state} />
+      <input type="hidden" name="next" value={next} />
+      <TextField
+        label="Full name"
+        name="fullName"
+        autoComplete="name"
+        required
+        hint="Your first and last name, so the church office can recognize you."
+        defaultValue={v.fullName ?? suggestedName}
+        error={state.fieldErrors?.fullName}
+      />
+      <TextField
+        label="Preferred name"
+        name="preferredName"
+        autoComplete="nickname"
+        optional
+        hint="What you like to be called, if different."
+        defaultValue={v.preferredName}
+        error={state.fieldErrors?.preferredName}
+      />
+      <SubmitButton pendingText="Saving…" className="w-full">
+        Continue
       </SubmitButton>
     </form>
   );

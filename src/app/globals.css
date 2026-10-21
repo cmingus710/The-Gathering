@@ -1142,3 +1142,53 @@ html[data-player] {
 .notification-filters [role="tablist"]::-webkit-scrollbar {
   display: none;
 }
+
+/*
+ * Sign in with Google / Apple buttons (src/components/auth/provider-button.tsx).
+ * Provider colours, not brand tokens: Google's light theme (white, #747775
+ * stroke, #1F1F1F text) and dark theme (#131314, #8E918F stroke, #E3E3E3
+ * text); Apple's black style on light backgrounds and white style on dark
+ * ones. The sign-in panel is always light.
+ */
+.provider-btn {
+  --google-bg: #ffffff;
+  --google-bg-hover: #f2f2f2;
+  --google-border: #747775;
+  --google-text: #1f1f1f;
+  --apple-bg: #000000;
+  --apple-bg-hover: #1f1f1f;
+  --apple-border: #000000;
+  --apple-text: #ffffff;
+}
+[data-theme="dark"] .provider-btn {
+  --google-bg: #131314;
+  --google-bg-hover: #1f1f20;
+  --google-border: #8e918f;
+  --google-text: #e3e3e3;
+  --apple-bg: #ffffff;
+  --apple-bg-hover: #f2f2f2;
+  --apple-border: #ffffff;
+  --apple-text: #000000;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] .provider-btn {
+    --google-bg: #131314;
+    --google-bg-hover: #1f1f20;
+    --google-border: #8e918f;
+    --google-text: #e3e3e3;
+    --apple-bg: #ffffff;
+    --apple-bg-hover: #f2f2f2;
+    --apple-border: #ffffff;
+    --apple-text: #000000;
+  }
+}
+.auth-theme .provider-btn {
+  --google-bg: #ffffff;
+  --google-bg-hover: #f2f2f2;
+  --google-border: #747775;
+  --google-text: #1f1f1f;
+  --apple-bg: #000000;
+  --apple-bg-hover: #1f1f1f;
+  --apple-border: #000000;
+  --apple-text: #ffffff;
+}

@@ -7,6 +7,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
+import { isApplePrivateRelay } from "@/lib/auth/oauth";
 import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
@@ -105,7 +106,9 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
         <Alert tone="error" title="Members couldn't be loaded right now." />
       ) : !data?.length ? (
         <EmptyState icon={<Users className="size-5" aria-hidden="true" />} title={q ? "No members match that search" : "No members in this list"}>
-          {filter === "pending" && !q ? "New registrations will appear here after people verify their email." : null}
+          {filter === "pending" && !q
+            ? "New registrations appear here after people verify their email or sign in with Google or Apple."
+            : null}
         </EmptyState>
       ) : (
         <ul className="space-y-3">
@@ -121,6 +124,9 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </Link>
                     <p className="break-all text-meta text-text-secondary">{m.email}</p>
+                    {isApplePrivateRelay(m.email) ? (
+                      <p className="text-sm text-text-secondary">Apple private relay address: it doesn&apos;t identify the person.</p>
+                    ) : null}
                     <p className="text-sm text-text-secondary">Registered {formatDate(m.created_at, settings.timezone)}</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
