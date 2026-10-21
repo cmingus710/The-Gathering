@@ -201,7 +201,7 @@ export function ContentDetail({
 
       {item.notes.trim() ? (
         <section aria-labelledby="notes-heading">
-          <SectionHeading id="notes-heading">Notes</SectionHeading>
+          <SectionHeading id="notes-heading">{item.kind === "lesson" ? "Lesson notes" : "Notes"}</SectionHeading>
           <MarkdownBody source={item.notes} className="reading-body" />
         </section>
       ) : null}

@@ -221,7 +221,15 @@ export function ContentForm({
             {body.trim() ? <MarkdownBody source={body} /> : <p className="text-text-secondary">Nothing written yet.</p>}
           </div>
           {kind === "lesson" ? (
-            <TextAreaField label="Notes" name="notes" rows={8} defaultValue={v?.notes ?? item?.notes ?? ""} optional hint="Outline or study notes (same formatting)." error={fe.notes} />
+            <TextAreaField
+              label="Notes shown to members"
+              name="notes"
+              rows={8}
+              defaultValue={v?.notes ?? item?.notes ?? ""}
+              optional
+              hint="Outline or study notes (same formatting). Members and, for a public lesson, visitors see these on the lesson page. For notes only teachers see, use the lesson builder's teacher notes."
+              error={fe.notes}
+            />
           ) : null}
           {kind !== "playlist" && kind !== "book" ? (
             <TextAreaField
