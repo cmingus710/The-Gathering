@@ -40,6 +40,7 @@ Banners are private: an event's banner is visible only to people who can see tha
 
 - Daily, weekly (chosen weekdays), or monthly (same date, or "the first/second/third/fourth/last <weekday>"), every 1 to 12 periods, ending on a date (up to two years) or after a number of dates (up to 200).
 - Times are local to the event's time zone: a weekly 9:00 AM gathering stays at 9:00 AM through daylight-saving changes.
+- On the nights clocks change, a time in the repeated or skipped hour is resolved the way PostgreSQL does: 1:30 AM on the fall-back night means the second (standard-time) 1:30, and 2:30 AM on the spring-forward night becomes 3:30 AM. Avoid scheduling in those hours.
 - **Monthly on the 29th, 30th, or 31st** skips months that don't have that date (it never moves to the last day).
 - **Nonexistent times** (the hour skipped in spring, e.g. 2:30 AM) move forward to 3:30 AM. **Repeated times** (the hour repeated in autumn, e.g. 1:30 AM) use the second, standard-time one. The edit page warns when dates were shifted.
 - Each date has its own page and registrations. **Change this date only** moves a date, changes its time or place, or adds a note; later series edits leave it alone.

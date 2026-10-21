@@ -1,6 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "./cn";
+import { Select } from "./select";
 
 const control =
   "block w-full rounded-control border bg-surface px-4 py-2.5 text-base text-text min-h-12 " +
@@ -140,7 +141,7 @@ export function SelectField({
   const message = firstError(error);
   return (
     <Chrome id={fieldId} label={label} hint={hint} error={error} optional={optional} className={className}>
-      <select
+      <Select
         id={fieldId}
         name={name}
         aria-invalid={message ? true : undefined}
@@ -149,7 +150,7 @@ export function SelectField({
         {...input}
       >
         {children}
-      </select>
+      </Select>
     </Chrome>
   );
 }

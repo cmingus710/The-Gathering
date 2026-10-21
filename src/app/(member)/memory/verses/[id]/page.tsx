@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES, STAGES, activityLabel, confidenceLabel, difficultyLabel, formatDay, percent, QUALITY, reviewDate } from "@/lib/memory/format";
 import type { CardDetail, Collection } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: "Memory verse" };
 
 export default async function VersePage({ params, searchParams }: PageProps<"/memory/verses/[id]">) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  await requireApprovedMember(`/memory/verses/${id}`);
+  await requireLearner(`/memory/verses/${id}`);
   const supabase = await requireClient();
   const [{ data, error }, cols, today] = await Promise.all([
     supabase.rpc("memory_card", { p_id: id }),

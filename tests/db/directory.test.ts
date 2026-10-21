@@ -116,9 +116,9 @@ describeDb("member directory, privacy, photos, and households", () => {
       ).rejects.toThrow(/check constraint/);
     });
 
-    it("does not allow youth accounts yet", async () => {
+    it("changes account kind only through the youth process (Phase 10)", async () => {
       await expect(db.raw("update public.profiles set account_kind = 'youth' where id = $1", [bob])).rejects.toThrow(
-        /profiles_youth_accounts_not_enabled/,
+        /youth and family process/,
       );
       await expect(db.query(as(bob), "update public.profiles set account_kind = 'youth' where id = $1", [bob])).rejects.toThrow(
         /permission denied/,

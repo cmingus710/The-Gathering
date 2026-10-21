@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { PracticeRunner } from "@/components/memory/practice/runner";
 import { Alert } from "@/components/ui/alert";
 import { PageHeader } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES } from "@/lib/memory/format";
 import type { Activity, CardDetail, Difficulty } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
 export default async function PracticePage({ params, searchParams }: PageProps<"/memory/practice/[id]">) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  await requireApprovedMember(`/memory/practice/${id}`);
+  await requireLearner(`/memory/practice/${id}`);
   const supabase = await requireClient();
   const [{ data, error }, q] = await Promise.all([supabase.rpc("memory_card", { p_id: id }), supabase.rpc("memory_review_queue")]);
   if (error?.code === "P0002" || (error && /invalid input syntax/.test(error.message))) notFound();

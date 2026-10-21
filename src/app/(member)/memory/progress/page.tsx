@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
 import { PageHeader, SectionHeading } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES, STAGES, formatDay } from "@/lib/memory/format";
 import type { Progress, Stage } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ function lastDays(today: string, n: number): string[] {
 }
 
 export default async function ProgressPage() {
-  await requireApprovedMember("/memory/progress");
+  await requireLearner("/memory/progress");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_progress");
   const p = data as Progress | null;

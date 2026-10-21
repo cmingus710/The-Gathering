@@ -45,6 +45,11 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
         <Alert tone="warning" title="No funds are open for giving right now." />
       ) : (
         <>
+          {/* Live Stripe keys are refused (src/lib/giving/config.ts), so checkout here is always Stripe test mode. */}
+          <Alert tone="warning" title="Testing only: no real money is taken" className="mb-6">
+            Online giving is in test mode while we try out the app. Real cards won&apos;t be charged and won&apos;t work here. Please keep
+            giving the usual way for now.
+          </Alert>
           <p className="mb-6 flex items-start gap-2 text-meta text-text-secondary">
             <HandCoins className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
             {viewer ? (

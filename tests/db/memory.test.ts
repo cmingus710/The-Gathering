@@ -847,7 +847,9 @@ describeDb("Scripture memory and practice", () => {
     const tick = () => db.raw("select community.tick()");
     const memoryNotices = async (who: string) => ((await rpc<Json>(as(who), "community_notifications", [null, 50])).items as Json[]).filter((n) => n.category === "memory");
     const remindNow = async (who: string, extra: Json) => {
-      const [{ t }] = await db.raw<{ t: string }>("select to_char((now() at time zone 'America/New_York') - interval '2 minutes', 'HH24:MI') t");
+      // Use this local minute: subtracting two minutes wraps to yesterday's
+      // 23:58/23:59 just after midnight, making today's reminder not due yet.
+      const [{ t }] = await db.raw<{ t: string }>("select to_char(now() at time zone 'America/New_York', 'HH24:MI') t");
       await rpc(as(who), "memory_settings_save", [j({ timezone: "America/New_York", reminder_time: t, ...extra })]);
       await db.raw("update memory.member_settings set last_weekly_on = null, last_review_on = null, last_practice_on = null where profile_id = $1", [who]);
     };
@@ -881,17 +883,37 @@ describeDb("Scripture memory and practice", () => {
       await db.setStatus(m5, "approved");
     });
 
-    it("announces a new weekly verse once", async () => {
-      await remindNow(m3, { remind_weekly: true });
-      await db.raw("update memory.member_settings set last_weekly_on = current_date - 3 where profile_id = $1", [m3]);
-      await tick();
-      await tick();
-      const mine = (await memoryNotices(m3)).filter((n) => n.kind === "memory_weekly_verse");
-      expect(mine.length).toBe(1);
-      expect(mine[0].title).toMatch(/^A new memory verse is ready: John 3:16–17$/);
-      const [{ item }] = await db.raw<{ item: Json }>("select community.notification_email_item(n) item from community.notifications n where n.id = $1", [mine[0].id]);
-      expect(item.title).toBe("A new memory verse is ready");
-    });
+    it.each(["UTC", "America/Chicago", "Pacific/Kiritimati", "Pacific/Pago_Pago"])(
+      "announces a new weekly verse once (database timezone %s)", async (databaseTimezone) => {
+        const [{ zone }] = await db.raw<{ zone: string }>("select current_setting('TimeZone') zone");
+        try {
+          await db.raw("select set_config('TimeZone', $1, false)", [databaseTimezone]);
+          // Each case owns its recipient, so notification deduplication and
+          // earlier reminders cannot mask a missing or duplicated delivery.
+          const who = await db.createAuthUser(`mv.weekly.${randomUUID()}@example.test`, { fullName: "Synthetic Weekly Reader" });
+          await db.setStatus(who, "approved");
+          await remindNow(who, { remind_weekly: true });
+          // The collection starts two Chicago days ago. A session current_date
+          // minus three can equal that start date when the session is a day
+          // ahead; the scheduler correctly requires starts_on > last_weekly_on.
+          // Anchor the fixture to the assignment, not the session calendar.
+          await db.raw(`update memory.member_settings
+            set last_weekly_on = (select starts_on - 1 from memory.items where id = $2)
+            where profile_id = $1`, [who, john]);
+          await tick();
+          await tick();
+          const mine = (await memoryNotices(who)).filter((n) => n.kind === "memory_weekly_verse");
+          expect(mine.length).toBe(1);
+          expect(mine[0].title).toMatch(/^A new memory verse is ready: John 3:16–17$/);
+          const [{ item }] = await db.raw<{ item: Json }>("select community.notification_email_item(n) item from community.notifications n where n.id = $1", [mine[0].id]);
+          expect(item.title).toBe("A new memory verse is ready");
+          const [{ sentOn }] = await db.raw<{ sentOn: string }>("select last_weekly_on::text as \"sentOn\" from memory.member_settings where profile_id = $1", [who]);
+          expect(sentOn).toBe(await todayIn("America/New_York"));
+        } finally {
+          await db.raw("select set_config('TimeZone', $1, false)", [zone]);
+        }
+      },
+    );
 
     it("announces challenge milestones once, only to sharing participants who asked", async () => {
       await rpc(as(m1), "memory_settings_save", [j({ remind_challenge: true })]);
@@ -901,7 +923,7 @@ describeDb("Scripture memory and practice", () => {
         const s = await start(m1, card, "read_repeat");
         await submit(m1, s.id as string, { level: 1 });
       }
-      await db.raw("update memory.attempts set local_date = local_date - 1 where profile_id = $1 and local_date = (now() at time zone 'America/New_York')::date", [m1]);
+      await db.raw("update memory.attempts set local_date = local_date - 1 where profile_id = $1 and local_date = memory.local_today(memory.member_tz($1))", [m1]);
       await tick();
       await tick();
       const m1n = (await memoryNotices(m1)).filter((n) => n.kind === "memory_challenge_milestone");

@@ -6,7 +6,7 @@ import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay, reviewDate } from "@/lib/memory/format";
 import type { ReviewQueue } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -14,7 +14,7 @@ import { requireClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Review queue" };
 
 export default async function ReviewPage() {
-  await requireApprovedMember("/memory/review");
+  await requireLearner("/memory/review");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_review_queue");
   const q = data as ReviewQueue | null;

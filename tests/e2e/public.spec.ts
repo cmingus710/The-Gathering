@@ -6,17 +6,39 @@ import { expect, test } from "@playwright/test";
  * Run with `npm run build && npm run test:e2e`.
  */
 
-test("welcome page shows the approved logo and clear actions", async ({ page }) => {
+test("welcome page shows the approved mark, one heading, and clear actions", async ({ page }) => {
   await page.goto("/");
-  const logo = page.getByRole("img", { name: "The Gathering" }).first();
-  await expect(logo).toBeVisible();
-  const ratio = await logo.evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.getBoundingClientRect().height);
-  expect(ratio).toBeCloseTo(1200 / 1116, 1); // never stretched
-  await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create an account" })).toBeVisible();
-  // Unconfigured details show friendly empty states, not invented data.
-  await expect(page.getByText("Gathering times will be posted here soon.")).toBeVisible();
-  await expect(page.getByText("Contact details will be posted here soon.")).toBeVisible();
+  const home = page.getByRole("link", { name: "The Gathering" }).first();
+  await expect(home).toBeVisible();
+  const mark = home.locator("img");
+  const ratio = await mark.evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.getBoundingClientRect().height);
+  expect(ratio).toBeCloseTo(444 / 512, 1); // never stretched
+  await expect(page.locator("h1")).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/A place to gather\.\s*A place to belong\./);
+  await expect(page.getByRole("main").getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/sign-in");
+  await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", "/sign-up");
+  for (const heading of ["Gather with us", "Grow in faith", "Share life"]) {
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+  }
+  // The supplied strip icons are served and drawn (as decorative gold masks).
+  for (const icon of ["gather-with-us", "grow-in-faith", "share-life"]) {
+    const res = await page.request.get(`/brand/welcome/${icon}.svg`);
+    expect(res.ok(), icon).toBe(true);
+    expect(res.headers()["content-type"]).toContain("image/svg+xml");
+  }
+  await expect(page.locator(".welcome-icon[aria-hidden='true']")).toHaveCount(3);
+  // Unconfigured details are left out, never shown as placeholders or invented.
+  await expect(page.getByText("will be posted here soon")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Announcements" })).toHaveCount(0);
+  // The barn image is decorative.
+  await expect(page.locator(".welcome-hero img")).toHaveAttribute("alt", "");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(overflow).toBe(false);
+});
+
+test("welcome page has no horizontal overflow with enlarged text", async ({ page }) => {
+  await page.goto("/");
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });
@@ -85,9 +107,12 @@ test("the approved logo stays legible on dark: it sits on the ivory plate", asyn
   const ctx = await browser.newContext();
   await ctx.addCookies([{ name: "theme", value: "dark", url: baseURL! }]);
   const page = await ctx.newPage();
-  await page.goto(`${baseURL}/`);
+  await page.goto(`${baseURL}/service-unavailable`);
   const plate = page.locator(".brand-plaque").first();
   expect(await plate.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(247, 244, 237)");
+  // The welcome page keeps its single ivory look (like the sign-in pages), so the charcoal mark stays legible.
+  await page.goto(`${baseURL}/`);
+  expect(await page.locator(".welcome-theme").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(247, 244, 236)");
   await ctx.close();
 });
 
@@ -198,6 +223,34 @@ for (const path of [
   "/admin/memory/collections/00000000-0000-0000-0000-000000000000",
   "/admin/memory/collections/00000000-0000-0000-0000-000000000000/preview",
   "/admin/memory/challenges/new",
+  // Phase 10 (youth ministry, family dashboard, leaders, youth accounts, administration)
+  "/youth",
+  "/youth/announcements",
+  "/youth/account",
+  "/youth/family",
+  "/youth/family/request",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000/events/00000000-0000-0000-0000-000000000000",
+  "/youth/family/children/00000000-0000-0000-0000-000000000000/practice",
+  "/youth/groups/00000000-0000-0000-0000-000000000000",
+  "/youth/discussions/00000000-0000-0000-0000-000000000000",
+  "/youth/lead",
+  "/youth/lead/reports",
+  "/youth/lead/groups/00000000-0000-0000-0000-000000000000",
+  "/youth/lead/events/00000000-0000-0000-0000-000000000000",
+  "/youth/lead/events/00000000-0000-0000-0000-000000000000/logistics",
+  "/youth-activate",
+  "/admin/youth",
+  "/admin/youth/policy",
+  "/admin/youth/families",
+  "/admin/youth/families/children/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/groups",
+  "/admin/youth/groups/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/forms",
+  "/admin/youth/events",
+  "/admin/youth/events/00000000-0000-0000-0000-000000000000",
+  "/admin/youth/media",
+  "/admin/youth/reports",
   // Design reference (administrators only)
   "/design/icons",
   "/admin/moderation",
@@ -467,4 +520,12 @@ test("memory pages are never publicly cacheable and never cached by the service 
   }
   const sw = await (await request.get("/sw.js")).text();
   for (const p of ["/memory", "/api/memory"]) expect(sw).not.toContain(p);
+});
+
+test("youth and family responses are never publicly cacheable", async ({ request }) => {
+  for (const path of ["/youth", "/youth/family", "/youth/lead", "/youth-activate", "/admin/youth"]) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.headers()["cache-control"], path).toContain("private");
+    expect(res.headers()["cache-control"], path).toContain("no-store");
+  }
 });

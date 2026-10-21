@@ -8,7 +8,7 @@ import { FumsTracker } from "@/components/bible/fums";
 import { Attribution } from "@/components/bible/scripture";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { resolveText } from "@/lib/bible/source";
 import type { ChapterPayload, Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -20,7 +20,7 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
   const { code, book, chapter } = await params;
   const ch = Number(chapter);
   if (!/^[A-Z0-9-]{2,16}$/.test(code) || !/^[1-3A-Z][A-Z0-9]{2}$/.test(book) || !Number.isInteger(ch) || ch < 1 || ch > 150) notFound();
-  await requireApprovedMember(`/bible/read/${code}/${book}/${ch}`);
+  await requireLearner(`/bible/read/${code}/${book}/${ch}`);
   const supabase = await requireClient();
   const { data: list } = await supabase.rpc("bible_translations");
   const translations = ((list as { items: Translation[] } | null)?.items ?? []) as Translation[];

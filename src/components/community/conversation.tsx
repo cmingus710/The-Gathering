@@ -254,7 +254,7 @@ export function Conversation({ initial, timezone }: { initial: ConversationPage;
       <div ref={endRef} />
 
       {canSend ? (
-        <form onSubmit={onSubmit} className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-10 rounded-card border border-border bg-surface p-3 shadow-(--elev-lift) lg:bottom-4">
+        <form onSubmit={onSubmit} className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom)+var(--player-clearance,0rem))] z-10 rounded-card border border-border bg-surface p-3 shadow-(--elev-lift) lg:bottom-4">
           <label htmlFor="message-input" className="sr-only">
             Message {initial.other_name}
           </label>

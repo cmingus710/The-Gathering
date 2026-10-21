@@ -15,7 +15,7 @@ export type EventFormValues = {
   title: string;
   description: string;
   categoryId: string;
-  audience: "public" | "members" | "group";
+  audience: "public" | "members" | "group" | "youth";
   groupId: string;
   timezone: string;
   allDay: boolean;
@@ -133,11 +133,18 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
             value={audience}
             onChange={(e) => setAudience(e.target.value as EventFormValues["audience"])}
             error={fe.audience}
-            hint={audience === "group" ? "Only the group's active members see it, its image, and its calendar entries." : undefined}
+            hint={
+              audience === "youth"
+                ? "A youth event: its group, permission forms, and event details are managed under Administration → Youth & families → Youth events."
+                : audience === "group"
+                  ? "Only the group's active members see it, its image, and its calendar entries."
+                  : undefined
+            }
           >
-            <option value="members">Approved members only</option>
-            <option value="public">Everyone (public)</option>
-            <option value="group" disabled={!groups.length && initial.audience !== "group"}>
+            {initial.audience === "youth" ? <option value="youth">Youth event (managed under Youth & families)</option> : null}
+            <option value="members" disabled={initial.audience === "youth"}>Approved members only</option>
+            <option value="public" disabled={initial.audience === "youth"}>Everyone (public)</option>
+            <option value="group" disabled={initial.audience === "youth" || (!groups.length && initial.audience !== "group")}>
               One group&apos;s members only{groups.length ? "" : " (no groups yet)"}
             </option>
           </SelectField>

@@ -29,6 +29,7 @@ type Row = {
   full_name: string;
   preferred_name: string | null;
   membership_status: "pending" | "approved" | "suspended";
+  account_kind: "adult" | "youth";
   created_at: string;
   user_roles: Array<{ role_key: string; roles: { name: string } | null }>;
   member_profile_details?: { directory_listed: boolean } | null;
@@ -45,7 +46,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
   const canManage = viewer.capabilities.has(CAPABILITIES.membersManage);
   // Directory visibility is part of the private details, readable only with members.manage.
   const columns =
-    "id, email, full_name, preferred_name, membership_status, created_at, user_roles!user_roles_user_id_fkey(role_key, roles(name))" +
+    "id, email, full_name, preferred_name, membership_status, account_kind, created_at, user_roles!user_roles_user_id_fkey(role_key, roles(name))" +
     (canManage ? ", member_profile_details(directory_listed)" : "");
   let query = supabase
     .from("profiles")
@@ -124,6 +125,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     <MembershipBadge status={m.membership_status} />
+                    {m.account_kind === "youth" ? <Badge tone="info">Youth account (managed under Youth &amp; families)</Badge> : null}
                     {m.user_roles.map((r) => (
                       <Badge key={r.role_key}>{r.roles?.name ?? r.role_key}</Badge>
                     ))}

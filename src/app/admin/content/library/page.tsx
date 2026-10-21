@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
@@ -97,12 +98,21 @@ export default async function TaxonomyPage({ searchParams }: PageProps<"/admin/c
                   {topic.name} <span className="text-meta text-text-secondary">({topic.items})</span>
                 </span>
                 {canDeleteTopics ? (
-                  <form action={deleteTopicAction}>
-                    <input type="hidden" name="id" value={topic.id} />
-                    <button type="submit" className="min-h-11 rounded-full px-3 text-meta font-semibold text-danger hover:bg-danger-soft" aria-label={`Delete topic ${topic.name}`}>
-                      ×
-                    </button>
-                  </form>
+                  <ConfirmDialog
+                    triggerVariant="ghost"
+                    trigger={
+                      <>
+                        <span aria-hidden="true">×</span>
+                        <span className="sr-only">Delete topic {topic.name}</span>
+                      </>
+                    }
+                    title={`Delete the topic “${topic.name}”?`}
+                    confirmLabel="Delete topic"
+                    formAction={deleteTopicAction}
+                    hidden={{ id: topic.id }}
+                  >
+                    It is removed from {topic.items === 1 ? "1 item" : `${topic.items} items`}. This can&apos;t be undone.
+                  </ConfirmDialog>
                 ) : (
                   <span className="pr-3" />
                 )}

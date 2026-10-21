@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, X } from "lucide-react";
+import { Download, LifeBuoy, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
@@ -42,6 +42,7 @@ function SectionLabel({ id, children }: { id: string; children: ReactNode }) {
 }
 
 function UpcomingList({ idPrefix }: { idPrefix: string }) {
+  if (upcoming.length === 0) return null;
   return (
     <section aria-labelledby={`${idPrefix}-upcoming`}>
       <SectionLabel id={`${idPrefix}-upcoming`}>Coming later</SectionLabel>
@@ -55,6 +56,22 @@ function UpcomingList({ idPrefix }: { idPrefix: string }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * "Report a problem" (Phase 12). Passes only the current path (never the
+ * query string) so the report can say where it happened; the member can
+ * leave it out on the form.
+ */
+function ReportProblemLink({ pathname, compact }: { pathname: string; compact?: boolean }) {
+  const active = pathname === "/report-problem";
+  const href = active ? "/report-problem" : `/report-problem?from=${encodeURIComponent(pathname)}`;
+  return (
+    <Link href={href} className={rowClass(active)} aria-current={active ? "page" : undefined}>
+      <LifeBuoy className="size-6 p-0.5" aria-hidden="true" />
+      <span className={cn("min-w-0", compact ? "truncate" : "flex-1 break-words leading-tight")}>Report a problem</span>
+    </Link>
   );
 }
 
@@ -72,6 +89,11 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
                 <NavRow item={item} pathname={pathname} />
               </li>
             ))}
+            {section.key === "you" ? (
+              <li>
+                <ReportProblemLink pathname={pathname} />
+              </li>
+            ) : null}
             {section.key === "you" && showAdmin ? (
               <li>
                 <Link href="/admin" className={rowClass(false)}>
@@ -89,18 +111,20 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
 }
 
 /**
- * Phone dock: four primary destinations plus More, on a slim floating
- * surface (smoked glass on dark, translucent ivory on light, solid where
- * blur is unsupported) above the safe area. The page reserves
- * --dock-clearance below its content, and focus scrolling keeps the same
- * margin, so the dock never covers the last content, form actions, or focus.
+ * Phone dock: four primary destinations plus More, on a full-width bar docked
+ * to the bottom edge (smoked glass on dark, translucent ivory on light, solid
+ * where blur is unsupported). The bar's background runs to the screen edge and
+ * the safe-area inset is padding inside it (see .dock in globals.css). The
+ * page reserves --dock-clearance below its content, and focus scrolling keeps
+ * the same margin, so the dock never covers the last content, form actions,
+ * or focus.
  */
 export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: boolean; signOut: ReactNode; appearance: ReactNode }) {
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const primary = MOBILE_PRIMARY_KEYS.map((k) => available.find((i) => i.key === k)!).filter(Boolean);
   const secondary = available.filter((i) => !(MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
-  const moreActive = secondary.some((i) => isActivePath(pathname, i.href)) || pathname === "/install";
+  const moreActive = secondary.some((i) => isActivePath(pathname, i.href)) || pathname === "/install" || pathname === "/report-problem";
 
   useEffect(() => {
     dialogRef.current?.close();
@@ -108,7 +132,7 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
 
   const tab = (active: boolean) =>
     cn(
-      "relative flex min-h-[3.25rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
+      "relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
       active ? "dock-active font-bold" : "font-semibold text-text-secondary hover:text-text",
     );
 
@@ -116,9 +140,9 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
     <>
       <nav
         aria-label="Main"
-        className="dock fixed inset-x-3 bottom-[max(0.625rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg rounded-[1.75rem] p-1 sm:inset-x-6 lg:hidden"
+        className="dock fixed inset-x-0 bottom-0 z-40 rounded-t-[1.25rem] lg:hidden"
       >
-        <ul className="flex gap-0.5">
+        <ul className="mx-auto flex h-(--dock-height) max-w-lg items-center gap-0.5 px-1.5">
           {primary.map((item) => {
             const active = isActivePath(pathname, item.href);
             return (
@@ -188,6 +212,11 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
                           <Download className="size-6 p-0.5" aria-hidden="true" />
                           <span className="min-w-0 truncate">Install app</span>
                         </Link>
+                      </li>
+                    ) : null}
+                    {section.key === "you" ? (
+                      <li className="min-w-0">
+                        <ReportProblemLink pathname={pathname} compact />
                       </li>
                     ) : null}
                   </ul>

@@ -12,6 +12,10 @@ import { isIP } from "node:net";
  *     link-local, carrier-grade NAT, multicast, reserved, documentation, and
  *     IPv4-mapped/translated internal addresses are refused, so a hostname
  *     that re-resolves to an internal address (DNS rebinding) still fails;
+ *   - the request always uses its own agent, so an ambient proxy (for example
+ *     NODE_USE_ENV_PROXY with HTTP_PROXY, or a replaced http.globalAgent)
+ *     can't route around the lookup, and the connected peer address is
+ *     checked again before any response is read;
  *   - redirects are followed manually (at most 3), each one rechecked;
  *   - total time and response size are capped, and compressed bodies are
  *     refused unless decoded within the same cap.
@@ -200,10 +204,15 @@ function requestOnce(
       if (literal) return done([{ address: hostname, family: literal }]);
       resolver(hostname).then(done, (err: NodeJS.ErrnoException) => callback(err, "", 4));
     };
+    // A dedicated, non-proxying agent: the global agent may be configured to
+    // send requests through a proxy, which resolves the host itself and would
+    // skip the lookup above entirely.
+    const agent = url.protocol === "https:" ? new https.Agent({ keepAlive: false }) : new http.Agent({ keepAlive: false });
     const req = lib.request(
       url,
       {
         method: "GET",
+        agent,
         lookup: lookup as unknown as typeof dnsLookup,
         headers: {
           "user-agent": "TheGatheringFeedReader/1.0 (+https://www.gathering.church)",
@@ -249,6 +258,19 @@ function requestOnce(
         res.on("error", () => fail(new SafeFetchError("network", "The connection was interrupted.")));
       },
     );
+    // Defense in depth: whatever connected the socket, the peer must be an
+    // allowed address (a proxy or patched agent on a private address fails).
+    req.on("socket", (socket) => {
+      const verifyPeer = () => {
+        const peer = socket.remoteAddress;
+        if (!peer || !allowed(peer)) {
+          fail(new SafeFetchError("blocked_address", "That address points to a private network."));
+          req.destroy();
+        }
+      };
+      if (socket.remoteAddress) verifyPeer();
+      else socket.once("connect", verifyPeer);
+    });
     const timer = setTimeout(() => {
       req.destroy();
       fail(new SafeFetchError("timeout", "The address took too long to respond."));
@@ -262,7 +284,10 @@ function requestOnce(
       else if (err.code === "ENOTFOUND" || err.code === "EAI_AGAIN") fail(new SafeFetchError("dns", "That address couldn't be found."));
       else fail(new SafeFetchError("network", "The address couldn't be reached."));
     });
-    req.on("close", () => clearTimeout(timer));
+    req.on("close", () => {
+      clearTimeout(timer);
+      agent.destroy();
+    });
     req.end();
   });
 }

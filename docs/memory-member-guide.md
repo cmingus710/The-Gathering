@@ -44,7 +44,7 @@ Each practice keeps separate facts: completed, accuracy (for scored activities),
 
 ## Kids presentation
 
-**Settings → Presentation → Kids** gives larger text and buttons, shorter parts, word choices, simple instructions, and gentle celebrations. It only changes how practice looks: it isn't an age setting and changes no one's permissions. If you practice with a child on your account, the progress is yours. Child profiles and guardian access come in a later phase (Phase 10).
+**Settings → Presentation → Kids** gives larger text and buttons, shorter parts, word choices, simple instructions, and gentle celebrations. It only changes how practice looks: it isn't an age setting and changes no one's permissions. If you practice with a child on your account, the progress is yours. To record practice for your child instead, a verified guardian uses **Youth → Family dashboard → Practice verses together** ([guardian-guide.md](guardian-guide.md)).
 
 ## Reminders
 

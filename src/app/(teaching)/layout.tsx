@@ -28,7 +28,7 @@ export default async function TeachingLayout({ children }: { children: ReactNode
         Skip to content
       </a>
       <PublicHeader churchName={settings.churchName} iconUrl={settings.iconUrl} signedIn={result.state === "signed-in"} />
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-4 outline-none sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--player-clearance,0rem))] pt-4 outline-none sm:px-6">
         {children}
       </main>
     </div>

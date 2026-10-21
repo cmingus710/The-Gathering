@@ -405,7 +405,11 @@ describeDb("events: visibility, recurrence, RSVP, notifications, feeds", () => {
       const soon = new Date(Date.now() + 30 * 60_000);
       const local = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(soon);
       const g = (t: string) => local.find((p) => p.type === t)!.value;
-      const occ = await firstOcc({ title: "Synthetic Reminder", start_date: `${g("year")}-${g("month")}-${g("day")}`, start_time: `${g("hour")}:${g("minute")}`, reminder_minutes: [60] });
+      // Start ~30 minutes from now with a 3-hour reminder, so it is due now
+      // even when this wall time is ambiguous or skipped by a daylight-saving
+      // change (1:30 AM on the fall-back night means the later, standard-time
+      // 1:30; 2:30 AM on the spring-forward night becomes 3:30).
+      const occ = await firstOcc({ title: "Synthetic Reminder", start_date: `${g("year")}-${g("month")}-${g("day")}`, start_time: `${g("hour")}:${g("minute")}`, reminder_minutes: [180] });
       await rpc(as(members[6]), "events_rsvp", [occ]);
       await rpc(as(members[7]), "events_rsvp", [occ]);
       await rpc(as(members[7]), "events_set_reminders", [false]);

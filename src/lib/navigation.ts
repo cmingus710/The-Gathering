@@ -53,6 +53,8 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },
   // Phase 9: scripture memory; practice results are private to each member.
   { key: "memory", label: "Memory verses", icon: "memory", section: "learn", status: "available", href: "/memory" },
+  // Phase 10: youth ministry, family dashboard, and leading youth groups.
+  { key: "youth", label: "Youth & Families", icon: "youth", section: "church", status: "available", href: "/youth" },
 ];
 
 /**
@@ -163,6 +165,24 @@ export const ADMIN_NAV: AdminNavItem[] = [
     anyOf: [CAPABILITIES.memoryManage, CAPABILITIES.memoryPublish],
   },
   {
+    key: "youth",
+    label: "Youth & families",
+    href: "/admin/youth",
+    icon: "youth",
+    requires: [],
+    anyOf: [
+      CAPABILITIES.youthManage,
+      CAPABILITIES.youthPublish,
+      CAPABILITIES.youthEnroll,
+      CAPABILITIES.youthForms,
+      CAPABILITIES.youthLogistics,
+      CAPABILITIES.youthMediaConsent,
+      CAPABILITIES.youthSafeguarding,
+      CAPABILITIES.youthPolicy,
+      CAPABILITIES.familyVerify,
+    ],
+  },
+  {
     key: "prayer",
     label: "Prayer reports",
     href: "/admin/prayer",
@@ -183,12 +203,24 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: "giving",
     requires: [CAPABILITIES.financeView],
   },
+  {
+    key: "problem-reports",
+    label: "Problem reports",
+    href: "/admin/problem-reports",
+    icon: "moderation",
+    requires: [CAPABILITIES.settingsManage],
+  },
   { key: "settings", label: "Church settings", href: "/admin/settings", icon: "settings", requires: [CAPABILITIES.settingsManage] },
   { key: "audit", label: "Audit log", href: "/admin/audit", icon: "audit", requires: [CAPABILITIES.auditView] },
 ];
 
 export function adminNavFor(capabilities: ReadonlySet<Capability>): AdminNavItem[] {
   return ADMIN_NAV.filter((item) => item.requires.every((c) => capabilities.has(c)) && (!item.anyOf || item.anyOf.some((c) => capabilities.has(c))));
+}
+
+/** The href of the most specific item matching the path (so /admin/bible/sources isn't also "Reading plans"). */
+export function activeHref(pathname: string, hrefs: readonly string[]): string | undefined {
+  return hrefs.filter((href) => isActivePath(pathname, href)).sort((a, b) => b.length - a.length)[0];
 }
 
 export function isActivePath(pathname: string, href: string): boolean {

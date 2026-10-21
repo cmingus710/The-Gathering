@@ -125,3 +125,16 @@ Matches the approved home design (`docs/design/home-mockup.webp`).
 On desktop, Coming up and Gathering times share the wider column and Life at sits beside them.
 
 "Coming later" moved off the home page: upcoming modules stay listed in the More sheet and sidebar, and in the launcher configuration.
+
+## Public welcome page
+
+The signed-out welcome page (`src/app/(public)`, components in `src/components/welcome/`) follows the approved welcome mockup: warm ivory `#F7F4EC`, antique gold `#AE8C4E`, charcoal `#34332D`, Source Serif 4 headings over Source Sans 3 text.
+
+- **Scoped theme.** `.welcome-theme` in `globals.css` re-points the semantic tokens for the public layout only (the welcome and install pages), with one look in light and dark, like the sign-in pages. It is mirrored by `welcomePalette` in `src/lib/theme/tokens.ts`, where contrast is unit-tested. Antique gold is never small text on ivory.
+- **Hero.** `assets/photos/barn-welcome-wide.webp` is an illustrative, generated image, treated as decorative (empty alt), not a photograph of the venue. It is served through `next/image` at responsive sizes, and the readability gradient is CSS (`.welcome-hero-scrim`), so the source image is never darkened. On phones the image box runs past the bottom edge so the circle of chairs sits below the text.
+- **Copy.** The church description from Church settings replaces the built-in supporting lines when it is set. Sign in and Create an account go to `/sign-in` and `/sign-up`, and signed-in visitors see Open the app.
+- **Welcome strip icons.** The supplied `gather-with-us.svg`, `grow-in-faith.svg`, and `share-life.svg` (originals in `assets/brand/source/`) are served from `public/brand/welcome/`. They are drawn as decorative CSS masks, so each one shows in antique gold at the same size and screen readers hear only the heading.
+- **Reference.** `reference/approved-welcome-mockup.png` is the approved design, kept for visual comparison only (it is never used as a page background). One deliberate difference: the gold Sign in button uses dark text (`#1F1E1A`, 6.2:1) rather than the mockup's ivory, which would fall below 3:1 on antique gold.
+- **Public information.** Gathering times, address, and contact details appear only when they are configured, and public announcements appear only when there are some. Empty sections are left out rather than shown with placeholders.
+
+Screenshots: `docs/design/screenshots/welcome/` (the `sample-data` shots use synthetic, local-only settings and announcements; `compare-mockup-1536.jpg` sets the mockup beside the build).

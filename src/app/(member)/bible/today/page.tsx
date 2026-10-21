@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
 
 /** Where reminders link: today's reading of the member's primary plan. */
 export default async function TodayPage() {
-  await requireApprovedMember("/bible/today");
+  await requireLearner("/bible/today");
   const supabase = await requireClient();
   const { data } = await supabase.rpc("bible_today");
   const t = data as { plan: { id: string }; day: { id: string } | null } | null;

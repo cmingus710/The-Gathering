@@ -1,7 +1,7 @@
 /**
  * The supplied dock glyphs (assets/brand/source/{home,events,community,
  * messages,more}.svg), inlined verbatim so they take the theme colour
- * through currentColor. Used only by the floating dock; everything else
+ * through currentColor. Used only by the bottom dock; everything else
  * keeps the custom icon set in ./icon.tsx.
  */
 import type { ReactNode } from "react";

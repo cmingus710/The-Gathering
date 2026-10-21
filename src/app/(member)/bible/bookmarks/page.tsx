@@ -5,7 +5,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
 import { clearAnnotationsAction, removeBookmarkAction } from "../actions";
 
@@ -24,7 +24,7 @@ type Bm = {
 };
 
 export default async function BookmarksPage() {
-  await requireApprovedMember("/bible/bookmarks");
+  await requireLearner("/bible/bookmarks");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("bible_bookmarks");
   const items = (data as Bm[] | null) ?? [];

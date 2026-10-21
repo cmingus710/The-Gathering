@@ -65,6 +65,9 @@ describe("Spotify", () => {
     const e = spotifyEmbed(ref!);
     expect(e.src).toBe("https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M?utm_source=generator");
     expect(e.openUrl).toBe("https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M");
+    // Full-size player (cover, controls, and track list), not the compact strip.
+    expect(e.height).toBe(352);
+    expect(e.sandbox).toBeUndefined();
   });
 
   it("refuses other kinds, hosts, http, and malformed ids", () => {

@@ -1,56 +1,64 @@
 import type { Metadata } from "next";
-import { ItemCard } from "@/components/media/item-card";
+import Link from "next/link";
+import { PlaylistSection } from "@/components/media/playlist-section";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
-import { coverPaths } from "@/lib/media/format";
+import { EmptyState, PageHeader } from "@/components/ui/card";
 import { listItems } from "@/lib/media/pages";
-import { signPaths } from "@/lib/media/storage";
 import { requireClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Music & playlists" };
 
-export default async function MusicPage() {
+/** Playlists shown at first, and added by each "Show more". */
+const STEP = 8;
+/** The most the list function returns in one call. */
+const MAX = 60;
+
+/**
+ * Every published playlist the member can see, each with its Spotify player
+ * on the page (no detail page needed; /music/<id> still works for saved and
+ * shared links). The database applies status, schedule, expiry, and
+ * audience; featured playlists come first, as before.
+ */
+export default async function MusicPage({ searchParams }: PageProps<"/music">) {
+  const sp = await searchParams;
+  const requested = Math.floor(Number(sp.show) || STEP);
+  const show = Math.min(Math.max(requested, STEP), MAX);
   const supabase = await requireClient();
-  const list = await listItems(supabase, "playlist", {}, 50);
-  const featured = list.items.filter((i) => i.featured);
-  const rest = list.items.filter((i) => !i.featured);
-  const urls = await signPaths(supabase, coverPaths(list.items));
+  const list = await listItems(supabase, "playlist", {}, MAX);
+  const ordered = [...list.items.filter((i) => i.featured), ...list.items.filter((i) => !i.featured)];
+  const visible = ordered.slice(0, show);
+  const more = ordered.length > show;
+
   return (
     <>
-      <PageHeader title="Music & playlists" description="Worship sets and playlists from our church, on Spotify." />
-      <p className="mb-6 rounded-tile bg-surface-muted px-4 py-3 text-meta text-text-secondary">
-        Playlists play through Spotify. Without a Spotify login in this browser you may hear 30-second previews, and full playback depends on your Spotify
-        account. Playlists are hosted by Spotify, so anyone with a playlist&apos;s Spotify link can open it there.
-      </p>
+      <PageHeader title="Music & playlists" description="Worship sets and playlists from our church." />
       {!list.ok ? <Alert tone="error" title="Playlists couldn't be loaded right now." className="mb-6" /> : null}
-      {list.ok && !list.items.length ? (
+      {list.ok && !visible.length ? (
         <EmptyState glyph="music" title="No playlists yet">
           Playlists will appear here after they&apos;re shared.
         </EmptyState>
       ) : null}
-      {featured.length ? (
-        <section aria-labelledby="mu-featured" className="mb-8">
-          <SectionHeading id="mu-featured">Featured</SectionHeading>
-          <ul className="space-y-3">
-            {featured.map((i) => (
-              <li key={i.id}>
-                <ItemCard item={i} urls={urls} />
-              </li>
-            ))}
-          </ul>
-        </section>
+      {visible.length ? (
+        <div className="mx-auto max-w-3xl space-y-6">
+          <p className="text-meta text-text-secondary">Playback is provided by Spotify. Availability may depend on your Spotify account and device.</p>
+          {visible.map((item, i) => (
+            <PlaylistSection key={item.id} item={item} first={i === 0} />
+          ))}
+        </div>
       ) : null}
-      {rest.length ? (
-        <section aria-labelledby="mu-all">
-          {featured.length ? <SectionHeading id="mu-all">All playlists</SectionHeading> : null}
-          <ul className="space-y-3">
-            {rest.map((i) => (
-              <li key={i.id}>
-                <ItemCard item={i} urls={urls} />
-              </li>
-            ))}
-          </ul>
-        </section>
+      {more ? (
+        <p className="mt-6 text-center">
+          <Link
+            href={{ query: { show: show + STEP } }}
+            scroll={false}
+            className="inline-flex min-h-11 items-center rounded-full border border-border-strong/60 px-5 font-semibold hover:bg-surface-muted"
+          >
+            Show more playlists
+          </Link>
+        </p>
+      ) : null}
+      {list.total > MAX && !more ? (
+        <p className="mt-6 text-center text-meta text-text-secondary">Showing the {MAX} most recent playlists.</p>
       ) : null}
     </>
   );

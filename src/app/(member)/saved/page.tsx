@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ItemCard } from "@/components/media/item-card";
 import { Alert } from "@/components/ui/alert";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState, PageHeader, rowListClass, SectionHeading } from "@/components/ui/card";
 import { coverPaths } from "@/lib/media/format";
 import { clearListeningHistoryAction } from "@/lib/media/member-actions";
@@ -83,11 +84,11 @@ export default async function SavedPage() {
           The app remembers where you stopped so you can pick up again. It&apos;s private to you and isn&apos;t shown to church staff. Clearing it forgets
           every saved position; your bookmarks stay.
         </p>
-        <form action={clearListeningHistoryAction} className="mt-3">
-          <button type="submit" className="min-h-11 rounded-full border border-border-strong/60 px-4 font-semibold hover:bg-surface-muted">
-            Clear listening history
-          </button>
-        </form>
+        <div className="mt-3">
+          <ConfirmDialog trigger="Clear listening history" title="Clear listening history?" confirmLabel="Clear history" formAction={clearListeningHistoryAction}>
+            Every saved position is forgotten. Your bookmarks stay. This can&apos;t be undone.
+          </ConfirmDialog>
+        </div>
       </section>
     </>
   );

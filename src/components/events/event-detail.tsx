@@ -73,7 +73,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
               {o.category ? <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-sm font-bold">{o.category.name}</span> : null}
               <AudienceBadge audience={o.audience} />
               {o.group ? (
-                <Link href={`/groups/${o.group.id}`} className="inline-flex min-h-8 items-center text-sm font-bold text-primary hover:underline">
+                <Link href={`/groups/${o.group.id}`} className="inline-flex min-h-11 items-center text-sm font-bold text-primary hover:underline">
                   {o.group.name}
                 </Link>
               ) : null}

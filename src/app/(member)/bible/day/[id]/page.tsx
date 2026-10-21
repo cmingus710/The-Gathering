@@ -11,7 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, SectionHeading, rowListClass } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatYmd } from "@/lib/bible/dates";
 import { kindLabel } from "@/lib/bible/format";
 import { resolveText, type TextResult } from "@/lib/bible/source";
@@ -55,7 +55,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/bibl
   const { id } = await params;
   const { v } = await searchParams;
   if (!isUuid(id)) notFound();
-  await requireApprovedMember(`/bible/day/${id}`);
+  await requireLearner(`/bible/day/${id}`);
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("bible_day", { p_day: id });
   if (error?.code === "P0002") notFound();

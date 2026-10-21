@@ -23,6 +23,9 @@ function escapeHtml(value: string): string {
 
 export function isSafeHref(href: string): boolean {
   const trimmed = href.trim();
+  // Browsers drop tabs and newlines inside URLs, so "/\t/evil.example" would
+  // become the protocol-relative "//evil.example". No real link needs them.
+  if (/[\u0000-\u001f\u007f]/.test(trimmed)) return false;
   if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("\\")) return true;
   // Strip characters browsers ignore inside schemes (e.g. "java\tscript:").
   const normalized = trimmed.replace(/[\u0000- ]/g, "");

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
@@ -115,12 +116,21 @@ export default async function SourcesPage() {
                     {[r.original_name, formatBytes(r.size_bytes), r.page_count ? `${r.page_count} pages` : null, r.text_layer ? LAYER[r.text_layer] : null, r.status !== "ready" ? r.status : null, r.error].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <form action={removeReferenceAction}>
-                  <input type="hidden" name="id" value={r.id} />
-                  <button type="submit" className="flex size-11 items-center justify-center rounded-full text-text-secondary hover:bg-surface-muted" aria-label={`Remove ${r.translation_label}`}>
-                    <Trash2 className="size-4" aria-hidden="true" />
-                  </button>
-                </form>
+                <ConfirmDialog
+                  triggerVariant="ghost"
+                  trigger={
+                    <>
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      <span className="sr-only">Remove {r.translation_label}</span>
+                    </>
+                  }
+                  title={`Remove the ${r.translation_label} reference PDF?`}
+                  confirmLabel="Remove PDF"
+                  formAction={removeReferenceAction}
+                  hidden={{ id: r.id }}
+                >
+                  The file is deleted from storage. This can&apos;t be undone.
+                </ConfirmDialog>
               </li>
             ))}
           </ul>

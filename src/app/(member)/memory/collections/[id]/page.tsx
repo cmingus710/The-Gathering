@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import { signMemoryPaths } from "@/lib/memory/storage";
 import type { Collection, Item } from "@/lib/memory/types";
@@ -25,7 +25,7 @@ type Detail = Collection & { mine: boolean; items: Item[]; challenges: Array<{ i
 
 export default async function CollectionPage({ params }: PageProps<"/memory/collections/[id]">) {
   const { id } = await params;
-  await requireApprovedMember(`/memory/collections/${id}`);
+  await requireLearner(`/memory/collections/${id}`);
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_collection", { p_id: id });
   if (error?.code === "P0002" || (error && /invalid input syntax/.test(error.message))) notFound();

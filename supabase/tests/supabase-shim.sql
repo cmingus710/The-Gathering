@@ -60,9 +60,12 @@ grant select on storage.buckets to anon, authenticated, service_role;
 
 -- Hosted Supabase grants broad table privileges by default and relies on RLS.
 -- Reproduce that so the migrations' explicit revokes are exercised. Function
--- EXECUTE is left to PostgreSQL's default (PUBLIC), matching what was observed
--- on the hosted project; the migrations grant every function explicitly.
+-- EXECUTE follows a new Supabase project (and `supabase start`): granted to
+-- anon, authenticated, and service_role in public. The hosted project had
+-- that default removed outside the migrations; 20261029000100 pins the same
+-- result, and tests/db/grants.test.ts checks it.
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 
 -- Same contract as Supabase's storage.foldername(): the folder parts of an object name.

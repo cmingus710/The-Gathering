@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { EmptyState, PageHeader } from "@/components/ui/card";
-import { requireApprovedMember } from "@/lib/auth/viewer";
+import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Bible" };
 
 /** Opens the member's preferred (or the church's default) translation. */
 export default async function ReadPage() {
-  await requireApprovedMember("/bible/read");
+  await requireLearner("/bible/read");
   const supabase = await requireClient();
   const { data } = await supabase.rpc("bible_translations");
   const t = data as { default_id: string | null; preferred_id: string | null; items: Translation[] } | null;

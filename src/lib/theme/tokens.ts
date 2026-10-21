@@ -105,6 +105,45 @@ export const authPalette = {
   onDanger: "#F6F1E6",
 } as const;
 
+/**
+ * Public welcome page: the light palette scoped by `.welcome-theme` in
+ * globals.css (warm ivory, antique gold, charcoal; one look in both themes).
+ */
+export const welcomeBrand = {
+  ivory: "#F7F4EC",
+  antiqueGold: "#AE8C4E",
+  charcoal: "#34332D",
+  /** Warm near-black behind the hero gradient. */
+  scrim: "#1A1611",
+  /** Text on the antique gold button. */
+  onGold: "#1F1E1A",
+} as const;
+
+export const welcomePalette = {
+  background: "#F7F4EC",
+  surface: "#FCFAF6",
+  surfaceMuted: "#EFE9DC",
+  surfaceRaised: "#FCFAF6",
+  primary: "#6E5527",
+  primaryHover: "#58431C",
+  primarySoft: "#EFE6D3",
+  onPrimary: "#F7F4EC",
+  accent: "#AE8C4E",
+  cta: "#34332D",
+  ctaHover: "#24231F",
+  onCta: "#F7F4EC",
+  text: "#34332D",
+  textSecondary: "#5F5A50",
+  border: "#E4DBC8",
+  borderStrong: "#8C8474",
+  success: "#3F5A3A",
+  successSoft: "#E5ECDF",
+  danger: "#9A3324",
+  dangerHover: "#7F2A1E",
+  dangerSoft: "#F6E3DD",
+  onDanger: "#F7F4EC",
+} as const;
+
 function luminance(hex: string): number {
   const channels = [0, 2, 4].map((i) => parseInt(hex.replace("#", "").slice(i, i + 2), 16) / 255);
   const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
