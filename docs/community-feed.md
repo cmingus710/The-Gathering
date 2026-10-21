@@ -16,7 +16,7 @@ Community opens to a feed of original posts. Comments stay closed until a member
 - **Back to the feed.** Going Back from a post (browser Back or the Community link) restores the same posts and scroll position.
 - **Avatars** use initials only. Member photos follow directory privacy settings, so the feed doesn't show them.
 
-## Data and access (migration `20261101000100_community_feed.sql`)
+## Data and access (migration `20261101000200_community_feed.sql`)
 
 The migration is additive. It adds three indexes and these functions:
 
@@ -43,7 +43,7 @@ Comment counts use the same rule, so a hidden reply never shows up in a member's
 
 ## Before merging
 
-1. Apply `20261101000100_community_feed.sql` to the hosted project. The new Community page calls these functions, so it shows "couldn't be loaded" until the migration exists. Merge only after the migration is applied, or apply it in the same release window.
+1. Apply `20261101000200_community_feed.sql` to the hosted project. The new Community page calls these functions, so it shows "couldn't be loaded" until the migration exists. Merge only after the migration is applied, or apply it in the same release window.
 2. After applying, run the schema and community fingerprint checks (`supabase/tests/schema-fingerprint.sql`, `community-fingerprint.sql`) and compare them with a fresh local build.
 
 ## Screenshots (synthetic data)
