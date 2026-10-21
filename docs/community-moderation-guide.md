@@ -54,3 +54,13 @@ Edit at **Administration → Community**. Members must accept the current guidel
 - **Hidden:** visible only to members and community administrators. Join by invitation.
 - A group always has at least one active leader. To remove the last leader, appoint another first or archive the group. Archived groups are read-only; open invitations and requests close.
 - Removing someone (or them leaving) ends their access immediately and cancels their group-event registrations (the waitlist moves up), with no event email.
+
+## Photos and videos in discussions (Phase 13)
+
+**Members.** In a new discussion or a reply, choose **Add photos or video**. Up to 6 per post: photos (JPEG, PNG, WebP, or iPhone HEIC, up to 20 MB each; converted to WebP with location and camera details removed) and up to 2 MP4 videos (H.264, up to 50 MB each). iPhone "High Efficiency" (HEVC) and `.mov` videos are refused with advice to export as MP4 (H.264) or switch the camera to **Most Compatible**. Each file uploads as soon as it's chosen; you can cancel, retry an interrupted upload, add a description for each photo (for people using screen readers), or remove a file before posting (removed files are deleted at once). The post button waits until uploads finish. Photos and videos can't be added to or removed from a post after posting; delete the post to remove them. Only people who can read the discussion see them (a group's discussions: its current members only), and they're never public.
+
+**Moderators and group leaders.**
+- Hiding a discussion or reply hides its photos and videos too; you still see them (in scope) so you can restore. Restoring brings them back.
+- When the author deletes a post, its photos and videos stop loading at once and their stored files are deleted. A deleted discussion that keeps a placeholder loses its own media; replies keep theirs.
+- Report evidence snapshots keep the text only, not the media. Review media from the discussion itself while it exists.
+- **Administration → Moderation → Attachment cleanup** (community moderators and media managers) lists uploads never posted (older than the "abandoned uploads" hours in Media settings, default 24), files of deleted posts that are still stored, and unreferenced files under `community/`. No names, text, or images are shown. Nothing is deleted until you select items, confirm, and press **Delete selected**. Details: [phase-13/forum-attachments.md](phase-13/forum-attachments.md).

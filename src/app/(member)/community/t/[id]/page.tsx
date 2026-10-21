@@ -2,6 +2,7 @@ import { ArrowLeft, Bell, BellOff, Lock, Pencil, Pin, Trash2 } from "lucide-reac
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AttachmentGallery } from "@/components/community/attachment-gallery";
 import { CommunityText } from "@/components/community/community-text";
 import { ReplyComposer } from "@/components/community/composer";
 import { LiveRefresh } from "@/components/community/live-refresh";
@@ -17,7 +18,7 @@ import { DeleteThreadButton } from "@/components/community/delete-thread-button"
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { exactTime, relativeTime, renderCommunityText } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
-import type { ThreadDetail } from "@/lib/community/types";
+import type { ThreadAttachments, ThreadDetail } from "@/lib/community/types";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { followAction, muteAction, replyAction } from "../../actions";
 
@@ -31,8 +32,10 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
   if (!UUID.test(id)) notFound();
   const sp = await searchParams;
   const n = Math.min(Math.max(Number(sp.n) || 30, 30), 100);
-  const [thread, { settings }] = await Promise.all([
+  const [thread, media, { settings }] = await Promise.all([
     tryCommunityRpc<ThreadDetail>("community_thread", { p_id: id, p_limit: n }),
+    // Photos and videos the viewer may see now (same rules as the text).
+    tryCommunityRpc<ThreadAttachments>("community_thread_attachments", { p_thread: id }),
     getChurchSettings(),
   ]);
   // Missing, hidden, or in a group the member isn't in: all the same "not found".
@@ -95,6 +98,7 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
         {!deleted && thread.body ? (
           <Card>
             <CommunityText source={thread.body} />
+            <AttachmentGallery items={media?.thread} />
             {thread.reactions ? (
               <div className="mt-4">
                 <ReactionBar type="thread" id={thread.id} initial={thread.reactions} disabled={!thread.can_reply} />
@@ -157,6 +161,7 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
                   exact={exactTime(p.created_at, tz)}
                   canModerate={thread.can_moderate}
                   canInteract={thread.can_reply}
+                  attachments={media?.posts[p.id]}
                 />
               </li>
             ))}
