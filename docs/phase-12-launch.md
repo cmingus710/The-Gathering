@@ -10,7 +10,7 @@ Related: [phase-11-release-readiness.md](phase-11-release-readiness.md) · [pilo
 
 | | |
 | --- | --- |
-| Branch / PR | `claude/gifted-knuth-j22tsl` → `main` (see the Phase 12 PR) |
+| Branch / PR | `claude/gifted-knuth-j22tsl` → `main`, [PR #21](https://github.com/cmingus710/The-Gathering/pull/21) |
 | Release-candidate code commit | `ce4013c` ("Label online giving as testing only"). Later commits on the branch change only `docs/` |
 | Base | `main` at `5add6de` (what production serves now) |
 | Contains | PR #17 (Phase 9 test timezone fix), PR #16 (Phase 10 youth and families, policy-gated off), PR #20 (Phase 11 release readiness), PR #18 (welcome page redesign), PR #19 (Spotify players on Music), branch `claude/loving-bohr-70o007` (mobile header and docked bottom nav; it had no PR), and the Phase 12 changes below. All merged cleanly, no conflicts |
