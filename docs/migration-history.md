@@ -204,4 +204,4 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - anon-executable functions 32 eeb898e4
   - no API table grants on `giving`, `media`, `community`, or `journal`
 
-  The digest query is the one in `docs/phase-13/README.md` (Hosted verification).
+  The query is `supabase/tests/phase13-fingerprint.sql`.
