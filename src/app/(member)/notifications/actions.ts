@@ -27,6 +27,36 @@ export async function markReadAction(_prev: FormState, formData: FormData): Prom
   return { status: "success", message: id ? "Marked as read." : "All notifications marked as read." };
 }
 
+/**
+ * "Clear read": hides the member's own read notifications from their lists.
+ * Only their copies are marked dismissed; nothing they point to changes, and
+ * retention removes them on the usual schedule. Returns the batch time so the
+ * panel can offer Undo.
+ */
+export async function clearReadAction(): Promise<{ ok: boolean; message: string; cleared?: number; at?: string }> {
+  await requireApprovedMember("/notifications");
+  const { data, error } = await rpc("community_notifications_clear_read", {});
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  const { cleared, at } = data as { cleared: number; at: string };
+  revalidatePath("/notifications");
+  return {
+    ok: true,
+    cleared,
+    at,
+    message: cleared ? `Cleared ${cleared} read notification${cleared === 1 ? "" : "s"}.` : "There were no read notifications to clear.",
+  };
+}
+
+export async function undoClearReadAction(at: string): Promise<{ ok: boolean; message: string }> {
+  await requireApprovedMember("/notifications");
+  const parsed = z.iso.datetime({ offset: true }).safeParse(at);
+  if (!parsed.success) return { ok: false, message: "That can't be undone now." };
+  const { error } = await rpc("community_notifications_restore", { p_at: parsed.data });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/notifications");
+  return { ok: true, message: "Restored." };
+}
+
 const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "prayer", "care", "teaching", "gallery", "reading", "memory", "youth"] as const;
 
 export async function savePrefsAction(_prev: FormState, formData: FormData): Promise<FormState> {
