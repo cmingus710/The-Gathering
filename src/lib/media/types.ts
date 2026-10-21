@@ -260,3 +260,8 @@ export type Photo = {
   caption_edited_at?: string | null;
   open_reports?: number | null;
 };
+
+/** One episode on the Podcasts landing page (media_podcast_episodes), with what it needs to play in place. */
+export type PodcastEpisode =
+  | (ItemCard & { type: "church"; play: Attachment | null; progress: { position: number; completed: boolean } | null })
+  | (ExternalEpisode & { type: "external" });

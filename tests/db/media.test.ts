@@ -554,6 +554,65 @@ describeDb("teaching, media, podcasts, and galleries", () => {
       expect(await rpc(anon, "media_public_feed")).toBeNull();
       await fails(anon, "media_public_episode_audio", [pub], /Not found/);
     });
+
+    it("lists playable episodes newest first on the landing page with the same access rules", async () => {
+      const show = await rpc<string>(as(podMgr), "media_admin_show_save", [null, j({ kind: "church", title: "Synthetic Landing Podcast", audience: "public", confirm_public: "public" })]);
+      await rpc(as(podMgr), "media_admin_show_status", [show, "publish"]);
+      const ok = await readyAsset("audio", { publicOk: true });
+      const membersOnly = await readyAsset("audio");
+      const mk = async (title: string, audio: string, opts: Json = {}) =>
+        (await save(as(publisher), null, { kind: "episode", title, show_id: show, attachments: [{ asset_id: audio, role: "audio" }], ...opts })).id as string;
+      const pub = await mk("Synthetic landing public", ok.id, { audience: "public", confirm_public: "public" });
+      await status(as(publisher), pub, "publish", { confirm: "public" });
+      const restricted = await mk("Synthetic landing members-only file", membersOnly.id, { audience: "public", confirm_public: "public" });
+      await status(as(publisher), restricted, "publish", { confirm: "public" });
+      const memberEp = await mk("Synthetic landing members", ok.id);
+      await status(as(publisher), memberEp, "publish");
+      const groupEp = await mk("Synthetic landing group", ok.id, { audience: "group", group_id: group });
+      await status(as(publisher), groupEp, "publish");
+      const draft = await mk("Synthetic landing draft", ok.id);
+      const later = await mk("Synthetic landing scheduled", ok.id);
+      await status(as(publisher), later, "publish", { at: new Date(Date.now() + 86_400_000) });
+      // Fixed dates; two share one instant, so the id decides their order.
+      const at: Array<[string, string]> = [[pub, "2026-09-04T12:00:00Z"], [restricted, "2026-09-03T12:00:00Z"], [memberEp, "2026-09-02T12:00:00Z"], [groupEp, "2026-09-02T12:00:00Z"]];
+      for (const [id, when] of at) await db.raw("update media.items set publish_at = $2 where id = $1", [id, when]);
+      const tied = [memberEp, groupEp].sort().reverse();
+
+      const landing = async (actor: Actor, limit = 100, offset = 0) => rpc<{ episodes: Json[]; total: number }>(actor, "media_podcast_episodes", [limit, offset]);
+      const mine = (r: { episodes: Json[] }) => r.episodes.filter((e) => (e.show as Json | null)?.id === show);
+
+      // Visitors: public episodes only; a file not approved for public use isn't offered.
+      const visitor = mine(await landing(anon));
+      expect(visitor.map((e) => e.id)).toEqual([pub, restricted]);
+      expect((visitor[0].play as Json).asset_id).toBe(ok.id);
+      expect(visitor[1].play).toBeNull();
+      // Group members see the group episode; others don't; never drafts or scheduled.
+      expect(mine(await landing(as(m1))).map((e) => e.id)).toEqual([pub, restricted, ...tied]);
+      expect(mine(await landing(as(m2))).map((e) => e.id)).toEqual([pub, restricted, memberEp]);
+      expect(((mine(await landing(as(m1)))[1].play) as Json).asset_id).toBe(membersOnly.id);
+      for (const actor of [anon, as(m1), as(pending), as(suspended)]) {
+        const ids = (await landing(actor)).episodes.map((e) => e.id);
+        expect(ids).not.toContain(draft);
+        expect(ids).not.toContain(later);
+      }
+      expect(mine(await landing(as(pending))).map((e) => e.id)).toEqual([pub, restricted]);
+
+      // Pages are stable: consecutive pages add up to the full list.
+      const all = await landing(as(m1));
+      expect(all.total).toBe(all.episodes.length);
+      const paged: unknown[] = [];
+      for (let o = 0; o < all.total; o += 2) paged.push(...(await landing(as(m1), 2, o)).episodes.map((e) => e.id));
+      expect(paged).toEqual(all.episodes.map((e) => e.id));
+
+      // The member's own position comes back for resuming; nobody else's.
+      await rpc(as(m1), "media_progress_save", [`a:${ok.id}`, pub, 42, 600, false]);
+      expect((mine(await landing(as(m1)))[0].progress as Json).position).toBe(42);
+      expect(mine(await landing(as(m2)))[0].progress).toBeNull();
+
+      // Unpublishing the show removes its episodes everywhere.
+      await rpc(as(podMgr), "media_admin_show_status", [show, "unpublish"]);
+      expect(mine(await landing(as(m1)))).toEqual([]);
+    });
   });
 
   describe("galleries", () => {
