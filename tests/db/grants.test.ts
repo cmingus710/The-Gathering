@@ -9,6 +9,9 @@ const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
  * script's function by service_role. Matches the hosted project (2026-10-21).
  */
 const ANON = [
+  // Phase 13 (20261031000100): campaign list/detail (visibility-checked,
+  // aggregate totals only) and the campaign-image storage read check.
+  "can_view_campaign_image", "giving_campaign", "giving_campaigns",
   "can_view_event_image", "community_job", "events_categories", "events_feed_private", "events_feed_public", "events_job",
   "events_list", "events_occurrence", "events_public_feed_enabled", "giving_ingest", "giving_public_config", "is_approved_member",
   "media_can_read_object", "media_devotional_day", "media_external_episode", "media_facets", "media_file", "media_item",

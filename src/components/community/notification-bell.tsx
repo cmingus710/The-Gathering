@@ -3,40 +3,20 @@
 import Link from "next/link";
 import { Icon } from "@/components/icons/icon";
 import { cn } from "@/components/ui/cn";
+import { CountPill, label } from "./count-pill";
+import { NotificationPanel } from "./notification-panel";
+
+export { CountPill };
 import { useCommunityRealtime } from "./realtime-provider";
 
-/** Count pill: a number in text (never colour alone), capped at 99+. */
-export function CountPill({ count, className }: { count: number; className?: string }) {
-  if (count <= 0) return null;
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "inline-flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-primary px-1 text-[0.6875rem] font-bold tabular-nums leading-none text-on-primary ring-2 ring-background",
-        className,
-      )}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
-
-function label(base: string, count: number) {
-  return count > 0 ? `${base}, ${count > 99 ? "more than 99" : count} unread` : base;
-}
-
+/**
+ * Header bell: opens a compact panel of recent notifications. Opening it reads
+ * only; a notification is marked read when it's opened (through
+ * /notifications/open/<id>, which rechecks access first) or with "Mark all as
+ * read". Without JavaScript the bell is a plain link to the full page.
+ */
 export function NotificationBell({ className }: { className?: string }) {
-  const { counts } = useCommunityRealtime();
-  return (
-    <Link
-      href="/notifications"
-      className={cn("relative flex size-11 items-center justify-center rounded-full text-text transition-colors hover:bg-surface-muted", className)}
-      aria-label={label("Notifications", counts.notifications)}
-    >
-      <Icon name="notifications" className="size-6" />
-      <CountPill count={counts.notifications} className="absolute right-0.5 top-0.5" />
-    </Link>
-  );
+  return <NotificationPanel className={className} />;
 }
 
 export function MessagesLink({ className }: { className?: string }) {

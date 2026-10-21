@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { MembershipBadge } from "@/components/ui/badge";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
+import { telHref } from "@/lib/directory/format";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -91,7 +92,19 @@ export default async function MemberDetailPage({ params }: PageProps<"/admin/mem
             </div>
             <div>
               <dt className="text-sm font-semibold text-text-secondary">Phone</dt>
-              <dd>{member.phone || "—"}</dd>
+              <dd>
+                {member.phone ? (
+                  telHref(member.phone) ? (
+                    <a href={telHref(member.phone)!} className="font-semibold text-primary underline-offset-2 hover:underline">
+                      {member.phone}
+                    </a>
+                  ) : (
+                    member.phone
+                  )
+                ) : (
+                  "—"
+                )}
+              </dd>
             </div>
           </dl>
           {isSelf ? (

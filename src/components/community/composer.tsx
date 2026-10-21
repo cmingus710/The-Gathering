@@ -2,6 +2,7 @@
 
 import { Globe, Lock, Send } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { AttachmentPicker } from "@/components/community/attachment-picker";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -30,12 +31,13 @@ export function AudienceNotice({ audience, place }: { audience: "church" | "grou
   );
 }
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. No images or attachments yet.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links.";
 
 /**
  * New or edited discussion. Fields are controlled, so the text survives a
  * failed save (and React's automatic form reset). A fresh idempotency key
- * per draft means a retried submit can never post twice.
+ * per draft means a retried submit can never post twice. New discussions
+ * can carry photos and videos (`attachments`); edits keep the ones posted.
  */
 export function ThreadComposer({
   action,
@@ -44,6 +46,7 @@ export function ThreadComposer({
   hidden,
   initial,
   submitLabel,
+  attachments = false,
 }: {
   action: Action;
   audience: "church" | "group";
@@ -51,11 +54,13 @@ export function ThreadComposer({
   hidden: Record<string, string>;
   initial?: { title: string; body: string };
   submitLabel: string;
+  attachments?: boolean;
 }) {
   const [state, formAction] = useActionState(action, initialFormState);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [clientKey] = useState(() => crypto.randomUUID());
+  const [uploading, setUploading] = useState(false);
   const fe = state.fieldErrors ?? {};
   return (
     <form action={formAction} className="space-y-5">
@@ -77,7 +82,8 @@ export function ThreadComposer({
         error={fe.body}
         hint={FORMAT_HINT}
       />
-      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />}>
+      {attachments ? <AttachmentPicker onBusyChange={setUploading} /> : null}
+      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />} disabled={uploading}>
         {submitLabel}
       </SubmitButton>
     </form>
@@ -93,6 +99,9 @@ export function ReplyComposer({ threadId, action }: { threadId: string; action: 
   const [state, formAction] = useActionState(action, initialFormState);
   const [body, setBody] = useState("");
   const [clientKey, setClientKey] = useState(() => crypto.randomUUID());
+  const [uploading, setUploading] = useState(false);
+  // A new picker (new draft batch, no files) after each posted reply.
+  const [pickerKey, setPickerKey] = useState(0);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const id = useId();
   const handled = useRef<FormState | null>(null);
@@ -101,6 +110,8 @@ export function ReplyComposer({ threadId, action }: { threadId: string; action: 
     handled.current = state;
     setBody("");
     setClientKey(crypto.randomUUID());
+    setPickerKey((k) => k + 1);
+    setUploading(false);
     const target = state.values?.postId ? document.getElementById(`post-${state.values.postId}`) : null;
     (target ?? statusRef.current)?.focus();
   }, [state]);
@@ -124,7 +135,8 @@ export function ReplyComposer({ threadId, action }: { threadId: string; action: 
         error={state.fieldErrors?.body}
         hint={FORMAT_HINT}
       />
-      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />}>
+      <AttachmentPicker key={pickerKey} onBusyChange={setUploading} />
+      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />} disabled={uploading}>
         Post reply
       </SubmitButton>
     </form>

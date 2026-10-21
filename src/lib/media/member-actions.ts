@@ -41,3 +41,25 @@ export async function clearListeningHistoryAction(): Promise<void> {
   await supabase.rpc("media_progress_clear");
   revalidatePath("/saved");
 }
+
+/** Phase 13: a member's own place in a church book (private; nothing syncs from Kindle or Audible). */
+export async function saveBookProgressAction(id: string, status: string, position: string): Promise<{ ok: boolean; message: string }> {
+  if (!isUuid(id) || !["want", "reading", "finished"].includes(status)) return { ok: false, message: "Choose where you are with this book." };
+  if (position.length > 80) return { ok: false, message: "Keep your place note to 80 characters." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Reading progress is unavailable right now. Nothing was saved." };
+  const { error } = await supabase.rpc("media_book_progress_save", { p_item: id, p_status: status, p_position: position.trim() || null });
+  if (error) return { ok: false, message: error.code === "P0001" || error.code === "22023" ? error.message : "Couldn't save your progress. Try again." };
+  revalidatePath(`/reading/books/${id}`);
+  revalidatePath("/reading");
+  return { ok: true, message: "Saved. Only you can see this." };
+}
+
+export async function clearBookProgressAction(id: string): Promise<{ ok: boolean }> {
+  if (!isUuid(id)) return { ok: false };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.rpc("media_book_progress_clear", { p_item: id });
+  if (!error) revalidatePath(`/reading/books/${id}`);
+  return { ok: !error };
+}

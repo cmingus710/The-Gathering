@@ -32,9 +32,13 @@ export type ManualDefaults = {
   note?: string;
 };
 
-function ManualFields({ state, funds, donor, defaults, today }: { state: FormState; funds: Fund[]; donor: Donor; defaults: ManualDefaults; today: string }) {
+export type CampaignChoice = { id: string; title: string; fund_id: string; fund_name: string };
+
+function ManualFields({ state, funds, donor, defaults, today, campaigns }: { state: FormState; funds: Fund[]; donor: Donor; defaults: ManualDefaults; today: string; campaigns?: CampaignChoice[] }) {
   const v = { ...defaults, ...(state.status === "error" ? state.values : {}) } as ManualDefaults & Record<string, string>;
   const [method, setMethod] = useState<"cash" | "check">((v.method as "cash" | "check") ?? "check");
+  const [campaignId, setCampaignId] = useState(v.campaignId ?? "");
+  const campaign = campaigns?.find((c) => c.id === campaignId);
   const err = state.fieldErrors ?? {};
   return (
     <>
@@ -50,14 +54,31 @@ function ManualFields({ state, funds, donor, defaults, today }: { state: FormSta
         <TextField label="Date received" name="receivedOn" type="date" max={today} required defaultValue={v.receivedOn} error={err.receivedOn} />
         <TextField label="Amount (USD)" name="amount" inputMode="decimal" required defaultValue={v.amount} error={err.amount} />
       </div>
-      {/* Keyed so a submitted choice survives an error (a select reads defaultValue only when mounted). */}
-      <SelectField key={v.fundId ?? "default"} label="Fund" name="fundId" defaultValue={v.fundId ?? funds.find((f) => f.active)?.id} error={err.fundId}>
-        {funds.filter((f) => f.active || f.id === v.fundId).map((f) => (
-          <option key={f.id} value={f.id}>
-            {f.name}
-          </option>
-        ))}
-      </SelectField>
+      {campaigns?.length ? (
+        <SelectField label="Campaign" name="campaignId" optional hint="Counts this gift toward a campaign's total. The gift goes to the campaign's fund." value={campaignId} onChange={(e) => setCampaignId(e.currentTarget.value)} error={err.campaignId}>
+          <option value="">No campaign</option>
+          {campaigns.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
+      {campaign ? (
+        <p>
+          <input type="hidden" name="fundId" value={campaign.fund_id} />
+          Fund: <span className="font-semibold">{campaign.fund_name}</span> <span className="text-text-secondary">(the campaign&apos;s fund)</span>
+        </p>
+      ) : (
+        /* Keyed so a submitted choice survives an error (a select reads defaultValue only when mounted). */
+        <SelectField key={v.fundId ?? "default"} label="Fund" name="fundId" defaultValue={v.fundId ?? funds.find((f) => f.active)?.id} error={err.fundId}>
+          {funds.filter((f) => f.active || f.id === v.fundId).map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+        </SelectField>
+      )}
       <fieldset>
         <legend className="font-semibold">Method</legend>
         <div className="mt-2 flex gap-4">
@@ -79,7 +100,7 @@ function ManualFields({ state, funds, donor, defaults, today }: { state: FormSta
   );
 }
 
-export function RecordManualForm({ funds, donor, today, formToken }: { funds: Fund[]; donor: Donor; today: string; formToken: string }) {
+export function RecordManualForm({ funds, donor, today, formToken, campaigns }: { funds: Fund[]; donor: Donor; today: string; formToken: string; campaigns?: CampaignChoice[] }) {
   const [state, action] = useActionState(recordManualAction, initialFormState);
   return (
     <form action={action} noValidate className="space-y-4">
@@ -93,7 +114,7 @@ export function RecordManualForm({ funds, donor, today, formToken }: { funds: Fu
         </p>
       ) : null}
       <input type="hidden" name="formToken" value={formToken} />
-      <ManualFields state={state} funds={funds} donor={donor} defaults={{ receivedOn: today }} today={today} />
+      <ManualFields state={state} funds={funds} donor={donor} defaults={{ receivedOn: today }} today={today} campaigns={campaigns} />
       <SubmitButton pendingText="Recording…" >Record gift</SubmitButton>
     </form>
   );

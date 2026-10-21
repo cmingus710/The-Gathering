@@ -22,6 +22,8 @@ export type CheckoutRequest = {
   frequency: Frequency;
   formToken: string;
   clientIp: string | null;
+  /** Optional fundraising campaign; the database checks it is open and uses this fund. */
+  campaignId?: string | null;
 };
 
 export class CheckoutError extends Error {}
@@ -83,12 +85,14 @@ export async function createCheckout(server: GivingServer, req: CheckoutRequest)
     frequency: Frequency;
     customer_id: string | null;
     profile_email: string | null;
+    campaign_id?: string | null;
   }>("checkout_prepare", {
     idempotency_key: req.formToken,
     profile_id: req.profileId,
     fund_id: req.fundId,
     amount_cents: req.amountCents,
     frequency: req.frequency,
+    ...(req.campaignId ? { campaign_id: req.campaignId } : {}),
   });
 
   if (prep.status !== "open") throw new CheckoutError("This gift form has already been used. Please start a new gift.");
@@ -122,7 +126,7 @@ export async function createCheckout(server: GivingServer, req: CheckoutRequest)
       : { submit_type: "donate", payment_intent_data: { metadata } }),
     // Return URLs come only from trusted configuration, never from the request.
     success_url: `${server.siteUrl}/give/thanks?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${server.siteUrl}/give?canceled=1`,
+    cancel_url: prep.campaign_id ? `${server.siteUrl}/give/campaigns/${prep.campaign_id}?canceled=1` : `${server.siteUrl}/give?canceled=1`,
   };
 
   const session = await stripeClient(server).checkout.sessions.create(params, { idempotencyKey: `gathering-checkout-${prep.intent_id}` });

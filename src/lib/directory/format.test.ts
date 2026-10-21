@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cityLine, formatBirthday, initials, mailtoHref, parsePage, parseQuery, telHref } from "./format";
+import { addressQuery, cityLine, dialable, formatBirthday, initials, mailtoHref, mapLinks, parsePage, parseQuery, smsHref, telHref } from "./format";
 
 describe("directory formatting", () => {
   it("formats month/day birthdays without a year", () => {
@@ -39,5 +39,47 @@ describe("directory formatting", () => {
     expect(parseQuery("  hello ")).toBe("hello");
     expect(parseQuery("x".repeat(200))).toHaveLength(80);
     expect(parseQuery(undefined)).toBe("");
+  });
+});
+
+describe("contact actions", () => {
+  it("dials international numbers without changing what is stored", () => {
+    const stored = "+44 (0)20 7946 0958";
+    expect(telHref(stored)).toBe("tel:+442079460958");
+    expect(smsHref(stored)).toBe("sms:+442079460958");
+    expect(stored).toBe("+44 (0)20 7946 0958");
+    expect(dialable("+1 (555) 010-0100")).toBe("+15550100100");
+    expect(dialable("0 (20) 7946 0958")).toBe("02079460958");
+  });
+
+  it("refuses numbers that can't be dialled", () => {
+    expect(telHref("123")).toBeNull();
+    expect(smsHref("+1234567890123456")).toBeNull();
+    expect(smsHref("")).toBeNull();
+  });
+
+  it("only builds mailto for plain addresses", () => {
+    expect(mailtoHref("a@b.c?cc=evil@x.y")).toBeNull();
+    expect(mailtoHref("a@b.c&body=x")).toBeNull();
+    expect(mailtoHref(" person@example.test ")).toBe("mailto:person@example.test");
+  });
+
+  it("encodes addresses into HTTPS map links", () => {
+    const q = addressQuery(["12 Elm St #4", null, "Springfield", "IL", "62701"]);
+    expect(q).toBe("12 Elm St #4, Springfield, IL, 62701");
+    const links = mapLinks(q)!;
+    expect(links.map).toBe("https://www.google.com/maps/search/?api=1&query=12%20Elm%20St%20%234%2C%20Springfield%2C%20IL%2C%2062701");
+    expect(links.directions.startsWith("https://www.google.com/maps/dir/?api=1&destination=")).toBe(true);
+    expect(links.apple.startsWith("https://maps.apple.com/?daddr=")).toBe(true);
+    for (const href of Object.values(links)) {
+      expect(href).not.toMatch(/[\s#<>"]/);
+      expect(new URL(href).protocol).toBe("https:");
+    }
+  });
+
+  it("strips control characters and refuses empty addresses", () => {
+    expect(addressQuery(["\u0000", "  "])).toBeNull();
+    expect(mapLinks(null)).toBeNull();
+    expect(addressQuery(["1 Main\nSt"])).toBe("1 Main St");
   });
 });

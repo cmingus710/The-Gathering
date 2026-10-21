@@ -63,7 +63,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
         {back}
         <PageHeader title="New group discussion" description={`In ${group.name}`} />
         <Card>
-          <ThreadComposer action={createThreadAction} audience="group" place={group.name} hidden={{ groupId }} submitLabel="Post to group" />
+          <ThreadComposer action={createThreadAction} audience="group" place={group.name} hidden={{ groupId }} submitLabel="Post to group" attachments />
         </Card>
       </>
     );
@@ -102,7 +102,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
       {back}
       <PageHeader title="New discussion" description={`In ${category.name}`} />
       <Card>
-        <ThreadComposer action={createThreadAction} audience="church" place={category.name} hidden={{ categoryId: category.id }} submitLabel="Post discussion" />
+        <ThreadComposer action={createThreadAction} audience="church" place={category.name} hidden={{ categoryId: category.id }} submitLabel="Post discussion" attachments />
       </Card>
     </>
   );

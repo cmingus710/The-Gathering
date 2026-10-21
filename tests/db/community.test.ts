@@ -783,6 +783,32 @@ describeDb("community: forum, groups, messages, moderation, notifications", () =
       expect((await unread(m1)).notifications).toBe(0);
     });
 
+    it("bell panel: listing never marks read, and mark-all or open touches only the caller's own", async () => {
+      const t1 = await newThread(m1, { title: "Bell synthetic one" });
+      const t2 = await newThread(m2, { title: "Bell synthetic two" });
+      await rpc(as(m3), "community_reply", [t1, "Bell reply one", null]);
+      await rpc(as(m3), "community_reply", [t2, "Bell reply two", null]);
+      const before1 = (await unread(m1)).notifications as number;
+      const before2 = (await unread(m2)).notifications as number;
+      expect(before1).toBeGreaterThan(0);
+      expect(before2).toBeGreaterThan(0);
+      // Opening the panel = listing recent items (the same RPC, small limit).
+      await rpc(as(m1), "community_notifications", [null, 8]);
+      await rpc(as(m1), "community_notifications", [null, 8]);
+      expect((await unread(m1)).notifications).toBe(before1);
+      // Someone else can't open (and so can't mark read) m1's notification.
+      const mine = (await notifs(m1)).find((x) => String(x.title).includes("Bell synthetic one") && !x.read)!;
+      expect(await rpc(as(m2), "community_notification_open", [mine.id])).toBeNull();
+      expect((await notifs(m1)).find((x) => x.id === mine.id)!.read).toBe(false);
+      // Marking one read by id from another account does nothing.
+      await rpc(as(m2), "community_notification_read", [mine.id]);
+      expect((await notifs(m1)).find((x) => x.id === mine.id)!.read).toBe(false);
+      // Mark all as read clears only the caller's.
+      await rpc(as(m1), "community_notification_read", [null]);
+      expect((await unread(m1)).notifications).toBe(0);
+      expect((await unread(m2)).notifications).toBe(before2);
+    });
+
     it("mutes a thread's notifications", async () => {
       const t = await newThread(m2, { title: "Muted synthetic thread" });
       await rpc(as(m2), "community_set_mute", ["thread", t, true]);

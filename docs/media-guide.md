@@ -62,3 +62,12 @@ Access is rechecked on every read: if an item's audience narrows, or a member le
 ## Cleanup and retention
 
 Cleanup is **manual and reviewed**: `/admin/media/cleanup` lists candidates (failed uploads, uploads abandoned longer than the setting, removed or replaced files no longer in use), and a media manager deletes them with their own session after review. Nothing is deleted automatically, and no destructive cleanup has been run on existing data. Before automating any retention, the church should adopt a written retention policy.
+
+## Lesson builder and member workbooks (Phase 13)
+
+A Sunday lesson can also be built as ordered **blocks** that members open as a private **workbook**. Details, the teacher and member guides, and the version rules are in [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
+
+- **Where:** the **Lesson builder** card on a lesson's editor page (`/admin/content/<id>/builder`), with **Preview the member workbook** (`/admin/content/<id>/builder/preview`). Same rules as other content: editors (`content.edit`) change draft lessons; changing a scheduled or published lesson's blocks needs `content.publish`; publishing still happens in the **Publishing** panel.
+- **Teacher-only content:** each block has a **Teacher note**, and a whole block can be marked **Hide this whole block from members**. Both are marked "Teacher only — never shown to members" and are never part of anything a member (or visitor) receives, including the preview. The lesson's existing **Notes shown to members** field (formerly "Notes") is unchanged: members, and visitors for a public lesson, see it on the lesson page.
+- **Files in blocks:** image and media blocks use ready files from the media library (YouTube and Vimeo only as external video references; no embedded HTML). A file used by a block counts as **in use** in the library (it can't be removed), **Replace** moves blocks to the new file too, and a block's file is shown only to approved members who can open the workbook (even on a public lesson).
+- **Answers are private:** no role, including super administrators, can read members' workbook answers or notes, or counts of them.
