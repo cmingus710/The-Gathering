@@ -15,6 +15,7 @@ import { deleteDraftAction } from "../actions";
 import { ContentForm } from "../content-form";
 import { loadEditorData } from "../editor-data";
 import { PublishPanel } from "../publish-panel";
+import { BookDetailsForm, type BookDetailsAdmin } from "./book-details-form";
 
 export const metadata: Metadata = { title: "Edit content" };
 
@@ -37,6 +38,8 @@ export default async function EditContentPage({ params, searchParams }: PageProp
   const [{ settings }, itemRes, data] = await Promise.all([getChurchSettings(), supabase.rpc("media_admin_item", { p_id: id }), loadEditorData(supabase)]);
   if (itemRes.error || !itemRes.data) notFound();
   const item = itemRes.data as ItemAdmin;
+  const bookDetails =
+    item.kind === "book" ? ((await supabase.rpc("media_admin_book_details", { p_item: id })).data as BookDetailsAdmin | null) : null;
   const tz = settings.timezone;
   const now = new Date();
   const inAnHour = new Date(now.getTime() + 3600_000);
@@ -68,6 +71,16 @@ export default async function EditContentPage({ params, searchParams }: PageProp
           ) : (
             <Alert tone="error" title="The editor couldn't be loaded." />
           )}
+          {item.kind === "book" ? (
+            <Card className="mt-6">
+              <SectionHeading description="Kindle link, reading dates, and a related lesson.">Reading details</SectionHeading>
+              {bookDetails ? (
+                <BookDetailsForm id={item.id} details={bookDetails} />
+              ) : (
+                <Alert tone="error" title="Reading details couldn't be loaded. Apply the Phase 13 migration if this is a new database." />
+              )}
+            </Card>
+          ) : null}
         </div>
         <aside className="space-y-6 xl:sticky xl:top-6">
           <Card>

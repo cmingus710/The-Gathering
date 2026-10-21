@@ -12,21 +12,38 @@ export const metadata: Metadata = { title: "Church reading" };
 
 type Reading = { today: string; current_books: Card[]; current_assignments: Card[]; recent_assignments: Card[]; past_books: Card[] };
 
-function List({ items, urls }: { items: Card[]; urls: Map<string, string> }) {
+const PROGRESS_LABEL = { want: "Want to read", reading: "Reading", finished: "Finished" } as const;
+type MyProgress = Map<string, { status: keyof typeof PROGRESS_LABEL; position: string | null }>;
+
+function List({ items, urls, progress }: { items: Card[]; urls: Map<string, string>; progress?: MyProgress }) {
   return (
     <ul className="space-y-3">
-      {items.map((i) => (
-        <li key={i.id}>
-          <ItemCard item={i} urls={urls} />
-        </li>
-      ))}
+      {items.map((i) => {
+        const p = progress?.get(i.id);
+        return (
+          <li key={i.id}>
+            <ItemCard item={i} urls={urls} />
+            {p ? (
+              <p className="mt-1 px-1 text-meta text-text-secondary">
+                <span className="sr-only">Your progress on {i.title}: </span>
+                {PROGRESS_LABEL[p.status]}
+                {p.position ? ` · ${p.position}` : ""}
+              </p>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
 export default async function ReadingPage() {
   const supabase = await requireClient();
-  const { data, error } = await supabase.rpc("media_reading");
+  const [{ data, error }, mine] = await Promise.all([supabase.rpc("media_reading"), supabase.rpc("media_books_progress")]);
+  // The member's own book progress (Phase 13); absent before that migration is applied.
+  const progress: MyProgress = new Map(
+    ((mine.data as Array<{ item_id: string; status: keyof typeof PROGRESS_LABEL; position: string | null }> | null) ?? []).map((p) => [p.item_id, p]),
+  );
   const r = (data ?? { current_books: [], current_assignments: [], recent_assignments: [], past_books: [] }) as Reading;
   const [lead, ...moreCurrent] = r.current_assignments;
   const urls = await signPaths(supabase, [
@@ -58,7 +75,7 @@ export default async function ReadingPage() {
       {r.current_books.length ? (
         <section aria-labelledby="rd-books" className="mb-8">
           <SectionHeading id="rd-books">{r.current_books.length > 1 ? "Current books" : "Current book"}</SectionHeading>
-          <List items={r.current_books} urls={urls} />
+          <List items={r.current_books} urls={urls} progress={progress} />
         </section>
       ) : null}
       {r.recent_assignments.length ? (
@@ -70,7 +87,7 @@ export default async function ReadingPage() {
       {r.past_books.length ? (
         <section aria-labelledby="rd-past">
           <SectionHeading id="rd-past">Books we&apos;ve read</SectionHeading>
-          <List items={r.past_books} urls={urls} />
+          <List items={r.past_books} urls={urls} progress={progress} />
         </section>
       ) : null}
     </>

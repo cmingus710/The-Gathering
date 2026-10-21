@@ -230,6 +230,32 @@ export function normalizeAudibleUrl(input: string): string | null {
   return `https://${host(url)}${url.pathname}`;
 }
 
+const AMAZON_TLDS = ["com", "co.uk", "ca", "com.au", "de", "fr", "it", "es", "in", "co.jp", "com.mx", "com.br", "nl"];
+const AMAZON_HOSTS = new Set(AMAZON_TLDS.flatMap((t) => [`amazon.${t}`, `www.amazon.${t}`, `smile.amazon.${t}`]));
+const KINDLE_READER_HOSTS = new Set(["com", "co.uk", "ca", "com.au", "de", "fr", "it", "es", "in", "co.jp"].map((t) => `read.amazon.${t}`));
+
+/**
+ * Normalized https Kindle link, or null: an Amazon product page (tracking
+ * query removed) or the Kindle Cloud Reader (only its ?asin= kept). These
+ * are plain links out; nothing is embedded or signed in to inside the app.
+ */
+export function normalizeKindleUrl(input: string): string | null {
+  const url = parseUrl(input);
+  if (!url || url.protocol !== "https:") return null;
+  const h = host(url);
+  if (KINDLE_READER_HOSTS.has(h)) {
+    if (!/^\/[A-Za-z0-9/_.\-]*$/.test(url.pathname)) return null;
+    const asin = url.searchParams.get("asin");
+    if (asin !== null && !/^[A-Z0-9]{10}$/i.test(asin)) return null;
+    return `https://${h}${url.pathname}${asin ? `?asin=${asin.toUpperCase()}` : ""}`;
+  }
+  if (!AMAZON_HOSTS.has(h)) return null;
+  // Amazon's "/ref=…" path segment is tracking, like the query string.
+  const path = url.pathname.replace(/\/ref=[^/]*\/?$/, "");
+  if (!/^\/[A-Za-z0-9/_.\-%]*$/.test(path) || path === "/" || path === "") return null;
+  return `https://${h}${path}`;
+}
+
 /** https only, no credentials; for website and artwork links shown to members. */
 export function safeHttpsUrl(input: string | null | undefined): string | null {
   if (!input) return null;

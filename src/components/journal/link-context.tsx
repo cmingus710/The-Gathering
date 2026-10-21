@@ -4,7 +4,7 @@ import Link from "next/link";
 export type EntryLink =
   | { kind: "passage"; label: string | null; translation_code: string | null; book: string; chapter: number; available: boolean }
   | { kind: "assignment"; available: boolean; day_id: string | null; label: string | null; plan_title: string | null; question: string | null; revision: number | null; changed_since: boolean; passages: Array<{ label: string }> | null }
-  | { kind: "devotional" | "lesson"; available: boolean; item_id: string | null; title: string | null };
+  | { kind: "devotional" | "lesson" | "book"; available: boolean; item_id: string | null; title: string | null };
 
 /**
  * What an entry is about. Linked teaching or plan days are named only while
@@ -59,12 +59,12 @@ export function LinkContext({ link }: { link: EntryLink | null }) {
       {link.available && link.item_id ? (
         <p>
           About{" "}
-          <Link href={`/${link.kind === "lesson" ? "lessons" : "devotionals"}/${link.item_id}`} className="font-semibold text-primary hover:underline">
+          <Link href={link.kind === "book" ? `/reading/books/${link.item_id}` : `/${link.kind === "lesson" ? "lessons" : "devotionals"}/${link.item_id}`} className="font-semibold text-primary hover:underline">
             {link.title}
           </Link>
         </p>
       ) : (
-        <p>About a {link.kind === "lesson" ? "Sunday lesson" : "devotional"} that&apos;s no longer available. Your note is kept.</p>
+        <p>About a {link.kind === "lesson" ? "Sunday lesson" : link.kind === "book" ? "church book" : "devotional"} that&apos;s no longer available. Your note is kept.</p>
       )}
     </div>
   );

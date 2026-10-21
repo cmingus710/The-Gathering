@@ -4,6 +4,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { cn } from "@/components/ui/cn";
 import type { ThemePreference } from "@/lib/theme/preference";
+import { THEME_COLOR } from "@/lib/theme/tokens";
 import { saveThemePreference } from "./actions";
 
 const OPTIONS: Array<{ value: ThemePreference; label: string; Icon: typeof Sun }> = [
@@ -11,6 +12,30 @@ const OPTIONS: Array<{ value: ThemePreference; label: string; Icon: typeof Sun }
   { value: "dark", label: "Dark", Icon: Moon },
   { value: "system", label: "System", Icon: Monitor },
 ];
+
+/**
+ * Keeps the browser chrome colour in step with the choice. "System" gets the
+ * same light/dark media pair the server renders, so the bar keeps following
+ * the device setting after this page has loaded.
+ */
+function syncThemeColor(theme: ThemePreference) {
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
+  const pairs: Array<[string, string | null]> =
+    theme === "system"
+      ? [
+          [THEME_COLOR.light, "(prefers-color-scheme: light)"],
+          [THEME_COLOR.dark, "(prefers-color-scheme: dark)"],
+        ]
+      : [[THEME_COLOR[theme], null]];
+  for (const [color, media] of pairs) {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.content = color;
+    if (media) meta.media = media;
+    document.head.appendChild(meta);
+  }
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", theme === "system" ? "light dark" : theme);
+}
 
 /**
  * Light / Dark / System segmented control. Applies the choice immediately,
@@ -25,11 +50,7 @@ export function ThemeControl({ current, className, compact = false }: { current:
   function apply(next: ThemePreference) {
     setValue(next);
     document.documentElement.setAttribute("data-theme", next);
-    const bg = getComputedStyle(document.body).backgroundColor;
-    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
-      m.setAttribute("content", bg);
-      m.removeAttribute("media");
-    });
+    syncThemeColor(next);
     formRef.current?.requestSubmit();
   }
 

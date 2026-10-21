@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
 import { BookOpen, Download, ExternalLink, FileText, MessagesSquare, NotebookPen } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { Alert } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { formatDay, itemDate, itemHref, KIND_LABEL, speakers } from "@/lib/media
 import { spotifyEmbed, videoEmbed } from "@/lib/media/embeds";
 import type { Attachment, ItemDetail } from "@/lib/media/types";
 import { AudioCard } from "./audio-card";
+import { BookAccess } from "./book-access";
 import { EmbedPlayer } from "./embed-player";
 import { ItemCard, itemCover } from "./item-card";
 import { NativeVideo } from "./native-video";
@@ -51,6 +53,7 @@ export function ContentDetail({
   member,
   origin,
   preview = false,
+  book,
 }: {
   item: ItemDetail;
   urls: Map<string, string>;
@@ -58,6 +61,8 @@ export function ContentDetail({
   member: boolean;
   origin: string;
   preview?: boolean;
+  /** Phase 13 book extras (Kindle link and the member's reading panel), rendered after "Read or listen". */
+  book?: { kindleUrl: string | null; panel?: ReactNode };
 }) {
   const day = itemDate(item);
   const byline = speakers(item);
@@ -102,7 +107,7 @@ export function ContentDetail({
           {item.group_name ? <span className="rounded-full bg-surface-muted px-3 py-1 text-meta">For {item.group_name}</span> : null}
           {member && !preview ? <BookmarkButton type="item" id={item.id} saved={item.bookmarked} label={item.title} /> : null}
           {/* Phase 8: a private journal note about this devotional or lesson (never posted anywhere). */}
-          {member && !preview && (item.kind === "devotional" || item.kind === "lesson") ? (
+          {member && !preview && (item.kind === "devotional" || item.kind === "lesson" || item.kind === "book") ? (
             <Link href={`/journal/new?item=${item.id}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-meta font-semibold hover:bg-surface-muted">
               <NotebookPen className="size-4" aria-hidden="true" />
               Write privately
@@ -166,25 +171,11 @@ export function ContentDetail({
         />
       ) : null}
 
-      {item.kind === "book" && item.audible_url ? (
-        <section aria-labelledby="audible-heading" className="rounded-card border border-border bg-surface p-5">
-          <h2 id="audible-heading" className="font-semibold">
-            Listen on Audible
-          </h2>
-          <p className="mt-1 text-meta text-text-secondary">
-            Opens Audible. You need your own Audible account with access to this title (a purchase, credit, or membership); the church&apos;s copy doesn&apos;t
-            give you access. Your Audible listening isn&apos;t shared with or tracked by this app.
-          </p>
-          <a
-            href={item.audible_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-cta px-5 font-semibold text-on-cta hover:bg-cta-hover"
-          >
-            Listen on Audible <ExternalLink className="size-4" aria-hidden="true" />
-            <span className="sr-only">(opens a new tab)</span>
-          </a>
-        </section>
+      {item.kind === "book" ? (
+        <>
+          <BookAccess kindleUrl={book?.kindleUrl ?? null} audibleUrl={item.audible_url} />
+          {book?.panel}
+        </>
       ) : null}
 
       {item.kind === "playlist" && item.spotify_id ? (
