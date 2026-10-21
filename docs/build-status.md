@@ -1,6 +1,6 @@
 # Build status
 
-Last updated: 2026-10-28 · Phase 10 branch `phase-10/youth-families` (also pushed as `claude/gracious-gauss-im5ojt`), based on the Phase 9 head and then merged with `main` after PR #15 · PR into `main` (not merged)
+Last updated: 2026-10-28 · Phase 10 branch `phase-10/youth-families` (also pushed as `claude/gracious-gauss-im5ojt`), based on the Phase 9 head and then merged with `main` after PR #15 · draft PR [#16](https://github.com/cmingus710/The-Gathering/pull/16) into `main` (not merged)
 
 ## Phase 10: Youth ministry and families
 
