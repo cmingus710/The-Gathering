@@ -212,4 +212,4 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script:** `supabase/manual/2026-11-01-apply-notification-panel.sql`, one transaction, requires `20261031000400` and refuses a second run, post-checks grants, `created_by = notification-panel`.
 - **Rehearsal (local, PostgreSQL 16, 2026-10-21):** on a database built from the 60 earlier migrations with their history rows, the script applied; a rerun stopped at the preflight.
 - **Order:** apply the migration before deploying the app change (the new panel calls the new function).
-- **Not applied to hosted.**
+- **Hosted (2026-10-21):** the owner ran the operator script in the SQL editor. Read-only check afterwards: 60 versions with `20261101000100` recorded (`created_by = notification-panel`); `dismissed_at` and `notifications_dismissed_read` present; the three new functions executable by `authenticated` and not by `anon`; `community_notifications` still granted to `authenticated`; no dismissed rows; anon-executable public functions still 32.
