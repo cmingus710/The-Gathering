@@ -123,7 +123,7 @@ export default async function SettingsPage() {
           <Card>
             <h3 className="mb-2 font-semibold">This device</h3>
             {notify ? (
-              <PushDevices publicKey={push?.publicKey ?? null} devices={notify.push_devices} />
+              <PushDevices publicKey={push?.publicKey ?? null} devices={notify.push_devices} pushCategories={Object.values(notify.prefs).filter((p) => p?.push).length} />
             ) : (
               <p className="text-text-secondary">Device notification status couldn&apos;t be loaded right now.</p>
             )}
