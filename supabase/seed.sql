@@ -18,6 +18,19 @@ values
    'pending@example.test', crypt('Gathering-dev-2026', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}', '{"full_name":"Synthetic Pending"}', now(), now());
 
+-- Supabase Auth reads these token columns as text and fails on NULL, and
+-- email sign-in needs an identity row per user.
+update auth.users
+   set confirmation_token = coalesce(confirmation_token, ''), recovery_token = coalesce(recovery_token, ''),
+       email_change_token_new = coalesce(email_change_token_new, ''), email_change = coalesce(email_change, ''),
+       email_change_token_current = coalesce(email_change_token_current, ''), reauthentication_token = coalesce(reauthentication_token, ''),
+       phone_change = coalesce(phone_change, ''), phone_change_token = coalesce(phone_change_token, '')
+ where email like '%@example.test';
+insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select id::text, id, jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true), 'email', now(), now(), now()
+  from auth.users where email like '%@example.test'
+on conflict do nothing;
+
 select public.bootstrap_super_admin('admin@example.test');
 update public.profiles set membership_status = 'approved'
  where id in ('22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-333333333333');
