@@ -94,10 +94,14 @@ export async function MemberShell({
               </div>
             </div>
           </header>
+          {/* Desktop: the bell sits top right, above the page, with its panel anchored beneath it. */}
+          <div className="sticky top-0 z-30 hidden h-16 items-center justify-end bg-(--header-bg) px-6 backdrop-blur-md lg:flex">
+            <NotificationBell />
+          </div>
           <main
             id="main"
             tabIndex={-1}
-            className="mx-auto w-full max-w-3xl flex-1 px-4 pb-(--dock-clearance) pt-3 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:px-10 lg:pb-14 lg:pt-10"
+            className="mx-auto w-full max-w-3xl flex-1 px-4 pb-(--dock-clearance) pt-3 outline-none has-[>.layout-wide]:max-w-6xl sm:px-6 lg:px-10 lg:pb-14 lg:pt-2"
           >
             {children}
           </main>

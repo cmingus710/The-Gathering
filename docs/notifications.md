@@ -33,6 +33,16 @@ Members change these at **Notifications → Settings**: in-app on/off (moderatio
 - **Prayer and care are always generic outside the app.** Email and push never include request titles, bodies, care details, names, or anonymous identities ("New activity on a prayer request", "An update about a care request"), and link to `/notifications/open/<id>`. The in-app list shows the request title only after rechecking that the reader can still read it. No actor is stored on prayer or care notifications.
 - **Muting and blocking** suppress new notifications at creation. Blocking also hides the blocked person's unread message notifications and unread counts.
 
+## Bell panel
+
+The bell (header on phones and tablets, top right on desktop) opens a panel; **View all** opens `/notifications`. Screenshots: [notification-panel/](notification-panel/).
+
+- **Filters:** All, Unread (with the bell's count), Community (discussions, groups, messages, moderation), Events, Prayer & Care, Teaching & Photos, Bible (reading, memory verses), and Youth & Families. Every filter maps to an existing category; there is no "app updates" category. Unread matches the bell badge, which leaves direct-message notices to the Messages badge.
+- **Mark all as read** marks every notification read, in every category (`community_notification_read(null)`, unchanged). **Clear read** hides the member's own *read* notifications from the panel and the full page (`community_notifications_clear_read`): it sets `dismissed_at` on their copies only. Unread notifications can't be dismissed (check constraint), nothing a notification points to changes, and the 180-day retention for read notifications still removes them. **Undo** restores that batch (`community_notifications_restore`, own rows only). Both buttons are disabled when there's nothing to do and act on click (not on touch-down), so scrolling can't trigger them. With a category filter selected, the action row says they apply to all categories.
+- **List:** 15 at a time from `community_notification_panel` (same access recheck as the full page, keyset paging on time and id; more load as you scroll), grouped Today / Yesterday / Earlier in the member's effective time zone (their notification time zone, else the church's). Relative times within a day, then a date. Each row: category icon, title (bold when unread), a fixed one-line preview chosen by kind, the category, the time, and an unread dot. Prayer, care, messages, youth, and moderation rows show the same generic wording as email and push.
+- **Behaviour:** opening or filtering never marks anything read; a row goes through `/notifications/open/<id>` (recheck, mark read, redirect). The list refreshes quietly on each Realtime signal or count change while open and keeps the reader's place when new items arrive above. Loading, empty, filtered-empty, error (Try again), and load-more failure states.
+- **Accessibility:** non-modal dialog; the bell is a disclosure button with `aria-expanded`; filters are a tab list (arrow keys, Home, End); Escape closes and returns focus to the bell; an outside click or tabbing away closes it.
+
 ## Delivery
 
 | Channel | How | Retries |

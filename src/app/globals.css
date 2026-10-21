@@ -1104,3 +1104,41 @@ html[data-player] {
 @media (prefers-reduced-motion: reduce) {
   .memory-celebrate { animation: none; }
 }
+
+/*
+ * Notification panel (bell). Phones: nearly full width with 12px margins,
+ * just under the header, ending above the dock. From 640px: anchored under
+ * the bell (right edges aligned), 30rem wide at most, never past the
+ * viewport. The JS sets --np-top / --np-right from the bell's position.
+ */
+.notification-panel {
+  --np-gap: 0.75rem;
+  --np-bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px) + var(--np-gap));
+  top: var(--np-top, calc(env(safe-area-inset-top, 0px) + 4.5rem));
+  left: var(--np-gap);
+  right: var(--np-gap);
+  max-height: calc(100dvh - var(--np-top, 4.5rem) - var(--np-bottom));
+}
+@media (min-width: 640px) {
+  .notification-panel {
+    left: auto;
+    right: var(--np-right, 1rem);
+    width: min(30rem, calc(100vw - 2 * var(--np-gap)));
+  }
+}
+@media (min-width: 1024px) {
+  .notification-panel {
+    --np-bottom: 1rem;
+    width: min(31rem, calc(100vw - 2 * var(--np-gap)));
+  }
+}
+.notification-panel[hidden] {
+  display: none;
+}
+/* The filter row scrolls sideways on its own; no visible scrollbar on touch. */
+.notification-filters [role="tablist"] {
+  scrollbar-width: none;
+}
+.notification-filters [role="tablist"]::-webkit-scrollbar {
+  display: none;
+}

@@ -205,3 +205,11 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - no API table grants on `giving`, `media`, `community`, or `journal`
 
   The query is `supabase/tests/phase13-fingerprint.sql`.
+
+## Notification panel (2026-11-01)
+
+- **New (additive; no applied migration was edited):** `20261101000100_notification_panel`: nullable `community.notifications.dismissed_at` with check `notifications_dismissed_read` (only read notifications can be dismissed); `public.community_notification_panel`, `community_notifications_clear_read`, `community_notifications_restore`, granted to `authenticated` only (anon baseline unchanged); `public.community_notifications` replaced with the same signature, grants, and body plus "not dismissed". Creation, merging, email, push, digests, and retention are unchanged. See [notifications.md](notifications.md#bell-panel).
+- **Operator script:** `supabase/manual/2026-11-01-apply-notification-panel.sql`, one transaction, requires `20261031000400` and refuses a second run, post-checks grants, `created_by = notification-panel`.
+- **Rehearsal (local, PostgreSQL 16, 2026-10-21):** on a database built from the 60 earlier migrations with their history rows, the script applied; a rerun stopped at the preflight.
+- **Order:** apply the migration before deploying the app change (the new panel calls the new function).
+- **Not applied to hosted.**
