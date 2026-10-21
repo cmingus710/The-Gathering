@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, X } from "lucide-react";
+import { Download, LifeBuoy, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
@@ -59,6 +59,22 @@ function UpcomingList({ idPrefix }: { idPrefix: string }) {
   );
 }
 
+/**
+ * "Report a problem" (Phase 12). Passes only the current path (never the
+ * query string) so the report can say where it happened; the member can
+ * leave it out on the form.
+ */
+function ReportProblemLink({ pathname, compact }: { pathname: string; compact?: boolean }) {
+  const active = pathname === "/report-problem";
+  const href = active ? "/report-problem" : `/report-problem?from=${encodeURIComponent(pathname)}`;
+  return (
+    <Link href={href} className={rowClass(active)} aria-current={active ? "page" : undefined}>
+      <LifeBuoy className="size-6 p-0.5" aria-hidden="true" />
+      <span className={cn("min-w-0", compact ? "truncate" : "flex-1 break-words leading-tight")}>Report a problem</span>
+    </Link>
+  );
+}
+
 /** Desktop sidebar links, grouped into the same sections as the phone More menu. */
 export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
   const pathname = usePathname();
@@ -73,6 +89,11 @@ export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
                 <NavRow item={item} pathname={pathname} />
               </li>
             ))}
+            {section.key === "you" ? (
+              <li>
+                <ReportProblemLink pathname={pathname} />
+              </li>
+            ) : null}
             {section.key === "you" && showAdmin ? (
               <li>
                 <Link href="/admin" className={rowClass(false)}>
@@ -103,7 +124,7 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
   const dialogRef = useRef<HTMLDialogElement>(null);
   const primary = MOBILE_PRIMARY_KEYS.map((k) => available.find((i) => i.key === k)!).filter(Boolean);
   const secondary = available.filter((i) => !(MOBILE_PRIMARY_KEYS as readonly string[]).includes(i.key));
-  const moreActive = secondary.some((i) => isActivePath(pathname, i.href)) || pathname === "/install";
+  const moreActive = secondary.some((i) => isActivePath(pathname, i.href)) || pathname === "/install" || pathname === "/report-problem";
 
   useEffect(() => {
     dialogRef.current?.close();
@@ -191,6 +212,11 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
                           <Download className="size-6 p-0.5" aria-hidden="true" />
                           <span className="min-w-0 truncate">Install app</span>
                         </Link>
+                      </li>
+                    ) : null}
+                    {section.key === "you" ? (
+                      <li className="min-w-0">
+                        <ReportProblemLink pathname={pathname} compact />
                       </li>
                     ) : null}
                   </ul>

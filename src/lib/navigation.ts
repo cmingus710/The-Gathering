@@ -203,6 +203,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: "giving",
     requires: [CAPABILITIES.financeView],
   },
+  {
+    key: "problem-reports",
+    label: "Problem reports",
+    href: "/admin/problem-reports",
+    icon: "moderation",
+    requires: [CAPABILITIES.settingsManage],
+  },
   { key: "settings", label: "Church settings", href: "/admin/settings", icon: "settings", requires: [CAPABILITIES.settingsManage] },
   { key: "audit", label: "Audit log", href: "/admin/audit", icon: "audit", requires: [CAPABILITIES.auditView] },
 ];
