@@ -27,7 +27,11 @@ Designated people get one email when a new account first becomes ready for membe
 
 The decision is made in the database (`supabase/migrations/20261101000300_membership_approval_alerts.sql`): a trigger on `auth.users` fires when `email_confirmed_at` goes from empty to set, or when an account is created already confirmed. `membership.approval_alerts` is unique per account, which is what makes "once" hold no matter how often a callback repeats. The trigger never blocks registration or verification: if queueing fails it logs a warning and lets the sign-up continue.
 
-**Google/Apple sign-in isn't built yet.** No extra hook is needed when it is: Supabase creates provider accounts already confirmed, so the insert trigger queues the alert after the profile trigger has created the pending profile. The provider callback should land on `/auth/confirm` (the `code` exchange) so the alert is sent right away; otherwise the scheduler sends it within about 5 minutes. See "Limits" for previews.
+**Google/Apple sign-in** (`docs/social-login-setup.md`). Supabase creates provider accounts already confirmed, so the insert trigger queues the alert as soon as the account exists, before the app sees it. Migration `20261102000100_membership_alerts_social_signups` holds those deliveries for 10 minutes. The app's `/auth/callback` then settles the alert with `membership_alert_settle_own`, which only ever touches the signed-in person's own pending, unsent alert:
+
+- **Previews and local development:** the alert is marked **test** right away, so production never sends it. The preview sends it to its allowlist, as with email registrations.
+- **Production:** a Google account (which has a name) is released and sent immediately. An Apple account (no name) waits for the "Tell us your name" step, so the email shows the name they enter.
+- **Fallback:** if the app never settles an alert (for example the person abandons the name step), the hold expires and the alert is sent as usual, with "Name not provided" if there's still no name.
 
 ## The email
 
@@ -69,5 +73,5 @@ So testing on a preview needs: an address you control on the preview's allowlist
 ## Limits
 
 - A registrant who calls Supabase Auth directly can mark their own sign-up as non-production, which only suppresses the alert about themselves; they still appear in **Admin → Members → Pending**.
-- Provider sign-in (when added) can't carry `registration_environment`, so a Google/Apple sign-up made on a preview would be treated as production. Before enabling provider sign-in on previews, add a server-side way to mark those alerts as test (for example from the preview's callback) or give previews their own Supabase project.
+- Google/Apple sign-ups on previews rely on the app's callback marking the alert as a test within the 10-minute hold (above). If that call fails, the hold expires and the alert is treated as production. A separate Supabase project for previews would remove this dependency.
 - Alerts don't repeat if nobody acts on a request.

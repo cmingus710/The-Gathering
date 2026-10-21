@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { classifyOAuthError, isOAuthProvider, type OAuthErrorKind } from "@/lib/auth/oauth";
 import { safeNextPath } from "@/lib/auth/redirects";
+import { registrationEnvironment } from "@/lib/membership/alerts";
+import { settleOwnApprovalAlert } from "@/lib/membership/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -61,7 +63,13 @@ export async function GET(request: NextRequest) {
     .select("full_name, membership_status")
     .eq("id", data.user.id)
     .maybeSingle();
-  if (profile && profile.membership_status !== "suspended" && !profile.full_name?.trim()) {
+  const named = Boolean(profile?.full_name?.trim());
+  // A new account's approval alert waits (briefly) in the database: mark a
+  // preview's as a test right away, and send a real one once it has a name.
+  if (profile?.membership_status === "pending" && (named || registrationEnvironment() !== "production")) {
+    await settleOwnApprovalAlert(supabase);
+  }
+  if (profile && profile.membership_status !== "suspended" && !named) {
     return go(next === "/home" ? "/complete-profile" : `/complete-profile?next=${encodeURIComponent(next)}`);
   }
   return go(next);
