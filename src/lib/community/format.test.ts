@@ -19,7 +19,7 @@ describe("renderCommunityText", () => {
   });
 
   it("drops dangerous links but keeps their text", () => {
-    for (const href of ["javascript:alert(1)", "java\tscript:alert(1)", "data:text/html,<b>x</b>", "vbscript:x", "tel:+15555550100", "//evil.example/x", "https://user:pass@evil.example"]) {
+    for (const href of ["javascript:alert(1)", "java\tscript:alert(1)", "data:text/html,<b>x</b>", "vbscript:x", "tel:+15555550100", "//evil.example/x", "/\t/evil.example/x", "https://user:pass@evil.example"]) {
       const html = renderCommunityText(`[click](${href})`);
       expect(html, href).not.toContain("<a ");
       expect(html).toContain("click");

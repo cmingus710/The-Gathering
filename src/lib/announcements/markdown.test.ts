@@ -47,6 +47,15 @@ describe("announcement markdown", () => {
     expect(isSafeHref("tel:+15555550100")).toBe(true);
   });
 
+  it("refuses relative links that browsers would turn into another site", () => {
+    for (const href of ["//evil.example", "/\\evil.example", "/\t/evil.example", "/\n/evil.example", "/\r/evil.example", "\t//evil.example"]) {
+      expect(isSafeHref(href), JSON.stringify(href)).toBe(false);
+    }
+    const html = render("[Church form](</\t/evil.example/login>)");
+    expect(html).not.toContain("<a");
+    expect(html).toContain("Church form");
+  });
+
   it("builds plain excerpts", () => {
     expect(markdownExcerpt("## Hi\n\n**Join** us [here](https://x.org)")).toBe("Hi Join us here");
     expect(markdownExcerpt("a".repeat(300), 20)).toHaveLength(20);
