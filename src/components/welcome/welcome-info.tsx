@@ -43,7 +43,7 @@ export function GatheringInfo({ settings }: { settings: ChurchSettings }) {
   if (!times.length && !contact) return null;
 
   return (
-    <section aria-labelledby="visit-heading" className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18">
+    <section aria-labelledby="visit-heading" className="mx-auto max-w-6xl border-t border-(--welcome-rule) px-5 py-14 sm:px-8 sm:py-18">
       <SectionTitle id="visit-heading" eyebrow="Visit">
         Join us
       </SectionTitle>

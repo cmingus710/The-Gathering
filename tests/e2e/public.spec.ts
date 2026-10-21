@@ -20,6 +20,13 @@ test("welcome page shows the approved mark, one heading, and clear actions", asy
   for (const heading of ["Gather with us", "Grow in faith", "Share life"]) {
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   }
+  // The supplied strip icons are served and drawn (as decorative gold masks).
+  for (const icon of ["gather-with-us", "grow-in-faith", "share-life"]) {
+    const res = await page.request.get(`/brand/welcome/${icon}.svg`);
+    expect(res.ok(), icon).toBe(true);
+    expect(res.headers()["content-type"]).toContain("image/svg+xml");
+  }
+  await expect(page.locator(".welcome-icon[aria-hidden='true']")).toHaveCount(3);
   // Unconfigured details are left out, never shown as placeholders or invented.
   await expect(page.getByText("will be posted here soon")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Announcements" })).toHaveCount(0);

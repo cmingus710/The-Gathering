@@ -13,19 +13,19 @@ const ITEMS = [
  */
 export function WelcomeStrip() {
   return (
-    <section aria-label="Life together" className="border-b border-(--welcome-rule)">
-      <ul className="mx-auto grid max-w-6xl px-5 sm:px-8 md:grid-cols-3">
+    <section aria-label="Life together">
+      <ul className="mx-auto grid max-w-[100rem] px-5 sm:px-8 md:grid-cols-3 md:py-7 lg:px-14">
         {ITEMS.map((item, i) => (
           <li
             key={item.title}
             className={
-              "flex flex-col items-center px-4 py-8 text-center md:my-11 md:px-8 md:py-1 " +
-              (i > 0 ? "border-t border-(--welcome-rule) md:border-t-0 md:border-l" : "")
+              "flex flex-col items-center px-4 py-9 text-center md:px-6 md:py-1 " +
+              (i > 0 ? "border-t border-(--welcome-rule) md:border-t-0 md:border-l md:border-(--welcome-gold)/70" : "")
             }
           >
-            <span aria-hidden="true" className="welcome-icon block size-12" style={{ "--welcome-icon": `url("${item.icon}")` } as CSSProperties} />
-            <h2 className="mt-4 font-display text-[1.5rem] leading-snug font-medium text-text">{item.title}</h2>
-            <p className="mt-1.5 text-text-secondary">{item.text}</p>
+            <span aria-hidden="true" className="welcome-icon block size-20 lg:size-24" style={{ "--welcome-icon": `url("${item.icon}")` } as CSSProperties} />
+            <h2 className="mt-4 font-display text-[1.75rem] leading-tight font-semibold tracking-[-0.01em] text-text md:text-[1.5rem] lg:mt-3 lg:text-[2.25rem]">{item.title}</h2>
+            <p className="mt-1 font-display text-[1.125rem] text-text lg:text-[1.25rem]">{item.text}</p>
           </li>
         ))}
       </ul>

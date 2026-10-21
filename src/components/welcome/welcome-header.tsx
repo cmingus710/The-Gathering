@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { IconMark } from "@/components/brand/logo";
 
-/** Outlined charcoal button on ivory, used in the welcome header. */
+/** Outlined button on ivory with a fine antique-gold border, used in the welcome header. */
 export const welcomeOutlineButton =
-  "inline-flex min-h-11 items-center justify-center rounded-md border border-text/70 px-4 text-meta font-semibold text-text " +
-  "transition-colors hover:border-text hover:bg-text hover:text-background active:bg-cta-hover active:text-background";
+  "inline-flex min-h-11 items-center justify-center rounded-md border border-(--welcome-gold) px-5 font-display text-[1.0625rem] text-text " +
+  "transition-colors hover:bg-text hover:border-text hover:text-background active:bg-cta-hover active:text-background sm:min-h-12 sm:px-8";
 
 /**
  * Compact ivory header for the public pages: the approved mark beside the
@@ -13,14 +13,13 @@ export const welcomeOutlineButton =
 export function WelcomeHeader({ churchName, iconUrl, signedIn }: { churchName: string; iconUrl: string; signedIn: boolean }) {
   return (
     <header className="border-b border-(--welcome-rule) bg-(--header-bg)">
-      <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5 sm:px-8">
-        <Link href="/" className="-mx-1 flex min-h-11 items-center gap-2.5 rounded-md px-1">
-          <IconMark src={iconUrl} className="h-10 sm:h-11" />
-          <span className="font-display text-[1.25rem] leading-tight font-semibold text-text sm:text-[1.375rem]">{churchName}</span>
+      <div className="mx-auto flex min-h-18 max-w-[100rem] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5 sm:min-h-22 sm:px-8 lg:px-20">
+        <Link href="/" className="-mx-1 flex min-h-11 items-center gap-3 rounded-md px-1">
+          <IconMark src={iconUrl} className="h-11 sm:h-16" />
+          <span className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.02em] text-text sm:text-[2.375rem]">{churchName}</span>
         </Link>
-        <div className="flex items-center gap-4">
-          <span className="hidden font-display text-meta tracking-[0.14em] text-text-secondary uppercase sm:inline">Welcome</span>
-          <span aria-hidden="true" className="hidden h-5 w-px bg-(--welcome-rule) sm:block" />
+        <div className="flex items-center gap-6 sm:gap-10">
+          <span className="hidden font-display text-[1.125rem] tracking-[0.04em] text-text sm:inline">Welcome</span>
           <Link href={signedIn ? "/home" : "/sign-in"} className={welcomeOutlineButton}>
             {signedIn ? "Open app" : "Sign in"}
           </Link>

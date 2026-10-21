@@ -477,7 +477,7 @@ h3 {
 @media (min-width: 48rem) {
   .welcome-hero-scrim {
     background:
-      linear-gradient(90deg, rgb(26 22 17 / 0.86) 0%, rgb(26 22 17 / 0.72) 30%, rgb(26 22 17 / 0.34) 56%, rgb(26 22 17 / 0.06) 78%, rgb(26 22 17 / 0) 100%),
+      linear-gradient(90deg, rgb(26 22 17 / 0.9) 0%, rgb(26 22 17 / 0.84) 34%, rgb(26 22 17 / 0.5) 48%, rgb(26 22 17 / 0.1) 64%, rgb(26 22 17 / 0) 80%),
       linear-gradient(180deg, rgb(26 22 17 / 0.18) 0%, rgb(26 22 17 / 0) 30%, rgb(26 22 17 / 0) 75%, rgb(26 22 17 / 0.28) 100%);
   }
 }
