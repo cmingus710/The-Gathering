@@ -206,6 +206,14 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 
   The query is `supabase/tests/phase13-fingerprint.sql`.
 
+## Notification panel (2026-11-01)
+
+- **New (additive; no applied migration was edited):** `20261101000100_notification_panel`: nullable `community.notifications.dismissed_at` with check `notifications_dismissed_read` (only read notifications can be dismissed); `public.community_notification_panel`, `community_notifications_clear_read`, `community_notifications_restore`, granted to `authenticated` only (anon baseline unchanged); `public.community_notifications` replaced with the same signature, grants, and body plus "not dismissed". Creation, merging, email, push, digests, and retention are unchanged. See [notifications.md](notifications.md#bell-panel).
+- **Operator script:** `supabase/manual/2026-11-01-apply-notification-panel.sql`, one transaction, requires `20261031000400` and refuses a second run, post-checks grants, `created_by = notification-panel`.
+- **Rehearsal (local, PostgreSQL 16, 2026-10-21):** on a database built from the 60 earlier migrations with their history rows, the script applied; a rerun stopped at the preflight.
+- **Order:** apply the migration before deploying the app change (the new panel calls the new function).
+- **Hosted (2026-10-21):** the owner ran the operator script in the SQL editor. Read-only check afterwards: 60 versions with `20261101000100` recorded (`created_by = notification-panel`); `dismissed_at` and `notifications_dismissed_read` present; the three new functions executable by `authenticated` and not by `anon`; `community_notifications` still granted to `authenticated`; no dismissed rows; anon-executable public functions still 32.
+
 ## Membership approval alerts (2026-11-01)
 
 - **New:** `20261101000300_membership_approval_alerts` (first merged as `20261101000100`, renumbered because that version belongs to `notification_panel` on hosted and `000200` to `community_feed`), additive: private schema `membership` (four tables, RLS on, no API grants), two triggers on `auth.users` that only queue rows (`on_auth_user_verified_alert` on insert when already confirmed, `on_auth_user_verified_alert_update` when `email_confirmed_at` is first set; failures are warnings), four `SECURITY DEFINER` settings functions granted to `authenticated` and checking `settings.manage`. Replaces `public.community_job` (same operations plus `membership_alert_claim` / `membership_alert_result`; grants unchanged) and `community.has_due_work` (same checks plus `membership.has_due_alerts()`). Anon baseline unchanged (32). Alerts start off with no recipients. See [membership-approval-alerts.md](membership-approval-alerts.md).
