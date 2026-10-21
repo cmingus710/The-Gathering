@@ -30,7 +30,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
   }
 
   const back = (
-    <Link href={groupId ? `/groups/${groupId}` : categoryId ? `/community/c/${categoryId}` : "/community"} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
+    <Link href={groupId ? `/groups/${groupId}` : categoryId ? `/community?category=${categoryId}` : "/community"} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" /> Back
     </Link>
   );
@@ -63,7 +63,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
         {back}
         <PageHeader title="New group discussion" description={`In ${group.name}`} />
         <Card>
-          <ThreadComposer action={createThreadAction} audience="group" place={group.name} hidden={{ groupId }} submitLabel="Post to group" />
+          <ThreadComposer action={createThreadAction} audience="group" place={group.name} hidden={{ groupId }} submitLabel="Post to group" attachments />
         </Card>
       </>
     );
@@ -102,7 +102,7 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
       {back}
       <PageHeader title="New discussion" description={`In ${category.name}`} />
       <Card>
-        <ThreadComposer action={createThreadAction} audience="church" place={category.name} hidden={{ categoryId: category.id }} submitLabel="Post discussion" />
+        <ThreadComposer action={createThreadAction} audience="church" place={category.name} hidden={{ categoryId: category.id }} submitLabel="Post discussion" attachments />
       </Card>
     </>
   );

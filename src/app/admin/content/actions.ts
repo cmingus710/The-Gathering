@@ -6,7 +6,7 @@ import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, type FormState } from "@/lib/forms";
-import { normalizeAudibleUrl, parseSpotify } from "@/lib/media/embeds";
+import { normalizeAudibleUrl, normalizeKindleUrl, parseSpotify } from "@/lib/media/embeds";
 import { isUuid, isYmd } from "@/lib/media/format";
 import { parseReferenceList } from "@/lib/media/scripture";
 import type { ItemKind } from "@/lib/media/types";
@@ -276,4 +276,41 @@ export async function deleteTopicAction(formData: FormData): Promise<void> {
   if (supabase && isUuid(formData.get("id"))) await supabase.rpc("media_admin_topic_delete", { p_id: formData.get("id") });
   revalidatePath("/admin/content/library");
   redirect("/admin/content/library?saved=topic");
+}
+
+/** Phase 13: a book's Kindle link, reading dates, and related lesson. */
+export async function saveBookDetailsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.contentEdit, "/admin/content");
+  const values = formValues(formData);
+  const id = formData.get("id");
+  if (!isUuid(id)) return errorState("That book wasn't found.", { values });
+  const rawKindle = String(formData.get("kindle_url") ?? "").trim();
+  const kindle = rawKindle ? normalizeKindleUrl(rawKindle) : null;
+  if (rawKindle && !kindle) {
+    return errorState("Check the Kindle link.", {
+      values,
+      fieldErrors: { kindle_url: ["Use an https:// link to the book on Amazon (…/dp/…) or Kindle Cloud Reader (read.amazon.com)."] },
+    });
+  }
+  const starts = String(formData.get("reading_starts_on") ?? "");
+  const ends = String(formData.get("reading_ends_on") ?? "");
+  if ((starts && !isYmd(starts)) || (ends && !isYmd(ends))) return errorState("Check the reading dates.", { values });
+  if (starts && ends && ends < starts) {
+    return errorState("Check the reading dates.", { values, fieldErrors: { reading_ends_on: ["The end date is before the start date."] } });
+  }
+  const lesson = formData.get("related_lesson_id");
+  const supabase = await createClient();
+  if (!supabase) return errorState(UNAVAILABLE, { values });
+  const { error } = await supabase.rpc("media_admin_book_details_save", {
+    p_item: id,
+    p_kindle_url: kindle,
+    p_starts: starts || null,
+    p_ends: ends || null,
+    p_related_lesson: isUuid(lesson) ? lesson : null,
+  });
+  if (error) return errorState(dbErrorMessage(error), { values });
+  revalidatePath(`/admin/content/${id}`);
+  revalidatePath(`/reading/books/${id}`);
+  revalidatePath("/reading");
+  return { status: "success", message: "Reading details saved." };
 }

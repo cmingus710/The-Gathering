@@ -142,6 +142,8 @@ If the `.p8` is lost or exposed: Apple Developer → Keys → **Revoke** it, cre
 
 Do this on a protected **preview** of this branch, with `AUTH_OAUTH_PROVIDERS` set for Preview, using **dedicated test accounts only**: a test Google account and a test Apple ID. Add the Google test account as a test user while the Google app is in Testing.
 
+> **Approval alerts on previews.** Email registrations made on a preview are tagged as tests, so their membership approval alert ([membership-approval-alerts.md](membership-approval-alerts.md)) never reaches production recipients. A Google or Apple sign-in can't carry that tag: Supabase creates the account before the app sees it. So a **new** Google/Apple test account on a preview queues a **real** alert to the configured recipients. Before the hosted test, either tell the recipients to expect "[TEST]" registrations, or turn alerts off under Church settings → Membership approval notifications and back on afterwards. Apple accounts are alerted before the name step, so their alert says "Name not provided".
+
 | # | Check | Expected |
 | --- | --- | --- |
 | 1 | Sign-in page on phone and desktop | Google and Apple buttons above the email form, "or" divider; email form unchanged |

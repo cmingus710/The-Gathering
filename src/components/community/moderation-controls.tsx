@@ -9,7 +9,7 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 
-const reasonField = (required: boolean) => (
+export const reasonField = (required: boolean) => (
   <TextAreaField
     label="Reason (recorded, and shown to the author)"
     name="reason"

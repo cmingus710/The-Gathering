@@ -2,6 +2,7 @@ import { CalendarClock, Mail, MapPin, Phone } from "lucide-react";
 import type { ReactNode } from "react";
 import { AnnouncementCard } from "@/components/announcements/announcement-card";
 import { Alert } from "@/components/ui/alert";
+import { addressQuery, mailtoHref, mapLinks, telHref } from "@/lib/directory/format";
 import type { AnnouncementWithImage } from "@/lib/announcements/queries";
 import { hasAddress, type ChurchSettings } from "@/lib/settings/queries";
 import { WEEKDAY_LABEL } from "@/lib/settings/schema";
@@ -39,6 +40,7 @@ function InfoPanel({ title, children }: { title: string; children: ReactNode }) 
 export function GatheringInfo({ settings }: { settings: ChurchSettings }) {
   const times = settings.gatheringTimes;
   const address = hasAddress(settings);
+  const churchMap = address ? mapLinks(addressQuery([settings.address.line1, settings.address.line2, settings.address.city, settings.address.region, settings.address.postalCode])) : null;
   const contact = address || settings.contactEmail || settings.contactPhone;
   if (!times.length && !contact) return null;
 
@@ -83,13 +85,23 @@ export function GatheringInfo({ settings }: { settings: ChurchSettings }) {
                     <span className="block">
                       {[settings.address.city, settings.address.region].filter(Boolean).join(", ")} {settings.address.postalCode}
                     </span>
+                    {churchMap ? (
+                      <a
+                        href={churchMap.directions}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${linkClass} mt-1 inline-block`}
+                      >
+                        Get directions<span className="sr-only"> (opens Google Maps)</span>
+                      </a>
+                    ) : null}
                   </address>
                 </li>
               ) : null}
               {settings.contactEmail ? (
                 <li className="flex gap-3">
                   <Mail className="mt-1 size-5 shrink-0 text-(--welcome-gold)" aria-hidden="true" />
-                  <a href={`mailto:${settings.contactEmail}`} className={`${linkClass} break-all`}>
+                  <a href={mailtoHref(settings.contactEmail) ?? undefined} className={`${linkClass} break-all`}>
                     {settings.contactEmail}
                   </a>
                 </li>
@@ -97,7 +109,7 @@ export function GatheringInfo({ settings }: { settings: ChurchSettings }) {
               {settings.contactPhone ? (
                 <li className="flex gap-3">
                   <Phone className="mt-1 size-5 shrink-0 text-(--welcome-gold)" aria-hidden="true" />
-                  <a href={`tel:${settings.contactPhone.replace(/[^0-9+]/g, "")}`} className={linkClass}>
+                  <a href={telHref(settings.contactPhone) ?? undefined} className={linkClass}>
                     {settings.contactPhone}
                   </a>
                 </li>

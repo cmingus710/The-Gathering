@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
+import type { AdminCampaign } from "@/lib/giving/campaigns";
 import { todayIn, type FinanceFund } from "@/lib/giving/finance";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
@@ -18,11 +19,16 @@ export default async function ManualGiftPage({ searchParams }: PageProps<"/admin
   const [{ settings }, params, supabase] = await Promise.all([getChurchSettings(), searchParams, requireClient()]);
   const q = typeof params.q === "string" ? params.q.slice(0, 80) : "";
   const donorId = typeof params.donor === "string" && /^[0-9a-f-]{36}$/i.test(params.donor) ? params.donor : null;
-  const [{ data: funds }, search] = await Promise.all([
+  const [{ data: funds }, { data: campaignData }, search] = await Promise.all([
     supabase.rpc("finance_funds"),
+    supabase.rpc("finance_campaigns"),
     q || donorId ? supabase.rpc("finance_donor_search", { p_query: q || "" }) : Promise.resolve({ data: [] }),
   ]);
   const results = (search.data as Donor[] | null) ?? [];
+  // Offline gifts can count toward published or closed campaigns (a check may arrive after the close).
+  const campaigns = ((campaignData as AdminCampaign[] | null) ?? [])
+    .filter((c) => c.status === "published" || c.status === "closed")
+    .map((c) => ({ id: c.id, title: c.status === "closed" ? `${c.title} (closed)` : c.title, fund_id: c.fund_id, fund_name: c.fund_name }));
   let donor: Donor | null = null;
   if (donorId) {
     const found = (((await supabase.rpc("finance_donor_search", { p_query: q || "" })).data as Donor[] | null) ?? []).find((d) => d.id === donorId);
@@ -37,7 +43,7 @@ export default async function ManualGiftPage({ searchParams }: PageProps<"/admin
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <Card>
           <SectionHeading>Gift</SectionHeading>
-          <RecordManualForm funds={(funds as FinanceFund[] | null) ?? []} donor={donor} today={todayIn(settings.timezone)} formToken={randomUUID()} />
+          <RecordManualForm funds={(funds as FinanceFund[] | null) ?? []} donor={donor} today={todayIn(settings.timezone)} formToken={randomUUID()} campaigns={campaigns} />
         </Card>
         <Card>
           <SectionHeading>Donor (optional)</SectionHeading>

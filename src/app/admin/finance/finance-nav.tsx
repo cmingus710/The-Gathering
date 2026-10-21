@@ -9,6 +9,7 @@ const ITEMS: Array<{ href: string; label: string; requires: Capability }> = [
   { href: "/admin/finance/manual", label: "Record cash/check", requires: CAPABILITIES.financeRecord },
   { href: "/admin/finance/statements", label: "Statements", requires: CAPABILITIES.financeView },
   { href: "/admin/finance/funds", label: "Funds", requires: CAPABILITIES.financeView },
+  { href: "/admin/finance/campaigns", label: "Campaigns", requires: CAPABILITIES.financeView },
   { href: "/admin/finance/settings", label: "Settings", requires: CAPABILITIES.financeView },
   { href: "/admin/finance/operations", label: "Reconcile & email", requires: CAPABILITIES.financeManage },
 ];

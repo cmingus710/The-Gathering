@@ -10,22 +10,23 @@ import { getSupabasePublicConfig } from "@/lib/env";
 import { displayName, type Viewer } from "@/lib/auth/viewer";
 import type { ChurchSettings } from "@/lib/settings/queries";
 import { getThemePreference } from "@/lib/theme/server";
+import { AccountMenu } from "./account-menu";
 import { MobileTabBar, SidebarNav } from "./member-nav";
 import { SignOutButton } from "./sign-out-button";
 
-/** Initial avatar linking to the profile. */
+/** Phone header: initial avatar opening Settings (profile, account, appearance, privacy, access). */
 function Avatar({ viewer, className = "size-9 bg-surface-muted text-[1.0625rem] ring-border" }: { viewer: Viewer; className?: string }) {
   const initial = displayName(viewer).trim().charAt(0).toUpperCase() || "?";
   return (
     <Link
-      href="/profile"
+      href="/settings"
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full font-display font-semibold text-text ring-1 transition-colors hover:ring-border-strong",
         className,
       )}
     >
       <span aria-hidden="true">{initial}</span>
-      <span className="sr-only">Your profile</span>
+      <span className="sr-only">Profile and settings</span>
     </Link>
   );
 }
@@ -57,16 +58,13 @@ export async function MemberShell({
           <div className="flex-1 overflow-y-auto px-3 py-3">
             <SidebarNav showAdmin={viewer.isAdmin} />
           </div>
-          <div className="space-y-3 border-t border-border px-3 py-3">
-            <div className="flex items-center gap-3 px-1">
-              <Avatar viewer={viewer} />
-              <p className="min-w-0 flex-1 truncate text-meta">
-                <span className="sr-only">Signed in as </span>
-                <span className="font-semibold text-text">{displayName(viewer)}</span>
-              </p>
-            </div>
-            <ThemeControl current={theme} compact />
-            <SignOutButton className="min-h-11 rounded-tile px-3 text-text-secondary hover:text-text" />
+          <div className="border-t border-border px-3 py-3">
+            <AccountMenu
+              name={displayName(viewer)}
+              initial={displayName(viewer).trim().charAt(0).toUpperCase() || "?"}
+              appearance={<ThemeControl current={theme} compact />}
+              signOut={<SignOutButton className="min-h-11 rounded-tile px-3 text-text-secondary hover:text-text" />}
+            />
           </div>
         </aside>
 

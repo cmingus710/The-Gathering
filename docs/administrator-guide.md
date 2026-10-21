@@ -25,9 +25,10 @@ The short version of every administrative job, with links to the detailed guides
 3. **Google and Apple registrations** arrive pending like any other. A Google or Apple email (or its domain) doesn't prove membership. An address ending `@privaterelay.appleid.com` is Apple's Hide My Email relay, and the list says so. If someone already has an account and signed in with a different Google/Apple email by mistake, **Decline** the extra registration and point them to Profile → Sign-in methods on their real account ([social-login-setup.md](social-login-setup.md#account-linking-behaviour)).
 4. **Decline** (pending) or **Suspend** (approved) asks you to confirm. Suspended people lose member access on their next page load; nothing is deleted. **Reinstate** restores it.
 5. **Roles** on the same page: **Assign** takes effect on the person's next page load. **Remove** asks you to confirm. Every change is in the audit log. You can't change your own status, and the last super administrator can't be removed.
-6. Give each person only the roles they need. Common pairs: *Membership administrator* (approvals), *Content editor/publisher* (teaching), *Event coordinator*, *Community moderator*, *Prayer moderator*, *Gallery moderator*, *Finance viewer/administrator*.
-7. **Direct messaging** is off for everyone until an administrator confirms the person is an adult (Members → person → Direct messaging).
-8. Correcting someone's profile records which fields changed (not the values) in the audit log.
+6. Optional: to be emailed when someone new is waiting, a super administrator lists recipients under **Church settings → Membership approval notifications** ([membership-approval-alerts.md](membership-approval-alerts.md)).
+7. Give each person only the roles they need. Common pairs: *Membership administrator* (approvals), *Content editor/publisher* (teaching), *Event coordinator*, *Community moderator*, *Prayer moderator*, *Gallery moderator*, *Finance viewer/administrator*.
+8. **Direct messaging** is off for everyone until an administrator confirms the person is an adult (Members → person → Direct messaging).
+9. Correcting someone's profile records which fields changed (not the values) in the audit log.
 
 ## Church settings and announcements
 
@@ -56,7 +57,28 @@ The short version of every administrative job, with links to the detailed guides
 
 ## Teacher tools that exist today
 
-Teachers with the content roles can publish lessons with attached handouts and media, and authorized group leaders can run memory-verse collections and challenges for their groups. **Not built yet:** a lesson builder ("Lesson Studio"), live "Follow Along", and member handout creation. Don't announce these.
+Teachers with the content roles can publish lessons with attached handouts and media, and authorized group leaders can run memory-verse collections and challenges for their groups.
+
+**Lesson builder and workbook (Phase 13, after its migration is applied):**
+1. Open a lesson under **Teaching content**, then choose **Lesson builder**.
+2. Add blocks (introduction, Scripture, teaching, discussion or written question, illustration, image, audio/video, reflection, closing), and order them with Up and Down.
+3. Anything in a dashed **Teacher only** box (a teacher note, or a whole block marked "Hide this whole block from members") never reaches members, the preview, or the page source.
+4. Use **Preview the member workbook** to check, then publish the lesson as usual.
+
+Editors change drafts; changing a live lesson needs the publisher role. Rewording a question keeps members' answers and shows them the wording they answered. Removing a block keeps answers for their authors. Members' answers are private: no teacher or administrator view exists. Full guide: [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
+
+**Church reading (Phase 13):** create a **Book** (title, author, description, cover image with confirmed rights, optional Audible link). Then, on its edit page, set **Reading details** (Kindle link, reading dates, related lesson). Add **Reading assignments** for the chapter schedule. Members open Kindle or Audible with their own accounts; nothing is embedded. Full guide: [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
+
+**Not built:** a printable workbook or handout export, live presenter "Follow Along", and member-created handouts. Don't announce these.
+
+## Fundraising campaigns (Phase 13)
+
+Finance administrators (`finance.manage`) go to **Administration → Finance → Campaigns**:
+1. Create a draft: title, description, optional image, goal, optional dates, the fund it gives to, and whether it's public or members-only.
+2. **Publish** it. The fund is locked once published.
+3. **Close** it to stop new gifts; the total stays visible. **Archive** it to hide it.
+
+Cash and check gifts for a campaign go through **Record cash/check** with the campaign chosen (`finance.record`). The meter counts succeeded gifts, less refunds and open or lost disputes. Test and live totals never mix, and the meter never shows donors or individual amounts. Exact definition: [phase-13/campaigns.md](phase-13/campaigns.md#progress-definition).
 
 ## Giving administration and statements
 

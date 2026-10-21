@@ -1,7 +1,8 @@
 "use client";
 
 import { Globe, Lock, Send } from "lucide-react";
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useState } from "react";
+import { AttachmentPicker } from "@/components/community/attachment-picker";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -30,12 +31,13 @@ export function AudienceNotice({ audience, place }: { audience: "church" | "grou
   );
 }
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. No images or attachments yet.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links.";
 
 /**
  * New or edited discussion. Fields are controlled, so the text survives a
  * failed save (and React's automatic form reset). A fresh idempotency key
- * per draft means a retried submit can never post twice.
+ * per draft means a retried submit can never post twice. New discussions
+ * can carry photos and videos (`attachments`); edits keep the ones posted.
  */
 export function ThreadComposer({
   action,
@@ -44,6 +46,7 @@ export function ThreadComposer({
   hidden,
   initial,
   submitLabel,
+  attachments = false,
 }: {
   action: Action;
   audience: "church" | "group";
@@ -51,11 +54,13 @@ export function ThreadComposer({
   hidden: Record<string, string>;
   initial?: { title: string; body: string };
   submitLabel: string;
+  attachments?: boolean;
 }) {
   const [state, formAction] = useActionState(action, initialFormState);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [clientKey] = useState(() => crypto.randomUUID());
+  const [uploading, setUploading] = useState(false);
   const fe = state.fieldErrors ?? {};
   return (
     <form action={formAction} className="space-y-5">
@@ -77,55 +82,9 @@ export function ThreadComposer({
         error={fe.body}
         hint={FORMAT_HINT}
       />
-      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />}>
+      {attachments ? <AttachmentPicker onBusyChange={setUploading} /> : null}
+      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />} disabled={uploading}>
         {submitLabel}
-      </SubmitButton>
-    </form>
-  );
-}
-
-/**
- * Reply box. Keeps the draft on failure; after a successful reply it clears,
- * gets a new idempotency key, and moves focus to the new reply (or the
- * status message) instead of re-reading the whole thread.
- */
-export function ReplyComposer({ threadId, action }: { threadId: string; action: Action }) {
-  const [state, formAction] = useActionState(action, initialFormState);
-  const [body, setBody] = useState("");
-  const [clientKey, setClientKey] = useState(() => crypto.randomUUID());
-  const statusRef = useRef<HTMLParagraphElement>(null);
-  const id = useId();
-  const handled = useRef<FormState | null>(null);
-  useEffect(() => {
-    if (state.status !== "success" || handled.current === state) return;
-    handled.current = state;
-    setBody("");
-    setClientKey(crypto.randomUUID());
-    const target = state.values?.postId ? document.getElementById(`post-${state.values.postId}`) : null;
-    (target ?? statusRef.current)?.focus();
-  }, [state]);
-  return (
-    <form action={formAction} className="space-y-3" aria-labelledby={`${id}-label`}>
-      <input type="hidden" name="threadId" value={threadId} />
-      <input type="hidden" name="clientKey" value={clientKey} />
-      {state.status === "error" ? <FormMessage state={state} /> : null}
-      <p ref={statusRef} tabIndex={-1} role="status" className="sr-only outline-none">
-        {state.status === "success" ? state.message : ""}
-      </p>
-      <TextAreaField
-        id={`${id}-body`}
-        label={<span id={`${id}-label`}>Your reply</span>}
-        name="body"
-        required
-        maxLength={LIMITS.reply}
-        rows={4}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        error={state.fieldErrors?.body}
-        hint={FORMAT_HINT}
-      />
-      <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />}>
-        Post reply
       </SubmitButton>
     </form>
   );

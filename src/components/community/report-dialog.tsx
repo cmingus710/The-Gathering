@@ -1,7 +1,7 @@
 "use client";
 
 import { Flag } from "lucide-react";
-import { useActionState, useId, useRef, useState } from "react";
+import { useActionState, useId, useRef, useState, type RefObject } from "react";
 import { reportAction } from "@/app/(member)/community/actions";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
@@ -19,6 +19,7 @@ export function ReportDialog({
   label = "Report",
   what,
   compact,
+  dialogRef,
 }: {
   type: "thread" | "post" | "message";
   ids: string[];
@@ -26,14 +27,18 @@ export function ReportDialog({
   /** e.g. "this reply" or "2 selected messages" */
   what: string;
   compact?: boolean;
+  /** Open it from elsewhere (a menu) instead of its own button. */
+  dialogRef?: RefObject<HTMLDialogElement | null>;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const ownRef = useRef<HTMLDialogElement>(null);
+  const ref = dialogRef ?? ownRef;
   const [state, action] = useActionState(reportAction, initialFormState);
   const [details, setDetails] = useState("");
   const titleId = useId();
   const done = state.status === "success";
   return (
     <>
+      {dialogRef ? null : (
       <Button
         variant="ghost"
         size="sm"
@@ -44,6 +49,7 @@ export function ReportDialog({
       >
         {compact ? <span className="sr-only">{label} {what}</span> : <>{label}<span className="sr-only"> {what}</span></>}
       </Button>
+      )}
       <dialog
         ref={ref}
         aria-labelledby={titleId}

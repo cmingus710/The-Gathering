@@ -49,6 +49,21 @@ Admin → Giving shows, for the chosen dates (church time zone):
   - Donors change the amount, update the card, or cancel from their own giving page. Changes affect future gifts only.
   - Pause and resume aren't offered.
 
+## Campaigns
+
+A campaign is a goal that gifts can be made toward ("Roof repair, $25,000"). Admin → Giving → Campaigns. Technical details and the exact total definition are in [phase-13/campaigns.md](phase-13/campaigns.md).
+
+- **Who:** anyone with `finance.view` sees campaigns and their totals; creating, editing, publishing, closing, and archiving need `finance.manage`. Recording a cash or check gift toward a campaign needs `finance.record`.
+- **Each campaign posts to one fund.** Campaign gifts are ordinary gifts in that fund (fund totals, statements, and exports include them). The fund can't be changed once the campaign has been published.
+- **Lifecycle:** new campaigns are **drafts** (only finance sees them). **Publish** to show it; **Close** to stop new online gifts (it stays visible with its final total); **Reopen** a closed campaign; **Archive** to hide it. Archived campaigns can be restored as closed. Nothing is deleted, and every change is in the audit log.
+- **Who sees it:** *Approved members only* or *Everyone, including guests*. Drafts and archived campaigns are never shown. Members and guests see the title, description, image, dates, fund, goal, and the amount raised. They never see donors, gift counts, or individual amounts.
+- **Dates (optional):** online gifts are accepted from the start date through the end date (church time zone). Publishing is refused once the end date has passed.
+- **Giving to a campaign:** from the campaign's page (Give → the campaign), using the usual form with the campaign's fund preselected. Recurring gifts can be started; each paid installment counts while the campaign is published, and after it closes later installments go to the fund only.
+- **Cash and checks:** in Record cash/check, choose the campaign. The gift goes to the campaign's fund and is shown as cash or check in the campaign's breakdown. This works for published and closed campaigns (a check can arrive after the close). Corrections keep the campaign; reversals stop it counting.
+- **What the total ("raised") includes:** received gifts attributed to the campaign, less completed refunds, less disputed amounts (lost disputes, and open disputes until they're won). Pending, failed, and reversed entries and future recurring installments never count. The campaign page shows the gross, refunds, disputes, and a breakdown by online, cash, and check.
+- **Gifts are never moved.** A gift's campaign is fixed when it's recorded. Gifts made before a campaign existed are never added to it, and renaming a campaign doesn't change its gifts.
+- **Test mode:** totals count test-mode gifts only, like every other finance total in this phase.
+
 ## Guest gifts
 
 - Guests don't need an account. Their acknowledgment email includes a **gift reference**.
@@ -84,6 +99,7 @@ Acknowledgments, failed recurring payment notices, cancellation confirmations, a
 Finance actions are in Admin → Audit log:
 - manual gifts recorded, corrected, and reversed;
 - donor links, refunds requested, and exports;
-- fund and setting changes, and email retries.
+- fund and setting changes, and email retries;
+- campaigns created, edited (field names only), status changes, and cash/check gifts recorded toward a campaign.
 
 Each entry records the action, the actor, and the record id. Amounts, names, emails, and notes are never recorded.

@@ -27,6 +27,7 @@ const giveInput = z.object({
   frequency: z.enum(["one_time", "weekly", "monthly"]),
   fundId: z.uuid({ message: "Choose a fund." }),
   formToken: z.uuid(),
+  campaignId: z.union([z.uuid(), z.literal("")]).optional().transform((v) => v || null),
 });
 
 export async function startGiveAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -47,7 +48,7 @@ export async function startGiveAction(_prev: FormState, formData: FormData): Pro
 
   let url: string;
   try {
-    url = await createCheckout(server, { profileId, fundId: parsed.data.fundId, amountCents: cents, frequency: parsed.data.frequency, formToken: parsed.data.formToken, clientIp: ip });
+    url = await createCheckout(server, { profileId, fundId: parsed.data.fundId, amountCents: cents, frequency: parsed.data.frequency, formToken: parsed.data.formToken, clientIp: ip, campaignId: parsed.data.campaignId });
   } catch (err) {
     const message = friendly(err, "We couldn't start checkout. No payment was made. Please try again.");
     return errorState(message, { values, fieldErrors: /amount/i.test(message) ? { amount: [message] } : undefined });

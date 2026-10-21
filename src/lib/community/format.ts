@@ -7,7 +7,8 @@ import { isSafeHref } from "@/lib/announcements/markdown";
  * code. Nothing unsafe is ever emitted, so no HTML sanitizer is needed:
  * - raw HTML is escaped and shown as text;
  * - headings render as bold paragraphs (posts can't shout over the page);
- * - images render as their alt text (attachments are deferred);
+ * - Markdown images render as their alt text (photos and videos are
+ *   separate attachments, served through an access-checked route);
  * - links are kept only for http(s), mailto, and same-site paths, open with
  *   rel="nofollow ugc noopener noreferrer", and anything else becomes text;
  * - tables and horizontal rules render as plain text.

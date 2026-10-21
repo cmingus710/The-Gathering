@@ -68,7 +68,7 @@ export async function proxy(request: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   // Community and media API responses are per-viewer and must never be cached publicly.
-  if (["/api/community/", "/api/media/", "/api/journal/", "/api/bible/", "/api/memory/"].some((p) => pathname.startsWith(p))) {
+  if (["/api/community/", "/api/media/", "/api/journal/", "/api/bible/", "/api/memory/", "/api/workbook/"].some((p) => pathname.startsWith(p))) {
     response.headers.set("Cache-Control", "private, no-store");
   }
 

@@ -48,6 +48,8 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "gallery", label: "Gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
   { key: "media", label: "Search teaching & media", icon: "media", section: "learn", status: "available", href: "/media" },
   { key: "saved", label: "Saved", icon: "media", section: "you", status: "available", href: "/saved" },
+  // Phase 13: one place for profile, sign-in, notifications, appearance, privacy, and access.
+  { key: "settings", label: "Settings", icon: "settings", section: "you", status: "available", href: "/settings" },
   // Phase 8: Bible reading plans and the reader; journals are private to each member.
   { key: "bible", label: "Bible reading", icon: "bible", section: "learn", status: "available", href: "/bible" },
   { key: "journal", label: "My Journal", icon: "journal", section: "you", status: "available", href: "/journal" },

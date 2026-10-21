@@ -2,8 +2,9 @@ import { Cake, Home, Mail, MapPin, Phone, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card, SectionHeading } from "@/components/ui/card";
-import { cityLine, formatBirthday, mailtoHref, telHref } from "@/lib/directory/format";
+import { addressQuery, cityLine, formatBirthday, mailtoHref, telHref } from "@/lib/directory/format";
 import type { DirectoryProfile } from "@/lib/directory/queries";
+import { AddressActions, EmailAction, PhoneActions } from "./contact-actions";
 import { MemberAvatar } from "./member-avatar";
 
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
@@ -57,6 +58,7 @@ export function DirectoryProfileView({ profile, linkHousehold = true }: { profil
                 ) : (
                   profile.phone
                 )}
+                <PhoneActions phone={profile.phone} name={profile.displayName} />
               </Row>
             ) : null}
             {profile.contactEmail ? (
@@ -68,12 +70,18 @@ export function DirectoryProfileView({ profile, linkHousehold = true }: { profil
                 ) : (
                   profile.contactEmail
                 )}
+                <EmailAction email={profile.contactEmail} name={profile.displayName} />
               </Row>
             ) : null}
             {profile.streetAddress ? (
               <Row icon={<MapPin className="size-5" aria-hidden="true" />} label="Address">
                 <span className="block">{profile.streetAddress}</span>
                 {place ? <span className="block">{place}</span> : null}
+                <AddressActions
+                  query={addressQuery([profile.streetAddress, profile.city, profile.stateRegion, profile.postalCode])}
+                  name={profile.displayName}
+                  className="mt-2"
+                />
               </Row>
             ) : place ? (
               <Row icon={<MapPin className="size-5" aria-hidden="true" />} label="Location">

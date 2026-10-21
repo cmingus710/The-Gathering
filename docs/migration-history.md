@@ -188,3 +188,27 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Rehearsal (local, PostgreSQL 16):** on a database built from the 54 hosted migrations with their history rows and without `20261029000100` (the hosted stage), the script applied; a rerun stopped at the preflight. A local Supabase stack (PostgreSQL 17.11) built from all 56 files ran the signed-in walkthrough.
 - **Compatibility:** production code (`5add6de`) never references the new objects, so the migration can be applied before the merge, and a code rollback leaves an unused table.
 - **Not applied to hosted** (hosted has 54 versions, checked 2026-10-21).
+
+## Phase 13 (2026-10-31)
+
+- **New (all additive; no applied migration was edited):**
+  - `20261031000100_giving_campaigns`: `giving.campaigns`; nullable `campaign_id` on `giving.intents`, `commitments`, `payments` (copied from the intent by insert triggers, immutable afterwards); `giving.campaign_totals`; replaces `giving.op_checkout_prepare` with the same signature (optional campaign); private `campaign-images` bucket; public `giving_campaigns` / `giving_campaign` and `can_view_campaign_image` (**anon baseline 29 → 32**, deliberately: public campaigns are readable on the public Give page, aggregates only); finance functions for campaigns and offline campaign gifts. See [phase-13/campaigns.md](phase-13/campaigns.md).
+  - `20261031000200_community_attachments`: `community.attachments`, upload/attach/read/delete functions, triggers that remove attachments with deleted posts, three storage policies limited to `community/` in the existing `media` and `media-uploads` buckets; replaces `public.media_can_read_object` (same body plus a carve-out so media managers don't read `community/` files). See [phase-13/forum-attachments.md](phase-13/forum-attachments.md).
+  - `20261031000300_media_lesson_workbooks`: `media.lesson_blocks`, `media.workbook_answers`, `media.workbook_notes`; builder and workbook functions; replaces `media.asset_used_visibly` and `media.asset_usage` (one extra clause each, for block files). See [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
+  - `20261031000400_media_books_reading`: `media.book_details`, `media.book_progress`; journal link kind `'book'` (drops and re-adds `entries_link_kind_check` with one more value) and replaces `public.journal_entry_create` (same body plus `'book'`). See [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
+- **Operator scripts:** `supabase/manual/2026-10-31-apply-giving-campaigns.sql`, `-community-attachments.sql`, `-lesson-workbooks.sql`, `-books-reading.sql`. Each copies its migration verbatim, runs in one transaction, requires `20261030000100` recorded and itself not, post-checks grants, and records the version with `created_by = phase-13`. They don't depend on each other.
+- **Rehearsal (local, PostgreSQL 16.15, 2026-10-21):** on a database built from the 56 earlier migrations with their history rows, the four scripts applied in order, and a rerun stopped at the preflight. On a second copy they applied in reverse order. `schema-fingerprint.sql`, `media-fingerprint.sql`, and `community-fingerprint.sql` are identical for in-order, reverse-order, and a fresh build from all 60 files.
+- **Hosted (2026-10-21):** the owner ran the four scripts in the SQL editor. History has 59 versions, and `20261031000100`…`000400` are recorded. A read-only Phase 13 digest equals a fresh local build in all nine categories:
+  - column 97 16fd0bca · constraint 145 33ba0515 · function 395 a7d2b636 · function_grant 226 5c686381
+  - rls 69 273bb4e1 · storage_bucket 3 e04771eb · storage_policy 6 47e66d7b · trigger 14 1d362b70
+  - anon-executable functions 32 eeb898e4
+  - no API table grants on `giving`, `media`, `community`, or `journal`
+
+  The query is `supabase/tests/phase13-fingerprint.sql`.
+
+## Membership approval alerts (2026-11-01)
+
+- **New:** `20261101000100_membership_approval_alerts`, additive: private schema `membership` (four tables, RLS on, no API grants), two triggers on `auth.users` that only queue rows (`on_auth_user_verified_alert` on insert when already confirmed, `on_auth_user_verified_alert_update` when `email_confirmed_at` is first set; failures are warnings), four `SECURITY DEFINER` settings functions granted to `authenticated` and checking `settings.manage`. Replaces `public.community_job` (same operations plus `membership_alert_claim` / `membership_alert_result`; grants unchanged) and `community.has_due_work` (same checks plus `membership.has_due_alerts()`). Anon baseline unchanged (32). Alerts start off with no recipients. See [membership-approval-alerts.md](membership-approval-alerts.md).
+- **Operator script:** `supabase/manual/2026-11-01-apply-membership-alerts.sql`, one transaction, preflight requires `20261031000400` and refuses a second run, post-checks that nothing in `membership` is reachable through the API and that alerts start off, history row `created_by = membership-alerts`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from the 60 earlier migrations with their history rows, the script applied; a rerun stopped at the preflight.
+- **Not applied to hosted.**

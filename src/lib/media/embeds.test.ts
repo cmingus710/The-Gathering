@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   appleEmbed,
   normalizeAudibleUrl,
+  normalizeKindleUrl,
   parseApplePodcasts,
   parsePodcastProvider,
   parseProviderRefString,
@@ -103,5 +104,23 @@ describe("Audible", () => {
     expect(normalizeAudibleUrl("https://www.audible.com.evil.example/pd/x")).toBeNull();
     expect(normalizeAudibleUrl("https://www.amazon.com/dp/B0123ABCDE")).toBeNull();
     expect(normalizeAudibleUrl("https://www.audible.com/")).toBeNull();
+  });
+});
+
+describe("Kindle links", () => {
+  it("keeps Amazon product pages without tracking", () => {
+    expect(normalizeKindleUrl("https://www.amazon.com/Some-Book-ebook/dp/B0123ABCDE/ref=sr_1_1?crid=x&keywords=y")).toBe(
+      "https://www.amazon.com/Some-Book-ebook/dp/B0123ABCDE",
+    );
+    expect(normalizeKindleUrl("https://amazon.co.uk/dp/B0123ABCDE")).toBe("https://amazon.co.uk/dp/B0123ABCDE");
+  });
+  it("keeps only the ASIN on Kindle Cloud Reader links", () => {
+    expect(normalizeKindleUrl("https://read.amazon.com/?asin=b0123abcde&ref_=x")).toBe("https://read.amazon.com/?asin=B0123ABCDE");
+    expect(normalizeKindleUrl("https://read.amazon.com/?asin=<script>")).toBeNull();
+  });
+  it("refuses other hosts, http, and lookalikes", () => {
+    for (const bad of ["http://www.amazon.com/dp/B0123ABCDE", "https://www.amazon.com.evil.example/dp/x", "https://evil.example/www.amazon.com/", "javascript:alert(1)", "https://www.amazon.com/", "https://user:pw@www.amazon.com/dp/x"]) {
+      expect(normalizeKindleUrl(bad)).toBeNull();
+    }
   });
 });
