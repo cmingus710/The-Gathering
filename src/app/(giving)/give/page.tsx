@@ -30,6 +30,20 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
     images = await signCampaignImages(supabase, campaigns.map((c) => c.image_path));
   }
 
+  // Campaign progress is shown even while online checkout isn't set up (gifts recorded by the office count too).
+  const campaignList = campaigns.length ? (
+    <section aria-labelledby="campaigns-heading" className="mb-8">
+              <SectionHeading id="campaigns-heading" description="Give toward a specific goal. Campaign gifts go to the fund shown and count toward the total.">
+                Campaigns
+              </SectionHeading>
+              <ul className="grid gap-4 sm:grid-cols-2">
+                {campaigns.map((c) => (
+                  <CampaignCard key={c.id} campaign={c} imageUrl={c.image_path ? images.get(c.image_path) : null} />
+                ))}
+              </ul>
+            </section>
+  ) : null;
+
   return (
     <>
       <PageHeader
@@ -48,6 +62,9 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
         <Alert tone="warning" title="Online giving isn't available yet.">
           The church is still setting up online giving. No payment can be made here right now.
         </Alert>
+      ) : null}
+      {!available || !config ? (
+        campaignList ? <div className="mt-6">{campaignList}</div> : null
       ) : !config.funds.length ? (
         <Alert tone="warning" title="No funds are open for giving right now." />
       ) : (
@@ -77,18 +94,7 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
               </span>
             )}
           </p>
-          {campaigns.length ? (
-            <section aria-labelledby="campaigns-heading" className="mb-8">
-              <SectionHeading id="campaigns-heading" description="Give toward a specific goal. Campaign gifts go to the fund shown and count toward the total.">
-                Campaigns
-              </SectionHeading>
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {campaigns.map((c) => (
-                  <CampaignCard key={c.id} campaign={c} imageUrl={c.image_path ? images.get(c.image_path) : null} />
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          {campaignList}
           {campaigns.length ? (
             <h2 className="mb-3 text-[1.125rem] font-semibold leading-snug text-text">Give to a fund</h2>
           ) : null}

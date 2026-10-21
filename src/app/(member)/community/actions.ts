@@ -104,6 +104,21 @@ export async function editThreadAction(_prev: FormState, formData: FormData): Pr
   redirect(`/community/t/${id}?edited=1`);
 }
 
+/**
+ * Deletes through the attachment-aware function, which also returns the files
+ * to remove. Until migration 20261031000200 is applied that function doesn't
+ * exist (PostgREST PGRST202), so fall back to the plain delete: there are no
+ * attachments to clean up then.
+ */
+async function deleteWithMedia(supabase: NonNullable<Awaited<ReturnType<typeof client>>>, fn: "community_thread_delete" | "community_reply_delete", id: string) {
+  const res = await supabase.rpc(`${fn}_with_media`, { p_id: id });
+  if (res.error?.code === "PGRST202") {
+    const plain = await supabase.rpc(fn, { p_id: id });
+    return { data: null, error: plain.error };
+  }
+  return res;
+}
+
 export async function deleteThreadAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = uuid.safeParse(formData.get("threadId")).data;
   await requireApprovedMember("/community");
@@ -111,7 +126,7 @@ export async function deleteThreadAction(_prev: FormState, formData: FormData): 
   const back = String(formData.get("back") ?? "/community");
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE);
-  const { data, error } = await supabase.rpc("community_thread_delete_with_media", { p_id: id });
+  const { data, error } = await deleteWithMedia(supabase, "community_thread_delete", id);
   if (error) return errorState(dbErrorMessage(error, "That discussion couldn't be deleted. Please try again."));
   // Its photos and videos are already unavailable; delete the stored files.
   await deleteAttachmentFiles(supabase, (data as { files?: AttachmentFiles[] } | null)?.files);
@@ -164,7 +179,7 @@ export async function deleteReplyAction(_prev: FormState, formData: FormData): P
   if (!id || !threadId) return errorState("That reply wasn't found.");
   const supabase = await client();
   if (!supabase) return errorState(UNAVAILABLE);
-  const { data, error } = await supabase.rpc("community_reply_delete_with_media", { p_id: id });
+  const { data, error } = await deleteWithMedia(supabase, "community_reply_delete", id);
   if (error) return errorState(dbErrorMessage(error, "That reply couldn't be deleted."));
   await deleteAttachmentFiles(supabase, (data as { files?: AttachmentFiles[] } | null)?.files);
   revalidatePath(`/community/t/${threadId}`);

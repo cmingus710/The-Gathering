@@ -55,7 +55,28 @@ The short version of every administrative job, with links to the detailed guides
 
 ## Teacher tools that exist today
 
-Teachers with the content roles can publish lessons with attached handouts and media, and authorized group leaders can run memory-verse collections and challenges for their groups. **Not built yet:** a lesson builder ("Lesson Studio"), live "Follow Along", and member handout creation. Don't announce these.
+Teachers with the content roles can publish lessons with attached handouts and media, and authorized group leaders can run memory-verse collections and challenges for their groups.
+
+**Lesson builder and workbook (Phase 13, after its migration is applied):**
+1. Open a lesson under **Teaching content**, then choose **Lesson builder**.
+2. Add blocks (introduction, Scripture, teaching, discussion or written question, illustration, image, audio/video, reflection, closing), and order them with Up and Down.
+3. Anything in a dashed **Teacher only** box (a teacher note, or a whole block marked "Hide this whole block from members") never reaches members, the preview, or the page source.
+4. Use **Preview the member workbook** to check, then publish the lesson as usual.
+
+Editors change drafts; changing a live lesson needs the publisher role. Rewording a question keeps members' answers and shows them the wording they answered. Removing a block keeps answers for their authors. Members' answers are private: no teacher or administrator view exists. Full guide: [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
+
+**Church reading (Phase 13):** create a **Book** (title, author, description, cover image with confirmed rights, optional Audible link). Then, on its edit page, set **Reading details** (Kindle link, reading dates, related lesson). Add **Reading assignments** for the chapter schedule. Members open Kindle or Audible with their own accounts; nothing is embedded. Full guide: [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
+
+**Not built:** a printable workbook or handout export, live presenter "Follow Along", and member-created handouts. Don't announce these.
+
+## Fundraising campaigns (Phase 13)
+
+Finance administrators (`finance.manage`) go to **Administration → Finance → Campaigns**:
+1. Create a draft: title, description, optional image, goal, optional dates, the fund it gives to, and whether it's public or members-only.
+2. **Publish** it. The fund is locked once published.
+3. **Close** it to stop new gifts; the total stays visible. **Archive** it to hide it.
+
+Cash and check gifts for a campaign go through **Record cash/check** with the campaign chosen (`finance.record`). The meter counts succeeded gifts, less refunds and open or lost disputes. Test and live totals never mix, and the meter never shows donors or individual amounts. Exact definition: [phase-13/campaigns.md](phase-13/campaigns.md#progress-definition).
 
 ## Giving administration and statements
 

@@ -18,7 +18,7 @@ Migration: `supabase/migrations/20261031000200_community_attachments.sql`. Hoste
 
 HEIC photos are decoded on the server (sharp, or libheif for iPhone HEVC-compressed HEIC), oriented, converted to sRGB, stripped of all metadata (EXIF, GPS, XMP, IPTC, ICC), and stored as WebP: a display copy (≤ 2048 px) and a thumbnail (≤ 480 px). The original is deleted as soon as the copies are stored.
 
-Video is not transcoded. `.mov` (QuickTime), HEVC/H.265 ("High Efficiency" on iPhone), Dolby Vision, AV1, VP8/VP9, and MPEG-4 Part 2 are refused with: "This video format can't be played on every device; export as MP4 (H.264) and try again." The check (`checkForumVideo` in `src/lib/community/attachments.ts`) reads the `ftyp` brand and the sample-entry codec of every `stsd` box in the first and last 1 MB; a file whose codec can't be confirmed as H.264 there is refused too. No poster frame is generated; players show the first frame (`preload="metadata"`, never autoplay).
+Video is not transcoded. `.mov` (QuickTime), HEVC/H.265 ("High Efficiency" on iPhone), Dolby Vision, AV1, VP8/VP9, and MPEG-4 Part 2 are refused with: "This video format can't be played on every device; export as MP4 (H.264) and try again." The check (`checkForumVideo` in `src/lib/community/attachments.ts`) reads the `ftyp` brand and the sample-entry codec of every `stsd` box in the first and last 1 MB; a file whose codec can't be confirmed as H.264 there is refused too. Video files are stored as uploaded, so metadata inside the MP4 (for example a recording location some Android phones write) is **not** removed; that needs a server-side rewrite and is a follow-up. No poster frame is generated; players show the first frame (`preload="metadata"`, never autoplay).
 
 ## Design
 

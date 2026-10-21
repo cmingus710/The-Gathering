@@ -1,6 +1,39 @@
 # Build status
 
-Last updated: 2026-10-21 · Phase 12 branch `claude/gifted-knuth-j22tsl`, based on `main` (`5add6de`) with PRs #17, #16, #20 (Phase 11), #18, #19, and the mobile-shell branch merged in · PR into `main` (not merged)
+Last updated: 2026-10-21 · Phase 13 branch `claude/inspiring-sagan-jlwim7`, based on `main` (`25b7087`, Phase 12 merged) · PR into `main` (not merged)
+
+## Phase 13: Requested features and experience improvements
+
+Everything: [phase-13/README.md](phase-13/README.md) (audit matrix, final status, verification, release steps, limits). Member guide: [phase-13/member-guide.md](phase-13/member-guide.md).
+
+**Nothing was merged, deployed, applied to the hosted database, or sent to anyone. Stripe stays in test mode.**
+
+- **Added:**
+  - Fundraising campaigns with a progress meter (`20261031000100`).
+  - Photo and video attachments in discussions (`20261031000200`).
+  - Lesson builder with a private member workbook (`20261031000300`).
+  - Kindle links, reading dates, and private progress for church books (`20261031000400`).
+  - A Settings page with a desktop account menu.
+  - A notification bell panel.
+  - Call, text, email, map, and directions actions on contact details.
+- **Fixed:**
+  - Choosing System appearance pinned the browser bar colour.
+  - `+44 (0)…` numbers dialled wrongly.
+  - Hardened the phone dock (background continues below the bar; it steps aside for the keyboard).
+- **Verified locally:**
+  - Lint, typecheck, and build pass.
+  - Vitest 887/887 (73 files, including database suites on PostgreSQL 16.15).
+  - Playwright signed-out 322/324 (2 apply only without Supabase configured).
+  - 71/71 signed-in Chromium journey checks at phone, tablet, and desktop sizes.
+  - Hosted-apply scripts rehearsed in both orders.
+- **Not done:** preview deployment and hosted checks, physical iPhone/Android and installed-PWA checks, real Stripe/Storage/Kindle/Audible behaviour.
+- **Owner actions:** approve the release, back up, run the four `supabase/manual/2026-10-31-apply-*.sql` scripts, then deploy. See [phase-13/README.md](phase-13/README.md#4-release-boundaries-and-setup).
+
+---
+
+# Phase 12 build status
+
+Branch `claude/gifted-knuth-j22tsl`, merged into `main` as #21.
 
 ## Phase 12: Controlled pilot and production launch
 

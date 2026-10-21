@@ -2,7 +2,7 @@
 
 The church community app for The Gathering: a mobile-first, installable web app for members and administrators.
 
-**Status:** Phases 1–9 in production at `www.gathering.church` (giving in Stripe test mode); Phase 10 (youth, policy-gated) and Phase 11 (release readiness) in review. See [docs/build-status.md](docs/build-status.md) and [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md).
+**Status:** Phases 1–9 in production at `www.gathering.church` (giving in Stripe test mode); Phases 10–12 merged; Phase 13 (campaigns, Kindle/Audible reading, settings, bell panel, contact actions, forum media, lesson workbook) in review. See [docs/build-status.md](docs/build-status.md) and [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md).
 
 ## Stack
 
@@ -50,6 +50,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases
 - [docs/build-status.md](docs/build-status.md): what is done and verified, and what still needs external setup
+- [docs/phase-13/README.md](docs/phase-13/README.md): Phase 13 audit, status, verification, release steps, and limits
 - [docs/phase-12-launch.md](docs/phase-12-launch.md): release candidate, pilot procedure, release and rollback steps, issue log, device checks
 - [docs/phase-11-release-readiness.md](docs/phase-11-release-readiness.md): feature status, release blockers, and validation results
 - [docs/administrator-guide.md](docs/administrator-guide.md): everyday administration, with links to the detailed guides
