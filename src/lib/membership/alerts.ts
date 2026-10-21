@@ -6,7 +6,7 @@ import { formatDateTime } from "@/lib/time";
 /**
  * Membership approval alerts: one email per configured recipient when a new
  * account first becomes eligible for approval (see
- * supabase/migrations/20261101000100_membership_approval_alerts.sql for when
+ * supabase/migrations/20261101000300_membership_approval_alerts.sql for when
  * an alert is queued). Delivered through the signed community job, like
  * community email, with one Resend message and idempotency key per recipient.
  */

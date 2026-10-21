@@ -1,4 +1,4 @@
--- Membership approval alerts · Apply migration 20261101000100_membership_approval_alerts to the hosted project.
+-- Membership approval alerts · Apply migration 20261101000300_membership_approval_alerts to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
 -- approves applying it (docs/membership-approval-alerts.md, "Release steps"):
@@ -12,7 +12,7 @@
 -- OFF with no recipients, so nothing is emailed until an administrator
 -- turns them on, and accounts already waiting are never notified.
 --
--- It copies supabase/migrations/20261101000100_membership_approval_alerts.sql
+-- It copies supabase/migrations/20261101000300_membership_approval_alerts.sql
 -- verbatim and records it under its repository version (created_by =
 -- membership-alerts). All or nothing: one transaction; out of order or a
 -- second run stops at the preflight with "Nothing was changed".
@@ -27,15 +27,15 @@ begin
   if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261031000400') then
     raise exception 'Nothing was changed: the previous step (20261031000400) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261101000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261101000300')
      or to_regnamespace('membership') is not null then
-    raise exception 'Nothing was changed: 20261101000100 is already applied.';
+    raise exception 'Nothing was changed: 20261101000300 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261101000100_membership_approval_alerts.sql
+-- 20261101000300_membership_approval_alerts.sql
 -- =========================================================================
 -- Membership approval alerts: email designated administrators once when a
 -- new account first becomes eligible for membership approval.
@@ -526,6 +526,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261101000100', 'membership_approval_alerts', 'membership-alerts');
+values ('20261101000300', 'membership_approval_alerts', 'membership-alerts');
 
 commit;
