@@ -409,6 +409,116 @@ h3 {
   }
 }
 
+/*
+ * Public welcome page (approved mockup): warm ivory #f7f4ec, antique gold
+ * #ae8c4e, charcoal #34332d. Scoped to the (public) layout so the member and
+ * administration areas keep their themes; one look in light and dark, like
+ * the sign-in pages. Mirrored in src/lib/theme/tokens.ts (welcomePalette),
+ * where contrast is unit-tested. Antique gold is never small text on ivory.
+ */
+.welcome-theme {
+  color-scheme: light;
+  --color-background: #f7f4ec;
+  --color-surface: #fcfaf6;
+  --color-surface-muted: #efe9dc;
+  --color-surface-raised: #fcfaf6;
+  --color-primary: #6e5527;
+  --color-primary-hover: #58431c;
+  --color-primary-soft: #efe6d3;
+  --color-on-primary: #f7f4ec;
+  --color-accent: #ae8c4e;
+  --color-cta: #34332d;
+  --color-cta-hover: #24231f;
+  --color-on-cta: #f7f4ec;
+  --color-text: #34332d;
+  --color-text-secondary: #5f5a50;
+  --color-border: #e4dbc8;
+  --color-border-strong: #8c8474;
+  --color-success: #3f5a3a;
+  --color-success-soft: #e5ecdf;
+  --color-danger: #9a3324;
+  --color-danger-hover: #7f2a1e;
+  --color-danger-soft: #f6e3dd;
+  --color-on-danger: #f7f4ec;
+  --mark-plate: transparent;
+  --mark-plate-ring: transparent;
+  --header-bg: #f7f4ec;
+  --elev-card: 0 1px 2px rgb(52 51 45 / 0.05);
+  --radius-card: 0.5rem;
+  --welcome-gold: #ae8c4e;
+  --welcome-gold-hover: #bf9f62;
+  --welcome-on-gold: #1f1e1a;
+  --welcome-rule: color-mix(in srgb, #ae8c4e 38%, transparent);
+  background: var(--color-background);
+  color: var(--color-text);
+  /* Long words wrap instead of widening the page when text is enlarged. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/*
+ * Readability gradient over the barn photograph (the image itself is never
+ * darkened). Phones: strongest behind the text at the top, easing so the
+ * circle of chairs shows below. Wider screens: strongest on the left, fading
+ * toward the chairs on the right.
+ */
+.welcome-hero {
+  --color-primary: #f7f4ec; /* ivory focus rings on the dark scrim */
+}
+.welcome-hero-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(26 22 17 / 0.82) 0%,
+    rgb(26 22 17 / 0.74) 45%,
+    rgb(26 22 17 / 0.38) 72%,
+    rgb(26 22 17 / 0.18) 100%
+  );
+}
+@media (min-width: 48rem) {
+  .welcome-hero-scrim {
+    background:
+      linear-gradient(90deg, rgb(26 22 17 / 0.9) 0%, rgb(26 22 17 / 0.84) 34%, rgb(26 22 17 / 0.5) 48%, rgb(26 22 17 / 0.1) 64%, rgb(26 22 17 / 0) 80%),
+      linear-gradient(180deg, rgb(26 22 17 / 0.18) 0%, rgb(26 22 17 / 0) 30%, rgb(26 22 17 / 0) 75%, rgb(26 22 17 / 0.28) 100%);
+  }
+}
+
+/* Hero buttons: antique gold with dark text, and an ivory outline on the photograph. */
+.welcome-gold-button {
+  background: var(--welcome-gold);
+  color: var(--welcome-on-gold);
+  border: 1px solid var(--welcome-gold);
+}
+.welcome-gold-button:hover {
+  background: var(--welcome-gold-hover);
+  border-color: var(--welcome-gold-hover);
+}
+.welcome-gold-button:active {
+  background: #a48446;
+  border-color: #a48446;
+}
+.welcome-ghost-button {
+  background: rgb(26 22 17 / 0.35);
+  color: #f7f4ec;
+  border: 1px solid rgb(247 244 236 / 0.85);
+}
+.welcome-ghost-button:hover {
+  background: rgb(247 244 236 / 0.12);
+  border-color: #f7f4ec;
+}
+.welcome-ghost-button:active {
+  background: rgb(247 244 236 / 0.2);
+}
+
+/*
+ * Welcome strip icons: the supplied SVG is used as a mask so every icon is the
+ * same antique gold at the same size. If an SVG is missing the mask simply
+ * renders nothing, never a broken-image box.
+ */
+.welcome-icon {
+  background-color: var(--welcome-gold);
+  mask: var(--welcome-icon) center / contain no-repeat;
+}
+
 /* Formatted announcement and discussion bodies (sanitized Markdown subset). */
 .prose-gathering {
   max-width: 68ch;

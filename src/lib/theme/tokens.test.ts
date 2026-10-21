@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { authBrand, authPalette as a, brand, contrastRatio, palettes, type ThemeName } from "./tokens";
+import { authBrand, authPalette as a, brand, contrastRatio, palettes, welcomeBrand, welcomePalette as w, type ThemeName } from "./tokens";
 
 const css = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8").toLowerCase();
 const toCss = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
@@ -153,6 +153,50 @@ describe("design tokens", () => {
 
     it("documents why antique gold is decorative only on ivory", () => {
       expect(contrastRatio(authBrand.antiqueGold, a.background)).toBeLessThan(3);
+    });
+  });
+
+  describe("public welcome page (.welcome-theme)", () => {
+    const block = css.slice(css.indexOf(".welcome-theme {"), css.indexOf("}", css.indexOf(".welcome-theme {")));
+
+    it("mirrors the CSS block exactly and uses the approved mockup colours", () => {
+      for (const [key, hex] of Object.entries(w)) expect(block, key).toContain(`--color-${toCss(key)}: ${hex.toLowerCase()};`);
+      expect(w.background).toBe(welcomeBrand.ivory);
+      expect(w.accent).toBe(welcomeBrand.antiqueGold);
+      expect(w.text).toBe(welcomeBrand.charcoal);
+      expect(css).toContain(`--welcome-on-gold: ${welcomeBrand.onGold.toLowerCase()};`);
+    });
+
+    const welcomeText: Array<[string, string, string]> = [
+      ["charcoal text on ivory", w.text, w.background],
+      ["charcoal text on card surface", w.text, w.surface],
+      ["secondary text on ivory", w.textSecondary, w.background],
+      ["secondary text on card surface", w.textSecondary, w.surface],
+      ["links on ivory", w.primary, w.background],
+      ["links on surface-muted", w.primary, w.surfaceMuted],
+      ["primary on primary-soft", w.primary, w.primarySoft],
+      ["outlined header button text", w.text, w.background],
+      ["danger on danger-soft", w.danger, w.dangerSoft],
+      ["hero heading on scrim", welcomeBrand.ivory, welcomeBrand.scrim],
+      ["hero eyebrow (gold) on scrim", welcomeBrand.antiqueGold, welcomeBrand.scrim],
+      ["gold button text", welcomeBrand.onGold, welcomeBrand.antiqueGold],
+    ];
+    it.each(welcomeText)("%s meets 4.5:1", (_label, fg, bg) => {
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    const welcomeUi: Array<[string, string, string]> = [
+      ["outlined button border on ivory", w.borderStrong, w.background],
+      ["focus ring on ivory", w.primary, w.background],
+      ["ivory focus ring on scrim", welcomeBrand.ivory, welcomeBrand.scrim],
+      ["ivory button border on scrim", welcomeBrand.ivory, welcomeBrand.scrim],
+    ];
+    it.each(welcomeUi)("%s meets 3:1", (_label, fg, bg) => {
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(3);
+    });
+
+    it("documents why antique gold is decorative only on ivory", () => {
+      expect(contrastRatio(welcomeBrand.antiqueGold, w.background)).toBeLessThan(3);
     });
   });
 });
