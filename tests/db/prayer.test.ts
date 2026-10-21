@@ -572,7 +572,7 @@ describeDb("prayer and care", () => {
     it("needs requester consent before sharing logistics with accepted volunteers", async () => {
       const opp = await rpc<string>(as(coord), "care_opportunity_save", [
         JSON.stringify({
-          care_id: care, title: "Deliver a meal", details: "One dinner", starts_at: "2026-11-01T23:00:00Z",
+          care_id: care, title: "Deliver a meal", details: "One dinner", starts_at: new Date(Date.now() + 10 * 86_400_000).toISOString(),
           helpers_needed: 1, audience: "church", logistics: "Synthetic 12 Example Street", share_name: true,
         }),
       ]);
