@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode, type RefObject } from "react";
 import { Button, type ButtonVariant } from "./button";
 
 /**
  * A button that opens a modal confirmation. Uses the native <dialog>, which
  * moves focus into the dialog, keeps it there, closes on Escape, and returns
  * focus to the trigger. The confirm button submits `formAction`.
+ * Pass `trigger={null}` and a `dialogRef` to open it from elsewhere (a menu).
  */
 export function ConfirmDialog({
   trigger,
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   hidden,
   fields,
   dismissLabel = "Cancel",
+  dialogRef,
 }: {
   trigger: ReactNode;
   triggerVariant?: ButtonVariant;
@@ -30,15 +32,20 @@ export function ConfirmDialog({
   fields?: ReactNode;
   /** Label for the button that closes the dialog without acting. */
   dismissLabel?: string;
+  /** Opens the dialog from outside (call showModal()); use with trigger={null}. */
+  dialogRef?: RefObject<HTMLDialogElement | null>;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const ownRef = useRef<HTMLDialogElement>(null);
+  const ref = dialogRef ?? ownRef;
   const titleId = useId();
   const bodyId = useId();
   return (
     <>
-      <Button variant={triggerVariant} size="sm" onClick={() => ref.current?.showModal()} aria-haspopup="dialog">
-        {trigger}
-      </Button>
+      {trigger === null ? null : (
+        <Button variant={triggerVariant} size="sm" onClick={() => ref.current?.showModal()} aria-haspopup="dialog">
+          {trigger}
+        </Button>
+      )}
       <dialog
         ref={ref}
         aria-labelledby={titleId}

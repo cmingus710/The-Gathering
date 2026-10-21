@@ -42,7 +42,19 @@ async function checkVideoFile(file: File) {
  * be cancelled, retried, or removed before posting; removed files are
  * deleted at once.
  */
-export function AttachmentPicker({ onBusyChange, disabled = false }: { onBusyChange?: (busy: boolean) => void; disabled?: boolean }) {
+export function AttachmentPicker({
+  onBusyChange,
+  onCountChange,
+  disabled = false,
+  compact = false,
+}: {
+  onBusyChange?: (busy: boolean) => void;
+  /** Files chosen (any state), so a composer can warn before discarding them. */
+  onCountChange?: (count: number) => void;
+  disabled?: boolean;
+  /** Small "Photo/video" button with the limits behind an "Upload guidelines" toggle (feed composers). */
+  compact?: boolean;
+}) {
   const [items, setItems] = useState<Item[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [batchKey] = useState(() => crypto.randomUUID());
@@ -54,6 +66,7 @@ export function AttachmentPicker({ onBusyChange, disabled = false }: { onBusyCha
 
   const busy = items.some((i) => i.state === "checking" || i.state === "uploading" || i.state === "processing");
   useEffect(() => onBusyChange?.(busy), [busy, onBusyChange]);
+  useEffect(() => onCountChange?.(items.length), [items.length, onCountChange]);
 
   // Previews are local object URLs: free them when the composer goes away.
   const previews = useRef(new Set<string>());
@@ -196,17 +209,40 @@ export function AttachmentPicker({ onBusyChange, disabled = false }: { onBusyCha
             if (files.length) void add(files);
           }}
         />
-        <label
-          htmlFor={id}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border-strong bg-surface px-4 font-semibold text-text-primary hover:bg-surface-muted peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-60"
-        >
-          <ImagePlus className="size-5" aria-hidden="true" /> Add photos or video
-        </label>
-        <p id={`${id}-help`} className="mt-1.5 text-meta text-text-secondary">
-          Up to {ATTACHMENT_LIMITS.perPost} per post. Photos: JPEG, PNG, WebP, or iPhone (HEIC) up to {ATTACHMENT_LIMITS.imageMb} MB; location and camera details
-          are removed. Video: MP4 (H.264) up to {ATTACHMENT_LIMITS.videoMb} MB, {ATTACHMENT_LIMITS.videosPerPost} per post. Only people who can read this
-          discussion can see them.
-        </p>
+        {compact ? (
+          <div className="flex flex-wrap items-center gap-x-1 peer-focus-visible:[&>label]:ring-2 peer-focus-visible:[&>label]:ring-primary peer-disabled:[&>label]:cursor-not-allowed peer-disabled:[&>label]:opacity-60">
+            <label
+              htmlFor={id}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-meta font-semibold text-text-secondary hover:bg-surface-muted hover:text-text"
+            >
+              <ImagePlus className="size-5 text-primary" aria-hidden="true" /> Photo/video
+            </label>
+            <details>
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-full px-3 text-meta text-text-secondary underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+                Upload guidelines
+              </summary>
+              <p id={`${id}-help`} className="max-w-prose px-3 pb-1 text-meta text-text-secondary">
+                Up to {ATTACHMENT_LIMITS.perPost} per post. Photos: JPEG, PNG, WebP, or iPhone (HEIC) up to {ATTACHMENT_LIMITS.imageMb} MB; location and camera details
+                are removed. Video: MP4 (H.264) up to {ATTACHMENT_LIMITS.videoMb} MB, {ATTACHMENT_LIMITS.videosPerPost} per post. Only people who can read this
+                discussion can see them.
+              </p>
+            </details>
+          </div>
+        ) : (
+          <>
+            <label
+              htmlFor={id}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border-strong bg-surface px-4 font-semibold text-text-primary hover:bg-surface-muted peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-60"
+            >
+              <ImagePlus className="size-5" aria-hidden="true" /> Add photos or video
+            </label>
+            <p id={`${id}-help`} className="mt-1.5 text-meta text-text-secondary">
+              Up to {ATTACHMENT_LIMITS.perPost} per post. Photos: JPEG, PNG, WebP, or iPhone (HEIC) up to {ATTACHMENT_LIMITS.imageMb} MB; location and camera details
+              are removed. Video: MP4 (H.264) up to {ATTACHMENT_LIMITS.videoMb} MB, {ATTACHMENT_LIMITS.videosPerPost} per post. Only people who can read this
+              discussion can see them.
+            </p>
+          </>
+        )}
       </div>
 
       {items.length ? (
