@@ -158,7 +158,8 @@ test("prayer: church-wide requests are shared and supported; private drafts stay
 
   const other = await as(browser, OTHER);
   await other.goto("/prayer");
-  await expect(other.getByText(prayerTitle)).toBeVisible();
+  // The link's accessible name, so a hidden copy kept briefly during a refresh doesn't count twice.
+  await expect(other.getByRole("link", { name: new RegExp(prayerTitle.replace(/[[\]]/g, "\\$&")) })).toBeVisible();
   await expect(other.getByText(privateTitle)).toHaveCount(0);
   await other.goto(privateUrl);
   await expect(other.getByText(privateTitle)).toHaveCount(0);

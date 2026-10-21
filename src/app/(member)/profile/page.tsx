@@ -51,7 +51,7 @@ export default async function ProfilePage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-6">
           <section aria-labelledby="profile-sections">
             <SectionHeading id="profile-sections">Profile and directory</SectionHeading>
