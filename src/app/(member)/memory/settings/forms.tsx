@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { CheckboxField, SelectField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -13,7 +14,17 @@ import { deleteHistoryAction, saveSettingsAction } from "../actions";
 
 const SOURCE: Record<string, string> = { reading: "your Bible reading version", church: "the church's version" };
 
-export function SettingsForm({ settings: s, translations, timezones }: { settings: PracticeSettings; translations: Translation[]; timezones: string[] }) {
+export function SettingsForm({
+  settings: s,
+  translations,
+  unavailable,
+  timezones,
+}: {
+  settings: PracticeSettings;
+  translations: Translation[];
+  unavailable: Translation[];
+  timezones: string[];
+}) {
   const [state, action] = useActionState(saveSettingsAction, initialFormState);
   const eff = s.effective_translation;
   // Not chosen yet: show what new verses use now (the reading or church version).
@@ -28,7 +39,7 @@ export function SettingsForm({ settings: s, translations, timezones }: { setting
             label="Default memory verse translation"
             name="default_translation_id"
             defaultValue={s.default_translation_available ? (s.default_translation_id ?? "") : ""}
-            hint="Used for new memory verses. You can choose a different translation for each verse. Changing it doesn't change verses you've already added or your earlier results."
+            hint={`Used for new memory verses. You can choose a different translation for each verse. Changing it doesn't change verses you've already added or your earlier results.${unavailable.length ? ` ${UNAVAILABLE_NOTE}` : ""}`}
           >
             <option value="">{followLabel}</option>
             {translations.map((t) => (
@@ -36,6 +47,7 @@ export function SettingsForm({ settings: s, translations, timezones }: { setting
                 {t.name} ({t.code})
               </option>
             ))}
+            <UnavailableVersionOptions items={unavailable} />
           </SelectField>
         ) : (
           <p className="text-meta text-text-secondary">No Bible version is available for memory practice yet.</p>

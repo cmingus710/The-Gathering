@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { PassageText } from "@/components/memory/passage";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
@@ -10,7 +11,8 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation, Verse } from "@/lib/bible/types";
 import { STAGES } from "@/lib/memory/format";
-import type { CardDetail, MemoryTranslations, Stage } from "@/lib/memory/types";
+import type { CardDetail, Stage } from "@/lib/memory/types";
+import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
 import { ChangeTranslationForm } from "./form";
 
@@ -48,12 +50,12 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   await requireLearner(`/memory/verses/${id}/translation`);
   const supabase = await requireClient();
-  const [{ data, error }, tr] = await Promise.all([supabase.rpc("memory_card", { p_id: id }), supabase.rpc("memory_translations")]);
+  const [{ data, error }, tr] = await Promise.all([supabase.rpc("memory_card", { p_id: id }), loadMemoryVersions(supabase)]);
   if (error?.code === "P0002" || (error && /invalid input syntax/.test(error.message))) notFound();
   const c = data as CardDetail | null;
   if (!c) return <Alert tone="error" title="This verse couldn't be loaded right now." />;
   const current = c.passage.translation;
-  const options = ((tr.data as MemoryTranslations | null)?.items ?? []).filter((t) => t.id !== current.id);
+  const options = tr.items.filter((t) => t.id !== current.id);
   const t = options.some((x) => x.id === one(sp.t)) ? one(sp.t) : "";
   let preview: Preview | null = null;
   if (t && c.can_change_translation) {
@@ -85,7 +87,7 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
           ) : null}
           <Card>
             <form method="get" className="flex flex-wrap items-end gap-3">
-              <SelectField label="New Bible version" name="t" defaultValue={t} className="min-w-0 flex-1 basis-60">
+              <SelectField label="New Bible version" name="t" defaultValue={t} className="min-w-0 flex-1 basis-60" hint={tr.unavailable.length ? UNAVAILABLE_NOTE : undefined}>
                 <option value="" disabled>
                   Choose a version
                 </option>
@@ -94,6 +96,7 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
                     {x.name} ({x.code})
                   </option>
                 ))}
+                <UnavailableVersionOptions items={tr.unavailable} />
               </SelectField>
               <SubmitButton variant="secondary">Preview</SubmitButton>
             </form>
