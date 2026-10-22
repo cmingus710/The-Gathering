@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
+import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
@@ -85,6 +85,23 @@ export function CollectionForm({
         <p className="text-meta text-text-secondary">
           For {collection!.audience === "group" ? collection!.group_name : "all members"} · {collection!.translation.name} ({collection!.translation.code}) · {collection!.kind === "sequence" ? "multiweek sequence" : "collection"}. These are fixed after publishing; duplicate it to change them.
         </p>
+      )}
+      {draft || !collection?.translation_choice ? (
+        <>
+          <input type="hidden" name="translation_choice_field" value="1" />
+          <CheckboxField
+            name="translation_choice"
+            label="Members may practice in their own Bible version"
+            defaultChecked={collection?.translation_choice ?? false}
+            hint={
+              draft
+                ? "Off: everyone practices in the version above. On: each member may choose another version that's available for memory practice; the collection itself never changes. After publishing this can be turned on but not off."
+                : "Each member may choose another version for themselves; the collection itself never changes. Once on, it stays on for this collection."
+            }
+          />
+        </>
+      ) : (
+        <p className="text-meta text-text-secondary">Members may practice in their own Bible version. This stays on for this collection; duplicate it to require one version.</p>
       )}
       <div className="grid gap-4 sm:grid-cols-3">
         <TextField label="Practice goal" name="goal_note" optional maxLength={300} defaultValue={v("goal_note", collection?.goal_note ?? "")} hint='For example "Learn one verse a week."' className="sm:col-span-2" />

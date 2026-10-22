@@ -21,6 +21,14 @@ The home page shows a small memory card only while a verse is assigned.
 - From a collection or the current assignment: **Add to My Verses** (or **Start learning it**).
 - Your own: **Add a verse** → choose the Bible version, book, chapter, and verses → **Show the passage** shows the exact text → **Add to My Verses**. Only versions whose text the church stores can be memorized.
 
+## Bible versions
+
+- **Default memory verse translation** (Practice settings): used for new memory verses; you can choose a different translation for each verse. It's saved to your account, so every device uses it. Until you choose one it follows your Bible reading version, then the church's version. Changing it never changes verses you already have or your earlier results.
+- **Per verse**: the version selector on *Add a verse* starts at your default; the preview shows exactly the wording you'll practice. If a version doesn't have that passage, you're told so and nothing is added; another version is never used in its place.
+- **Assigned verses** say which version they use. *Practiced in WEB, as assigned* means the church requires that version. *You may practice it in another version* means **Start learning it: choose a version** lets you pick yours; the assignment stays the same for everyone else.
+- **Change translation** (on a verse's page) shows the current and new wording side by side, any verses the two versions include or number differently, and what happens to your practice before you confirm. The new wording is practiced on its own schedule (practice of one wording isn't practice of another). Your earlier practice stays with the earlier text, badges stay, and switching back brings that progress back. Changing translation never adds practice to a group challenge.
+- Every practice activity, check, and history entry uses the verse's own version, shown beside the reference.
+
 ## Practicing
 
 Choose an activity, a difficulty (Guided, Growing, Challenge), and, for longer passages, a part. Nothing is timed, nothing makes a sound, and you can go at your own pace.

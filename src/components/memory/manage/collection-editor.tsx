@@ -33,7 +33,7 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={st.tone}>{st.label}</Badge>
         <span className="text-meta text-text-secondary">
-          {audienceLabel(c)} · {c.translation.name} ({c.translation.code}) · {c.item_count} verses
+          {audienceLabel(c)} · {c.translation.name} ({c.translation.code}){c.translation_choice ? " or the member's own version" : " required"} · {c.item_count} verses
           {c.scheduled && c.publish_at ? ` · appears ${formatDay(c.publish_at.slice(0, 10))}` : ""}
         </span>
       </div>

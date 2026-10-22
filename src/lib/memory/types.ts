@@ -1,4 +1,4 @@
-import type { Verse } from "@/lib/bible/types";
+import type { Translation, Verse } from "@/lib/bible/types";
 
 /** Shapes returned by the memory_* database functions (Phase 9). */
 export type Activity = "read_repeat" | "flashcards" | "missing_words" | "word_order" | "type_verse" | "self_check";
@@ -52,7 +52,9 @@ export type Item = {
   ends_on: string | null;
   retired: boolean;
   passage: Passage;
-  card?: { id: string; stage: Stage; sessions: number; review_ready: boolean; current_version: boolean } | null;
+  /** The collection lets members practice in another stored version. */
+  translation_choice?: boolean;
+  card?: { id: string; stage: Stage; sessions: number; review_ready: boolean; current_version: boolean; translation?: { id: string; code: string; name: string } } | null;
   collection?: { id: string; title: string; kind?: string; goal_note?: string | null; goal_sessions_per_week?: number | null };
 };
 
@@ -66,6 +68,8 @@ export type Collection = {
   group_id: string | null;
   group_name: string | null;
   translation: { id: string; code: string; name: string };
+  /** Members may practice in their own version (false: the collection's version is required). */
+  translation_choice: boolean;
   kind: "collection" | "sequence";
   status: "draft" | "published" | "archived";
   publish_at: string | null;
@@ -99,7 +103,12 @@ export type Card = {
   item: { id: string; title: string | null; note: string; hint: string | null; collection: { id: string; title: string; audience: string } } | null;
   update_available: { source: "collection" | "bible"; reason: string | null } | null;
   translation_available: boolean;
+  /** Set for verses from a church or group collection. */
+  assignment: { translation: TranslationBrief; choice: boolean; own_translation: boolean } | null;
+  can_change_translation: boolean;
 };
+
+export type TranslationBrief = { id: string; code: string; name: string; attribution: string; copyright: string; source_url: string | null; available: boolean };
 
 export type HistoryEntry = {
   activity: Activity;
@@ -113,11 +122,13 @@ export type HistoryEntry = {
   step_after: number;
   date: string;
   at: string;
+  translation: string;
+  text_version: number;
 };
 
 export type CardDetail = Card & {
   history: HistoryEntry[];
-  earlier: Array<{ id: string; version: number; sessions: number; status: string }>;
+  earlier: Array<{ id: string; version: number; sessions: number; status: string; translation: string; same_translation: boolean }>;
   settings: PracticeSettings;
 };
 
@@ -136,6 +147,20 @@ export type PracticeSettings = {
   remind_practice: boolean;
   remind_challenge: boolean;
   reminder_time: string;
+  /** The member's stored choice (null: not chosen). */
+  default_translation_id: string | null;
+  default_translation_available: boolean;
+  /** What new verses start with now, and why. */
+  effective_translation: (TranslationBrief & { source: "memory" | "reading" | "church" }) | null;
+};
+
+/** memory_translations: stored-text versions a member can memorize. */
+export type MemoryTranslations = {
+  effective_id: string | null;
+  source: "memory" | "reading" | "church" | "none";
+  church_id: string | null;
+  reading_id: string | null;
+  items: Translation[];
 };
 
 export type ChallengeAggregate =

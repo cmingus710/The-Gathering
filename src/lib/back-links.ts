@@ -88,6 +88,7 @@ export const BACK_ROUTES = {
   "/memory/verses/[id]": { parent: "/memory/verses", label: "My Verses" },
   "/memory/verses/add": { parent: "/memory/verses", label: "My Verses" },
   "/memory/practice/[id]": { parent: "/memory/verses/[id]", label: "the verse" },
+  "/memory/verses/[id]/translation": { parent: "/memory/verses/[id]", label: "the verse" },
   "/memory/collections/new": { parent: "/memory/collections", label: "Collections" },
   "/memory/collections/[id]": { parent: "/memory/collections", label: "Collections" },
   "/memory/challenges/[id]": { parent: "/memory", label: "Memory verses" },
