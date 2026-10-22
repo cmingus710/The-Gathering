@@ -2,7 +2,7 @@
 
 import { Send } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { careMessageAction, createCareAction } from "@/app/(member)/prayer/care-actions";
+import { careMessageAction, createCareAction } from "@/app/(app)/(member)/prayer/care-actions";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

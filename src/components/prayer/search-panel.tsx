@@ -2,7 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import { useId, useState, useTransition, type FormEvent, type ReactNode } from "react";
-import { searchAction } from "@/app/(member)/prayer/actions";
+import { searchAction } from "@/app/(app)/(member)/prayer/actions";
 import { Button } from "@/components/ui/button";
 import { rowListClass } from "@/components/ui/card";
 import type { PrayerCard } from "@/lib/prayer/types";

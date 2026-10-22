@@ -2,7 +2,7 @@
 
 import { Globe, ImagePlus, Lock, Send } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
-import { createThreadAction } from "@/app/(member)/community/actions";
+import { createThreadAction } from "@/app/(app)/(member)/community/actions";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

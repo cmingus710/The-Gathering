@@ -2,7 +2,7 @@
 
 import { Eye, Send } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { noteAction, opportunityPublishAction, opportunitySaveAction } from "@/app/(member)/prayer/care-actions";
+import { noteAction, opportunityPublishAction, opportunitySaveAction } from "@/app/(app)/(member)/prayer/care-actions";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

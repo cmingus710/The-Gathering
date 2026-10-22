@@ -3,7 +3,7 @@
 import { CircleCheck, CircleX, ImagePlus, LoaderCircle, RotateCcw, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
-import { beginPhotoUpload, cancelPhotoUpload, processPhoto, type PhotoBegin } from "@/app/(member)/gallery/actions";
+import { beginPhotoUpload, cancelPhotoUpload, processPhoto, type PhotoBegin } from "@/app/(app)/(member)/gallery/actions";
 import { Button } from "@/components/ui/button";
 import { ACCEPT, formatBytes } from "@/lib/media/files";
 import { startUpload, type UploadHandle } from "@/lib/media/upload-client";

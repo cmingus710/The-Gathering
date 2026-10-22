@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
-import { youthFormAction } from "@/app/(member)/youth/actions";
+import { youthFormAction } from "@/app/(app)/(member)/youth/actions";
 import type { ButtonSize, ButtonVariant } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { FormMessage } from "@/components/ui/form-message";

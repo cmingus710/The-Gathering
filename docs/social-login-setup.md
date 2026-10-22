@@ -24,7 +24,7 @@ How "Continue with Google" and "Continue with Apple" work in The Gathering, and 
 6. Pending and suspended accounts see only `/account-status`, exactly as before. Status is re-read from the database on every request, so approval and suspension take effect immediately.
 7. Signed-in approved members can connect or disconnect Google and Apple at **Profile → Sign-in methods** (`/profile/sign-in-methods`). This uses Supabase's manual identity linking.
 
-Code: `src/lib/auth/oauth.ts` (rules: origins, errors, unlink safety), `src/lib/auth/oauth-config.ts` (provider gating), `src/app/auth/callback/route.ts`, `src/app/(auth)/complete-profile/`, `src/app/(member)/profile/sign-in-methods/`, `src/components/auth/`.
+Code: `src/lib/auth/oauth.ts` (rules: origins, errors, unlink safety), `src/lib/auth/oauth-config.ts` (provider gating), `src/app/auth/callback/route.ts`, `src/app/(auth)/complete-profile/`, `src/app/(app)/(member)/profile/sign-in-methods/`, `src/components/auth/`.
 
 ## The two kinds of URL
 

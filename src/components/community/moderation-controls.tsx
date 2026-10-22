@@ -2,7 +2,7 @@
 
 import { EyeOff, Lock, LockOpen, Pin, PinOff, RotateCcw } from "lucide-react";
 import { useActionState } from "react";
-import { modPostAction, modThreadAction } from "@/app/(member)/community/actions";
+import { modPostAction, modThreadAction } from "@/app/(app)/(member)/community/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextAreaField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";

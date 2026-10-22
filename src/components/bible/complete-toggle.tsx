@@ -2,7 +2,7 @@
 
 import { Check, Circle } from "lucide-react";
 import { useState, useTransition } from "react";
-import { completeDayAction } from "@/app/(member)/bible/actions";
+import { completeDayAction } from "@/app/(app)/(member)/bible/actions";
 import { Button } from "@/components/ui/button";
 
 /** Mark a reading done (or not). Opening a reading never marks it. */
