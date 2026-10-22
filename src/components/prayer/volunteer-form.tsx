@@ -2,7 +2,7 @@
 
 import { HandHeart } from "lucide-react";
 import { useActionState, useState } from "react";
-import { volunteerAction } from "@/app/(member)/prayer/care-actions";
+import { volunteerAction } from "@/app/(app)/(member)/prayer/care-actions";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { leaderSearch } from "@/app/(member)/groups/actions";
+import { leaderSearch } from "@/app/(app)/(member)/groups/actions";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

@@ -2,7 +2,7 @@
 
 import { HandHeart } from "lucide-react";
 import { useState, useTransition } from "react";
-import { prayAction } from "@/app/(member)/prayer/actions";
+import { prayAction } from "@/app/(app)/(member)/prayer/actions";
 import { cn } from "@/components/ui/cn";
 
 /**

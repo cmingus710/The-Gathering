@@ -2,7 +2,7 @@
 
 import { Archive, CheckCircle2, CircleSlash, EyeOff, RotateCcw, Trash2, UserSearch } from "lucide-react";
 import { useActionState, useId, useRef, useState, type ReactNode } from "react";
-import { deleteRequestAction, identityLookupAction, statusAction } from "@/app/(member)/prayer/actions";
+import { deleteRequestAction, identityLookupAction, statusAction } from "@/app/(app)/(member)/prayer/actions";
 import { prayerModAction } from "@/app/admin/prayer/actions";
 import { Button, type ButtonVariant } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";

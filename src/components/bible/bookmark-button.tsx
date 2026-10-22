@@ -2,7 +2,7 @@
 
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useState, useTransition } from "react";
-import { toggleBookmarkAction, type BookmarkInput } from "@/app/(member)/bible/actions";
+import { toggleBookmarkAction, type BookmarkInput } from "@/app/(app)/(member)/bible/actions";
 import { Button } from "@/components/ui/button";
 
 export function BookmarkButton({ input, bookmarked: initial, label = "Bookmark" }: { input: BookmarkInput; bookmarked: boolean; label?: string }) {

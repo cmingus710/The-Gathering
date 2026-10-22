@@ -3,8 +3,8 @@
 import { ChevronUp, EyeOff, Flag, Pencil, RotateCcw, Send, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useId, useRef, useState, useTransition } from "react";
-import { deleteReplyAction, editReplyAction, modPostAction, replyAction } from "@/app/(member)/community/actions";
-import { loadCommentsAction } from "@/app/(member)/community/feed-actions";
+import { deleteReplyAction, editReplyAction, modPostAction, replyAction } from "@/app/(app)/(member)/community/actions";
+import { loadCommentsAction } from "@/app/(app)/(member)/community/feed-actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";

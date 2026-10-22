@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
-import { removeMyPhotoAction, updatePhotoAction } from "@/app/(member)/gallery/actions";
+import { removeMyPhotoAction, updatePhotoAction } from "@/app/(app)/(member)/gallery/actions";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Photo } from "@/lib/media/types";

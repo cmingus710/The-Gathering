@@ -3,7 +3,7 @@
 import { Bookmark, Minus, NotebookPen, Plus, Type, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
-import { highlightAction, readerPrefsAction, toggleBookmarkAction } from "@/app/(member)/bible/actions";
+import { highlightAction, readerPrefsAction, toggleBookmarkAction } from "@/app/(app)/(member)/bible/actions";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { HIGHLIGHT_COLORS } from "@/lib/bible/format";
 import type { Translation, Verse } from "@/lib/bible/types";

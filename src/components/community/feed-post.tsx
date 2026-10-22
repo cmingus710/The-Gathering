@@ -3,10 +3,11 @@
 import { Bell, BellOff, EyeOff, ExternalLink, Flag, Lock, LockOpen, MessageCircle, Pencil, Pin, PinOff, RotateCcw, Trash2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useCallback, useId, useLayoutEffect, useRef, useState, useTransition } from "react";
-import { deleteThreadAction, followAction, modThreadAction, muteAction } from "@/app/(member)/community/actions";
-import { loadPostAction } from "@/app/(member)/community/feed-actions";
+import { deleteThreadAction, followAction, modThreadAction, muteAction } from "@/app/(app)/(member)/community/actions";
+import { loadPostAction } from "@/app/(app)/(member)/community/feed-actions";
 import { cn } from "@/components/ui/cn";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { LinkPending } from "@/components/ui/link-pending";
 import { exactTime, relativeTime } from "@/lib/community/format";
 import type { RenderedPost } from "@/lib/community/types";
 import { initialFormState, type FormState } from "@/lib/forms";
@@ -205,6 +206,7 @@ export function FeedPostCard({
           {headingLevel === 2 ? (
             <Link href={`/community/t/${post.id}`} className="hover:underline">
               {post.title}
+              <LinkPending />
             </Link>
           ) : (
             post.title

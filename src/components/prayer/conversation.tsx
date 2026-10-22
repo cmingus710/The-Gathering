@@ -2,7 +2,7 @@
 
 import { MessageCircleHeart, Pencil, Send, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { addUpdateAction, commentAction, deleteCommentAction, deleteUpdateAction, editCommentAction, editUpdateAction } from "@/app/(member)/prayer/actions";
+import { addUpdateAction, commentAction, deleteCommentAction, deleteUpdateAction, editCommentAction, editUpdateAction } from "@/app/(app)/(member)/prayer/actions";
 import { CommunityText } from "@/components/community/community-text";
 import { Button } from "@/components/ui/button";
 import { CheckboxField, TextAreaField } from "@/components/ui/field";

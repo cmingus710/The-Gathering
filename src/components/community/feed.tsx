@@ -3,7 +3,7 @@
 import { ArrowUp, ChevronDown, Pin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
-import { feedNewerAction, loadFeedAction } from "@/app/(member)/community/feed-actions";
+import { feedNewerAction, loadFeedAction } from "@/app/(app)/(member)/community/feed-actions";
 import { lastReturnAt } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/community/format";
@@ -12,7 +12,7 @@ import { FeedPostCard } from "./feed-post";
 import { useCommunityRealtime } from "./realtime-provider";
 
 type Place = { category: string | null; group: string | null };
-type Saved = { posts: RenderedPost[]; cursor: FeedCursor | null; scrollY: number; at: number };
+type Saved = { posts: RenderedPost[]; cursor: FeedCursor | null; scrollY: number; at: number; entry: string | null };
 
 /**
  * Feed state kept across a visit to a post and back (browser Back, or the
@@ -22,6 +22,23 @@ type Saved = { posts: RenderedPost[]; cursor: FeedCursor | null; scrollY: number
 const saved = new Map<string, Saved>();
 let lastPopAt = 0;
 if (typeof window !== "undefined") window.addEventListener("popstate", () => (lastPopAt = Date.now()));
+
+/** The current history entry's key (Navigation API), or null where it isn't supported. */
+function historyEntry(): string | null {
+  return (window as { navigation?: { currentEntry?: { key?: string } | null } }).navigation?.currentEntry?.key ?? null;
+}
+
+/**
+ * The reader came back to the feed they left: a "Back to …" link followed
+ * since saving, or Back/Forward to the same history entry (Navigation API; a
+ * fresh visit makes a new entry). Next.js can show the page before popstate
+ * fires, so popstate is only the fallback where entries can't be compared.
+ */
+function returnedTo(s: Saved): boolean {
+  const entry = historyEntry();
+  const back = lastReturnAt() > s.at || (s.entry && entry ? s.entry === entry : lastPopAt > s.at);
+  return back && Date.now() - s.at < 30 * 60_000;
+}
 
 /**
  * The Community feed: original posts only, newest first by when they were
@@ -42,35 +59,53 @@ export function Feed({
   postedId?: string | null;
 }) {
   const key = `${place.category ?? ""}:${place.group ?? ""}`;
-  const [restored] = useState(() => {
-    const s = saved.get(key);
-    saved.delete(key);
-    return s && Math.max(lastPopAt, lastReturnAt()) > s.at && Date.now() - s.at < 30 * 60_000 ? s : null;
-  });
-  const [posts, setPosts] = useState<RenderedPost[]>(restored?.posts ?? initial.items);
-  const [cursor, setCursor] = useState<FeedCursor | null>(restored ? restored.cursor : initial.next_cursor);
+  const [posts, setPosts] = useState<RenderedPost[]>(initial.items);
+  const [cursor, setCursor] = useState<FeedCursor | null>(initial.next_cursor);
   const [error, setError] = useState<string | null>(null);
   const [newer, setNewer] = useState(0);
   const [pending, start] = useTransition();
   const listRef = useRef<HTMLOListElement>(null);
   const state = useRef({ posts, cursor });
+  // Where the reader was when they followed a link. By the time this feed
+  // unmounts the router has already scrolled the next page to the top.
+  const leftAt = useRef<{ y: number; at: number } | null>(null);
+  // The history entry this feed is showing in.
+  const entry = useRef<string | null>(null);
   useEffect(() => {
     state.current = { posts, cursor };
   }, [posts, cursor]);
 
-  // Remember where the reader was when they leave for a post. The position is
-  // taken when a link is followed: by the time this unmounts, the router has
-  // already scrolled the next page to the top.
-  const leftAt = useRef<number | null>(null);
+  // Remember where the reader was when they leave for a post.
   useEffect(
     () => () => {
-      saved.set(key, { ...state.current, scrollY: leftAt.current ?? window.scrollY, at: Date.now() });
+      saved.set(key, { ...state.current, scrollY: leftAt.current && Date.now() - leftAt.current.at < 10_000 ? leftAt.current.y : window.scrollY, at: Date.now(), entry: entry.current });
     },
     [key],
   );
+  // Restore when the feed is shown again after Back. Next.js renders the
+  // page for Back before popstate fires, so this checks the history entry.
   useLayoutEffect(() => {
-    if (restored) requestAnimationFrame(() => window.scrollTo(0, restored.scrollY));
-  }, [restored]);
+    entry.current = historyEntry();
+    const s = saved.get(key);
+    saved.delete(key);
+    if (s && returnedTo(s)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring the in-memory feed when it is shown again after Back
+      setPosts(s.posts);
+      setCursor(s.cursor);
+      // Posts settle their height (the "See more" check) just after being
+      // shown; with scroll anchoring on, the browser then moves the page by
+      // that amount and the reader lands on a different post.
+      const scrollers = [document.documentElement, document.body];
+      const anchoring = (value: string) => scrollers.forEach((el) => (el.style.overflowAnchor = value));
+      anchoring("none");
+      requestAnimationFrame(() => window.scrollTo(0, s.scrollY));
+      const timer = window.setTimeout(() => anchoring(""), 1000);
+      return () => {
+        window.clearTimeout(timer);
+        anchoring("");
+      };
+    }
+  }, [key]);
 
   useEffect(() => {
     if (postedId) document.getElementById(`post-${postedId}`)?.querySelector<HTMLElement>("h2 a")?.focus();
@@ -122,7 +157,7 @@ export function Feed({
   return (
     <div
       onClickCapture={(e) => {
-        if ((e.target as HTMLElement).closest("a[href]")) leftAt.current = window.scrollY;
+        if ((e.target as HTMLElement).closest("a[href]")) leftAt.current = { y: window.scrollY, at: Date.now() };
       }}
     >
       {newer > 0 ? (

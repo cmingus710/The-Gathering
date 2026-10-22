@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- previews are local object URLs of the chosen files. */
 import { CircleCheck, CircleX, ImagePlus, LoaderCircle, RotateCcw, Trash2, Video, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { beginAttachment, discardAttachment, processAttachment, type AttachmentBegin } from "@/app/(member)/community/attachment-actions";
+import { beginAttachment, discardAttachment, processAttachment, type AttachmentBegin } from "@/app/(app)/(member)/community/attachment-actions";
 import { Button } from "@/components/ui/button";
 import { ATTACHMENT_ACCEPT, ATTACHMENT_LIMITS, checkForumVideo, classifyAttachment } from "@/lib/community/attachments";
 import { formatBytes } from "@/lib/media/files";

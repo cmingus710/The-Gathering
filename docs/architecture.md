@@ -17,6 +17,8 @@ Browser (PWA) ──► Next.js on Vercel ──► Supabase (Auth · Postgres +
 ```
 src/
   app/
+    (app)/           holds (member), (events), (teaching), and (giving); its layout renders the
+                     member shell once for approved adults, so it stays mounted between sections
     (public)/        welcome page, install guidance
     (auth)/          sign-in, sign-up, forgot/reset password, check-email (+ actions.ts)
     (member)/        home, announcements, directory, profile (edit, photo, privacy,
@@ -99,7 +101,7 @@ Two independent axes:
 ### Enforcement layers (deny by default)
 
 1. **Database:** RLS on every table. Column-level grants mean members can update only their name fields and `phone` on `profiles`, and only their own details and privacy choices on `member_profile_details`. `user_roles`, `audit_log`, and membership status have no client write path. Privileged changes go through `SECURITY DEFINER` functions (`admin_set_membership_status`, `admin_grant_role`, `admin_revoke_role`) that re-check `has_capability()` and write audit entries.
-2. **Server:** layouts and every Server Action call `requireApprovedMember()` / `requireCapability()` (`src/lib/auth/viewer.ts`). The user is verified with `auth.getUser()` on each request.
+2. **Server:** layouts and every Server Action call `requireApprovedMember()` / `requireCapability()` (`src/lib/auth/viewer.ts`). The session token is verified on each request with `auth.getClaims()` (signature checked against the project's published signing keys, cached in memory; the Auth server is asked only for a shared-secret key), and the profile, membership status, and capabilities are read from the database on each request, so suspension and role changes apply on the next request.
 3. **Proxy:** sends signed-out visitors to sign-in and marks protected responses `private, no-store`. It's not relied on for authorization.
 
 ### Safeguards

@@ -4,7 +4,7 @@
 import { ChevronLeft, ChevronRight, Flag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useTransition } from "react";
-import { reportPhotoAction } from "@/app/(member)/gallery/actions";
+import { reportPhotoAction } from "@/app/(app)/(member)/gallery/actions";
 import { Button } from "@/components/ui/button";
 
 export type ViewerPhoto = { id: string; thumb: string | null; display: string | null; alt: string; caption: string; width: number | null; height: number | null };

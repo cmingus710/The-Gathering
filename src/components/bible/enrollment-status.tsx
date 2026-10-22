@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { leavePlanAction } from "@/app/(member)/bible/actions";
+import { leavePlanAction } from "@/app/(app)/(member)/bible/actions";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { ackGuidelinesAction } from "@/app/(member)/community/actions";
+import { ackGuidelinesAction } from "@/app/(app)/(member)/community/actions";
 import { CheckboxField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

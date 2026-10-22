@@ -2,7 +2,7 @@
 
 import { Flag, Send, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { markReadAction, sendMessageAction } from "@/app/(member)/messages/actions";
+import { markReadAction, sendMessageAction } from "@/app/(app)/(member)/messages/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { LIMITS } from "@/lib/community/format";

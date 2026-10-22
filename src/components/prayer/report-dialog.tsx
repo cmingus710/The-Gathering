@@ -2,7 +2,7 @@
 
 import { Flag } from "lucide-react";
 import { useActionState, useId, useRef, useState } from "react";
-import { reportAction } from "@/app/(member)/prayer/actions";
+import { reportAction } from "@/app/(app)/(member)/prayer/actions";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

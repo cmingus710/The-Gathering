@@ -2,7 +2,7 @@
 
 import { SmilePlus } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
-import { reactAction } from "@/app/(member)/community/actions";
+import { reactAction } from "@/app/(app)/(member)/community/actions";
 import { cn } from "@/components/ui/cn";
 import { REACTIONS, type ReactionKind, type Reactions } from "@/lib/community/types";
 

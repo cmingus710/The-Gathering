@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -6,6 +6,13 @@ import { LAUNCHER_ITEMS, launcherItemsFor, menuArtSource, type LauncherItem } fr
 import { MENU_ART, MENU_ART_NAMES } from "./menu-art.generated";
 
 const ROOT = path.resolve(import.meta.dirname, "../../..");
+
+/** A route folder with a page, directly or inside a route group such as community/(feed). */
+function hasPage(dir: string): boolean {
+  if (existsSync(path.join(dir, "page.tsx"))) return true;
+  if (!existsSync(dir)) return false;
+  return readdirSync(dir).some((d) => /^\(.+\)$/.test(d) && existsSync(path.join(dir, d, "page.tsx")));
+}
 const none = { capabilities: new Set<never>(), features: {} };
 
 describe("launcher config", () => {
@@ -46,7 +53,7 @@ describe("launcher config", () => {
   it("links every available tile to an existing member route", () => {
     for (const item of launcherItemsFor({ capabilities: new Set(), features: { giving: true } })) {
       const segment = item.href.slice(1);
-      const found = ["(member)", "(events)", "(giving)", "(teaching)"].some((g) => existsSync(path.join(ROOT, "src/app", g, segment, "page.tsx")));
+      const found = ["(member)", "(events)", "(giving)", "(teaching)"].some((g) => hasPage(path.join(ROOT, "src/app/(app)", g, segment)));
       expect(found, item.href).toBe(true);
     }
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, LifeBuoy, X } from "lucide-react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import { NavCount } from "@/components/community/notification-bell";
@@ -75,6 +75,15 @@ function ReportProblemLink({ pathname, compact }: { pathname: string; compact?: 
   );
 }
 
+/**
+ * Lights a tapped dock tab at once while its page loads, so the tap is
+ * acknowledged even where the page has no loading skeleton (Home).
+ */
+function TabPending() {
+  const { pending } = useLinkStatus();
+  return pending ? <span aria-hidden="true" data-link-pending="" className="dock-active pointer-events-none absolute inset-0 -z-10 rounded-[1.375rem]" /> : null;
+}
+
 /** Desktop sidebar links, grouped into the same sections as the phone More menu. */
 export function SidebarNav({ showAdmin }: { showAdmin: boolean }) {
   const pathname = usePathname();
@@ -132,7 +141,7 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
 
   const tab = (active: boolean) =>
     cn(
-      "relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
+      "relative isolate flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.375rem] px-1 text-[0.75rem] leading-none transition-colors",
       active ? "dock-active font-bold" : "font-semibold text-text-secondary hover:text-text",
     );
 
@@ -148,6 +157,7 @@ export function MobileTabBar({ showAdmin, signOut, appearance }: { showAdmin: bo
             return (
               <li key={item.key} className="flex min-w-0 flex-1">
                 <Link href={item.href} className={tab(active)} aria-current={active ? "page" : undefined}>
+                  <TabPending />
                   <span className="relative">
                     <DockGlyph name={item.key as DockGlyphName} className="size-[1.375rem]" />
                     {item.count ? (

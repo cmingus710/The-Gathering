@@ -27,25 +27,37 @@ export type ViewerResult =
 
 /**
  * Loads the signed-in user, their profile, and their capabilities once per
- * request. The user is verified with the Auth server (getUser), and profile
- * and capabilities are read through RLS, so the database decides.
+ * request. The session's access token is verified with getClaims(): against
+ * the project's published signing keys (cached in memory, so no Auth round
+ * trip on each navigation), or with the Auth server when the project still
+ * uses a shared-secret key. Profile and capabilities are then read through
+ * RLS on every request, so membership status (suspension included) and roles
+ * always come from the database, never from the token.
  */
 export const getViewer = cache(async (): Promise<ViewerResult> => {
   const supabase = await createClient();
   if (!supabase) return { state: "unconfigured" };
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) {
-    const status = (userError as { status?: number } | null)?.status ?? 401;
-    if (userError && status >= 500) return { state: "error", message: "We couldn't reach the sign-in service." };
-    return { state: "signed-out" };
+  let claims: Record<string, unknown> | null = null;
+  try {
+    const { data, error } = await supabase.auth.getClaims();
+    if (error) {
+      const status = (error as { status?: number }).status ?? 401;
+      if (status >= 500) return { state: "error", message: "We couldn't reach the sign-in service." };
+      return { state: "signed-out" };
+    }
+    claims = (data?.claims as Record<string, unknown> | undefined) ?? null;
+  } catch {
+    return { state: "error", message: "We couldn't reach the sign-in service." };
   }
+  const userId = typeof claims?.sub === "string" ? claims.sub : null;
+  if (!userId) return { state: "signed-out" };
 
   const [{ data: profile, error: profileError }, { data: caps, error: capsError }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, email, full_name, preferred_name, phone, membership_status, account_kind")
-      .eq("id", userData.user.id)
+      .eq("id", userId)
       .maybeSingle(),
     supabase.rpc("my_capabilities"),
   ]);
@@ -73,12 +85,26 @@ export const getViewer = cache(async (): Promise<ViewerResult> => {
       capabilities,
       // The database grants youth accounts no capabilities; this keeps the UI consistent.
       isAdmin: profile.membership_status === "approved" && profile.account_kind !== "youth" && canAccessAdmin(capabilities),
-      authProviders: Array.isArray(userData.user.app_metadata?.providers)
-        ? (userData.user.app_metadata.providers as unknown[]).filter((p): p is string => typeof p === "string")
-        : [],
+      authProviders: providersFrom(claims?.app_metadata),
     },
   };
 });
+
+/** Sign-in methods recorded by Supabase Auth in the token's app_metadata. */
+function providersFrom(appMetadata: unknown): string[] {
+  const providers = (appMetadata as { providers?: unknown } | null | undefined)?.providers;
+  return Array.isArray(providers) ? providers.filter((p): p is string => typeof p === "string") : [];
+}
+
+/**
+ * The viewer the shared member shell is rendered for (approved adult
+ * members), or null. The (app) layout renders the shell for exactly these
+ * accounts, and section layouts use the same test to add their own chrome
+ * for everyone else.
+ */
+export function shellViewer(result: ViewerResult): Viewer | null {
+  return result.state === "signed-in" && result.viewer.status === "approved" && result.viewer.accountKind === "adult" ? result.viewer : null;
+}
 
 /** Any signed-in account (pending/suspended included). */
 export async function requireSignedIn(next = "/home"): Promise<Viewer> {

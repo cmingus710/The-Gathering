@@ -1,6 +1,5 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { UnreadCounts } from "@/lib/community/types";
@@ -89,6 +88,10 @@ export function CommunityRealtimeProvider({
     let cancelled = false;
     let wasLive = false;
     (async () => {
+      // Loaded after the page is interactive: the Supabase client is the
+      // largest script in the shell and nothing on screen needs it.
+      const { createBrowserClient } = await import("@supabase/ssr");
+      if (cancelled) return;
       client = createBrowserClient(supabaseUrl, supabaseKey);
       await client.realtime.setAuth();
       if (cancelled) return;

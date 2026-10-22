@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { clearReadAction, markReadAction, undoClearReadAction } from "@/app/(member)/notifications/actions";
+import { clearReadAction, markReadAction, undoClearReadAction } from "@/app/(app)/(member)/notifications/actions";
 import { Icon } from "@/components/icons/icon";
 import { cn } from "@/components/ui/cn";
 import { CATEGORY_LABEL, PANEL_FILTERS, type NotificationPreview, type PanelFilter } from "@/lib/community/notification-preview";

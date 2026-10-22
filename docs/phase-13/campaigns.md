@@ -12,8 +12,8 @@ top. Operator-facing guidance is in [../finance-guide.md](../finance-guide.md#ca
 | --- | --- |
 | Migration | `supabase/migrations/20261031000100_giving_campaigns.sql` |
 | Hosted apply script | `supabase/manual/2026-10-31-apply-giving-campaigns.sql` (preflight: 20261030000100 recorded, 20261031000100 not; one transaction; records the version with `created_by = 'phase-13'`) |
-| Member UI | `src/app/(giving)/give/page.tsx` (campaign list), `src/app/(giving)/give/campaigns/[id]/page.tsx`, `src/components/giving/campaign-meter.tsx`, `src/components/giving/campaign-card.tsx`, `src/app/(giving)/give/give-form.tsx` (`campaign` prop) |
-| Checkout | `src/app/(giving)/actions.ts` (`campaignId`), `src/lib/giving/checkout.ts` (`campaign_id` sent to `checkout_prepare`; cancel returns to the campaign page) |
+| Member UI | `src/app/(app)/(giving)/give/page.tsx` (campaign list), `src/app/(app)/(giving)/give/campaigns/[id]/page.tsx`, `src/components/giving/campaign-meter.tsx`, `src/components/giving/campaign-card.tsx`, `src/app/(app)/(giving)/give/give-form.tsx` (`campaign` prop) |
+| Checkout | `src/app/(app)/(giving)/actions.ts` (`campaignId`), `src/lib/giving/checkout.ts` (`campaign_id` sent to `checkout_prepare`; cancel returns to the campaign page) |
 | Finance UI | `src/app/admin/finance/campaigns/` (list, detail/edit, status buttons, actions), nav entry in `finance-nav.tsx`, campaign choice in Record cash/check (`finance-forms.tsx`, `actions.ts`, `manual/page.tsx`) |
 | Shared | `src/lib/giving/campaigns.ts` (types, transitions, meter text), `src/lib/giving/campaign-images.ts` (upload processing, signed URLs) |
 | Tests | `tests/db/campaigns.test.ts`, `tests/db/grants.test.ts` (ANON list), `src/lib/giving/campaigns.test.ts` |
