@@ -17,7 +17,8 @@ const int = (v: string | undefined) => (v && /^\d{1,3}$/.test(v) ? Number(v) : n
 
 /**
  * A new entry, optionally about a passage (?t&b&c&sv&ev), a plan day and one
- * of its reflection questions (?day&q), or a devotional, lesson, or church book (?item).
+ * of its reflection questions (?day&q), or a devotional, lesson, church book, or
+ * church reading assignment (?item).
  * The link is checked when the first save creates the entry.
  */
 export default async function NewEntryPage({ searchParams }: PageProps<"/journal/new">) {
@@ -45,10 +46,12 @@ export default async function NewEntryPage({ searchParams }: PageProps<"/journal
   } else if (item && isUuid(item)) {
     const { data, error } = await supabase.rpc("media_item", { p_id: item });
     const media = data as { id: string; kind: string; title: string } | null;
-    if (error || !media || !["devotional", "lesson", "book"].includes(media.kind)) problem = "That teaching isn't available, so this entry won't be linked to it.";
+    if (error || !media || !["devotional", "lesson", "book", "assignment"].includes(media.kind)) problem = "That teaching isn't available, so this entry won't be linked to it.";
     else {
-      link = { kind: media.kind, media_item_id: media.id };
-      context = { kind: media.kind as "devotional" | "lesson" | "book", available: true, item_id: media.id, title: media.title };
+      // A church reading assignment links as 'book_assignment' ('assignment' is a Bible plan day).
+      const kind = media.kind === "assignment" ? "book_assignment" : (media.kind as "devotional" | "lesson" | "book");
+      link = { kind, media_item_id: media.id };
+      context = { kind, available: true, item_id: media.id, title: media.title };
     }
   } else if (t && isUuid(t) && b && isBookCode(b)) {
     const c = int(one(sp.c));

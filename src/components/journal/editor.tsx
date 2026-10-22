@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Bold, CheckCircle2, CircleDashed, CloudOff, Italic, List, Loader2, Quote, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { renderCommunityText } from "@/lib/community/format";
@@ -15,6 +15,11 @@ type Props = {
   /** For a new entry: what it links to (sent with the first save). */
   link?: Record<string, string | number | null> | null;
   placeholder?: string;
+  /**
+   * Embedded in another page (the church reading page): the address bar stays
+   * on that page after the first save, and a link opens the entry in My Journal.
+   */
+  inline?: boolean;
 };
 
 async function call(url: string, method: "POST" | "PUT", body: unknown): Promise<{ status: number; data: Record<string, unknown> }> {
@@ -39,7 +44,8 @@ function toResponse(status: number, data: Record<string, unknown>): SaveResponse
  * the account copy is the only saved copy, and the status line says
  * "Saved" only after the server confirms the text on screen.
  */
-export function JournalEditor({ entry, link, placeholder }: Props) {
+export function JournalEditor({ entry, link, placeholder, inline = false }: Props) {
+  const fieldId = useId();
   const [id, setId] = useState(entry?.id ?? null);
   // Mutable per-editor session (the saved entry's id once created, and the
   // key that makes the first save idempotent).
@@ -63,7 +69,7 @@ export function JournalEditor({ entry, link, placeholder }: Props) {
               if (r.status === 200) {
                 session.id = String(r.data.id);
                 setId(session.id);
-                window.history.replaceState(null, "", `/journal/${session.id}`);
+                if (!inline) window.history.replaceState(null, "", `/journal/${session.id}`);
               }
               return toResponse(r.status, r.data);
             }
@@ -155,7 +161,12 @@ export function JournalEditor({ entry, link, placeholder }: Props) {
         }
       }}
     >
-      <div className="sticky top-[calc(var(--header-height,3.5rem))] z-10 -mx-1 mb-3 flex flex-wrap items-center justify-between gap-2 bg-background/95 px-1 py-2 backdrop-blur-sm">
+      <div
+        className={cn(
+          "mb-3 flex flex-wrap items-center justify-between gap-2",
+          !inline && "sticky top-[calc(var(--header-height,3.5rem))] z-10 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm",
+        )}
+      >
         <p className={cn("flex items-center gap-1.5 text-meta font-semibold", s.status === "saved" ? "text-text-secondary" : "text-text")} role="status" aria-live="polite">
           {isNewAndEmpty ? <span className="text-text-secondary">Start writing; it saves as you go.</span> : (
             <>
@@ -168,6 +179,11 @@ export function JournalEditor({ entry, link, placeholder }: Props) {
           <Button size="sm" variant="secondary" onClick={() => controller.resume()} icon={<RotateCcw className="size-4" aria-hidden="true" />}>
             Retry
           </Button>
+        ) : null}
+        {inline && id ? (
+          <Link href={`/journal/${id}`} className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
+            Open in My Journal
+          </Link>
         ) : null}
       </div>
 
@@ -228,11 +244,11 @@ export function JournalEditor({ entry, link, placeholder }: Props) {
         </p>
       ) : null}
 
-      <label htmlFor="journal-title" className="sr-only">
+      <label htmlFor={`${fieldId}-title`} className="sr-only">
         Title
       </label>
       <input
-        id="journal-title"
+        id={`${fieldId}-title`}
         value={title}
         maxLength={200}
         placeholder="Title"
@@ -262,18 +278,18 @@ export function JournalEditor({ entry, link, placeholder }: Props) {
         <div className="prose-gathering min-h-64 rounded-control border border-border bg-surface px-4 py-3" dangerouslySetInnerHTML={{ __html: renderCommunityText(body) || "<p></p>" }} />
       ) : (
         <>
-          <label htmlFor="journal-body" className="sr-only">
+          <label htmlFor={`${fieldId}-body`} className="sr-only">
             Entry
           </label>
           <textarea
-            id="journal-body"
+            id={`${fieldId}-body`}
             ref={area}
             value={body}
             maxLength={100_000}
             placeholder={placeholder ?? "Write freely. Only you can see this."}
             onChange={(e) => edit(title, e.target.value)}
             onBlur={() => void controller.flush()}
-            className="block min-h-[22rem] w-full rounded-control border border-border-strong bg-surface px-4 py-3 text-base leading-relaxed focus-visible:outline-3 focus-visible:outline-primary"
+            className={cn("block w-full", inline ? "min-h-48" : "min-h-[22rem]", "rounded-control border border-border-strong bg-surface px-4 py-3 text-base leading-relaxed focus-visible:outline-3 focus-visible:outline-primary")}
           />
         </>
       )}

@@ -20,7 +20,8 @@ export async function completeAssignmentAction(id: string, done: boolean): Promi
   const supabase = await createClient();
   if (!supabase) return { ok: false };
   const { error } = await supabase.rpc("media_assignment_complete", { p_item: id, p_done: done });
-  if (!error) revalidatePath("/reading");
+  // The Church reading page and every book's reading page (counts and schedule).
+  if (!error) revalidatePath("/reading", "layout");
   return { ok: !error };
 }
 

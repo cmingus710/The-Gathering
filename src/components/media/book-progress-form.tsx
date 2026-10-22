@@ -11,8 +11,12 @@ const STATUS: Array<{ value: "want" | "reading" | "finished"; label: string }> =
   { value: "finished", label: "Finished" },
 ];
 
-/** The member's own place in a book. Private: no one else (including leaders) can see it. */
-export function BookProgressForm({ id, progress }: { id: string; progress: Progress }) {
+/**
+ * The member's own place in a book. Private: no one else (including leaders) can see it.
+ * One record per book, whichever reading plans it is in; checking off plan
+ * assignments never changes it.
+ */
+export function BookProgressForm({ id, progress, legend = "Where you are" }: { id: string; progress: Progress; legend?: string }) {
   const [status, setStatus] = useState(progress?.status ?? "reading");
   const [position, setPosition] = useState(progress?.position ?? "");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -32,7 +36,7 @@ export function BookProgressForm({ id, progress }: { id: string; progress: Progr
       }}
     >
       <fieldset>
-        <legend className="mb-2 font-semibold">Where you are</legend>
+        <legend className="mb-2 font-semibold">{legend}</legend>
         <div className="flex flex-wrap gap-2">
           {STATUS.map((s) => (
             <label
@@ -47,14 +51,14 @@ export function BookProgressForm({ id, progress }: { id: string; progress: Progr
       </fieldset>
       <div>
         <label htmlFor={`book-position-${id}`} className="mb-1 block font-semibold">
-          Your place <span className="font-normal text-text-secondary">(optional)</span>
+          Current place <span className="font-normal text-text-secondary">(optional: chapter, page, or listening time)</span>
         </label>
         <input
           id={`book-position-${id}`}
           value={position}
           onChange={(e) => setPosition(e.target.value)}
           maxLength={80}
-          placeholder="For example, Chapter 4"
+          placeholder="Chapter 4, page 82, or 3h 10m"
           className="min-h-11 w-full rounded-control border border-border-strong/60 bg-surface px-3 sm:max-w-xs"
         />
       </div>
