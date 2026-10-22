@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { MemberShell } from "@/components/layout/member-shell";
 import { PublicHeader } from "@/components/layout/public-header";
+import { ReturnViewRecorder } from "@/components/ui/back-link";
 import { getViewer, shellViewer } from "@/lib/auth/viewer";
 import { getUnreadCounts } from "@/lib/community/queries";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -29,6 +30,9 @@ export default async function TeachingLayout({ children }: { children: ReactNode
       <a href="#main" className="skip-link">
         Skip to content
       </a>
+      <Suspense fallback={null}>
+        <ReturnViewRecorder />
+      </Suspense>
       <PublicHeader churchName={settings.churchName} iconUrl={settings.iconUrl} signedIn={result.state === "signed-in"} />
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--player-clearance,0rem))] pt-4 outline-none sm:px-6">
         {children}

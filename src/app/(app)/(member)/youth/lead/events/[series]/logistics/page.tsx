@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
@@ -29,8 +29,8 @@ export default async function LogisticsPage({ params }: PageProps<"/youth/lead/e
   if (!data) return <Alert tone="error" title="Logistics couldn't be loaded right now." />;
   return (
     <>
+      <BackLink route="/youth/lead/events/[series]/logistics" params={{ series }} />
       <PageHeader
-        eyebrow={<Link href={`/youth/lead/events/${series}`} className="hover:underline">Back to the event</Link>}
         title="Event logistics"
         description="For staffing this event only. Don't copy, print, or share these details. Your viewing is recorded. Pickup notes describe a family's arrangements; they don't authorize anyone to collect a child."
       />

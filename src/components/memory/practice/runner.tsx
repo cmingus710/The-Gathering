@@ -26,6 +26,10 @@ export type RunnerCard = {
   segments: Segment[];
   shortSegments: Segment[];
   hint: string | null;
+  /** Activities the verse's version allows (a licensed version: flashcards and self-check). */
+  modes: Activity[];
+  /** A licensed version: its text is shown only unchanged, never stored. */
+  provider: boolean;
 };
 
 const SCORED_WHOLE_LIMIT = 80;
@@ -49,7 +53,7 @@ export function PracticeRunner({
   initial: { activity: Activity; difficulty: Difficulty; segment: number; direction: "ref_to_text" | "text_to_ref" };
 }) {
   const kids = settings.presentation === "kids";
-  const [activity, setActivity] = useState<Activity>(initial.activity);
+  const [activity, setActivity] = useState<Activity>(card.modes.includes(initial.activity) ? initial.activity : (card.modes[0] ?? initial.activity));
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.difficulty);
   const [short, setShort] = useState(kids);
   const parts = short ? card.shortSegments : card.segments;
@@ -57,7 +61,7 @@ export function PracticeRunner({
   const wholeAllowed = !scored || card.wordCount <= SCORED_WHOLE_LIMIT;
   // Kids presentation starts with the first short part; others with the whole passage when allowed.
   const [segment, setSegment] = useState<number>(initial.segment || (wholeAllowed && !(kids && card.shortSegments.length > 1) ? 0 : 1));
-  const [direction, setDirection] = useState(initial.direction);
+  const [direction, setDirection] = useState(card.provider ? "ref_to_text" : initial.direction);
   const [ignoreCase, setIgnoreCase] = useState(settings.ignore_case);
   const [ignorePunct, setIgnorePunct] = useState(settings.ignore_punctuation);
   const [session, setSession] = useState<Session | null>(null);
@@ -130,7 +134,7 @@ export function PracticeRunner({
               Choose an activity
             </legend>
             <div className="grid gap-2 sm:grid-cols-2">
-              {ACTIVITIES.map((a) => (
+              {ACTIVITIES.filter((a) => card.modes.includes(a.key)).map((a) => (
                 <label
                   key={a.key}
                   className={cn(
@@ -146,6 +150,11 @@ export function PracticeRunner({
                 </label>
               ))}
             </div>
+            {card.provider ? (
+              <p className="mt-2 text-meta text-text-secondary">
+                For {card.code}, practice shows the verse exactly as published: flashcards and self-check. Activities that hide or rearrange words aren&apos;t available for this version.
+              </p>
+            ) : null}
           </fieldset>
           {activity !== "read_repeat" && activity !== "flashcards" && activity !== "self_check" ? (
             <fieldset>
@@ -197,7 +206,7 @@ export function PracticeRunner({
               </label>
             </div>
           ) : null}
-          {activity === "flashcards" ? (
+          {activity === "flashcards" && !card.provider ? (
             <fieldset>
               <legend className="mb-2 font-semibold">Card front</legend>
               <div className="flex flex-wrap gap-2">
@@ -245,7 +254,7 @@ export function PracticeRunner({
               {session.activity === "missing_words" ? <MissingWords session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
               {session.activity === "word_order" ? <WordOrder session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
               {session.activity === "type_verse" ? <TypeVerse session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
-              {session.activity === "self_check" ? <SelfCheck session={session} kids={kids} busy={busy} hint={card.hint} onSubmit={send} /> : null}
+              {session.activity === "self_check" ? <SelfCheck session={session} kids={kids} busy={busy} hint={card.hint} provider={card.provider} onSubmit={send} /> : null}
             </>
           ) : null}
           {submit ? (

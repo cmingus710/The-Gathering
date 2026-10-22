@@ -1,8 +1,8 @@
-import { ArrowLeft, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { GroupImage } from "@/components/community/group-card";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { signGroupImages, tryCommunityRpc } from "@/lib/community/queries";
@@ -17,9 +17,7 @@ export default async function InvitationsPage() {
   const images = data ? await signGroupImages(data.invitations.map((i) => i.group.image_path)) : new Map<string, string>();
   return (
     <>
-      <Link href="/groups" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Groups
-      </Link>
+      <BackLink route="/groups/invitations" />
       <PageHeader title="Group invitations" description="Joining is up to you. Invitations expire after 14 days." />
       {!data ? (
         <Alert tone="error" title="Invitations couldn't be loaded right now." />

@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ToggleForm } from "@/components/community/toggle-form";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { allTimeZones } from "@/app/admin/events/series";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -34,9 +33,7 @@ export default async function NotificationSettingsPage() {
   const muted = teaching && !teaching.error ? new Set(((teaching.data as { muted?: string[] } | null)?.muted ?? []) as string[]) : null;
   return (
     <>
-      <Link href="/notifications" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Notifications
-      </Link>
+      <BackLink route="/notifications/settings" />
       <PageHeader title="Notification settings" description="Choose what reaches you, where, and when. Giving receipts and event emails have their own settings." />
       {!settings ? (
         <Alert tone="error" title="Settings couldn't be loaded right now." />

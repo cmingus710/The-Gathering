@@ -1,10 +1,10 @@
-import { ArrowLeft, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ToggleForm } from "@/components/community/toggle-form";
 import { VolunteerForm } from "@/components/prayer/volunteer-form";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -27,9 +27,7 @@ export default async function OpportunityPage({ params }: PageProps<"/prayer/ser
   const tz = settings.timezone;
   return (
     <>
-      <Link href="/prayer/serve" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Ways to help
-      </Link>
+      <BackLink route="/prayer/serve/[id]" />
       <header className="mb-6">
         <p className="mb-1 text-meta font-semibold text-primary">{OPPORTUNITY_STATUS_LABEL[o.status]}{o.my_status ? ` · ${SIGNUP_LABEL[o.my_status]}` : ""}</p>
         <h1 className="font-display text-[1.75rem] font-semibold leading-tight">{o.title}</h1>

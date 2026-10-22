@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation } from "@/lib/bible/types";
@@ -22,6 +23,7 @@ export default async function ReadPage() {
   }
   return (
     <>
+      <BackLink route="/bible/read" />
       <PageHeader title="Bible" />
       <EmptyState glyph="bible" title="No Bible text is available yet">
         The church hasn&apos;t set up a translation for reading in the app.

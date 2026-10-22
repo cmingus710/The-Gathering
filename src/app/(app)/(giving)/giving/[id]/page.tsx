@@ -1,6 +1,4 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireSignedIn } from "@/lib/auth/viewer";
@@ -9,6 +7,7 @@ import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/time";
 import { GiftStatusBadge as StatusBadge } from "@/components/giving/gift-status-badge";
+import { BackLink } from "@/components/ui/back-link";
 import type { MyPayment } from "../types";
 
 export const metadata: Metadata = { title: "Gift acknowledgment" };
@@ -27,9 +26,7 @@ export default async function GiftPage({ params }: PageProps<"/giving/[id]">) {
 
   return (
     <>
-      <Link href="/giving" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline print:hidden">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Your giving
-      </Link>
+      <BackLink route="/giving/[id]" className="print:hidden" />
       <PageHeader title="Gift acknowledgment" description={settings.churchName} />
       <Card className="space-y-4">
         <dl className="grid gap-4 sm:grid-cols-2">

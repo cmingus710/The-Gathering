@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProgressSummary } from "@/components/bible/progress";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
 import { formatYmd } from "@/lib/bible/dates";
@@ -27,11 +28,7 @@ export default async function CatchUpPage({ params }: PageProps<"/bible/plans/[i
 
   return (
     <>
-      <p className="mb-4">
-        <Link href={`/bible/plans/${id}`} className="font-semibold text-primary hover:underline">
-          Back to the plan
-        </Link>
-      </p>
+      <BackLink route="/bible/plans/[id]/catch-up" params={{ id }} />
       <PageHeader title="Catch up" description="Earlier readings you haven't marked yet. Read them in any order, whenever it suits you." />
       {error || !c ? (
         <Alert tone="error" title="Catch-up couldn't be loaded right now." />

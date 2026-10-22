@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BackToFeed } from "@/components/community/back-to-feed";
 import { FeedPostCard } from "@/components/community/feed-post";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { renderCommunityText } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -35,7 +34,8 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
 
   return (
     <div className="mx-auto max-w-[40rem]">
-      <BackToFeed href={back} />
+      {/* A group's post goes back to that group's feed; others to Community, with the reader's feed filter if they came from one. */}
+      <BackLink route="/community/t/[id]" query={{ group: post?.group?.id }} label={post?.group?.name} />
       {sp.posted ? <Alert tone="success" title="Your post is shared." className="mb-4" /> : null}
       {sp.edited ? <Alert tone="success" title="Your changes are saved." className="mb-4" /> : null}
       {post ? (
@@ -52,9 +52,6 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
         <div className="rounded-card border border-border bg-surface px-5 py-8 text-center">
           <h1 className="text-[1.0625rem] font-semibold">This post isn&apos;t available</h1>
           <p className="mt-1 text-text-secondary">It may have been deleted or removed, or it&apos;s in a group you&apos;re not part of.</p>
-          <Link href="/community" className="mt-4 inline-flex min-h-11 items-center font-semibold text-primary underline">
-            Back to Community
-          </Link>
         </div>
       )}
     </div>

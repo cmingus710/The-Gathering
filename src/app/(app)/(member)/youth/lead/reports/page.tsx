@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { ReportList, type YouthReport } from "@/components/youth/reports";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -12,8 +13,8 @@ export default async function ReportsPage() {
   const { data, failed } = await youthRead<YouthReport[]>("youth_reports", { p_status: "open" });
   return (
     <>
+      <BackLink route="/youth/lead/reports" />
       <PageHeader
-        eyebrow="Leading"
         title="Reports"
         description="Reports about posts in your groups. Reports about a leader go to safeguarding reviewers outside that leader's groups, never to the leader."
       />

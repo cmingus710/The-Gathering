@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
 import type { PracticeSettings } from "@/lib/memory/types";
+import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
 import { DeleteHistoryForm, SettingsForm } from "./forms";
 
@@ -15,7 +16,8 @@ export const metadata: Metadata = { title: "Practice settings" };
 export default async function SettingsPage() {
   await requireLearner("/memory/settings");
   const supabase = await requireClient();
-  const { data, error } = await supabase.rpc("memory_settings");
+  const [{ data, error }, versions] = await Promise.all([supabase.rpc("memory_settings"), loadMemoryVersions(supabase)]);
+  const translations = versions.items;
   const s = data as (PracticeSettings & { notifications: { in_app: boolean; email: string; push: boolean } | null }) | null;
   return (
     <>
@@ -26,7 +28,7 @@ export default async function SettingsPage() {
       ) : (
         <div className="space-y-8">
           <Card>
-            <SettingsForm settings={s} timezones={allTimeZones([s.effective_timezone])} />
+            <SettingsForm settings={s} translations={translations} unavailable={versions.unavailable} timezones={allTimeZones([s.effective_timezone])} />
           </Card>
           <p className="text-meta text-text-secondary">
             Reminders arrive in the app{s.notifications?.email === "immediate" ? " and by email" : ""}

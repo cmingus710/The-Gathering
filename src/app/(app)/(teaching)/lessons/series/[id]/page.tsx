@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs */
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ItemCard } from "@/components/media/item-card";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { coverPaths, isUuid } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
@@ -24,11 +24,7 @@ export default async function SeriesPage({ params }: PageProps<"/lessons/series/
   const cover = s.cover ? urls.get(s.cover.path) : null;
   return (
     <>
-      <p className="mb-4">
-        <Link href="/lessons" className="font-semibold text-primary hover:underline">
-          All Sunday lessons
-        </Link>
-      </p>
+      <BackLink route="/lessons/series/[id]" />
       {cover ? <img src={cover} alt={s.cover?.alt ?? ""} className="mb-6 max-h-72 w-full rounded-card object-cover" /> : null}
       <PageHeader eyebrow="Series" title={s.title} description={s.description || undefined} />
       <p className="mb-4 text-meta text-text-secondary">

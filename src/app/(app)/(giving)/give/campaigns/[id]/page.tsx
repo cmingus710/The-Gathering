@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { ArrowLeft, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CampaignMeter } from "@/components/giving/campaign-meter";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { displayName, getViewer } from "@/lib/auth/viewer";
 import { signCampaignImages } from "@/lib/giving/campaign-images";
@@ -40,9 +41,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
 
   return (
     <>
-      <Link href="/give" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Give
-      </Link>
+      <BackLink route="/give/campaigns/[id]" />
       <PageHeader eyebrow="Campaign" title={c.title} description={dates ? `${dates} · Gifts go to the ${c.fund_name} fund` : `Gifts go to the ${c.fund_name} fund`} />
 
       {sp.canceled === "1" ? (

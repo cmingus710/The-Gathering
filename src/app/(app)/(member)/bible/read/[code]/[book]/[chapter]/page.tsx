@@ -1,12 +1,12 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { readerPrefsAction } from "@/app/(app)/(member)/bible/actions";
 import { ChapterReader } from "@/components/bible/chapter-reader";
 import { FumsTracker } from "@/components/bible/fums";
 import { Attribution } from "@/components/bible/scripture";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { requireLearner } from "@/lib/auth/viewer";
 import { resolveText } from "@/lib/bible/source";
@@ -50,10 +50,8 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Link href="/bible" className="font-semibold text-primary hover:underline">
-          Bible reading
-        </Link>
+      <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:mb-4">
+        <BackLink route="/bible/read/[code]/[book]/[chapter]" inRow />
         {translations.length > 1 ? (
           <form action={switchTo} className="flex items-center gap-2">
             <label htmlFor="translation" className="text-meta text-text-secondary">

@@ -1,8 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
@@ -24,9 +24,7 @@ export default async function ChallengePage({ params }: PageProps<"/memory/chall
   const joined = !!ch.me?.joined;
   return (
     <>
-      <Link href="/memory" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Memory verses
-      </Link>
+      <BackLink route="/memory/challenges/[id]" />
       <PageHeader eyebrow={`${ch.group?.name ?? "Group"} challenge`} title={ch.title} description={`${formatDay(ch.starts_on)} – ${formatDay(ch.ends_on)}${ch.status !== "active" ? " · ended" : ""}`} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="space-y-6">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PRIVACY_COPY, RemovedAnswers, WorkbookView } from "@/components/media/workbook-view";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
@@ -30,16 +31,15 @@ export default async function WorkbookPage({ params, searchParams }: PageProps<"
 
   return (
     <>
-      <nav aria-label="Workbook" className="mb-4 flex flex-wrap gap-x-4 gap-y-1">
+      <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-4 sm:mb-4">
+        {/* A lesson that's no longer available can't be opened; its workbook then belongs to My workbooks. */}
+        <BackLink route="/lessons/[id]/workbook" params={{ id: workbook.available ? id : null }} inRow />
         {workbook.available ? (
-          <Link href={`/lessons/${id}`} className="font-semibold text-primary hover:underline">
-            Back to the lesson
+          <Link href="/lessons/workbooks" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
+            My workbooks
           </Link>
         ) : null}
-        <Link href="/lessons/workbooks" className="font-semibold text-primary hover:underline">
-          My workbooks
-        </Link>
-      </nav>
+      </div>
       {sp.error === "delete" ? <Alert tone="error" title="Your answers couldn't be deleted right now. Try again." className="mb-6" /> : null}
       {workbook.available ? (
         <WorkbookView page={page} userId={viewer.id} origin={getSiteUrl()} />

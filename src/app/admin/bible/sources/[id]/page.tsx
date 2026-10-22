@@ -11,6 +11,7 @@ import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { TranslationForm, TranslationStatus, type AdminTranslation } from "../translation-form";
 import { TextImportPanel } from "../upload-panels";
+import { MemoryPermissionForm, type MemoryPermission } from "./memory-permission";
 
 export const metadata: Metadata = { title: "Translation" };
 // Staging a whole Bible runs in this page's server actions.
@@ -27,6 +28,9 @@ export default async function TranslationPage({ params }: PageProps<"/admin/bibl
   if (error?.code === "P0002") notFound();
   if (error || !data) return <Alert tone="error" title="This translation couldn't be loaded right now." />;
   const t = data as Detail;
+  const perms =
+    t.source_kind === "api" ? (((await supabase.rpc("memory_admin_provider_permissions")).data as Array<MemoryPermission & { translation: { id: string } }> | null) ?? []) : [];
+  const permission = perms.find((p) => p.translation.id === t.id) ?? null;
   const ready = t.rights !== "unverified" && !!t.rights_confirmed_at && (t.source_kind === "api" ? !!t.provider_ref && !!t.credential_env : t.verse_count > 0);
 
   return (
@@ -59,6 +63,21 @@ export default async function TranslationPage({ params }: PageProps<"/admin/bibl
             </SectionHeading>
             <TranslationStatus t={t} />
           </Card>
+          {t.source_kind === "api" ? (
+            <Card>
+              <SectionHeading
+                as="h2"
+                description={
+                  permission?.confirmed_at
+                    ? `Last recorded ${new Date(permission.confirmed_at).toLocaleDateString("en-US", { dateStyle: "medium" })}${permission.confirmed_by ? ` by ${permission.confirmed_by}` : ""}. ${permission.cards} active member ${permission.cards === 1 ? "verse" : "verses"}.`
+                    : "Not offered for memory verses until you record that this version's terms permit it."
+                }
+              >
+                Memory verses
+              </SectionHeading>
+              <MemoryPermissionForm translationId={t.id} code={t.code} permission={permission} />
+            </Card>
+          ) : null}
           {t.source_kind === "database" ? (
             <Card>
               <SectionHeading as="h2" description="Lines are staged for your review. Published text changes only when you publish a reviewed import.">

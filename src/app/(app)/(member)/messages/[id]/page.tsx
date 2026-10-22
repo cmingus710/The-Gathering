@@ -1,9 +1,9 @@
-import { ArrowLeft, BellOff } from "lucide-react";
+import { BellOff } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Conversation } from "@/components/community/conversation";
 import { ToggleForm } from "@/components/community/toggle-form";
+import { BackLink } from "@/components/ui/back-link";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
 import type { ConversationPage } from "@/lib/community/types";
@@ -25,9 +25,7 @@ export default async function ConversationPage({ params }: PageProps<"/messages/
   if (!page) notFound();
   return (
     <>
-      <Link href="/messages" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Messages
-      </Link>
+      <BackLink route="/messages/[id]" />
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex min-w-0 items-center gap-3 font-display text-[1.625rem] font-semibold leading-tight">
           <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted text-lg ring-1 ring-border">

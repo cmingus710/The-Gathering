@@ -1,8 +1,8 @@
-import { ArrowLeft, Flag } from "lucide-react";
+import { Flag } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -31,9 +31,7 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
   ]);
   return (
     <>
-      <Link href={`/groups/${id}`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> {group.name}
-      </Link>
+      <BackLink route="/groups/[id]/manage" params={{ id }} label={group.name} />
       <PageHeader title="Manage group" description={`Tools for ${group.name}. Changes take effect immediately.`} />
       {group.status === "archived" ? <Alert tone="info" title="This group is archived. Restore it from Administration → Community → Groups to make changes." className="mb-6" /> : null}
       <div className="space-y-10">

@@ -1,6 +1,5 @@
-import { ArrowLeft, Bell, BellOff, CheckCircle2, EyeOff, Lock, MessageCircleOff, Pencil } from "lucide-react";
+import { Bell, BellOff, CheckCircle2, EyeOff, Lock, MessageCircleOff, Pencil } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommunityText } from "@/components/community/community-text";
 import { LiveRefresh } from "@/components/community/live-refresh";
@@ -11,6 +10,7 @@ import { PrayButton } from "@/components/prayer/pray-button";
 import { AudienceTag } from "@/components/prayer/prayer-row";
 import { PrayerReportDialog } from "@/components/prayer/report-dialog";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -58,9 +58,7 @@ export default async function PrayerRequestPage({ params, searchParams }: PagePr
   return (
     <>
       <LiveRefresh />
-      <Link href="/prayer" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Prayer
-      </Link>
+      <BackLink route="/prayer/[id]" />
       {saved ? <Alert tone="success" title={saved} className="mb-4" /> : null}
 
       <article aria-labelledby="request-title" className="space-y-5">

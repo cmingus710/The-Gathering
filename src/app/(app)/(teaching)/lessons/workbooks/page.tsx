@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PRIVACY_COPY } from "@/components/media/workbook-view";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/media/format";
@@ -21,11 +22,7 @@ export default async function MyWorkbooksPage({ searchParams }: PageProps<"/less
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/lessons" className="font-semibold text-primary hover:underline">
-          All Sunday lessons
-        </Link>
-      </p>
+      <BackLink route="/lessons/workbooks" />
       <PageHeader title="My workbooks" description="Lessons you've written answers or notes for." />
       <p className="mb-6 flex items-center gap-1.5 text-meta font-semibold">
         <Lock className="size-4 text-primary" aria-hidden="true" />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
@@ -63,8 +64,8 @@ export default async function ChildPage({ params }: PageProps<"/youth/family/chi
 
   return (
     <>
+      <BackLink route="/youth/family/children/[id]" />
       <PageHeader
-        eyebrow="Family dashboard"
         title={c.display_name}
         description={`${RELATIONSHIPS[c.relationship] ?? c.relationship}${c.groups.length ? ` · ${c.groups.map((g) => g.name).join(", ")}` : ""}`}
         actions={p.practice && !c.account_linked ? <ButtonLink href={`/youth/family/children/${id}/practice`}>Practice verses together</ButtonLink> : undefined}

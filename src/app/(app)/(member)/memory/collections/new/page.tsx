@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation } from "@/lib/bible/types";
@@ -17,9 +16,7 @@ export default async function NewCollectionPage() {
   const stored = t.items.filter((x) => x.source_kind === "database");
   return (
     <>
-      <Link href="/memory/collections" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Collections
-      </Link>
+      <BackLink route="/memory/collections/new" />
       <PageHeader title="New collection" description="A private collection for your own verses. One Bible version per collection, so versions are never mixed." />
       <Card>
         <MyCollectionForm translations={stored.map((x) => ({ id: x.id, label: `${x.name} (${x.code})` }))} defaultTranslation={t.preferred_id ?? t.default_id ?? stored[0]?.id ?? ""} />

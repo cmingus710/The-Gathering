@@ -55,6 +55,7 @@ export async function saveCollectionAction(_prev: FormState, formData: FormData)
   }
   if (formData.has("translation_id")) p.translation_id = str(formData, "translation_id");
   if (formData.has("kind")) p.kind = str(formData, "kind");
+  if (formData.has("translation_choice_field")) p.translation_choice = formData.get("translation_choice") === "on";
   if (formData.has("timezone")) p.timezone = str(formData, "timezone");
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_admin_collection_save", {

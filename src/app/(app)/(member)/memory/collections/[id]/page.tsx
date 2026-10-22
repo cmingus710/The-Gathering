@@ -1,11 +1,12 @@
-import { ArrowLeft, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MemoryNav } from "@/components/memory/nav";
 import { PassageText } from "@/components/memory/passage";
 import { StageBadge } from "@/components/memory/stage-badge";
+import { ItemTranslationNote } from "@/components/memory/translation-note";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -34,9 +35,7 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
   const cover = c.cover_path ? (await signMemoryPaths(supabase, [c.cover_path])).get(c.cover_path) : undefined;
   return (
     <>
-      <Link href="/memory/collections" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Collections
-      </Link>
+      <BackLink route="/memory/collections/[id]" />
       <PageHeader eyebrow={c.mine ? "My collection" : (c.group_name ?? "Church collection")} title={c.title} description={c.description || undefined} />
       <MemoryNav current="collections" />
       {cover ? (
@@ -71,6 +70,7 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
               </h2>
               {i.starts_on && i.ends_on ? <span className="text-meta text-text-secondary">{formatDay(i.starts_on)} – {formatDay(i.ends_on)}</span> : null}
             </div>
+            {c.mine ? null : <ItemTranslationNote item={i} className="mb-2 text-meta text-text-secondary" />}
             <PassageText passage={i.passage} />
             {i.note ? (
               <aside className="mt-3 rounded-tile bg-surface-muted/50 p-3 text-meta" aria-label="Note">
@@ -91,7 +91,7 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
                   ) : null}
                 </>
               ) : (
-                <AddVerseButton itemId={i.id} />
+                <AddVerseButton itemId={i.id} choiceIn={i.translation_choice ? c.id : null} />
               )}
               {c.mine ? (
                 <form action={myCollectionItemAction}>

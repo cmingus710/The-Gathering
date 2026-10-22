@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventDetail } from "@/components/events/event-detail";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { getViewer } from "@/lib/auth/viewer";
 import { googleCalendarUrl } from "@/lib/events/ics";
@@ -37,9 +36,7 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
 
   return (
     <>
-      <Link href="/events" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> All events
-      </Link>
+      <BackLink route="/events/[id]" />
       <PageHeader eyebrow={o.category?.name ?? "Event"} title={o.status === "canceled" ? `Canceled: ${o.title}` : o.title} />
       <EventDetail
         o={o}

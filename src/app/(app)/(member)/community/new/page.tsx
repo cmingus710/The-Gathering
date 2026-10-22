@@ -1,9 +1,9 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ThreadComposer } from "@/components/community/composer";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -29,11 +29,8 @@ export default async function NewThreadPage({ searchParams }: PageProps<"/commun
     redirect(`/community/guidelines?next=${encodeURIComponent(next)}`);
   }
 
-  const back = (
-    <Link href={groupId ? `/groups/${groupId}` : categoryId ? `/community?category=${categoryId}` : "/community"} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-      <ArrowLeft className="size-4" aria-hidden="true" /> Back
-    </Link>
-  );
+  // Posting from a group goes back to that group; otherwise to Community (in the chosen category).
+  const back = <BackLink route="/community/new" params={{ group: groupId }} query={{ category: categoryId }} />;
 
   if (guidelines?.posting_restricted) {
     return (

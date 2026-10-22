@@ -4,6 +4,7 @@ import { ArrowUp, ChevronDown, Pin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { feedNewerAction, loadFeedAction } from "@/app/(app)/(member)/community/feed-actions";
+import { lastReturnAt } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/community/format";
 import type { FeedCursor, FeedPage, RenderedPost } from "@/lib/community/types";
@@ -14,9 +15,9 @@ type Place = { category: string | null; group: string | null };
 type Saved = { posts: RenderedPost[]; cursor: FeedCursor | null; scrollY: number; at: number; entry: string | null };
 
 /**
- * Feed state kept across a visit to a post and back (browser Back), so the
- * reader returns to the same place with the same posts loaded. Restored only
- * after a Back/Forward navigation, never when Community is opened afresh.
+ * Feed state kept across a visit to a post and back (browser Back, or the
+ * post's "Back to …" link), so the reader returns to the same place with the
+ * same posts loaded. Never restored when Community is opened afresh.
  */
 const saved = new Map<string, Saved>();
 let lastPopAt = 0;
@@ -28,14 +29,14 @@ function historyEntry(): string | null {
 }
 
 /**
- * Back/Forward returned to the entry the feed was saved from. With the
- * Navigation API that is the same history entry (a fresh visit makes a new
- * one); elsewhere, a popstate since saving. Next.js can show the page before
- * popstate fires, so the entry is checked first.
+ * The reader came back to the feed they left: a "Back to …" link followed
+ * since saving, or Back/Forward to the same history entry (Navigation API; a
+ * fresh visit makes a new entry). Next.js can show the page before popstate
+ * fires, so popstate is only the fallback where entries can't be compared.
  */
 function returnedTo(s: Saved): boolean {
   const entry = historyEntry();
-  const back = s.entry && entry ? s.entry === entry : lastPopAt > s.at;
+  const back = lastReturnAt() > s.at || (s.entry && entry ? s.entry === entry : lastPopAt > s.at);
   return back && Date.now() - s.at < 30 * 60_000;
 }
 
@@ -65,9 +66,8 @@ export function Feed({
   const [pending, start] = useTransition();
   const listRef = useRef<HTMLOListElement>(null);
   const state = useRef({ posts, cursor });
-  // Where the reader was when they tapped into a post. By the time this feed
-  // unmounts the next page is already on screen, so window.scrollY then is
-  // no longer the reader's place in the feed.
+  // Where the reader was when they followed a link. By the time this feed
+  // unmounts the router has already scrolled the next page to the top.
   const leftAt = useRef<{ y: number; at: number } | null>(null);
   // The history entry this feed is showing in.
   const entry = useRef<string | null>(null);
@@ -86,9 +86,6 @@ export function Feed({
   // page for Back before popstate fires, so this checks the history entry.
   useLayoutEffect(() => {
     entry.current = historyEntry();
-    try {
-      sessionStorage.removeItem("community:from-feed");
-    } catch {}
     const s = saved.get(key);
     saved.delete(key);
     if (s && returnedTo(s)) {
@@ -158,15 +155,9 @@ export function Feed({
   const remove = useCallback((id: string) => setPosts((list) => list.filter((p) => p.id !== id)), []);
 
   return (
-    // A post opened from here can send the reader Back to this spot (see BackToFeed).
     <div
       onClickCapture={(e) => {
-        if ((e.target as HTMLElement).closest('a[href^="/community/t/"]')) {
-          leftAt.current = { y: window.scrollY, at: Date.now() };
-          try {
-            sessionStorage.setItem("community:from-feed", "1");
-          } catch {}
-        }
+        if ((e.target as HTMLElement).closest("a[href]")) leftAt.current = { y: window.scrollY, at: Date.now() };
       }}
     >
       {newer > 0 ? (

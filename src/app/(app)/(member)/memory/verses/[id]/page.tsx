@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FumsTracker } from "@/components/bible/fums";
+import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { MemoryNav } from "@/components/memory/nav";
 import { PassageText } from "@/components/memory/passage";
 import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -12,8 +15,10 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES, STAGES, activityLabel, confidenceLabel, difficultyLabel, formatDay, percent, QUALITY, reviewDate } from "@/lib/memory/format";
 import type { CardDetail, Collection } from "@/lib/memory/types";
+import { fetchMemoryText, type MemoryText } from "@/lib/memory/provider";
 import { requireClient } from "@/lib/supabase/server";
 import { myCollectionItemAction, removeVerseAction, switchVersionAction } from "../../actions";
+import { RefreshLicensedForm } from "./refresh-form";
 
 export const metadata: Metadata = { title: "Memory verse" };
 
@@ -32,9 +37,19 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
   const todayYmd = (today.data as { today: string } | null)?.today;
   const mine = ((cols.data as { personal: Collection[] } | null)?.personal ?? []).filter((x) => x.translation.id === c.passage.translation.id);
   const active = c.status === "active";
+  // A licensed version: the text is fetched now (never stored) and compared
+  // with the wording the member added.
+  const p = c.passage;
+  const licensed: MemoryText | null =
+    c.provider && active ? await fetchMemoryText(supabase, p.translation.id, { book: p.book, sc: p.start_chapter, sv: p.start_verse, ec: p.end_chapter, ev: p.end_verse }) : null;
+  const wordingChanged = licensed?.status === "ok" && licensed.payload.fingerprint !== p.fingerprint;
+  // Practice can't start while a licensed text can't be fetched (or changed).
+  const practiceBlocked = wordingChanged || (c.provider && licensed?.status !== "ok");
+  const modes = ACTIVITIES.filter((a) => c.modes.includes(a.key));
 
   return (
     <>
+      <BackLink route="/memory/verses/[id]" />
       <PageHeader
         eyebrow={c.item?.collection.title ?? "Added by you"}
         title={
@@ -46,6 +61,11 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
       />
       <MemoryNav current="verses" />
       {sp.updated ? <Alert tone="success" title="You're now practicing the updated text. Your earlier practice is kept with the earlier text." className="mb-6" /> : null}
+      {sp.translation ? (
+        <Alert tone="success" title={`You're now practicing this verse in ${c.passage.translation.name} (${c.passage.translation.code}).`} className="mb-6">
+          Your practice in the earlier version is kept with that text. Your default and your other verses didn&apos;t change.
+        </Alert>
+      ) : null}
       {c.update_available ? (
         <Alert tone="warning" title="This verse's text has been updated." className="mb-6">
           <p>
@@ -63,13 +83,41 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
         </Alert>
       ) : null}
       {!c.translation_available ? <Alert tone="info" title={`${c.passage.translation.code} is no longer offered, so this verse can't be practiced. Its history is kept.`} className="mb-6" /> : null}
-      {c.status === "superseded" ? <Alert tone="info" title="This is an earlier text of the verse. Its history is kept here; practice continues with the updated text." className="mb-6" /> : null}
+      {active && c.translation_available && !c.modes.length ? (
+        <Alert tone="info" title={`Memory practice in ${c.passage.translation.code} is paused by the church.`} className="mb-6">
+          This verse, its schedule, and your results are kept. You can change it to another version, or wait until practice in {c.passage.translation.code} is available again.
+        </Alert>
+      ) : null}
+      {c.status === "superseded" ? <Alert tone="info" title="This is an earlier text of the verse. Its history is kept here; practice continues with the updated text or another version." className="mb-6" /> : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card>
-            <PassageText passage={c.passage} />
+            {!c.provider ? (
+              <PassageText passage={c.passage} />
+            ) : licensed?.status === "ok" ? (
+              <>
+                <ScriptureText verses={licensed.verses} translation={licensed.translation} label={`${p.label} (${p.translation.code})`} showChapters={p.end_chapter > p.start_chapter} />
+                <Attribution translation={licensed.translation} extra={licensed.copyright} />
+                {licensed.fumsId ? <FumsTracker ids={[licensed.fumsId]} /> : null}
+              </>
+            ) : (
+              <p className="text-text-secondary">
+                {licensed && licensed.status !== "stored"
+                  ? licensed.message
+                  : `${p.translation.code} is licensed, so its text isn't kept here once this verse is replaced. Your results are kept.`}
+              </p>
+            )}
           </Card>
+          {wordingChanged ? (
+            <Alert tone="warning" title={`The published wording of ${p.label} in ${p.translation.code} has changed since you added it.`}>
+              <p>
+                The text above is the current wording. Practice of one wording isn&apos;t practice of another, so practicing the new wording starts this verse fresh. Your
+                earlier results stay with the earlier wording. Until you choose, practice is paused for this verse.
+              </p>
+              <RefreshLicensedForm cardId={c.id} passage={p} />
+            </Alert>
+          ) : null}
           {c.item?.note || c.item?.hint ? (
             <aside aria-label="From the church" className="rounded-card border border-border bg-surface-muted/50 p-4 text-meta">
               {c.item.note ? <p className="whitespace-pre-line">{c.item.note}</p> : null}
@@ -80,11 +128,17 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
               ) : null}
             </aside>
           ) : null}
-          {active && c.translation_available ? (
+          {active && c.translation_available && modes.length && !practiceBlocked ? (
             <section aria-labelledby="practice">
               <SectionHeading id="practice">Practice</SectionHeading>
+              {c.provider ? (
+                <p className="mb-3 text-meta text-text-secondary">
+                  For {p.translation.code}, practice shows the verse exactly as published: flashcards and self-check. Activities that hide or rearrange words aren&apos;t
+                  available for this version.
+                </p>
+              ) : null}
               <ul className="grid gap-2 sm:grid-cols-2">
-                {ACTIVITIES.map((a) => (
+                {modes.map((a) => (
                   <li key={a.key}>
                     <Link href={`/memory/practice/${c.id}?activity=${a.key}`} className="interactive block min-h-14 rounded-tile border border-border bg-surface p-3 hover:bg-surface-muted/60">
                       <span className="block font-semibold">{a.label}</span>
@@ -125,6 +179,29 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
             <p className="mt-3 text-meta text-text-secondary">Only you can see this.</p>
           </section>
 
+          <section aria-labelledby="version" className="rounded-card border border-border bg-surface p-4">
+            <SectionHeading id="version" as="h2">
+              Bible version
+            </SectionHeading>
+            <p className="font-semibold">
+              {c.passage.translation.name} ({c.passage.translation.code})
+            </p>
+            <p className="mt-1 text-meta text-text-secondary">
+              {c.assignment && !c.assignment.choice
+                ? `Assigned in ${c.assignment.translation.code}: this assignment is practiced in that version.`
+                : c.assignment?.own_translation
+                  ? `Assigned in ${c.assignment.translation.code}; you chose ${c.passage.translation.code} for yourself. The assignment is unchanged for everyone else.`
+                  : c.assignment?.choice
+                    ? `Assigned in ${c.assignment.translation.code}. You may practice it in another version.`
+                    : "Practice and checking always use exactly this wording."}
+            </p>
+            {active && c.can_change_translation ? (
+              <ButtonLink href={`/memory/verses/${c.id}/translation`} size="sm" variant="secondary" className="mt-3">
+                Change translation
+              </ButtonLink>
+            ) : null}
+          </section>
+
           {active && mine.length ? (
             <section aria-labelledby="add-to" className="rounded-card border border-border bg-surface p-4">
               <SectionHeading id="add-to" as="h2">
@@ -149,13 +226,13 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
           {c.earlier.length ? (
             <section aria-labelledby="earlier" className="rounded-card border border-border bg-surface p-4">
               <SectionHeading id="earlier" as="h2">
-                Other texts of this verse
+                Other texts and versions of this verse
               </SectionHeading>
               <ul className="space-y-1 text-meta">
                 {c.earlier.map((e) => (
                   <li key={e.id}>
                     <Link href={`/memory/verses/${e.id}`} className="font-semibold text-primary hover:underline">
-                      Text version {e.version}
+                      {e.translation} · text version {e.version}
                     </Link>{" "}
                     · {e.sessions} practice {e.sessions === 1 ? "activity" : "activities"} · {e.status === "active" ? "current" : e.status === "superseded" ? "earlier" : "removed"}
                   </li>
@@ -198,12 +275,13 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
         </SectionHeading>
         {c.history.length ? (
           <div className="overflow-x-auto rounded-card border border-border bg-surface">
-            <table className="w-full min-w-[40rem] text-left text-meta">
+            <table className="w-full min-w-[46rem] text-left text-meta">
               <caption className="sr-only">Practice history for {c.passage.label}</caption>
               <thead className="border-b border-border text-text-secondary">
                 <tr>
                   <th scope="col" className="px-3 py-2">Date</th>
                   <th scope="col" className="px-3 py-2">Activity</th>
+                  <th scope="col" className="px-3 py-2">Version</th>
                   <th scope="col" className="px-3 py-2">Result</th>
                   <th scope="col" className="px-3 py-2">Accuracy</th>
                   <th scope="col" className="px-3 py-2">Hints</th>
@@ -216,6 +294,10 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
                     <td className="px-3 py-2 whitespace-nowrap">{formatDay(h.date)}</td>
                     <td className="px-3 py-2">
                       {activityLabel(h.activity)} <span className="text-text-secondary">· {difficultyLabel(h.difficulty)}{h.segment ? ` · part ${h.segment}` : ""}</span>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {h.translation}
+                      {h.text_version > 1 ? <span className="text-text-secondary"> · text {h.text_version}</span> : null}
                     </td>
                     <td className="px-3 py-2">{QUALITY[h.quality]}</td>
                     <td className="px-3 py-2">{percent(h.accuracy) ?? "—"}</td>
@@ -230,7 +312,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
           <p className="text-text-secondary">No practice yet.</p>
         )}
       </section>
-      {active && c.translation_available ? (
+      {active && c.translation_available && modes.length && !practiceBlocked ? (
         <div className="mt-6">
           <ButtonLink href={`/memory/practice/${c.id}`}>Practice now</ButtonLink>
         </div>

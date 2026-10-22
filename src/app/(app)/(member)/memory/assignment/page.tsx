@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MemoryNav } from "@/components/memory/nav";
 import { PassageText } from "@/components/memory/passage";
 import { StageBadge } from "@/components/memory/stage-badge";
+import { ItemTranslationNote } from "@/components/memory/translation-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export default async function AssignmentPage() {
             <h2 id={`a-${i.id}`} className="mt-1 font-display text-[1.5rem] font-semibold">
               {i.passage.label} <span className="text-text-secondary">({i.passage.translation.code})</span>
             </h2>
+            <ItemTranslationNote item={i} />
             {i.title ? <p className="mt-1 font-semibold">{i.title}</p> : null}
             <PassageText passage={i.passage} className="mt-4" />
             {i.note ? (
@@ -62,7 +64,7 @@ export default async function AssignmentPage() {
                   {!i.card.current_version ? <ButtonLink href={`/memory/verses/${i.card.id}`} variant="secondary">Updated text available</ButtonLink> : null}
                 </>
               ) : (
-                <AddVerseButton itemId={i.id} label="Start learning it" then="practice" variant="primary" />
+                <AddVerseButton itemId={i.id} label="Start learning it" then="practice" variant="primary" choiceIn={i.translation_choice ? i.collection_id : null} />
               )}
             </div>
           </article>
