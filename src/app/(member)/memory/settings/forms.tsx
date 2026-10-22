@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions, versionLabel } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { CheckboxField, SelectField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -44,7 +44,7 @@ export function SettingsForm({
             <option value="">{followLabel}</option>
             {translations.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} ({t.code})
+                {versionLabel(t)}
               </option>
             ))}
             <UnavailableVersionOptions items={unavailable} />

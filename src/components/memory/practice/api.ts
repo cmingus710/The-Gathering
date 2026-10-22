@@ -1,4 +1,5 @@
 import { toSendResponse, type SendResponse } from "@/lib/memory/submit";
+import type { Verse } from "@/lib/bible/types";
 import type { Session, SubmitResult } from "@/lib/memory/types";
 
 /**
@@ -32,7 +33,10 @@ export const startSession = (req: StartRequest) => post<Session>("/api/memory/se
 
 export const sessionHint = <T,>(id: string, body: Record<string, unknown> = {}) => post<T>(`/api/memory/sessions/${id}`, { action: "hint", ...body });
 
-export const sessionReveal = (id: string) => post<{ status: string; reference: string; text: string | null }>(`/api/memory/sessions/${id}`, { action: "reveal" });
+/** Licensed versions also return the fetched verses (shown unchanged), their copyright, and the FUMS id to report. */
+export type RevealResponse = { status: string; reference: string; text: string | null; verses?: Verse[]; copyright?: string | null; fums_id?: string | null };
+
+export const sessionReveal = (id: string) => post<RevealResponse>(`/api/memory/sessions/${id}`, { action: "reveal" });
 
 export const sessionSubmit = (id: string, payload: Record<string, unknown>) => post<SubmitResult>(`/api/memory/sessions/${id}`, { action: "submit", ...payload });
 

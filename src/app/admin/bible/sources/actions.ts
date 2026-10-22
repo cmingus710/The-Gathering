@@ -83,6 +83,24 @@ export async function saveTranslationAction(_prev: FormState, formData: FormData
 }
 
 /** The Bibles the named key can use, for choosing an API.Bible Bible ID. */
+/**
+ * Records whether a licensed version's own terms (API.Bible dashboard, license,
+ * publisher) permit showing it unchanged for memory practice, and what was
+ * checked. Only unchanged-text practice can be enabled here.
+ */
+export async function memoryPermissionAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = uuid.safeParse(formData.get("translation_id")).data;
+  await requireCapability(CAPABILITIES.bibleManage, id ? `/admin/bible/sources/${id}` : "/admin/bible/sources");
+  if (!id) return errorState("That translation wasn't found.");
+  const note = str(formData, "terms_note");
+  if (note.length < 10) return errorState("Record what you checked in this version's terms.", { fieldErrors: { terms_note: ["Record what you checked (at least 10 characters)."] } });
+  const { error } = await rpc("memory_admin_provider_permission_save", { p_translation: id, p_unchanged_text: formData.get("unchanged_text") === "on", p_terms_note: note });
+  if (error) return errorState(dbErrorMessage(error));
+  revalidatePath(`/admin/bible/sources/${id}`);
+  revalidatePath("/memory", "layout");
+  return { status: "success", message: "Saved." };
+}
+
 export async function listApiBiblesAction(credentialEnv: string): Promise<BibleListResult> {
   await requireCapability(CAPABILITIES.bibleManage, "/admin/bible/sources");
   return listApiBibles(String(credentialEnv ?? "").trim());

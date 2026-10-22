@@ -39,6 +39,12 @@ export type Passage = {
   superseded: boolean;
   translation: MemoryTranslation;
   verses: Verse[] | null;
+  /** "api": a licensed version; no text is stored, it's fetched on the server when shown. */
+  source_kind: "database" | "api";
+  /** Licensed versions: one-way fingerprint of the exact wording added. */
+  fingerprint: string | null;
+  provider_passage_id: string | null;
+  verse_numbers: Array<[number, number]> | null;
 };
 
 export type Item = {
@@ -106,6 +112,9 @@ export type Card = {
   /** Set for verses from a church or group collection. */
   assignment: { translation: TranslationBrief; choice: boolean; own_translation: boolean } | null;
   can_change_translation: boolean;
+  /** Practice modes the verse's version allows now (licensed: flashcards and self-check only). */
+  modes: Activity[];
+  provider: boolean;
 };
 
 export type TranslationBrief = { id: string; code: string; name: string; attribution: string; copyright: string; source_url: string | null; available: boolean };
@@ -160,7 +169,7 @@ export type MemoryTranslations = {
   source: "memory" | "reading" | "church" | "none";
   church_id: string | null;
   reading_id: string | null;
-  items: Translation[];
+  items: Array<Translation & { memory_modes: Activity[] }>;
 };
 
 export type ChallengeAggregate =

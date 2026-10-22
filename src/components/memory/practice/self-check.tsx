@@ -5,7 +5,8 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/memory/types";
-import { failureMessage, sessionHint, sessionReveal } from "./api";
+import { failureMessage, sessionHint, sessionReveal, type RevealResponse } from "./api";
+import { ProviderText } from "./provider-text";
 import { ConfidencePicker } from "./confidence";
 
 /**
@@ -14,8 +15,24 @@ import { ConfidencePicker } from "./confidence";
  * is the member's own check; it never claims to prove memorization, and
  * nothing is recorded or listened to (no microphone).
  */
-export function SelfCheck({ session, kids, busy, hint, onSubmit }: { session: Session; kids: boolean; busy: boolean; hint: string | null; onSubmit: (p: Record<string, unknown>) => void }) {
+export function SelfCheck({
+  session,
+  kids,
+  busy,
+  hint,
+  provider = false,
+  onSubmit,
+}: {
+  session: Session;
+  kids: boolean;
+  busy: boolean;
+  hint: string | null;
+  /** A licensed version: no "how it begins" hints (they'd show part of the text). */
+  provider?: boolean;
+  onSubmit: (p: Record<string, unknown>) => void;
+}) {
   const [text, setText] = useState<string | null>(null);
+  const [licensed, setLicensed] = useState<RevealResponse | null>(null);
   const [firstWords, setFirstWords] = useState<{ words: string; more: boolean } | null>(null);
   const [showEditorial, setShowEditorial] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +45,7 @@ export function SelfCheck({ session, kids, busy, hint, onSubmit }: { session: Se
     setLoading(null);
     if (r.kind !== "ok") return setError(failureMessage(r));
     setText(r.data.text ?? "");
+    if (r.data.verses) setLicensed(r.data);
     requestAnimationFrame(() => revealed.current?.focus());
   };
   const more = async () => {
@@ -60,7 +78,7 @@ export function SelfCheck({ session, kids, busy, hint, onSubmit }: { session: Se
           <Button className="memory-control" onClick={reveal} loading={loading === "reveal"} loadingText="Revealing…" icon={<Eye className="size-4" aria-hidden="true" />}>
             Reveal the verse
           </Button>
-          {!firstWords || firstWords.more ? (
+          {!provider && (!firstWords || firstWords.more) ? (
             <Button variant="secondary" className="memory-control" onClick={more} loading={loading === "hint"} icon={<Lightbulb className="size-4" aria-hidden="true" />}>
               {firstWords ? "A few more words" : "Show how it begins"}
             </Button>
@@ -75,7 +93,11 @@ export function SelfCheck({ session, kids, busy, hint, onSubmit }: { session: Se
         <>
           <div ref={revealed} tabIndex={-1} className="rounded-card border border-primary/50 bg-primary-soft/40 p-5 outline-none focus-visible:outline-3 focus-visible:outline-primary sm:p-8">
             <p className="mb-2 text-meta font-semibold uppercase tracking-wide text-text-secondary">The verse</p>
-            <p className="memory-text">{text}</p>
+            {licensed?.verses ? (
+              <ProviderText verses={licensed.verses} copyright={licensed.copyright ?? null} fumsId={licensed.fums_id ?? null} session={session} label={session.reference} />
+            ) : (
+              <p className="memory-text">{text}</p>
+            )}
           </div>
           <ConfidencePicker kids={kids} busy={busy} question="How did your recitation go?" onChoose={(c) => onSubmit({ confidence: c })} />
           <p className="text-meta text-text-secondary">This records your own judgment. It helps plan your reviews; it isn&apos;t a test.</p>

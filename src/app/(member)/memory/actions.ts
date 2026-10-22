@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireLearner } from "@/lib/auth/viewer";
 import { isValidTimeZone } from "@/lib/bible/dates";
 import { errorState, type FormState } from "@/lib/forms";
+import { fetchMemoryText, type Ref } from "@/lib/memory/provider";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,6 +29,28 @@ function refresh() {
 }
 
 /**
+ * For a licensed version: fetches the passage on the server and returns what
+ * the database keeps (fingerprint, verse numbers, word count, passage ID),
+ * never the text. Stored-text versions need nothing.
+ */
+async function licensedPayload(translation: string, ref: Ref): Promise<{ provider?: unknown } | { error: string }> {
+  const supabase = await createClient();
+  if (!supabase) return { error: UNAVAILABLE };
+  const text = await fetchMemoryText(supabase, translation, ref);
+  if (text.status === "stored") return {};
+  if (text.status !== "ok") return { error: `${text.message} Nothing was changed.` };
+  return { provider: text.payload };
+}
+
+function refFrom(formData: FormData): Ref | null {
+  const book = String(formData.get("book") ?? "");
+  const [sc, sv, ev] = ["chapter", "start_verse", "end_verse"].map((k) => Number(formData.get(k)));
+  const ec = formData.has("end_chapter") ? Number(formData.get("end_chapter")) : sc;
+  if (!/^[1-3A-Z][A-Z0-9]{2}$/.test(book) || ![sc, sv, ec, ev].every((n) => Number.isInteger(n) && n > 0)) return null;
+  return { book, sc, sv, ec, ev };
+}
+
+/**
  * Adds a collection verse (item_id, optionally in the member's chosen version
  * when the collection allows it) or a passage chosen from the approved source.
  */
@@ -35,17 +58,18 @@ export async function addVerseAction(_prev: FormState, formData: FormData): Prom
   await requireLearner("/memory");
   const item = idFrom(formData, "item_id");
   let payload: Record<string, unknown>;
+  const translation = idFrom(formData, "translation_id");
+  const ref = refFrom(formData);
   if (item) {
-    const translation = idFrom(formData, "translation_id");
     payload = translation ? { item_id: item, translation_id: translation } : { item_id: item };
   } else {
-    const translation = idFrom(formData, "translation_id");
-    const book = String(formData.get("book") ?? "");
-    const [sc, sv, ev] = ["chapter", "start_verse", "end_verse"].map((k) => Number(formData.get(k)));
-    if (!translation || !/^[1-3A-Z][A-Z0-9]{2}$/.test(book) || ![sc, sv, ev].every((n) => Number.isInteger(n) && n > 0)) {
-      return errorState("Choose a book, chapter, and verses.");
-    }
-    payload = { translation_id: translation, book, sc, sv, ec: sc, ev };
+    if (!translation || !ref) return errorState("Choose a book, chapter, and verses.");
+    payload = { translation_id: translation, ...ref };
+  }
+  if (translation && ref) {
+    const licensed = await licensedPayload(translation, ref);
+    if ("error" in licensed) return errorState(licensed.error);
+    Object.assign(payload, licensed);
   }
   const { data, error } = await rpc("memory_card_add", { p: payload });
   if (error) return errorState(dbErrorMessage(error, "That verse couldn't be added right now."));
@@ -85,10 +109,38 @@ export async function changeTranslationAction(_prev: FormState, formData: FormDa
   const translation = idFrom(formData, "translation_id");
   if (!id || !translation) return errorState("Choose a Bible version.");
   if (formData.get("confirm") !== "on") return errorState("Confirm that you understand what changes.");
-  const { data, error } = await rpc("memory_card_change_translation", { p_card: id, p_translation: translation, p_confirm: true });
+  const ref = refFrom(formData);
+  const licensed = ref ? await licensedPayload(translation, ref) : {};
+  if ("error" in licensed) return errorState(licensed.error);
+  const { data, error } = await rpc("memory_card_change_translation", {
+    p_card: id,
+    p_translation: translation,
+    p_confirm: true,
+    p_provider: "provider" in licensed ? licensed.provider : null,
+  });
   if (error) return errorState(dbErrorMessage(error, "The translation couldn't be changed right now. Nothing was changed."));
   refresh();
   redirect(`/memory/verses/${(data as { id: string }).id}?translation=1`);
+}
+
+/**
+ * The member's choice to practice a licensed version's new wording, after
+ * the verse page found the source text changed. The earlier wording keeps
+ * its history; the new one starts fresh.
+ */
+export async function refreshLicensedAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireLearner("/memory/verses");
+  const id = idFrom(formData);
+  const translation = idFrom(formData, "translation_id");
+  const ref = refFrom(formData);
+  if (!id || !translation || !ref) return errorState("That verse couldn't be updated.");
+  const licensed = await licensedPayload(translation, ref);
+  if ("error" in licensed) return errorState(licensed.error);
+  if (!("provider" in licensed)) return errorState("That verse couldn't be updated.");
+  const { data, error } = await rpc("memory_card_provider_refresh", { p_card: id, p_provider: licensed.provider });
+  if (error) return errorState(dbErrorMessage(error, "That verse couldn't be updated right now. Nothing was changed."));
+  refresh();
+  redirect(`/memory/verses/${(data as { id: string }).id}?updated=1`);
 }
 
 const Settings = z.object({
