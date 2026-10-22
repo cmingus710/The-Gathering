@@ -260,3 +260,26 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Rehearsal (local, PostgreSQL 16, 2026-10-22):** on a database built from every earlier migration with their history rows, the script applied and recorded the version; a rerun stopped at the preflight.
 - **Order:** apply the migration before deploying the app (the memory pages read the new fields and call the new functions).
 - **Hosted (2026-10-22):** the owner ran the operator script in the SQL editor. Read-only check afterwards: `20261106000100` recorded (`created_by = memory-provider-practice`), 67 versions in history; `memory.provider_permissions` present with RLS on and empty; `memory.passages` has `source_kind` (not null, default `'database'`), `provider_passage_id`, `verse_numbers`, nullable text columns, and check `passages_source`; all 4 existing passages are `database` with their text, and the 4 member cards are unchanged; AMP, NIV, and NASB are not usable for memory practice (no modes) and the 6 stored-text versions are; the new and replaced functions are executable by `authenticated` and not by `anon`, and no `memory` function is executable by clients; `memory_session_start` branches to `memory.provider_session_start` and `memory_session_hint` refuses licensed passages. Anon-executable public functions: 33 (unchanged).
+
+## Community @mentions (2026-11-07)
+
+- **New (additive; no applied migration was edited):** `20261107000100_community_mentions`:
+  - private table `community.mentions` (RLS on, no API grants), one row per post or comment and mentioned member;
+  - triggers `threads_mentions_clean` / `posts_mentions_clean` (before insert or update of `body`: turn ineligible mention markup into plain text, at most 10 people) and `threads_mentions_sync` / `posts_mentions_sync` (after: record mentions and notify);
+  - notification kind `mention` and category `mentions` added to the `notifications` and `notification_prefs` check constraints (nothing removed);
+  - new `public.community_mention_search`, granted to `authenticated` only, plus private `community.*` helpers.
+  - Replaced with the same signatures (the current definitions with the mention case added):
+    - `community.kind_category`, `pref`, `notify`, `notification_visible`, `notification_json`, `notification_email_item`, `op_push_claim`;
+    - `community.thread_card`, `feed_card`, `comment_json`;
+    - `public.community_my_settings`, `community_set_pref`, `community_notification_panel`.
+  - Existing rows are unchanged. Anon baseline unchanged. See [community-mentions.md](community-mentions.md).
+- **Operator script:** `supabase/manual/2026-11-07-apply-community-mentions.sql`, one transaction. The preflight requires `20261106000100` and refuses a second run. It post-checks grants and the four triggers. History row `created_by = community-mentions`.
+- **Rehearsal (local, PostgreSQL 16, 2026-10-22):** on a database built from every earlier migration with their history rows, the script applied and recorded the version; a rerun stopped at the preflight.
+- **Order:** the app can be deployed first (suggestions stay empty until the migration exists). The app was deployed with #44 before the migration was applied.
+- **Hosted (2026-10-22):** the owner ran the operator script in the SQL editor. Read-only check afterwards:
+  - `20261107000100` recorded (`created_by = community-mentions`), 68 versions in history;
+  - `supabase/tests/community-fingerprint.sql` identical to a fresh local build in all 15 categories, and `supabase/tests/schema-fingerprint.sql` identical in all 17;
+  - `community.mentions` present with RLS on and empty, and no `mention` notifications yet;
+  - all four triggers present;
+  - `community_mention_search` executable by `authenticated` and not by `anon`, and no `community` function executable by clients;
+  - anon-executable public functions: 33 (unchanged).
