@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RequestComposer } from "@/components/prayer/request-composer";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -29,9 +28,7 @@ export default async function EditPrayerPage({ params }: PageProps<"/prayer/[id]
   if (request.group && !options.some((g) => g.id === request.group!.id) && request.group_member) options.push(request.group);
   return (
     <>
-      <Link href={`/prayer/${id}`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Back to the request
-      </Link>
+      <BackLink route="/prayer/[id]/edit" params={{ id }} />
       <PageHeader title="Edit prayer request" description="Narrowing who can see it takes effect at once. Widening asks you to confirm." />
       {request.status === "archived" ? (
         <Alert tone="info" title="Restore this request from the archive before editing it." />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { CheckboxField, TextAreaField, TextField } from "@/components/ui/field";
 import { StateBadge } from "@/components/youth/state-badge";
@@ -42,8 +42,8 @@ export default async function ChildEventPage({ params }: PageProps<"/youth/famil
 
   return (
     <>
+      <BackLink route="/youth/family/children/[id]/events/[occurrence]" params={{ id }} label={e.child.display_name} />
       <PageHeader
-        eyebrow={<Link href={`/youth/family/children/${id}`} className="hover:underline">{e.child.display_name}</Link>}
         title={e.title}
         description={`${formatWhen(e.starts_at, e.timezone)}${e.location_name ? ` · ${e.location_name}` : ""}${e.group ? ` · ${e.group}` : ""}`}
       />

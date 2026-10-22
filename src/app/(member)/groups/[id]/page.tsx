@@ -1,4 +1,4 @@
-import { ArrowLeft, BellOff, CalendarDays, MessageCircle, PenSquare, Settings } from "lucide-react";
+import { BellOff, CalendarDays, MessageCircle, PenSquare, Settings } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,6 +9,7 @@ import { ThreadRow } from "@/components/community/thread-row";
 import { ToggleForm } from "@/components/community/toggle-form";
 import { EventListItem } from "@/components/events/event-list-item";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, SectionHeading, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -41,9 +42,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
   return (
     <>
       <LiveRefresh />
-      <Link href="/groups" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Groups
-      </Link>
+      <BackLink route="/groups/[id]" />
       {sp.joined ? <Alert tone="success" title={`Welcome to ${group.name}!`} className="mb-4" /> : null}
       <h1 className="sr-only">{group.name}</h1>
       <GroupCardView group={group} imageUrl={group.image_path ? images.get(group.image_path) : null}>

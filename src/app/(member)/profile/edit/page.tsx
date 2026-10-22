@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { getOwnProfile, type OwnProfile } from "@/lib/profile/queries";
@@ -22,9 +21,7 @@ export default async function EditProfilePage() {
 
   return (
     <>
-      <Link href="/profile" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Profile
-      </Link>
+      <BackLink route="/profile/edit" />
       <PageHeader
         title="Edit profile details"
         description="Everything except your first name is optional. Contact details, street address, and birthday stay hidden until you choose to share them."

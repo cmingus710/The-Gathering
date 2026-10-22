@@ -5,6 +5,7 @@ import { MemoryNav } from "@/components/memory/nav";
 import { PassageText } from "@/components/memory/passage";
 import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -35,6 +36,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
 
   return (
     <>
+      <BackLink route="/memory/verses/[id]" />
       <PageHeader
         eyebrow={c.item?.collection.title ?? "Added by you"}
         title={

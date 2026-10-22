@@ -1,8 +1,9 @@
-import { ArrowLeft, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppleLogo, GoogleLogo } from "@/components/auth/provider-logos";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, PageHeader } from "@/components/ui/card";
 import {
@@ -40,9 +41,7 @@ export default async function SignInMethodsPage({ searchParams }: PageProps<"/pr
 
   return (
     <>
-      <Link href="/profile" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Profile
-      </Link>
+      <BackLink route="/profile/sign-in-methods" />
       <PageHeader title="Sign-in methods" description="The ways you can sign in to this account. They all open the same account." />
 
       <div className="max-w-2xl space-y-5">

@@ -1,11 +1,11 @@
-import { ArrowLeft, History, Lock, MessagesSquare, NotebookPen, Users } from "lucide-react";
+import { History, Lock, MessagesSquare, NotebookPen, Users } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { CareMessageForm } from "@/components/prayer/care-forms";
 import { NoteForm, OpportunityForm, PublishPreview, SimpleActionForm } from "@/components/prayer/team-forms";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -57,9 +57,7 @@ export default async function TeamCarePage({ params }: PageProps<"/prayer/team/c
   return (
     <>
       <LiveRefresh />
-      <Link href="/prayer/team" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Workspace
-      </Link>
+      <BackLink route="/prayer/team/care/[id]" />
       <header className="mb-6">
         <p className="mb-1 flex items-center gap-1.5 text-meta font-semibold text-primary">
           <Lock className="size-3.5" aria-hidden="true" /> Care team only · {CARE_KIND_LABEL[c.kind]}

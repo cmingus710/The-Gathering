@@ -1,8 +1,9 @@
-import { ArrowLeft, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DirectoryProfileView } from "@/components/profile/directory-profile";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -28,9 +29,7 @@ export default async function PreviewPage() {
 
   return (
     <>
-      <Link href="/profile" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Profile
-      </Link>
+      <BackLink route="/profile/preview" />
       <Alert tone="info" title="Preview: this is exactly what other approved members see." className="mb-5" live={false}>
         <div className="flex flex-wrap gap-x-4">
           <Link href="/profile/edit" className="inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-2">

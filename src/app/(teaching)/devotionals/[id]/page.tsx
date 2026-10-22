@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContentDetail } from "@/components/media/content-detail";
+import { BackLink } from "@/components/ui/back-link";
 import { isUuid } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
 import { teachingViewer } from "@/lib/media/viewer";
@@ -19,11 +19,7 @@ export default async function DevotionalPage({ params }: PageProps<"/devotionals
   if (!page) notFound();
   return (
     <>
-      <p className="mb-4">
-        <Link href="/devotionals" className="font-semibold text-primary hover:underline">
-          Today&apos;s devotional
-        </Link>
-      </p>
+      <BackLink route="/devotionals/[id]" />
       <ContentDetail item={page.item} urls={page.urls} transcripts={page.transcripts} member={viewer.member} origin={getSiteUrl()} />
     </>
   );

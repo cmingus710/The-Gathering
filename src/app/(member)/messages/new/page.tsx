@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -15,9 +14,7 @@ export default async function NewMessagePage() {
   const settings = await tryCommunityRpc<MySettings>("community_my_settings");
   return (
     <>
-      <Link href="/messages" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Messages
-      </Link>
+      <BackLink route="/messages/new" />
       <PageHeader title="New message" description="Messages are text only and visible only to you and the person you write to." />
       {!settings?.dm_eligible ? (
         <Alert tone="info" title="Direct messaging isn't turned on for your account.">

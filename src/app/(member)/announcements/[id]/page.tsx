@@ -1,9 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- signed Supabase Storage URL */
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
+import { BackLink } from "@/components/ui/back-link";
 import { PinnedBadge } from "@/components/ui/badge";
 import { getLiveAnnouncement } from "@/lib/announcements/queries";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -22,10 +21,7 @@ export default async function AnnouncementPage({ params }: PageProps<"/announcem
 
   return (
     <article className="max-w-2xl">
-      <Link href="/announcements" className="mb-6 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary underline-offset-2 hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        All announcements
-      </Link>
+      <BackLink route="/announcements/[id]" />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {announcement.pinned ? <PinnedBadge /> : null}
         {announcement.publish_at ? (

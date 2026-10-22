@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { JournalEditor } from "@/components/journal/editor";
 import { LinkContext, type EntryLink } from "@/components/journal/link-context";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { requireLearner } from "@/lib/auth/viewer";
 import { isBookCode } from "@/lib/bible/books";
 import { formatPassage } from "@/lib/bible/reference";
@@ -67,11 +67,7 @@ export default async function NewEntryPage({ searchParams }: PageProps<"/journal
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/journal" className="font-semibold text-primary hover:underline">
-          My Journal
-        </Link>
-      </p>
+      <BackLink route="/journal/new" />
       <h1 className="sr-only">New journal entry</h1>
       {problem ? <Alert tone="warning" title={problem} className="mb-4" /> : null}
       <LinkContext link={context} />

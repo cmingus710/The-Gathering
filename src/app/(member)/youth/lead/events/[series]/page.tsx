@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/card";
 import { Attendees, type YouthEventAdmin } from "@/components/youth/attendees";
@@ -19,8 +19,8 @@ export default async function LeadEventPage({ params }: PageProps<"/youth/lead/e
   if (!data) return <Alert tone="error" title="This event couldn't be loaded right now." />;
   return (
     <>
+      <BackLink route="/youth/lead/events/[series]" />
       <PageHeader
-        eyebrow={<Link href="/youth/lead" className="hover:underline">Leading</Link>}
         title={data.title}
         description={data.settings ? `Youth event for ${data.settings.group}` : undefined}
         actions={data.i_am_personnel ? <ButtonLink href={`/youth/lead/events/${series}/logistics`} variant="secondary">Event logistics</ButtonLink> : undefined}

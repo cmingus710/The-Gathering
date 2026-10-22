@@ -1,12 +1,12 @@
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { ToggleForm } from "@/components/community/toggle-form";
 import { CareMessageForm } from "@/components/prayer/care-forms";
 import { DialogAction } from "@/components/prayer/controls";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { exactTime, relativeTime } from "@/lib/community/format";
@@ -33,9 +33,7 @@ export default async function CareRequestPage({ params, searchParams }: PageProp
   return (
     <>
       <LiveRefresh />
-      <Link href="/prayer/care" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> My care requests
-      </Link>
+      <BackLink route="/prayer/care/[id]" />
       {sp.sent ? <Alert tone="success" title="Your request was sent privately to the care team." className="mb-4" /> : null}
       <header className="mb-6">
         <p className="mb-1 text-meta font-semibold text-primary">{CARE_KIND_LABEL[c.kind]} · Private to you and the care team</p>

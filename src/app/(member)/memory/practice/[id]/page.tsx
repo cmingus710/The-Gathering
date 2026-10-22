@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PracticeRunner } from "@/components/memory/practice/runner";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES } from "@/lib/memory/format";
@@ -28,9 +27,7 @@ export default async function PracticePage({ params, searchParams }: PageProps<"
   const segment = Math.max(0, Number(one(sp.segment) ?? 0) || 0);
   return (
     <>
-      <Link href={`/memory/verses/${c.id}`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> {c.passage.label}
-      </Link>
+      <BackLink route="/memory/practice/[id]" params={{ id: c.id }} label={c.passage.label} />
       <PageHeader title="Practice" description={`${c.passage.label} (${c.passage.translation.code}). Take your time; nothing here is timed.`} />
       {c.status !== "active" || !c.translation_available ? (
         <Alert tone="info" title="This verse can't be practiced right now." />

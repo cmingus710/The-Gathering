@@ -1,7 +1,7 @@
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -18,9 +18,7 @@ export default async function MessageSettingsPage() {
   ]);
   return (
     <>
-      <Link href="/messages" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Messages
-      </Link>
+      <BackLink route="/messages/settings" />
       <PageHeader title="Message settings and privacy" />
       {!settings ? (
         <Alert tone="error" title="Settings couldn't be loaded right now." />

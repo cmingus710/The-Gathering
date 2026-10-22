@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element -- the publisher's own artwork, loaded without a referrer */
 import { ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AudioCard } from "@/components/media/audio-card";
 import { ExternalShowNote } from "@/components/media/podcast";
+import { BackLink } from "@/components/ui/back-link";
 import { parseProviderRefString, providerEmbed, safeHttpsUrl } from "@/lib/media/embeds";
 import { formatInstant, isUuid } from "@/lib/media/format";
 import type { ExternalEpisode } from "@/lib/media/types";
@@ -37,11 +37,7 @@ export default async function ExternalEpisodePage({ params }: PageProps<"/podcas
 
   return (
     <>
-      <p className="mb-4">
-        <Link href={`/podcasts/shows/${e.show_id}`} className="font-semibold text-primary hover:underline">
-          {e.show_title}
-        </Link>
-      </p>
+      <BackLink route="/podcasts/external/[id]" params={{ show: e.show_id }} label={e.show_title} />
       <article className="space-y-6">
         <header className="flex flex-wrap gap-5">
           {art ? <img src={art} alt="" referrerPolicy="no-referrer" className="size-32 shrink-0 rounded-tile object-cover sm:size-40" /> : null}

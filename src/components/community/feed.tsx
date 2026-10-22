@@ -4,6 +4,7 @@ import { ArrowUp, ChevronDown, Pin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { feedNewerAction, loadFeedAction } from "@/app/(member)/community/feed-actions";
+import { lastReturnAt } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/community/format";
 import type { FeedCursor, FeedPage, RenderedPost } from "@/lib/community/types";
@@ -14,9 +15,9 @@ type Place = { category: string | null; group: string | null };
 type Saved = { posts: RenderedPost[]; cursor: FeedCursor | null; scrollY: number; at: number };
 
 /**
- * Feed state kept across a visit to a post and back (browser Back), so the
- * reader returns to the same place with the same posts loaded. Restored only
- * after a Back/Forward navigation, never when Community is opened afresh.
+ * Feed state kept across a visit to a post and back (browser Back, or the
+ * post's "Back to …" link), so the reader returns to the same place with the
+ * same posts loaded. Never restored when Community is opened afresh.
  */
 const saved = new Map<string, Saved>();
 let lastPopAt = 0;
@@ -44,7 +45,7 @@ export function Feed({
   const [restored] = useState(() => {
     const s = saved.get(key);
     saved.delete(key);
-    return s && lastPopAt > s.at && Date.now() - s.at < 30 * 60_000 ? s : null;
+    return s && Math.max(lastPopAt, lastReturnAt()) > s.at && Date.now() - s.at < 30 * 60_000 ? s : null;
   });
   const [posts, setPosts] = useState<RenderedPost[]>(restored?.posts ?? initial.items);
   const [cursor, setCursor] = useState<FeedCursor | null>(restored ? restored.cursor : initial.next_cursor);
@@ -57,18 +58,18 @@ export function Feed({
     state.current = { posts, cursor };
   }, [posts, cursor]);
 
-  // Remember where the reader was when they leave for a post.
+  // Remember where the reader was when they leave for a post. The position is
+  // taken when a link is followed: by the time this unmounts, the router has
+  // already scrolled the next page to the top.
+  const leftAt = useRef<number | null>(null);
   useEffect(
     () => () => {
-      saved.set(key, { ...state.current, scrollY: window.scrollY, at: Date.now() });
+      saved.set(key, { ...state.current, scrollY: leftAt.current ?? window.scrollY, at: Date.now() });
     },
     [key],
   );
   useLayoutEffect(() => {
     if (restored) requestAnimationFrame(() => window.scrollTo(0, restored.scrollY));
-    try {
-      sessionStorage.removeItem("community:from-feed");
-    } catch {}
   }, [restored]);
 
   useEffect(() => {
@@ -119,14 +120,9 @@ export function Feed({
   const remove = useCallback((id: string) => setPosts((list) => list.filter((p) => p.id !== id)), []);
 
   return (
-    // A post opened from here can send the reader Back to this spot (see BackToFeed).
     <div
       onClickCapture={(e) => {
-        if ((e.target as HTMLElement).closest('a[href^="/community/t/"]')) {
-          try {
-            sessionStorage.setItem("community:from-feed", "1");
-          } catch {}
-        }
+        if ((e.target as HTMLElement).closest("a[href]")) leftAt.current = window.scrollY;
       }}
     >
       {newer > 0 ? (

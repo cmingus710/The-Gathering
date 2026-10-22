@@ -1,7 +1,8 @@
-import { ArrowLeft, Flag } from "lucide-react";
+import { Flag } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
@@ -22,9 +23,7 @@ export default async function GroupReportsPage({ params, searchParams }: PagePro
   if (!reports) notFound();
   return (
     <>
-      <Link href={`/groups/${id}/manage`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Manage {group.name}
-      </Link>
+      <BackLink route="/groups/[id]/manage/reports" params={{ id }} label={`Manage ${group.name}`} />
       <PageHeader title="Reports in this group" description="Only reports about this group's discussions. Reports about a leader are reviewed by community moderators." />
       <nav aria-label="Report status" className="mb-4 flex gap-2">
         <Link href={`/groups/${id}/manage/reports`} aria-current={status === "open" ? "page" : undefined} className="rounded-full px-4 py-2 font-semibold aria-[current=page]:bg-surface-muted">

@@ -1,7 +1,7 @@
-import { ArrowLeft, ChevronRight, HandHelping } from "lucide-react";
+import { ChevronRight, HandHelping } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -17,9 +17,7 @@ export default async function MyCarePage() {
   const rows = await tryCommunityRpc<MyCareRow[]>("care_my_requests");
   return (
     <>
-      <Link href="/prayer" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Prayer
-      </Link>
+      <BackLink route="/prayer/care" />
       <PageHeader
         title="My care requests"
         description="Practical help from the care team. Only you and the care team can see these."

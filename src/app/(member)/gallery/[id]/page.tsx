@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GalleryViewer, type ViewerPhoto } from "@/components/media/gallery-viewer";
 import { MyPhotos } from "@/components/media/my-photos";
 import { PhotoUploader } from "@/components/media/photo-uploader";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { formatDay, isUuid } from "@/lib/media/format";
 import { signPaths, UPLOAD_BUCKET } from "@/lib/media/storage";
@@ -37,11 +37,7 @@ export default async function AlbumPage({ params }: PageProps<"/gallery/[id]">) 
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/gallery" className="font-semibold text-primary hover:underline">
-          All albums
-        </Link>
-      </p>
+      <BackLink route="/gallery/[id]" />
       <PageHeader
         eyebrow={[a.album_on ? formatDay(a.album_on) : null, a.audience === "group" ? `Shared with ${a.group_name ?? "one group"}` : "Shared with members"].filter(Boolean).join(" · ")}
         title={a.title}
