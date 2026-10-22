@@ -9,6 +9,7 @@ import { FumsTracker } from "@/components/bible/fums";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { CommunityText } from "@/components/community/community-text";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, SectionHeading, rowListClass } from "@/components/ui/card";
@@ -104,11 +105,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/bibl
 
   return (
     <>
-      <p className="mb-4">
-        <Link href={`/bible/plans/${day.plan.id}`} className="font-semibold text-primary hover:underline">
-          {day.plan.title}
-        </Link>
-      </p>
+      <BackLink route="/bible/day/[id]" params={{ plan: day.plan.id }} label={day.plan.title} />
       <header className="mb-6">
         <p className="text-meta font-semibold text-text-secondary">
           {day.label}

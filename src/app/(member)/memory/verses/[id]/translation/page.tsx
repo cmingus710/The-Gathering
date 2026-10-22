@@ -1,10 +1,9 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { PassageText } from "@/components/memory/passage";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { SelectField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -64,9 +63,7 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
 
   return (
     <>
-      <Link href={`/memory/verses/${c.id}`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> {c.passage.label} ({current.code})
-      </Link>
+      <BackLink route="/memory/verses/[id]/translation" params={{ id: c.id }} label={`${c.passage.label} (${current.code})`} />
       <PageHeader
         title="Change translation"
         description={`${c.passage.label} is in ${current.name} (${current.code}). Choosing another version affects only this verse; your default and your other verses stay the same.`}

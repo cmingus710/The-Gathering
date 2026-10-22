@@ -1,8 +1,9 @@
-import { ArrowLeft, Home, Search, Users } from "lucide-react";
+import { Home, Search, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MemberAvatar } from "@/components/profile/member-avatar";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { buttonClasses } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -43,9 +44,7 @@ export default async function HouseholdPage({ searchParams }: PageProps<"/profil
 
   return (
     <>
-      <Link href="/profile" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Profile
-      </Link>
+      <BackLink route="/profile/household" />
       <PageHeader
         title="Household"
         description="Connect your profile with other adults you live with. Each person joins only by accepting an invitation, and being in a household never shares anything you've kept private."

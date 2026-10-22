@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { displayName, requireApprovedMember } from "@/lib/auth/viewer";
 import { PHOTO_URL_TTL_SECONDS, signPhotoUrls } from "@/lib/profile/photos";
@@ -19,9 +18,7 @@ export default async function PhotoPage() {
 
   return (
     <>
-      <Link href="/profile" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Profile
-      </Link>
+      <BackLink route="/profile/photo" />
       <PageHeader title="Profile photo" description="Optional. Without a photo, members see your initials." />
       {!details ? (
         <Alert tone="error" title="Your photo settings couldn't be loaded right now." />

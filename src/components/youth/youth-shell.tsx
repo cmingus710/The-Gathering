@@ -1,8 +1,9 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { IconMark } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ThemeControl } from "@/components/theme/theme-control";
+import { ReturnViewRecorder } from "@/components/ui/back-link";
 import { displayName, type Viewer } from "@/lib/auth/viewer";
 import type { ChurchSettings } from "@/lib/settings/queries";
 import { getThemePreference } from "@/lib/theme/server";
@@ -17,10 +18,13 @@ import { YouthNav } from "./youth-nav";
 export async function YouthShell({ viewer, settings, children }: { viewer: Viewer; settings: ChurchSettings; children: ReactNode }) {
   const theme = await getThemePreference();
   return (
-    <div className="min-h-dvh">
+    <div className="youth-shell min-h-dvh">
       <a href="#main" className="skip-link">
         Skip to content
       </a>
+      <Suspense fallback={null}>
+        <ReturnViewRecorder />
+      </Suspense>
       <header className="sticky top-0 z-30 border-b border-border bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-2 px-4 sm:px-6">
           <Link href="/youth" className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label={`${settings.churchName} Youth home`}>

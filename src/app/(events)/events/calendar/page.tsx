@@ -1,8 +1,8 @@
-import { ArrowLeft, CalendarCheck, ShieldAlert } from "lucide-react";
+import { CalendarCheck, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { EventListItem } from "@/components/events/event-list-item";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { getMyPrefs, getMyRegistrations, publicFeedEnabled } from "@/lib/events/queries";
@@ -23,9 +23,7 @@ export default async function CalendarSettingsPage() {
 
   return (
     <>
-      <Link href="/events" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> All events
-      </Link>
+      <BackLink route="/events/calendar" />
       <PageHeader title="Calendar & reminders" description="Your registrations, your private calendar subscription, and reminder emails." />
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <section aria-labelledby="mine">

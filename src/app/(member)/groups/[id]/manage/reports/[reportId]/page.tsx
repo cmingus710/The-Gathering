@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReportDetailView } from "@/components/community/report-detail";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -20,9 +19,7 @@ export default async function GroupReportPage({ params }: PageProps<"/groups/[id
   if (!report || report.group_id !== id) notFound();
   return (
     <>
-      <Link href={`/groups/${id}/manage/reports`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Reports
-      </Link>
+      <BackLink route="/groups/[id]/manage/reports/[reportId]" params={{ id }} />
       <PageHeader title="Review report" description="Opening this report is recorded. Act only within this group." />
       <ReportDetailView report={report} tz={settings.timezone} />
     </>

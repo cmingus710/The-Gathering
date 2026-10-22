@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
@@ -20,8 +21,8 @@ export default async function LeadPage() {
   const { data, failed } = await youthRead<LeadHome>("youth_lead_home");
   return (
     <>
+      <BackLink route="/youth/lead" />
       <PageHeader
-        eyebrow="Youth & Families"
         title="Leading"
         description="Only the groups you're assigned to. You never see contact details, dates of birth, or anyone's private learning."
         actions={data && data.open_reports > 0 ? <ButtonLink href="/youth/lead/reports">Reports ({data.open_reports})</ButtonLink> : <ButtonLink href="/youth/lead/reports" variant="secondary">Reports</ButtonLink>}

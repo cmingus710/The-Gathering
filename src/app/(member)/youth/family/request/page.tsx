@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { YouthForm } from "@/components/youth/youth-form";
@@ -13,8 +14,8 @@ export default async function RequestPage() {
   const askBirthDate = policy?.settings.birth_date_required === true;
   return (
     <>
+      <BackLink route="/youth/family/request" />
       <PageHeader
-        eyebrow="Youth & Families"
         title="Link a child"
         description="Ask the church office to verify that you're a parent, legal guardian, or caregiver. Nothing is shared with you until a family administrator verifies the relationship with you directly."
       />

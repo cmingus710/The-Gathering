@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
@@ -43,7 +43,8 @@ export default async function LeadGroupPage({ params, searchParams }: PageProps<
 
   return (
     <>
-      <PageHeader eyebrow={<Link href="/youth/lead" className="hover:underline">Leading</Link>} title={r.name} description={r.my_role ? `You're a ${r.my_role.role} of this group.` : "Youth administration view"} />
+      <BackLink route="/youth/lead/groups/[id]" />
+      <PageHeader title={r.name} description={r.my_role ? `You're a ${r.my_role.role} of this group.` : "Youth administration view"} />
       <div className="space-y-10">
         <section aria-labelledby="roster">
           <SectionHeading id="roster" description="Preferred names only. Contact details, dates of birth, and guardians' identities stay with the family office.">

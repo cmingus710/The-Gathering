@@ -1,7 +1,7 @@
-import { ArrowLeft, ChevronRight, HandHeart } from "lucide-react";
+import { ChevronRight, HandHeart } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -18,9 +18,7 @@ export default async function ServePage() {
   const [rows, { settings }] = await Promise.all([tryCommunityRpc<OpportunityCard[]>("care_opportunities"), getChurchSettings()]);
   return (
     <>
-      <Link href="/prayer" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Prayer
-      </Link>
+      <BackLink route="/prayer/serve" />
       <PageHeader title="Ways to help" description="Practical care needs the care team has asked for help with. Details are shared only with the volunteers they confirm." />
       {!rows ? (
         <Alert tone="error" title="Opportunities couldn't be loaded right now." />

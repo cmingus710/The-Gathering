@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { AudienceNote } from "@/components/youth/audience";
 import { AnnouncementList, LearningList } from "@/components/youth/sections";
@@ -37,6 +38,7 @@ export default async function GroupPage({ params }: PageProps<"/youth/groups/[id
   if (!g) return <Alert tone="error" title="This group couldn't be loaded right now." />;
   return (
     <>
+      <BackLink route="/youth/groups/[id]" />
       <PageHeader
         eyebrow="Youth group"
         title={g.name}

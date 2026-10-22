@@ -1,10 +1,10 @@
 import { Archive, ArchiveRestore, Unlink } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { JournalEditor } from "@/components/journal/editor";
 import { LinkContext, type EntryLink } from "@/components/journal/link-context";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -30,10 +30,8 @@ export default async function EntryPage({ params }: PageProps<"/journal/[id]">) 
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <Link href="/journal" className="font-semibold text-primary hover:underline">
-          My Journal
-        </Link>
+      <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 sm:mb-4">
+        <BackLink route="/journal/[id]" inRow />
         {e.status === "archived" ? <Badge>Archived</Badge> : null}
       </div>
       <h1 className="sr-only">Journal entry</h1>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { YouthForm } from "@/components/youth/youth-form";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -27,6 +27,7 @@ export default async function PracticePage({ params }: PageProps<"/youth/family/
   if (data.independent) {
     return (
       <>
+        <BackLink route="/youth/family/children/[id]/practice" params={{ id }} />
         <PageHeader title="Practice together" />
         <Alert tone="info" title="This child practices on their own account.">
           Their progress is theirs. You&apos;ll see a summary only if they choose to share one.
@@ -38,8 +39,8 @@ export default async function PracticePage({ params }: PageProps<"/youth/family/
   const unadded = (data.assigned ?? []).filter((a) => !a.card_id);
   return (
     <>
+      <BackLink route="/youth/family/children/[id]/practice" params={{ id }} label={name} />
       <PageHeader
-        eyebrow={<Link href={`/youth/family/children/${id}`} className="hover:underline">{name}</Link>}
         title={`Practice with ${name}`}
         description={`Everything you do here is recorded as ${name}'s practice, not yours. Your own memory verses aren't affected.`}
       />

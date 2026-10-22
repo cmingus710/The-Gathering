@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -63,13 +62,9 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
     const { data, error } = await supabase.rpc("memory_passage_preview", { p_translation: version, p: { book, sc: chapter, sv: from, ec: endChapter, ev: to } });
     preview = error ? { ok: false, problem: error.code === "22023" ? error.message : "That passage couldn't be checked right now." } : (data as Preview);
   }
-  const back = item && collectionId ? { href: `/memory/collections/${collectionId}`, label: "Collection" } : { href: "/memory/verses", label: "My Verses" };
-
   return (
     <>
-      <Link href={back.href} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> {back.label}
-      </Link>
+      <BackLink route="/memory/verses/add" />
       <PageHeader
         title={item ? `Add ${item.passage.label}` : "Add a memory verse"}
         description={

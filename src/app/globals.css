@@ -815,8 +815,21 @@ dialog.sheet[open] {
 @media (max-width: 1023.98px) {
   html {
     scroll-padding-bottom: var(--dock-clearance);
+    scroll-padding-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  }
+}
+/*
+ * Focus and in-page scrolling also stop below the desktop's sticky top bar
+ * and the youth shell's taller header (title row plus tabs), so a page's
+ * back link and heading are never tucked under them.
+ */
+@media (min-width: 1024px) {
+  html {
     scroll-padding-top: 4.5rem;
   }
+}
+html:has(.youth-shell) {
+  scroll-padding-top: calc(7.75rem + env(safe-area-inset-top, 0px));
 }
 .dock {
   padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);

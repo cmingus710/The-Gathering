@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ItemCard } from "@/components/media/item-card";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { coverPaths, isYm, monthBounds, todayIn } from "@/lib/media/format";
 import { listItems } from "@/lib/media/pages";
@@ -23,14 +24,8 @@ export default async function DevotionalArchivePage({ searchParams }: PageProps<
   const urls = await signPaths(supabase, coverPaths(list.items));
   return (
     <>
-      <PageHeader
-        eyebrow={
-          <Link href="/devotionals" className="hover:underline">
-            Devotionals
-          </Link>
-        }
-        title="Archive"
-      />
+      <BackLink route="/devotionals/archive" />
+      <PageHeader title="Devotional archive" />
       <nav aria-label="Months" className="mb-4 flex items-center justify-between">
         <Link href={`?month=${m.prev}`} className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 font-semibold text-primary hover:bg-primary-soft">
           <ChevronLeft className="size-4" aria-hidden="true" /> Earlier

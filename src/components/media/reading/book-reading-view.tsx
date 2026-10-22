@@ -3,6 +3,7 @@ import { CalendarDays, Circle, CircleCheck, GraduationCap, MessagesSquare } from
 import Link from "next/link";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { TileIcon } from "@/components/icons/icon";
+import { BackLink } from "@/components/ui/back-link";
 import { SectionHeading } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { segmentClass } from "@/components/ui/segmented";
@@ -87,11 +88,7 @@ export function BookReadingView({
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/reading" className="font-semibold text-primary hover:underline">
-          Church reading
-        </Link>
-      </p>
+      <BackLink route="/reading/books/[id]" />
       {targetId ? <ScrollToSelected targetId={targetId} /> : null}
       <article className="space-y-6 sm:space-y-8">
         {/* 1 · Compact book header: the full cover at its own proportions beside the details. */}
