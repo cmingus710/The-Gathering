@@ -9,7 +9,8 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { LIMITS } from "@/lib/community/format";
 import { initialFormState } from "@/lib/forms";
 import { AttachmentPicker } from "./attachment-picker";
-import { AutoGrowTextarea, InitialsAvatar, useDraftGuard } from "./feed-bits";
+import { InitialsAvatar, useDraftGuard } from "./feed-bits";
+import { MentionTextarea } from "./mention-textarea";
 
 export type ComposerPlace = { kind: "category" | "group"; id: string; name: string };
 
@@ -169,14 +170,15 @@ export function FeedComposer({
         <label htmlFor={`${id}-body`} className="block text-meta font-semibold">
           Message
         </label>
-        <AutoGrowTextarea
+        <MentionTextarea
           id={`${id}-body`}
           name="body"
           required
           maxLength={LIMITS.thread}
           minRows={3}
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onValueChange={setBody}
+          place={selected ? { categoryId: selected.kind === "category" ? selected.id : null, groupId: selected.kind === "group" ? selected.id : null } : null}
           placeholder="Share something with your church community…"
           aria-invalid={fe.body ? true : undefined}
           aria-describedby={`${id}-format`}
@@ -187,7 +189,7 @@ export function FeedComposer({
             Formatting help
           </summary>
           <p id={`${id}-format`} className="pb-1 text-meta text-text-secondary">
-            You can use **bold**, _italic_, lists, &gt; quotes, and links.
+            You can use **bold**, _italic_, lists, &gt; quotes, and links. Type @ and a name to mention someone who can see this post.
           </p>
         </details>
       </div>

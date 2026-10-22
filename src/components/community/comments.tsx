@@ -16,7 +16,8 @@ import { initialFormState, type FormState } from "@/lib/forms";
 import { ActionMenu, type MenuItem } from "./action-menu";
 import { AttachmentGallery } from "./attachment-gallery";
 import { AttachmentPicker } from "./attachment-picker";
-import { AutoGrowTextarea, InitialsAvatar, reveal, useDraftGuard } from "./feed-bits";
+import { InitialsAvatar, reveal, useDraftGuard } from "./feed-bits";
+import { MentionTextarea } from "./mention-textarea";
 import { reasonField } from "./moderation-controls";
 import { ReactionPicker, ReactionSummary, useReactions } from "./reaction-picker";
 import { useCommunityRealtime } from "./realtime-provider";
@@ -273,7 +274,7 @@ function CommentComposer({
         Write a comment
       </label>
       <div className="flex items-end gap-2">
-        <AutoGrowTextarea
+        <MentionTextarea
           ref={inputRef}
           id={`${id}-body`}
           name="body"
@@ -281,7 +282,8 @@ function CommentComposer({
           maxLength={LIMITS.reply}
           placeholder="Write a comment…"
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onValueChange={setBody}
+          place={{ threadId }}
           aria-describedby={`${id}-format`}
           aria-invalid={state.fieldErrors?.body ? true : undefined}
           className="rounded-[1.25rem] bg-surface-muted/60"
@@ -292,7 +294,7 @@ function CommentComposer({
         </SubmitButton>
       </div>
       <p id={`${id}-format`} className="sr-only">
-        You can use **bold**, _italic_, lists, quotes, and links.
+        You can use **bold**, _italic_, lists, quotes, and links. Type @ and a name to mention someone.
       </p>
       <AttachmentPicker key={pickerKey} compact onBusyChange={setUploading} onCountChange={setFiles} />
     </form>
@@ -377,7 +379,17 @@ function CommentItem({
                 <label htmlFor={`edit-${c.id}`} className="sr-only">
                   Edit your comment
                 </label>
-                <AutoGrowTextarea id={`edit-${c.id}`} name="body" required maxLength={LIMITS.reply} value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus minRows={2} />
+                <MentionTextarea
+                  id={`edit-${c.id}`}
+                  name="body"
+                  required
+                  maxLength={LIMITS.reply}
+                  value={draft}
+                  onValueChange={setDraft}
+                  place={{ threadId }}
+                  autoFocus
+                  minRows={2}
+                />
                 <div className="flex gap-2">
                   <SubmitButton size="sm" pendingText="Saving…">
                     Save

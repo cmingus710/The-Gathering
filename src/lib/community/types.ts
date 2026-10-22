@@ -1,3 +1,5 @@
+import type { MentionRef } from "./mentions";
+
 /** Shapes returned by the community_* database functions. */
 export type ContentStatus = "visible" | "hidden" | "deleted";
 export type ReactionKind = "heart" | "pray" | "amen";
@@ -132,7 +134,7 @@ export type ConversationPage = {
 export type NotificationItem = {
   id: string;
   kind: string;
-  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care" | "teaching" | "gallery" | "reading" | "memory" | "youth";
+  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care" | "teaching" | "gallery" | "reading" | "memory" | "youth" | "mentions";
   title: string;
   url: string;
   count: number;
@@ -239,6 +241,8 @@ export type FeedPost = ThreadCard & {
   reactions: Reactions | null;
   comment_count: number;
   attachments: Attachment[];
+  /** People mentioned in the text (null when the text isn't shown); absent before migration 20261107000100. */
+  mentions?: MentionRef[] | null;
   can_moderate: boolean;
   can_reply: boolean;
   muted: boolean;
@@ -254,7 +258,7 @@ export type FeedPage = {
 };
 
 /** A reply shown as a comment, with its photos and videos. */
-export type Comment = Post & { attachments: Attachment[] };
+export type Comment = Post & { attachments: Attachment[]; mentions?: MentionRef[] | null };
 
 export type CommentPage = {
   items: Comment[];

@@ -1,10 +1,12 @@
 "use client";
 
-import { Globe, Lock, Send } from "lucide-react";
+import { CircleAlert, Globe, Lock, Send } from "lucide-react";
 import { useActionState, useState } from "react";
 import { AttachmentPicker } from "@/components/community/attachment-picker";
-import { TextAreaField, TextField } from "@/components/ui/field";
+import { MentionTextarea, type MentionPlace } from "@/components/community/mention-textarea";
+import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { cn } from "@/components/ui/cn";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { LIMITS } from "@/lib/community/format";
 import { initialFormState, type FormState } from "@/lib/forms";
@@ -31,13 +33,15 @@ export function AudienceNotice({ audience, place }: { audience: "church" | "grou
   );
 }
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. Type @ and a name to mention someone.";
 
 /**
  * New or edited discussion. Fields are controlled, so the text survives a
  * failed save (and React's automatic form reset). A fresh idempotency key
  * per draft means a retried submit can never post twice. New discussions
  * can carry photos and videos (`attachments`); edits keep the ones posted.
+ * The message box suggests people to @mention for the post's place (its
+ * category or group, from `hidden`, or the post itself when editing).
  */
 export function ThreadComposer({
   action,
@@ -62,6 +66,10 @@ export function ThreadComposer({
   const [clientKey] = useState(() => crypto.randomUUID());
   const [uploading, setUploading] = useState(false);
   const fe = state.fieldErrors ?? {};
+  const mentionPlace: MentionPlace = hidden.threadId
+    ? { threadId: hidden.threadId }
+    : { categoryId: hidden.categoryId || null, groupId: hidden.groupId || null };
+  const bodyError = fe.body?.[0];
   return (
     <form action={formAction} className="space-y-5">
       <AudienceNotice audience={audience} place={place} />
@@ -71,17 +79,36 @@ export function ThreadComposer({
       ))}
       <input type="hidden" name="clientKey" value={clientKey} />
       <TextField label="Title" name="title" required minLength={3} maxLength={LIMITS.title} value={title} onChange={(e) => setTitle(e.target.value)} error={fe.title} />
-      <TextAreaField
-        label="Message"
-        name="body"
-        required
-        maxLength={LIMITS.thread}
-        rows={8}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        error={fe.body}
-        hint={FORMAT_HINT}
-      />
+      <div className="space-y-1.5">
+        <label htmlFor="field-body" className="block font-semibold text-text">
+          Message
+        </label>
+        <p id="field-body-hint" className="text-meta text-text-secondary">
+          {FORMAT_HINT}
+        </p>
+        <MentionTextarea
+          id="field-body"
+          name="body"
+          required
+          maxLength={LIMITS.thread}
+          minRows={8}
+          value={body}
+          onValueChange={setBody}
+          place={mentionPlace}
+          aria-invalid={bodyError ? true : undefined}
+          aria-describedby={bodyError ? "field-body-hint field-body-error" : "field-body-hint"}
+          className={cn("min-h-32 leading-relaxed", bodyError && "border-danger")}
+        />
+        {bodyError ? (
+          <p id="field-body-error" className="flex items-start gap-1.5 text-meta font-medium text-danger">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>
+              <span className="sr-only">Error: </span>
+              {bodyError}
+            </span>
+          </p>
+        ) : null}
+      </div>
       {attachments ? <AttachmentPicker onBusyChange={setUploading} /> : null}
       <SubmitButton pendingText="Posting…" icon={<Send className="size-4" aria-hidden="true" />} disabled={uploading}>
         {submitLabel}

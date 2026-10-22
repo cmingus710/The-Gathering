@@ -104,7 +104,7 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
             <PinnedPosts items={feed.pinned} />
             <Feed
               key={here}
-              initial={{ items: feed.items.map((p) => ({ ...p, html: p.body ? renderCommunityText(p.body) : null })), next_cursor: feed.next_cursor }}
+              initial={{ items: feed.items.map((p) => ({ ...p, html: p.body ? renderCommunityText(p.body, { mentions: p.mentions }) : null })), next_cursor: feed.next_cursor }}
               place={{ category, group }}
               timeZone={settings.timezone}
               postedId={posted}

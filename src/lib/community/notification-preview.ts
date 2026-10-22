@@ -56,6 +56,7 @@ export const CATEGORY_LABEL: Record<NotificationCategory, string> = {
   reading: "Bible reading",
   memory: "Memory verses",
   youth: "Youth & Families",
+  mentions: "Mentions",
 };
 
 const PRIVATE_LINE: Partial<Record<NotificationCategory, string>> = {
@@ -85,6 +86,7 @@ const KIND_LINE: Record<string, string> = {
   memory_review_due: "Memory verses are ready to review.",
   memory_practice_reminder: "A reminder to practice your memory verses.",
   memory_challenge_milestone: "A challenge you share in reached a milestone.",
+  mention: "Someone mentioned you in Community.",
 };
 
 export function previewLine(category: NotificationCategory, kind: string): string {
@@ -98,7 +100,7 @@ export function previewLine(category: NotificationCategory, kind: string): strin
 export const PANEL_FILTERS = [
   { key: "all", label: "All" },
   { key: "unread", label: "Unread" },
-  { key: "community", label: "Community", categories: ["forum", "groups", "messages", "moderation"] },
+  { key: "community", label: "Community", categories: ["forum", "groups", "messages", "moderation", "mentions"] },
   { key: "events", label: "Events", categories: ["events"] },
   { key: "prayer", label: "Prayer & Care", categories: ["prayer", "care"] },
   { key: "teaching", label: "Teaching & Photos", categories: ["teaching", "gallery"] },

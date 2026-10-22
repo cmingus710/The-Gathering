@@ -23,7 +23,7 @@ const place = z.object({ category: optionalUuid, group: optionalUuid });
 type Result<T> = { ok: true; data: T } | { ok: false; message: string };
 
 function renderPost(post: FeedPost): RenderedPost {
-  return { ...post, html: post.body ? renderCommunityText(post.body) : null };
+  return { ...post, html: post.body ? renderCommunityText(post.body, { mentions: post.mentions }) : null };
 }
 
 export async function loadFeedAction(input: { category?: string | null; group?: string | null; cursor?: { at: string; id: string } | null }): Promise<
@@ -74,7 +74,7 @@ export async function loadCommentsAction(input: { threadId: string; cursor?: { a
       p_through: parsed.data.through,
     });
     if (!page) return { ok: true, data: null };
-    return { ok: true, data: { ...page, items: page.items.map((c) => ({ ...c, html: c.body ? renderCommunityText(c.body) : null })) } };
+    return { ok: true, data: { ...page, items: page.items.map((c) => ({ ...c, html: c.body ? renderCommunityText(c.body, { mentions: c.mentions }) : null })) } };
   } catch (error) {
     return { ok: false, message: dbErrorMessage(error as { code?: string; message?: string }, LOAD_FAILED) };
   }
