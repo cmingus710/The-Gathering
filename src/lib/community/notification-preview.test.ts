@@ -44,7 +44,7 @@ describe("bell notification previews", () => {
   it("maps every category to exactly one filter, and unknown filters to All", () => {
     const mapped = PANEL_FILTERS.flatMap((f) => ("categories" in f ? [...f.categories] : []));
     expect(new Set(mapped).size).toBe(mapped.length);
-    expect(mapped.sort()).toEqual(["care", "events", "forum", "gallery", "groups", "memory", "messages", "moderation", "prayer", "reading", "teaching", "youth"]);
+    expect(mapped.sort()).toEqual(["care", "events", "forum", "gallery", "groups", "memory", "mentions", "messages", "moderation", "prayer", "reading", "teaching", "youth"]);
     expect(panelFilter("nope").key).toBe("all");
     expect(panelFilter("events").key).toBe("events");
   });

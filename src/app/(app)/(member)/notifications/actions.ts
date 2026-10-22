@@ -57,7 +57,7 @@ export async function undoClearReadAction(at: string): Promise<{ ok: boolean; me
   return { ok: true, message: "Restored." };
 }
 
-const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "prayer", "care", "teaching", "gallery", "reading", "memory", "youth"] as const;
+const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "prayer", "care", "teaching", "gallery", "reading", "memory", "youth", "mentions"] as const;
 
 export async function savePrefsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireApprovedMember("/notifications/settings");

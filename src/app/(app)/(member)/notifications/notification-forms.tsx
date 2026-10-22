@@ -32,6 +32,7 @@ export function MarkReadButton({ id, label }: { id?: string; label: string }) {
 
 const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string }> = {
   forum: { label: "Discussions", hint: "Replies to your discussions and ones you follow." },
+  mentions: { label: "Someone mentions me", hint: "When someone @mentions you in a Community post or comment. Push only says someone mentioned you; email names who mentioned you only for church-wide posts." },
   groups: { label: "Groups", hint: "Invitations, join requests, and decisions." },
   messages: { label: "Direct messages", hint: "Email and push only say “You have a new message”, never the text or sender." },
   moderation: { label: "Moderator actions", hint: "Always shown in the app when a moderator acts on your posts or account." },
@@ -62,7 +63,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
               <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
-                {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" ? null : (
+                {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" || c === "mentions" ? null : (
                   <>
                     <option value="daily">Daily summary</option>
                     <option value="weekly">Weekly summary</option>

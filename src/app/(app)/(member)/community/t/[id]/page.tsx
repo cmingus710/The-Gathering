@@ -40,7 +40,7 @@ export default async function ThreadPage({ params, searchParams }: PageProps<"/c
       {sp.edited ? <Alert tone="success" title="Your changes are saved." className="mb-4" /> : null}
       {post ? (
         <FeedPostCard
-          post={{ ...post, html: post.body ? renderCommunityText(post.body) : null }}
+          post={{ ...post, html: post.body ? renderCommunityText(post.body, { mentions: post.mentions }) : null }}
           timeZone={settings.timezone}
           initiallyOpen
           target={comment}

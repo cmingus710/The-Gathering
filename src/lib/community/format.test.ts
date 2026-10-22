@@ -45,6 +45,36 @@ describe("renderCommunityText", () => {
   });
 });
 
+describe("renderCommunityText mentions", () => {
+  const ann = "0f8fad5b-d9cb-469f-a165-70867728950e";
+  const ben = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+
+  it("links a listed member with their current name", () => {
+    const html = renderCommunityText(`Thanks @[Ann Rivers](mention:${ann})!`, { mentions: [{ id: ann, name: "Annie Rivers", listed: true }] });
+    expect(html).toBe(`<p>Thanks <a href="/directory/${ann}" class="mention">@Annie Rivers</a>!</p>\n`);
+  });
+
+  it("shows plain text when the member isn't listed, isn't recorded, or can't be shown", () => {
+    expect(renderCommunityText(`@[Ben Rowe](mention:${ben})`, { mentions: [{ id: ben, name: "Ben Rowe", listed: false }] })).toBe("<p>@Ben Rowe</p>\n");
+    expect(renderCommunityText(`@[Ben Rowe](mention:${ben})`)).toBe("<p>@Ben Rowe</p>\n");
+    expect(renderCommunityText(`@[Former Name](mention:${ben})`, { mentions: [{ id: ben, name: null, listed: false }] })).toBe("<p>@Former Name</p>\n");
+  });
+
+  it("never turns a label into HTML", () => {
+    const html = renderCommunityText(`@[<img src=x onerror=alert(1)>](mention:${ann})`, { mentions: [{ id: ann, name: "<b>x</b>", listed: true }] });
+    expect(html).not.toMatch(/<img|<b>/);
+    expect(html).toContain("&lt;b&gt;x&lt;/b&gt;");
+  });
+
+  it("leaves email addresses and hand-typed @names alone and keeps formatting around mentions", () => {
+    const html = renderCommunityText(`**Hi @[Ann](mention:${ann})**, write to office@example.org or @ben`, { mentions: [{ id: ann, name: "Ann", listed: true }] });
+    expect(html).toContain(`<strong>Hi <a href="/directory/${ann}" class="mention">@Ann</a></strong>`);
+    expect(html).toContain('href="mailto:office@example.org"');
+    expect(html).toContain("or @ben");
+    expect(html.match(/class="mention"/g)).toHaveLength(1);
+  });
+});
+
 describe("relativeTime", () => {
   it("describes recent times in words", () => {
     const now = Date.parse("2026-10-20T12:00:00Z");

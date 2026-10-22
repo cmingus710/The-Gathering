@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AtSign,
   Bell,
   BookMarked,
   BookOpen,
@@ -43,6 +44,7 @@ const ICON = {
   reading: BookOpenCheck,
   memory: BookMarked,
   youth: Sprout,
+  mentions: AtSign,
 } as const;
 
 type Page = { items: NotificationPreview[]; has_more: boolean; timezone: string; has_read: boolean };

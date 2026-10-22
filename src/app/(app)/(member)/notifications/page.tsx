@@ -1,4 +1,4 @@
-import { Bell, BookMarked, BookOpen, BookOpenCheck, CalendarDays, HandHeart, HandHelping, Images, MessageCircle, MessagesSquare, Settings, ShieldAlert, Sprout, UsersRound } from "lucide-react";
+import { AtSign, Bell, BookMarked, BookOpen, BookOpenCheck, CalendarDays, HandHeart, HandHelping, Images, MessageCircle, MessagesSquare, Settings, ShieldAlert, Sprout, UsersRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LiveRefresh } from "@/components/community/live-refresh";
@@ -26,6 +26,7 @@ const ICON = {
   reading: BookOpenCheck,
   memory: BookMarked,
   youth: Sprout,
+  mentions: AtSign,
 } as const;
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {
