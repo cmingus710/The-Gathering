@@ -36,6 +36,8 @@ Long passages are split automatically into parts of up to 32 words (16 for kids)
 
 The **current memory verse** (Memory home, the home card, reminders) is any verse whose assignment window includes today in the church's time zone, in a collection the member can see.
 
+**Members may practice in their own Bible version** (checkbox): off by default, which keeps the collection's version required (how every existing collection works). On, each member may add an assigned verse in another stored version, or change it later; the collection, its verses, and other members are never affected. A published collection can turn it on but not off (members may already be practicing in their own version); duplicate the collection to require one version again. Group challenge totals count practice in any version only when this is on, and each practice activity counts once.
+
 ### After publishing
 
 - Presentation changes (title, description, goal, order, cover, verse titles, notes, hints, dates) need a publisher; audience, Bible version, and kind are fixed. *Duplicate* to make a new version (a new draft captured from the source's current text; history stays with the original).
