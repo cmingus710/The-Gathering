@@ -5,13 +5,15 @@ import type { Verse } from "./types";
  * API.Bible (American Bible Society) adapter: request building and response
  * parsing, kept free of I/O so it can be tested with recorded shapes.
  *
- * Not verified against the live service from this environment (its
- * documentation and API hosts were unreachable here). It follows the
- * published v1 REST shape: GET /v1/bibles/{bibleId}/passages/{passageId}
- * with an `api-key` header, `content-type=text`, verse numbers in the text
- * as "[16]", and `meta.fumsId` for the required usage tracking. Confirm the
- * current base URL, parameters, terms, and FUMS requirements before
- * activating an API translation (docs/bible-sources.md).
+ * Confirmed working in production with the church's key (2026-10-22). It
+ * follows the published v1 REST shape:
+ * GET /v1/bibles lists the Bibles the key can use, and each one's `id` (the
+ * bible_id, e.g. "de4e12af7f28f599-01", never the shorter dblId) goes in
+ * GET /v1/bibles/{bibleId}/passages/{passageId}, with an `api-key` header,
+ * `content-type=text`, verse numbers in the text as "[16]", and
+ * `meta.fumsId` for the required usage tracking. Confirm the current terms
+ * and FUMS requirements before activating an API translation
+ * (docs/bible-sources.md).
  */
 export const API_BIBLE_HOSTS = ["rest.api.bible", "api.scripture.api.bible"] as const;
 export const API_BIBLE_DEFAULT_BASE = "https://rest.api.bible/v1";
@@ -48,6 +50,44 @@ export function apiBiblePassageUrl(base: string, bibleId: string, passageId: str
     "include-verse-spans": "false",
   });
   return `${base}/bibles/${encodeURIComponent(bibleId)}/passages/${encodeURIComponent(passageId)}?${params}`;
+}
+
+export function apiBibleListUrl(base: string): string {
+  return `${base}/bibles`;
+}
+
+/** One entry of GET /bibles, reduced to what the translation form needs. */
+export type ApiBibleSummary = { id: string; name: string; abbreviation: string; language: string; languageName: string; description: string };
+
+/**
+ * The Bibles available to the key, sorted by name. Entries without a usable
+ * bible_id are left out rather than repaired.
+ */
+export function parseApiBibleList(json: unknown): ApiBibleSummary[] {
+  const data = (json as { data?: unknown })?.data;
+  if (!Array.isArray(data)) throw new Error("The scripture service returned an unexpected response.");
+  const text = (x: unknown) => (typeof x === "string" ? x.trim() : "");
+  const out: ApiBibleSummary[] = [];
+  for (const b of data as Array<Record<string, unknown>>) {
+    const id = text(b?.id);
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) continue;
+    const lang = (b.language ?? {}) as Record<string, unknown>;
+    out.push({
+      id,
+      name: text(b.nameLocal) || text(b.name) || id,
+      abbreviation: text(b.abbreviationLocal) || text(b.abbreviation),
+      language: text(lang.id).toLowerCase(),
+      languageName: text(lang.nameLocal) || text(lang.name),
+      description: text(b.descriptionLocal) || text(b.description),
+    });
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** A translation code the app accepts, from the provider's abbreviation ("KJV"), or "" if none fits. */
+export function codeFromAbbreviation(abbreviation: string): string {
+  const code = abbreviation.toUpperCase().replace(/[^A-Z0-9-]/g, "").replace(/^-+/, "").slice(0, 16);
+  return /^[A-Z0-9][A-Z0-9-]{1,15}$/.test(code) ? code : "";
 }
 
 export type ApiBibleResult = { verses: Verse[]; copyright: string | null; fumsId: string | null };
