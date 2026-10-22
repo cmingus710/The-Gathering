@@ -24,7 +24,8 @@ export class TestDb {
     private readonly name: string,
   ) {}
 
-  static async create(): Promise<TestDb> {
+  /** `before`: apply only the migrations whose version sorts before it (see applyMigrations). */
+  static async create(opts: { before?: string } = {}): Promise<TestDb> {
     if (!TEST_DATABASE_URL) throw new Error("TEST_DATABASE_URL is not set");
     const name = `gathering_test_${process.pid}_${Date.now()}`;
     const admin = new Client({ connectionString: TEST_DATABASE_URL });
@@ -35,11 +36,19 @@ export class TestDb {
     const client = new Client({ connectionString: url.toString() });
     await client.connect();
     await client.query(readFileSync(path.join(ROOT, "supabase/tests/supabase-shim.sql"), "utf8"));
+    const db = new TestDb(admin, client, name);
+    await db.applyMigrations({ before: opts.before });
+    return db;
+  }
+
+  /** Applies migrations in order: those from `from` (inclusive) and before `before`. */
+  async applyMigrations(opts: { from?: string; before?: string } = {}) {
     const dir = path.join(ROOT, "supabase/migrations");
     for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
-      await client.query(readFileSync(path.join(dir, file), "utf8"));
+      if (opts.from && file < opts.from) continue;
+      if (opts.before && file >= opts.before) continue;
+      await this.client.query(readFileSync(path.join(dir, file), "utf8"));
     }
-    return new TestDb(admin, client, name);
   }
 
   async destroy() {

@@ -27,13 +27,17 @@ function refresh() {
   revalidatePath("/home");
 }
 
-/** Adds a collection verse (item_id) or a passage chosen from the approved source. */
+/**
+ * Adds a collection verse (item_id, optionally in the member's chosen version
+ * when the collection allows it) or a passage chosen from the approved source.
+ */
 export async function addVerseAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireLearner("/memory");
   const item = idFrom(formData, "item_id");
   let payload: Record<string, unknown>;
   if (item) {
-    payload = { item_id: item };
+    const translation = idFrom(formData, "translation_id");
+    payload = translation ? { item_id: item, translation_id: translation } : { item_id: item };
   } else {
     const translation = idFrom(formData, "translation_id");
     const book = String(formData.get("book") ?? "");
@@ -71,12 +75,29 @@ export async function switchVersionAction(formData: FormData) {
   if (!error) redirect(`/memory/verses/${(data as { id: string }).id}?updated=1`);
 }
 
+/**
+ * The member's confirmed change of one verse's translation. The earlier text
+ * keeps its history; the new wording is practiced on its own schedule.
+ */
+export async function changeTranslationAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireLearner("/memory/verses");
+  const id = idFrom(formData);
+  const translation = idFrom(formData, "translation_id");
+  if (!id || !translation) return errorState("Choose a Bible version.");
+  if (formData.get("confirm") !== "on") return errorState("Confirm that you understand what changes.");
+  const { data, error } = await rpc("memory_card_change_translation", { p_card: id, p_translation: translation, p_confirm: true });
+  if (error) return errorState(dbErrorMessage(error, "The translation couldn't be changed right now. Nothing was changed."));
+  refresh();
+  redirect(`/memory/verses/${(data as { id: string }).id}?translation=1`);
+}
+
 const Settings = z.object({
   difficulty: z.enum(["guided", "growing", "challenge"]),
   presentation: z.enum(["standard", "kids"]),
   daily_goal: z.union([z.literal(""), z.coerce.number().int().min(1).max(20)]),
   timezone: z.string().max(64),
   reminder_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  default_translation_id: z.union([z.literal(""), z.uuid()]).optional(),
 });
 
 export async function saveSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -87,6 +108,7 @@ export async function saveSettingsAction(_prev: FormState, formData: FormData): 
     daily_goal: String(formData.get("daily_goal") ?? ""),
     timezone: String(formData.get("timezone") ?? ""),
     reminder_time: String(formData.get("reminder_time") ?? "18:00"),
+    default_translation_id: formData.has("default_translation_id") ? String(formData.get("default_translation_id")) : undefined,
   });
   if (!parsed.success) return errorState("Please check your choices.");
   if (parsed.data.timezone && !isValidTimeZone(parsed.data.timezone)) return errorState("Choose a valid time zone.");
@@ -98,6 +120,8 @@ export async function saveSettingsAction(_prev: FormState, formData: FormData): 
       daily_goal: parsed.data.daily_goal === "" ? "" : String(parsed.data.daily_goal),
       timezone: parsed.data.timezone,
       reminder_time: parsed.data.reminder_time,
+      // Only when the form offered the choice; '' = not chosen.
+      ...(parsed.data.default_translation_id !== undefined ? { default_translation_id: parsed.data.default_translation_id } : {}),
       ignore_case: on("ignore_case"),
       ignore_punctuation: on("ignore_punctuation"),
       celebrations: on("celebrations"),

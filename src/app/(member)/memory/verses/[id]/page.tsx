@@ -46,6 +46,11 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
       />
       <MemoryNav current="verses" />
       {sp.updated ? <Alert tone="success" title="You're now practicing the updated text. Your earlier practice is kept with the earlier text." className="mb-6" /> : null}
+      {sp.translation ? (
+        <Alert tone="success" title={`You're now practicing this verse in ${c.passage.translation.name} (${c.passage.translation.code}).`} className="mb-6">
+          Your practice in the earlier version is kept with that text. Your default and your other verses didn&apos;t change.
+        </Alert>
+      ) : null}
       {c.update_available ? (
         <Alert tone="warning" title="This verse's text has been updated." className="mb-6">
           <p>
@@ -63,7 +68,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
         </Alert>
       ) : null}
       {!c.translation_available ? <Alert tone="info" title={`${c.passage.translation.code} is no longer offered, so this verse can't be practiced. Its history is kept.`} className="mb-6" /> : null}
-      {c.status === "superseded" ? <Alert tone="info" title="This is an earlier text of the verse. Its history is kept here; practice continues with the updated text." className="mb-6" /> : null}
+      {c.status === "superseded" ? <Alert tone="info" title="This is an earlier text of the verse. Its history is kept here; practice continues with the updated text or another version." className="mb-6" /> : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="space-y-6">
@@ -125,6 +130,29 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
             <p className="mt-3 text-meta text-text-secondary">Only you can see this.</p>
           </section>
 
+          <section aria-labelledby="version" className="rounded-card border border-border bg-surface p-4">
+            <SectionHeading id="version" as="h2">
+              Bible version
+            </SectionHeading>
+            <p className="font-semibold">
+              {c.passage.translation.name} ({c.passage.translation.code})
+            </p>
+            <p className="mt-1 text-meta text-text-secondary">
+              {c.assignment && !c.assignment.choice
+                ? `Assigned in ${c.assignment.translation.code}: this assignment is practiced in that version.`
+                : c.assignment?.own_translation
+                  ? `Assigned in ${c.assignment.translation.code}; you chose ${c.passage.translation.code} for yourself. The assignment is unchanged for everyone else.`
+                  : c.assignment?.choice
+                    ? `Assigned in ${c.assignment.translation.code}. You may practice it in another version.`
+                    : "Practice and checking always use exactly this wording."}
+            </p>
+            {active && c.can_change_translation ? (
+              <ButtonLink href={`/memory/verses/${c.id}/translation`} size="sm" variant="secondary" className="mt-3">
+                Change translation
+              </ButtonLink>
+            ) : null}
+          </section>
+
           {active && mine.length ? (
             <section aria-labelledby="add-to" className="rounded-card border border-border bg-surface p-4">
               <SectionHeading id="add-to" as="h2">
@@ -149,13 +177,13 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
           {c.earlier.length ? (
             <section aria-labelledby="earlier" className="rounded-card border border-border bg-surface p-4">
               <SectionHeading id="earlier" as="h2">
-                Other texts of this verse
+                Other texts and versions of this verse
               </SectionHeading>
               <ul className="space-y-1 text-meta">
                 {c.earlier.map((e) => (
                   <li key={e.id}>
                     <Link href={`/memory/verses/${e.id}`} className="font-semibold text-primary hover:underline">
-                      Text version {e.version}
+                      {e.translation} · text version {e.version}
                     </Link>{" "}
                     · {e.sessions} practice {e.sessions === 1 ? "activity" : "activities"} · {e.status === "active" ? "current" : e.status === "superseded" ? "earlier" : "removed"}
                   </li>
@@ -198,12 +226,13 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
         </SectionHeading>
         {c.history.length ? (
           <div className="overflow-x-auto rounded-card border border-border bg-surface">
-            <table className="w-full min-w-[40rem] text-left text-meta">
+            <table className="w-full min-w-[46rem] text-left text-meta">
               <caption className="sr-only">Practice history for {c.passage.label}</caption>
               <thead className="border-b border-border text-text-secondary">
                 <tr>
                   <th scope="col" className="px-3 py-2">Date</th>
                   <th scope="col" className="px-3 py-2">Activity</th>
+                  <th scope="col" className="px-3 py-2">Version</th>
                   <th scope="col" className="px-3 py-2">Result</th>
                   <th scope="col" className="px-3 py-2">Accuracy</th>
                   <th scope="col" className="px-3 py-2">Hints</th>
@@ -216,6 +245,10 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
                     <td className="px-3 py-2 whitespace-nowrap">{formatDay(h.date)}</td>
                     <td className="px-3 py-2">
                       {activityLabel(h.activity)} <span className="text-text-secondary">· {difficultyLabel(h.difficulty)}{h.segment ? ` · part ${h.segment}` : ""}</span>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {h.translation}
+                      {h.text_version > 1 ? <span className="text-text-secondary"> · text {h.text_version}</span> : null}
                     </td>
                     <td className="px-3 py-2">{QUALITY[h.quality]}</td>
                     <td className="px-3 py-2">{percent(h.accuracy) ?? "—"}</td>

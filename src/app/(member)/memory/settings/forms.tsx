@@ -1,19 +1,51 @@
 "use client";
 
 import { useActionState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { CheckboxField, SelectField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 import { DIFFICULTIES } from "@/lib/memory/format";
+import type { Translation } from "@/lib/bible/types";
 import type { PracticeSettings } from "@/lib/memory/types";
 import { deleteHistoryAction, saveSettingsAction } from "../actions";
 
-export function SettingsForm({ settings: s, timezones }: { settings: PracticeSettings; timezones: string[] }) {
+const SOURCE: Record<string, string> = { reading: "your Bible reading version", church: "the church's version" };
+
+export function SettingsForm({ settings: s, translations, timezones }: { settings: PracticeSettings; translations: Translation[]; timezones: string[] }) {
   const [state, action] = useActionState(saveSettingsAction, initialFormState);
+  const eff = s.effective_translation;
+  // Not chosen yet: show what new verses use now (the reading or church version).
+  const followLabel = eff && eff.source !== "memory" ? `Not chosen: use ${SOURCE[eff.source]} (${eff.code})` : "Not chosen: use my Bible reading version";
   return (
     <form action={action} className="space-y-8">
       <FormMessage state={state} />
+      <fieldset className="space-y-4">
+        <legend className="text-[1.125rem] font-semibold">Bible version</legend>
+        {translations.length ? (
+          <SelectField
+            label="Default memory verse translation"
+            name="default_translation_id"
+            defaultValue={s.default_translation_available ? (s.default_translation_id ?? "") : ""}
+            hint="Used for new memory verses. You can choose a different translation for each verse. Changing it doesn't change verses you've already added or your earlier results."
+          >
+            <option value="">{followLabel}</option>
+            {translations.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.code})
+              </option>
+            ))}
+          </SelectField>
+        ) : (
+          <p className="text-meta text-text-secondary">No Bible version is available for memory practice yet.</p>
+        )}
+        {!s.default_translation_available ? (
+          <Alert tone="warning" title="The version you chose is no longer offered for memory practice.">
+            New verses use {eff ? `${eff.name} (${eff.code})` : "a version you choose when adding them"} until you pick another. Verses you already have keep their version.
+          </Alert>
+        ) : null}
+      </fieldset>
       <fieldset className="space-y-4">
         <legend className="text-[1.125rem] font-semibold">Practice</legend>
         <SelectField label="Usual difficulty" name="difficulty" defaultValue={s.difficulty} hint={DIFFICULTIES.map((d) => `${d.label}: ${d.description}`).join(" ")}>

@@ -6,7 +6,7 @@ import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
-import type { PracticeSettings } from "@/lib/memory/types";
+import type { MemoryTranslations, PracticeSettings } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
 import { DeleteHistoryForm, SettingsForm } from "./forms";
 
@@ -15,7 +15,8 @@ export const metadata: Metadata = { title: "Practice settings" };
 export default async function SettingsPage() {
   await requireLearner("/memory/settings");
   const supabase = await requireClient();
-  const { data, error } = await supabase.rpc("memory_settings");
+  const [{ data, error }, tr] = await Promise.all([supabase.rpc("memory_settings"), supabase.rpc("memory_translations")]);
+  const translations = (tr.data as MemoryTranslations | null)?.items ?? [];
   const s = data as (PracticeSettings & { notifications: { in_app: boolean; email: string; push: boolean } | null }) | null;
   return (
     <>
@@ -26,7 +27,7 @@ export default async function SettingsPage() {
       ) : (
         <div className="space-y-8">
           <Card>
-            <SettingsForm settings={s} timezones={allTimeZones([s.effective_timezone])} />
+            <SettingsForm settings={s} translations={translations} timezones={allTimeZones([s.effective_timezone])} />
           </Card>
           <p className="text-meta text-text-secondary">
             Reminders arrive in the app{s.notifications?.email === "immediate" ? " and by email" : ""}
