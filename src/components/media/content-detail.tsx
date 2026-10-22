@@ -18,7 +18,7 @@ import { BookmarkButton, CompleteToggle } from "./toggles";
 
 const QUESTION_TITLE: Record<string, string> = { devotional: "Reflection questions", assignment: "Discussion questions" };
 
-function FileRow({ a }: { a: Attachment }) {
+export function FileRow({ a }: { a: Attachment }) {
   const ext = a.mime?.includes("presentation") ? "PowerPoint" : a.mime === "application/pdf" ? "PDF" : a.kind === "audio" ? "Audio" : "File";
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">

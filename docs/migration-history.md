@@ -228,3 +228,11 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Rehearsal (local, PostgreSQL 16):** on a database built from the earlier migrations with their history rows, the script applied and recorded the version; a rerun stopped at the preflight. Also checked through a local Supabase stack's REST API: anon is refused (`42501`), and a signed-in Google account can settle only its own alert.
 - **Hosted:** **not applied.** Apply it, with the owner's approval, before enabling Google or Apple sign-in on any environment.
 
+## Unified church reading page (2026-11-04)
+
+- **New (additive; no applied migration was edited):** `20261104000100_media_reading_plan`: `public.media_reading_plan(uuid)` (`SECURITY DEFINER`, read-only, granted to `authenticated` only; approved members, visible books only; completions and notes are the caller's own); the journal link-kind check also accepts `'book_assignment'`; `public.journal_entry_create` replaced with the same signature, grants, and body plus `'book_assignment'` (checked against item kind `'assignment'` and `media.item_visible`). No table, row, or existing grant changes. Anon baseline unchanged. See [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md#unified-reading-page-2026-11-04).
+- **Operator script:** `supabase/manual/2026-11-04-apply-reading-plan.sql`, one transaction, preflight requires `20261031000400` and refuses a second run, post-checks grants, `created_by = reading-plan`.
+- **Rehearsal (local, PostgreSQL 16, 2026-10-22):** on a database built from every earlier migration with their history rows, the script applied and recorded the version; a rerun stopped at the preflight.
+- **Order:** apply before or after deploying the app (the page degrades gracefully without it; assignment notes and per-assignment details need it).
+- **Hosted:** **not applied.** Apply it only with the owner's approval.
+

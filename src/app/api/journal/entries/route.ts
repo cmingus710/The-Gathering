@@ -8,7 +8,7 @@ const Body = z.object({
   title: z.string().max(200),
   body: z.string().max(100_000),
   link: z
-    .object({ kind: z.enum(["none", "passage", "assignment", "devotional", "lesson"]) })
+    .object({ kind: z.enum(["none", "passage", "assignment", "devotional", "lesson", "book", "book_assignment"]) })
     .catchall(z.union([z.string().max(500), z.number(), z.null()]))
     .nullable()
     .optional(),

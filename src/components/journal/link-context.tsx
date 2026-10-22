@@ -4,7 +4,10 @@ import Link from "next/link";
 export type EntryLink =
   | { kind: "passage"; label: string | null; translation_code: string | null; book: string; chapter: number; available: boolean }
   | { kind: "assignment"; available: boolean; day_id: string | null; label: string | null; plan_title: string | null; question: string | null; revision: number | null; changed_since: boolean; passages: Array<{ label: string }> | null }
-  | { kind: "devotional" | "lesson" | "book"; available: boolean; item_id: string | null; title: string | null };
+  | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null };
+
+const ITEM_HREF = { devotional: "/devotionals/", lesson: "/lessons/", book: "/reading/books/", book_assignment: "/reading/assignments/" } as const;
+const ITEM_NAME = { devotional: "devotional", lesson: "Sunday lesson", book: "church book", book_assignment: "church reading assignment" } as const;
 
 /**
  * What an entry is about. Linked teaching or plan days are named only while
@@ -59,12 +62,12 @@ export function LinkContext({ link }: { link: EntryLink | null }) {
       {link.available && link.item_id ? (
         <p>
           About{" "}
-          <Link href={link.kind === "book" ? `/reading/books/${link.item_id}` : `/${link.kind === "lesson" ? "lessons" : "devotionals"}/${link.item_id}`} className="font-semibold text-primary hover:underline">
-            {link.title}
+          <Link href={`${ITEM_HREF[link.kind]}${link.item_id}`} className="font-semibold text-primary hover:underline">
+            {link.kind === "book_assignment" ? `Reading assignment: ${link.title}` : link.title}
           </Link>
         </p>
       ) : (
-        <p>About a {link.kind === "lesson" ? "Sunday lesson" : link.kind === "book" ? "church book" : "devotional"} that&apos;s no longer available. Your note is kept.</p>
+        <p>About a {ITEM_NAME[link.kind]} that&apos;s no longer available. Your note is kept.</p>
       )}
     </div>
   );

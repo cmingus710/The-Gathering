@@ -5,8 +5,13 @@ export function coverPaths(items: Array<Pick<ItemCard, "cover">>, prefer: "small
   return items.flatMap((i) => (i.cover ? [prefer === "small" ? (i.cover.variant_path ?? i.cover.path) : i.cover.path] : []));
 }
 
+/** The unified church reading page for a book, optionally with one assignment selected. */
+export function readingHref(bookId: string, assignmentId?: string | null): string {
+  return assignmentId ? `/reading/books/${bookId}?assignment=${assignmentId}` : `/reading/books/${bookId}`;
+}
+
 /** Member-facing routes for each kind of content. */
-export function itemHref(item: Pick<ItemCard, "id" | "kind">): string {
+export function itemHref(item: Pick<ItemCard, "id" | "kind"> & { book?: Pick<NonNullable<ItemCard["book"]>, "id"> | null }): string {
   switch (item.kind) {
     case "devotional":
       return `/devotionals/${item.id}`;
@@ -17,7 +22,9 @@ export function itemHref(item: Pick<ItemCard, "id" | "kind">): string {
     case "book":
       return `/reading/books/${item.id}`;
     case "assignment":
-      return `/reading/assignments/${item.id}`;
+      // The book's reading page, with this assignment selected; the old
+      // address redirects there too (and is kept when the book isn't visible).
+      return item.book ? readingHref(item.book.id, item.id) : `/reading/assignments/${item.id}`;
     case "playlist":
       return `/music/${item.id}`;
   }
