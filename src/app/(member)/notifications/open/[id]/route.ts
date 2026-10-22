@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safeNotificationUrl } from "@/lib/community/notification-url";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,5 @@ export async function GET(request: Request, ctx: RouteContext<"/notifications/op
   if (!user.user) return go(`/sign-in?next=${encodeURIComponent(`/notifications/open/${id}`)}`);
   const { data, error } = await supabase.rpc("community_notification_open", { p_id: id });
   if (error) return go("/account-status");
-  const url = typeof data === "string" && /^\/[A-Za-z0-9/_-]*$/.test(data) && !data.startsWith("//") ? data : null;
-  return go(url ?? "/notifications?gone=1");
+  return go(safeNotificationUrl(data) ?? "/notifications?gone=1");
 }
