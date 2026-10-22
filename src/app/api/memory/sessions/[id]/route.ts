@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fetchMemoryText } from "@/lib/memory/provider";
 import { dbError, json, readJson, signedInClient } from "@/lib/memory/route";
 
 export const dynamic = "force-dynamic";
@@ -43,8 +44,21 @@ export async function POST(request: Request, ctx: RouteContext<"/api/memory/sess
   const args = action === "reveal" ? { p_session: id } : { p_session: id, p: payload };
   const { data, error } = await caller.supabase.rpc(fn, args);
   if (error) return dbError(error);
-  const r = data as { status?: string };
+  const r = data as { status?: string; provider?: { translation_id: string; book: string; sc: number; sv: number; ec: number; ev: number; fingerprint: string } };
   if (r?.status === "expired") return json(410, { error: "This activity has expired. Start it again." });
   if (r?.status === "conflict") return json(409, { error: "This verse changed or was removed since you started, so nothing was recorded." });
+  if (action === "reveal" && r?.provider) {
+    // A licensed version: fetched now (its cache only while unexpired), shown
+    // unchanged, and only if it's still the wording this activity started on.
+    const p = r.provider;
+    const text = await fetchMemoryText(caller.supabase, p.translation_id, { book: p.book, sc: p.sc, sv: p.sv, ec: p.ec, ev: p.ev });
+    if (text.status !== "ok") return json(503, { error: text.status === "stored" ? "The verse couldn't be shown." : text.message });
+    if (text.payload.fingerprint !== p.fingerprint) {
+      return json(409, { error: "The wording of this passage changed since you added it. Open the verse to start the new wording; nothing was recorded." });
+    }
+    const { provider: _drop, ...rest } = r;
+    void _drop;
+    return json(200, { ...rest, text: null, verses: text.verses, copyright: text.copyright, fums_id: text.fumsId });
+  }
   return json(200, data);
 }

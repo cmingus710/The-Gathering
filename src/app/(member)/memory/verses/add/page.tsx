@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { FumsTracker } from "@/components/bible/fums";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
-import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions, versionLabel } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { requireLearner } from "@/lib/auth/viewer";
 import { BOOK_LIST, chapterCount, isBookCode } from "@/lib/bible/books";
 import type { Translation, Verse } from "@/lib/bible/types";
 import type { Item } from "@/lib/memory/types";
+import { fetchMemoryText } from "@/lib/memory/provider";
 import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
 import { AddPassageForm } from "./add-form";
@@ -20,7 +22,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 const int = (v: string) => (/^\d{1,3}$/.test(v) ? Number(v) : null);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Preview = { ok: boolean; problem?: string; label?: string; translation?: Translation; verses?: Verse[] };
+type Preview = { ok: boolean; problem?: string; label?: string; translation?: Translation; verses?: Verse[] ; copyright?: string | null; fumsId?: string | null };
 
 /**
  * Choose a passage from the approved Bible source, see its exact text, then
@@ -63,6 +65,15 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
   if (asked && version && isBookCode(book) && chapter && from && to && endChapter) {
     const { data, error } = await supabase.rpc("memory_passage_preview", { p_translation: version, p: { book, sc: chapter, sv: from, ec: endChapter, ev: to } });
     preview = error ? { ok: false, problem: error.code === "22023" ? error.message : "That passage couldn't be checked right now." } : (data as Preview);
+    // A licensed version: its text is fetched here and shown unchanged; the
+    // database never receives it.
+    if (preview.ok && preview.translation?.source_kind === "api") {
+      const text = await fetchMemoryText(supabase, version, { book, sc: chapter, sv: from, ec: endChapter, ev: to });
+      preview =
+        text.status === "ok"
+          ? { ...preview, verses: text.verses, copyright: text.copyright, fumsId: text.fumsId }
+          : { ok: false, problem: text.status === "stored" ? "That passage couldn't be checked right now." : text.message };
+    }
   }
   return (
     <>
@@ -107,7 +118,7 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
                 >
                   {stored.map((x) => (
                     <option key={x.id} value={x.id}>
-                      {x.name} ({x.code})
+                      {versionLabel(x)}
                     </option>
                   ))}
                   <UnavailableVersionOptions items={versions.unavailable} />
@@ -145,11 +156,16 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
                 {preview.label} <span className="text-text-secondary">({preview.translation.code})</span>
               </h2>
               <ScriptureText verses={preview.verses} translation={preview.translation} label={`${preview.label} (${preview.translation.code})`} />
-              <Attribution translation={preview.translation} />
-              <p className="mt-3 text-meta text-text-secondary">You&apos;ll practice and be checked against exactly this wording in {preview.translation.code}.</p>
+              <Attribution translation={preview.translation} extra={preview.copyright} />
+              {preview.fumsId ? <FumsTracker ids={[preview.fumsId]} /> : null}
+              <p className="mt-3 text-meta text-text-secondary">
+                {preview.translation.source_kind === "api"
+                  ? `${preview.translation.code} is licensed: it's shown exactly as published and isn't stored here. You'll practice it with flashcards and self-check.`
+                  : `You'll practice and be checked against exactly this wording in ${preview.translation.code}.`}
+              </p>
               <div className="mt-4">
                 {item ? (
-                  <AddPassageForm itemId={item.id} translation={version} />
+                  <AddPassageForm itemId={item.id} translation={version} book={book} chapter={chapter!} from={from!} endChapter={endChapter!} to={to!} />
                 ) : (
                   <AddPassageForm translation={version} book={book} chapter={chapter!} from={from!} to={to!} />
                 )}

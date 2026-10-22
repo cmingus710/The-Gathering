@@ -29,7 +29,7 @@ export default async function PracticePage({ params, searchParams }: PageProps<"
     <>
       <BackLink route="/memory/practice/[id]" params={{ id: c.id }} label={c.passage.label} />
       <PageHeader title="Practice" description={`${c.passage.label} (${c.passage.translation.code}). Take your time; nothing here is timed.`} />
-      {c.status !== "active" || !c.translation_available ? (
+      {c.status !== "active" || !c.translation_available || !c.modes.length ? (
         <Alert tone="info" title="This verse can't be practiced right now." />
       ) : (
         <PracticeRunner
@@ -38,9 +38,11 @@ export default async function PracticePage({ params, searchParams }: PageProps<"
             label: c.passage.label,
             code: c.passage.translation.code,
             wordCount: c.passage.word_count,
-            segments: c.passage.segments,
-            shortSegments: c.passage.short_segments,
+            segments: c.passage.segments ?? [],
+            shortSegments: c.passage.short_segments ?? [],
             hint: c.item?.hint ?? null,
+            modes: c.modes,
+            provider: c.provider,
           }}
           settings={c.settings}
           today={today}

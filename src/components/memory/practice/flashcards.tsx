@@ -5,7 +5,8 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/memory/types";
-import { failureMessage, sessionReveal } from "./api";
+import { failureMessage, sessionReveal, type RevealResponse } from "./api";
+import { ProviderText } from "./provider-text";
 import { ConfidencePicker } from "./confidence";
 
 /**
@@ -16,6 +17,7 @@ import { ConfidencePicker } from "./confidence";
 export function Flashcards({ session, kids, busy, onSubmit }: { session: Session; kids: boolean; busy: boolean; onSubmit: (p: Record<string, unknown>) => void }) {
   const toRef = session.setup.direction === "text_to_ref";
   const [back, setBack] = useState<string | null>(null);
+  const [licensed, setLicensed] = useState<RevealResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const backRef = useRef<HTMLDivElement>(null);
@@ -26,6 +28,7 @@ export function Flashcards({ session, kids, busy, onSubmit }: { session: Session
     setLoading(false);
     if (r.kind !== "ok") return setError(failureMessage(r));
     setBack(toRef ? r.data.reference : (r.data.text ?? ""));
+    if (r.data.verses) setLicensed(r.data);
     requestAnimationFrame(() => backRef.current?.focus());
   };
   return (
@@ -45,7 +48,11 @@ export function Flashcards({ session, kids, busy, onSubmit }: { session: Session
         <>
           <div ref={backRef} tabIndex={-1} className="rounded-card border border-primary/50 bg-primary-soft/40 p-5 outline-none focus-visible:outline-3 focus-visible:outline-primary sm:p-8">
             <p className="mb-2 text-meta font-semibold uppercase tracking-wide text-text-secondary">Back</p>
-            <p className={toRef ? "font-display text-display font-semibold" : "memory-text"}>{back}</p>
+            {licensed?.verses ? (
+              <ProviderText verses={licensed.verses} copyright={licensed.copyright ?? null} fumsId={licensed.fums_id ?? null} session={session} label={session.reference} />
+            ) : (
+              <p className={toRef ? "font-display text-display font-semibold" : "memory-text"}>{back}</p>
+            )}
           </div>
           <ConfidencePicker kids={kids} busy={busy} onChoose={(c) => onSubmit({ confidence: c })} />
         </>

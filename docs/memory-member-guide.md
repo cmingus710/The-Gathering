@@ -24,7 +24,12 @@ The home page shows a small memory card only while a verse is assigned.
 ## Bible versions
 
 - **Default memory verse translation** (Practice settings): used for new memory verses; you can choose a different translation for each verse. It's saved to your account, so every device uses it. Until you choose one it follows your Bible reading version, then the church's version. Changing it never changes verses you already have or your earlier results.
-- **Versions that can't be memorized**: licensed versions the church reads from an outside service (for example NIV, NASB, AMP through API.Bible) appear greyed out under *Not available for memory practice*. Practice is checked against a stored copy of the exact wording, and that licensed text isn't stored here.
+- **Licensed versions** (for example NIV, NASB, AMP through API.Bible) are read from an outside service and never stored here. A licensed version appears greyed out under *Not available for memory practice* until the church confirms its terms allow memory practice. Once confirmed, it's marked *licensed, flashcards and self-check only*:
+  - The verse is always shown exactly as published, with its copyright.
+  - Practice uses flashcards (reference first, then the verse) and self-check.
+  - Activities that hide or rearrange words aren't offered.
+  - If the service is down, practice says the version is temporarily unavailable; another version is never used instead.
+  - If the publisher revises the wording, the verse says so and pauses practice until you choose **Practice the new wording**. Your earlier results stay with the earlier wording.
 - **Per verse**: the version selector on *Add a verse* starts at your default; the preview shows exactly the wording you'll practice. If a version doesn't have that passage, you're told so and nothing is added; another version is never used in its place.
 - **Assigned verses** say which version they use. *Practiced in WEB, as assigned* means the church requires that version. *You may practice it in another version* means **Start learning it: choose a version** lets you pick yours; the assignment stays the same for everyone else.
 - **Change translation** (on a verse's page) shows the current and new wording side by side, any verses the two versions include or number differently, and what happens to your practice before you confirm. The new wording is practiced on its own schedule (practice of one wording isn't practice of another). Your earlier practice stays with the earlier text, badges stay, and switching back brings that progress back. Changing translation never adds practice to a group challenge.

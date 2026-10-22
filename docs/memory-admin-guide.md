@@ -38,6 +38,10 @@ The **current memory verse** (Memory home, the home card, reminders) is any vers
 
 **Members may practice in their own Bible version** (checkbox): off by default, which keeps the collection's version required (how every existing collection works). On, each member may add an assigned verse in another stored version, or change it later; the collection, its verses, and other members are never affected. A published collection can turn it on but not off (members may already be practicing in their own version); duplicate the collection to require one version again. Group challenge totals count practice in any version only when this is on, and each practice activity counts once.
 
+### Licensed versions (API.Bible)
+
+Bible source managers decide, per licensed version, whether members may memorize it: **Administration → Bible sources → (version) → Memory verses**. Record what you checked (dashboard, license, publisher terms) and tick *Offer … for memory verses, shown unchanged*. Only unchanged-text practice can be enabled: the verse page, flashcards, and self-check. The text is never stored. Church and group collections still use stored-text versions; members can choose a licensed version for an assigned verse only when the collection allows a choice. Details, the per-mode assessment, and the open questions for API.Bible: [memory-provider-practice.md](memory-provider-practice.md).
+
 ### After publishing
 
 - Presentation changes (title, description, goal, order, cover, verse titles, notes, hints, dates) need a publisher; audience, Bible version, and kind are fixed. *Duplicate* to make a new version (a new draft captured from the source's current text; history stays with the original).

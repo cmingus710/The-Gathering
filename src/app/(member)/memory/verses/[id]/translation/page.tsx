@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FumsTracker } from "@/components/bible/fums";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { PassageText } from "@/components/memory/passage";
-import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions, versionLabel } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { requireLearner } from "@/lib/auth/viewer";
 import type { Translation, Verse } from "@/lib/bible/types";
 import { STAGES } from "@/lib/memory/format";
 import type { CardDetail, Stage } from "@/lib/memory/types";
+import { fetchMemoryText, verseDifferences, type MemoryText } from "@/lib/memory/provider";
 import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
 import { ChangeTranslationForm } from "./form";
@@ -37,6 +39,8 @@ type Preview =
       only_current: string[];
       only_new: string[];
       effects: Effects;
+      copyright?: string | null;
+      fumsId?: string | null;
     };
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -57,11 +61,26 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
   const current = c.passage.translation;
   const options = tr.items.filter((t) => t.id !== current.id);
   const t = options.some((x) => x.id === one(sp.t)) ? one(sp.t) : "";
+  const p = c.passage;
+  const ref = { book: p.book, sc: p.start_chapter, sv: p.start_verse, ec: p.end_chapter, ev: p.end_verse };
   let preview: Preview | null = null;
   if (t && c.can_change_translation) {
-    const res = await supabase.rpc("memory_card_translation_preview", { p_card: c.id, p_translation: t });
-    preview = res.error ? { ok: false, problem: res.error.code === "22023" ? res.error.message : "That version couldn't be checked right now." } : (res.data as Preview);
+    // A licensed target: its text is fetched here (never stored) and its
+    // fingerprint lets the database find the member's earlier progress.
+    const target = options.find((x) => x.id === t)!;
+    const licensed = target.source_kind === "api" ? await fetchMemoryText(supabase, t, ref) : null;
+    if (licensed && licensed.status !== "ok") {
+      preview = { ok: false, problem: licensed.status === "stored" ? "That version couldn't be checked right now." : licensed.message };
+    } else {
+      const res = await supabase.rpc("memory_card_translation_preview", { p_card: c.id, p_translation: t, p_fingerprint: licensed?.payload.fingerprint ?? null });
+      preview = res.error ? { ok: false, problem: res.error.code === "22023" ? res.error.message : "That version couldn't be checked right now." } : (res.data as Preview);
+      if (preview.ok && licensed?.status === "ok") {
+        preview = { ...preview, verses: licensed.verses, copyright: licensed.copyright, fumsId: licensed.fumsId, ...verseDifferences(p.verse_numbers ?? [], licensed.payload.verses) };
+      }
+    }
   }
+  // The current wording, when it is itself licensed (fetched, not stored).
+  const currentText: MemoryText | null = c.provider && preview?.ok ? await fetchMemoryText(supabase, current.id, ref) : null;
 
   return (
     <>
@@ -93,7 +112,7 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
                 </option>
                 {options.map((x) => (
                   <option key={x.id} value={x.id}>
-                    {x.name} ({x.code})
+                    {versionLabel(x)}
                   </option>
                 ))}
                 <UnavailableVersionOptions items={tr.unavailable} />
@@ -115,14 +134,25 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
                   <SectionHeading id="now" as="h2">
                     Now: {current.code}
                   </SectionHeading>
-                  <PassageText passage={c.passage} />
+                  {!c.provider ? (
+                    <PassageText passage={c.passage} />
+                  ) : currentText?.status === "ok" ? (
+                    <>
+                      <ScriptureText verses={currentText.verses} translation={currentText.translation} label={`${p.label} (${current.code})`} />
+                      <Attribution translation={currentText.translation} extra={currentText.copyright} />
+                      {currentText.fumsId ? <FumsTracker ids={[currentText.fumsId]} /> : null}
+                    </>
+                  ) : (
+                    <p className="text-text-secondary">{currentText && currentText.status !== "stored" ? currentText.message : `${current.code} text isn't available right now.`}</p>
+                  )}
                 </section>
                 <section aria-labelledby="new" className="rounded-card border border-primary bg-surface p-4">
                   <SectionHeading id="new" as="h2">
                     New: {preview.translation.code}
                   </SectionHeading>
                   <ScriptureText verses={preview.verses} translation={preview.translation} label={`${preview.label} (${preview.translation.code})`} />
-                  <Attribution translation={preview.translation} />
+                  <Attribution translation={preview.translation} extra={preview.copyright} />
+                  {preview.fumsId ? <FumsTracker ids={[preview.fumsId]} /> : null}
                 </section>
               </div>
               {preview.only_current.length || preview.only_new.length ? (
@@ -147,6 +177,12 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
                     Your {current.code} practice ({STAGES[preview.effects.stage].label.toLowerCase()}, {plural(preview.effects.sessions, "practice activity", "practice activities")}
                     {preview.effects.review_ready ? ", review-ready" : ""}) is kept with the {current.code} text under &ldquo;Removed and earlier texts&rdquo;. You can switch back to it later.
                   </li>
+                  {preview.translation.source_kind === "api" ? (
+                    <li>
+                      {preview.translation.code} is licensed: its text is shown exactly as published and isn&apos;t stored here, so you&apos;ll practice it with flashcards and
+                      self-check only.
+                    </li>
+                  ) : null}
                   <li>Badges you&apos;ve earned stay. Changing translation doesn&apos;t add practice to any group challenge.</li>
                   {preview.effects.leaves_collection ? (
                     <li>
@@ -155,7 +191,7 @@ export default async function ChangeTranslationPage({ params, searchParams }: Pa
                   ) : null}
                 </ul>
                 <div className="mt-4">
-                  <ChangeTranslationForm id={c.id} translation={preview.translation.id} code={preview.translation.code} />
+                  <ChangeTranslationForm id={c.id} translation={preview.translation.id} code={preview.translation.code} passage={p} />
                 </div>
               </section>
             </>
