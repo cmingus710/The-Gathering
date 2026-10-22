@@ -234,5 +234,5 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script:** `supabase/manual/2026-11-04-apply-reading-plan.sql`, one transaction, preflight requires `20261031000400` and refuses a second run, post-checks grants, `created_by = reading-plan`.
 - **Rehearsal (local, PostgreSQL 16, 2026-10-22):** on a database built from every earlier migration with their history rows, the script applied and recorded the version; a rerun stopped at the preflight.
 - **Order:** apply before or after deploying the app (the page degrades gracefully without it; assignment notes and per-assignment details need it).
-- **Hosted:** **not applied.** Apply it only with the owner's approval.
+- **Hosted (2026-10-22):** the owner ran the operator script in the SQL editor. Read-only check afterwards: `20261104000100` recorded (`created_by = reading-plan`); `public.media_reading_plan(uuid)` present, executable by `authenticated` and not by `anon`; `entries_link_kind_check` accepts `book_assignment`. The production deploy of merge `987cae1` was ready before the script ran (it used the fallback until then).
 
