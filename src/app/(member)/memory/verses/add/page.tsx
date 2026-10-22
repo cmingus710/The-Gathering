@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
+import { UNAVAILABLE_NOTE, UnavailableVersionOptions } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
@@ -8,7 +9,8 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
 import { BOOK_LIST, chapterCount, isBookCode } from "@/lib/bible/books";
 import type { Translation, Verse } from "@/lib/bible/types";
-import type { Item, MemoryTranslations } from "@/lib/memory/types";
+import type { Item } from "@/lib/memory/types";
+import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
 import { AddPassageForm } from "./add-form";
 
@@ -37,11 +39,11 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
   const supabase = await requireClient();
   const itemId = UUID.test(one(sp.item)) ? one(sp.item) : null;
   const collectionId = UUID.test(one(sp.collection)) ? one(sp.collection) : null;
-  const [{ data: tData }, col] = await Promise.all([
-    supabase.rpc("memory_translations"),
+  const [tData, col] = await Promise.all([
+    loadMemoryVersions(supabase),
     itemId && collectionId ? supabase.rpc("memory_collection", { p_id: collectionId }) : Promise.resolve(null),
   ]);
-  const versions = (tData as MemoryTranslations | null) ?? { effective_id: null, items: [] };
+  const versions = tData;
   const stored = versions.items;
   const item = itemId ? ((col?.data as { items: Item[]; translation_choice: boolean } | null)?.items ?? []).find((i) => i.id === itemId) ?? null : null;
   const assignedIn = item ? item.passage.translation : null;
@@ -101,13 +103,14 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
                   label="Bible version"
                   name="t"
                   defaultValue={t}
-                  hint={t === versions.effective_id ? "Your default memory verse translation. Change it here for this verse only." : "For this verse only. Your default stays the same."}
+                  hint={`${t === versions.effective_id ? "Your default memory verse translation. Change it here for this verse only." : "For this verse only. Your default stays the same."}${versions.unavailable.length ? ` ${UNAVAILABLE_NOTE}` : ""}`}
                 >
                   {stored.map((x) => (
                     <option key={x.id} value={x.id}>
                       {x.name} ({x.code})
                     </option>
                   ))}
+                  <UnavailableVersionOptions items={versions.unavailable} />
                 </SelectField>
                 {!item ? (
                   <>
