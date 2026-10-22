@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allTimeZones } from "@/app/admin/events/series";
+import { EnrollmentStatus } from "@/components/bible/enrollment-status";
 import { ProgressSummary } from "@/components/bible/progress";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +105,25 @@ export default async function PlanPage({ params }: PageProps<"/bible/plans/[id]"
         </div>
       </header>
 
+      <EnrollmentStatus
+        planId={plan.id}
+        enrollment={e}
+        joinable={plan.status === "published"}
+        className="mb-6"
+        joinForm={
+          <JoinForm
+            planId={plan.id}
+            mode={plan.mode}
+            started={started}
+            today={plan.today}
+            startDate={e?.start_date ?? null}
+            timezone={e?.timezone ?? plan.member_timezone}
+            timezones={allTimeZones([e?.timezone ?? plan.member_timezone])}
+            rejoin={!!e}
+          />
+        }
+      />
+
       {active && plan.progress ? (
         <Card className="mb-6 space-y-4">
           {plan.today_day ? (
@@ -128,12 +148,6 @@ export default async function PlanPage({ params }: PageProps<"/bible/plans/[id]"
               Catch up
             </ButtonLink>
           ) : null}
-        </Card>
-      ) : plan.status === "published" ? (
-        <Card className="mb-6">
-          <SectionHeading as="h2">{e ? "Rejoin this plan" : "Join this plan"}</SectionHeading>
-          {e ? <p className="mb-3 text-meta text-text-secondary">What you read before is still here.</p> : null}
-          <JoinForm planId={plan.id} mode={plan.mode} started={started} today={plan.today} timezone={plan.member_timezone} timezones={allTimeZones([plan.member_timezone])} />
         </Card>
       ) : null}
 
@@ -214,7 +228,7 @@ export default async function PlanPage({ params }: PageProps<"/bible/plans/[id]"
               </Card>
             </>
           ) : null}
-          <LeaveControls enrollmentId={e.id} left={!active} />
+          <LeaveControls enrollmentId={e.id} />
         </section>
       ) : null}
     </>

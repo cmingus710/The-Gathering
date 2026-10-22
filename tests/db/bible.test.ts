@@ -412,11 +412,30 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       expect(d).toBe("2027-03-14");
     });
 
+    it("previews a plan and its readings without joining", async () => {
+      const m3Rows = () => db.raw<{ n: string }>("select count(*)::text as n from bible.enrollments where plan_id = $1 and profile_id = $2", [personal, m3]);
+      const plan = await rpc<Json>(as(m3), "bible_plan", [personal]);
+      expect(plan.enrollment).toBeNull();
+      expect((plan.day_list as Json[]).length).toBe(5);
+      const d = await rpc<Json>(as(m3), "bible_day", [days[0].id]);
+      expect(d).toMatchObject({ enrollment: null, completed: false });
+      expect((d.passages as Json[]).length).toBe(1);
+      expect((await m3Rows())[0].n).toBe("0");
+    });
+
     it("leaves a plan without losing history, rejoins, and deletes only on confirmation", async () => {
-      await rpc(as(m1), "bible_plan_leave", [enrollment]);
+      await rpc(as(m1), "bible_enrollment_update", [enrollment, j({ reminders: true })]);
+      const left = await rpc<Json>(as(m1), "bible_plan_leave", [enrollment]);
+      expect(left).toMatchObject({ status: "left", reminders: false, is_primary: false });
+      // A left enrollment is still reported (so the page offers "Rejoin"), on the plan and on each day.
+      expect(((await rpc<Json>(as(m1), "bible_plan", [personal])).enrollment as Json).status).toBe("left");
+      expect(((await rpc<Json>(as(m1), "bible_day", [days[0].id])).enrollment as Json).status).toBe("left");
+      await fails(as(m1), "bible_day_complete", [days[1].id, true], /Join this plan/);
       const hub = await rpc<Json>(as(m1), "bible_hub");
       expect((hub.history as Json[]).map((h) => (h.plan as Json).id)).toContain(personal);
-      await rpc(as(m1), "bible_plan_join", [personal, await shift(-3), tz, true]);
+      const back = await rpc<Json>(as(m1), "bible_plan_join", [personal, await shift(-3), tz, true]);
+      // Same enrollment, history kept, and reminders stay off until turned on again.
+      expect(back).toMatchObject({ id: enrollment, status: "active", reminders: false });
       expect(((await rpc<Json>(as(m1), "bible_plan", [personal])).progress as Json).completed).toBe(1);
       await fails(as(m1), "bible_enrollment_delete", [enrollment, "yes"], /Confirm/);
       await fails(as(m3), "bible_enrollment_delete", [enrollment, "delete"], /not found/);
