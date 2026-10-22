@@ -43,6 +43,8 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
   const licensed: MemoryText | null =
     c.provider && active ? await fetchMemoryText(supabase, p.translation.id, { book: p.book, sc: p.start_chapter, sv: p.start_verse, ec: p.end_chapter, ev: p.end_verse }) : null;
   const wordingChanged = licensed?.status === "ok" && licensed.payload.fingerprint !== p.fingerprint;
+  // Practice can't start while a licensed text can't be fetched (or changed).
+  const practiceBlocked = wordingChanged || (c.provider && licensed?.status !== "ok");
   const modes = ACTIVITIES.filter((a) => c.modes.includes(a.key));
 
   return (
@@ -126,7 +128,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
               ) : null}
             </aside>
           ) : null}
-          {active && c.translation_available && modes.length && !wordingChanged ? (
+          {active && c.translation_available && modes.length && !practiceBlocked ? (
             <section aria-labelledby="practice">
               <SectionHeading id="practice">Practice</SectionHeading>
               {c.provider ? (
@@ -310,7 +312,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
           <p className="text-text-secondary">No practice yet.</p>
         )}
       </section>
-      {active && c.translation_available && modes.length && !wordingChanged ? (
+      {active && c.translation_available && modes.length && !practiceBlocked ? (
         <div className="mt-6">
           <ButtonLink href={`/memory/practice/${c.id}`}>Practice now</ButtonLink>
         </div>
