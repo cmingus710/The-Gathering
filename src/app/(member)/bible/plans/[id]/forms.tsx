@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { deleteHistoryAction, joinPlanAction, leavePlanAction, updateEnrollmentAction } from "@/app/(member)/bible/actions";
+import { deleteHistoryAction, joinPlanAction, updateEnrollmentAction } from "@/app/(member)/bible/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CheckboxField, SelectField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -13,15 +13,20 @@ export function JoinForm({
   mode,
   started,
   today,
+  startDate,
   timezone,
   timezones,
+  rejoin,
 }: {
   planId: string;
   mode: "calendar" | "personal";
   started: boolean;
   today: string;
+  /** The earlier start date when rejoining, so "today" stays where it was. */
+  startDate: string | null;
   timezone: string;
   timezones: string[];
+  rejoin: boolean;
 }) {
   const [state, action] = useActionState(joinPlanAction, initialFormState);
   return (
@@ -30,7 +35,7 @@ export function JoinForm({
       <input type="hidden" name="plan_id" value={planId} />
       {mode === "personal" ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField label="Start date" name="start_date" type="date" defaultValue={today} hint="Day 1 is this date." required error={state.fieldErrors?.start_date} />
+          <TextField label="Start date" name="start_date" type="date" defaultValue={startDate ?? today} hint={rejoin && startDate ? "Day 1 is this date. It's the date you started before; change it to start over from a new day." : "Day 1 is this date."} required error={state.fieldErrors?.start_date} />
           <SelectField label="Your time zone" name="timezone" defaultValue={timezone} hint="“Today” follows this time zone.">
             {timezones.map((z) => (
               <option key={z} value={z}>
@@ -56,7 +61,7 @@ export function JoinForm({
           </label>
         </fieldset>
       ) : null}
-      <SubmitButton pendingText="Joining…">Join this plan</SubmitButton>
+      <SubmitButton pendingText="Joining…">{rejoin ? "Rejoin plan" : "Join plan"}</SubmitButton>
     </form>
   );
 }
@@ -157,14 +162,10 @@ export function EnrollmentOptions({
   );
 }
 
-export function LeaveControls({ enrollmentId, left }: { enrollmentId: string; left: boolean }) {
+/** Leaving lives in the enrollment status at the top of the page. */
+export function LeaveControls({ enrollmentId }: { enrollmentId: string }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {left ? null : (
-        <ConfirmDialog trigger="Leave this plan" title="Leave this plan?" confirmLabel="Leave plan" formAction={leavePlanAction} hidden={{ id: enrollmentId }}>
-          Reminders stop. What you&apos;ve read and your journal entries are kept, and you can rejoin later.
-        </ConfirmDialog>
-      )}
       <ConfirmDialog trigger="Delete my history" title="Delete your history for this plan?" confirmLabel="Delete history" formAction={deleteHistoryAction} hidden={{ id: enrollmentId }}>
         This removes which readings you marked as read and your settings for this plan. It can&apos;t be undone. Journal entries are kept (delete them in My Journal).
       </ConfirmDialog>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookmarkButton } from "@/components/bible/bookmark-button";
 import { CompleteToggle } from "@/components/bible/complete-toggle";
+import { EnrollmentStatus } from "@/components/bible/enrollment-status";
 import { FumsTracker } from "@/components/bible/fums";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { CommunityText } from "@/components/community/community-text";
@@ -121,6 +122,8 @@ export default async function DayPage({ params, searchParams }: PageProps<"/bibl
         </div>
       </header>
 
+      <EnrollmentStatus planId={day.plan.id} enrollment={day.enrollment} joinable={day.plan.status === "published"} className="mb-6" />
+
       {day.completed_snapshot ? (
         <Alert tone="info" title="This reading changed after you read it" className="mb-6">
           You read {day.completed_snapshot.passages.map((p) => p.label).join("; ")}. Your progress counts it as read.
@@ -199,13 +202,6 @@ export default async function DayPage({ params, searchParams }: PageProps<"/bibl
         <div className="my-8">
           <CompleteToggle dayId={day.id} completed={day.completed} />
         </div>
-      ) : !active ? (
-        <p className="my-6 text-meta text-text-secondary">
-          <Link href={`/bible/plans/${day.plan.id}`} className="font-semibold text-primary hover:underline">
-            Join this plan
-          </Link>{" "}
-          to keep track of what you&apos;ve read.
-        </p>
       ) : null}
 
       {day.questions.length ? (
