@@ -39,11 +39,11 @@ test.beforeAll(async () => {
   // Earlier runs' posts would push these off the feed's first page.
   await sql("delete from community.notifications where thread_id in (select id from community.threads where title like '[TEST] Back %')");
   await sql("delete from community.threads where title like '[TEST] Back %'");
-  // Enough posts that the feed scrolls; the member's own post is near the bottom.
+  // The newest posts in the feed, enough that it scrolls; the member's own post is lower down.
   for (let i = 0; i < 12; i++) {
     const [{ id }] = await sql<{ id: string }>(
-      "insert into community.threads (category_id, author_id, title, body, created_at, last_activity_at) values ($1, $2, $3, 'Synthetic body for the back link walkthrough.', now() - make_interval(mins => $4), now() - make_interval(mins => $4)) returning id",
-      [category, i === 6 ? member : admin, `[TEST] Back ${stamp} #${i}`, 30 + i],
+      "insert into community.threads (category_id, author_id, title, body, created_at, last_activity_at) values ($1, $2, $3, 'Synthetic body for the back link walkthrough.', now() - make_interval(secs => $4), now() - make_interval(secs => $4)) returning id",
+      [category, i === 6 ? member : admin, `[TEST] Back ${stamp} #${i}`, 1 + i],
     );
     if (i === 6) thread = id;
   }
