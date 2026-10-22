@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ThreadComposer } from "@/components/community/composer";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -20,9 +19,7 @@ export default async function EditThreadPage({ params }: PageProps<"/community/t
   if (!thread || !thread.mine || thread.status !== "visible") notFound();
   return (
     <>
-      <Link href={`/community/t/${id}`} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Back to the discussion
-      </Link>
+      <BackLink route="/community/t/[id]/edit" params={{ id }} />
       <PageHeader title="Edit discussion" description="Edits replace the text; the post shows that it was edited." />
       {thread.locked ? (
         <Alert tone="info" title="This discussion is locked, so it can't be edited." />

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { EmbedPlayer } from "@/components/media/embed-player";
 import { EpisodeList, ExternalShowNote, ShowArt, showArtPaths } from "@/components/media/podcast";
 import { BookmarkButton } from "@/components/media/toggles";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, SectionHeading } from "@/components/ui/card";
 import { parseProviderRefString, providerEmbed, safeHttpsUrl } from "@/lib/media/embeds";
 import { coverPaths, isUuid } from "@/lib/media/format";
@@ -37,11 +38,7 @@ export default async function ShowPage({ params, searchParams }: PageProps<"/pod
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/podcasts" className="font-semibold text-primary hover:underline">
-          All podcasts
-        </Link>
-      </p>
+      <BackLink route="/podcasts/shows/[id]" />
       <header className="mb-6 flex flex-wrap gap-5">
         <ShowArt show={show} urls={urls} className="size-32 sm:size-40" />
         <div className="min-w-0 flex-1 space-y-2">

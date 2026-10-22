@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { requireLearner } from "@/lib/auth/viewer";
@@ -33,11 +34,7 @@ export default async function BookmarksPage() {
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/bible" className="font-semibold text-primary hover:underline">
-          Bible reading
-        </Link>
-      </p>
+      <BackLink route="/bible/bookmarks" />
       <PageHeader title="Bookmarks and highlights" description="Private to you. Highlights appear in the reader." />
       {error ? <Alert tone="error" title="Bookmarks couldn't be loaded right now." className="mb-6" /> : null}
       {items.length ? (

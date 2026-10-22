@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -44,9 +43,7 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
   }
   return (
     <>
-      <Link href="/memory/verses" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> My Verses
-      </Link>
+      <BackLink route="/memory/verses/add" />
       <PageHeader title="Add a memory verse" description="Choose a passage from the church's Bible versions. You'll see its exact text before adding it." />
       {!stored.length ? (
         <Alert tone="info" title="No Bible version is available for memory practice yet.">

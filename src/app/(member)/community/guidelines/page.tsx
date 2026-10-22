@@ -1,9 +1,10 @@
-import { ArrowLeft, CircleCheck } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CommunityText } from "@/components/community/community-text";
 import { AckGuidelinesForm } from "@/components/community/ack-guidelines-form";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -26,9 +27,7 @@ export default async function GuidelinesPage({ searchParams }: PageProps<"/commu
   const g = await tryCommunityRpc<Guidelines>("community_guidelines");
   return (
     <>
-      <Link href="/community" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Community
-      </Link>
+      <BackLink route="/community/guidelines" />
       <PageHeader title="Community guidelines" description="How we care for one another in discussions, groups, and messages." />
       {!g ? (
         <Alert tone="error" title="The guidelines couldn't be loaded right now." />

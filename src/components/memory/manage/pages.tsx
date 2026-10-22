@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ChallengeView } from "@/components/memory/manage/challenge-view";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { todayIn } from "@/lib/bible/dates";
@@ -29,11 +28,6 @@ async function load(base: ManageBase) {
   return { supabase, home: data as AdminHome | null, error };
 }
 
-const Back = ({ href, label }: { href: string; label: string }) => (
-  <Link href={href} className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-    <ArrowLeft className="size-4" aria-hidden="true" /> {label}
-  </Link>
-);
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 const isUuid = (s: string) => /^[0-9a-f-]{36}$/i.test(s);
@@ -42,7 +36,12 @@ export async function ManageHomePage({ base }: { base: ManageBase }) {
   const { supabase, home } = await load(base);
   if (!home) return <Alert tone="error" title="Memory verses couldn't be loaded right now." />;
   const { data } = await supabase.rpc("memory_admin_challenges");
-  return <ManageHome data={home} challenges={(data as Challenge[] | null) ?? []} base={base} />;
+  return (
+    <>
+      {base === "/memory/lead" ? <BackLink route="/memory/lead" /> : null}
+      <ManageHome data={home} challenges={(data as Challenge[] | null) ?? []} base={base} />
+    </>
+  );
 }
 
 export async function NewCollectionPage({ base }: { base: ManageBase }) {
@@ -51,7 +50,7 @@ export async function NewCollectionPage({ base }: { base: ManageBase }) {
   const leader = base === "/memory/lead";
   return (
     <>
-      <Back href={base} label="Memory verses" />
+      <BackLink route={`${base}/collections/new`} />
       <PageHeader title="New collection" description="Start with the details; then add verses by reference from the approved Bible source." />
       {!home.translations.length ? (
         <Alert tone="info" title="No Bible version with stored text is active yet." />
@@ -81,7 +80,7 @@ export async function CollectionPage({ base, id }: { base: ManageBase; id: strin
   const cover = c.cover_path ? (await signMemoryPaths(supabase, [c.cover_path])).get(c.cover_path) : undefined;
   return (
     <>
-      <Back href={base} label="Memory verses" />
+      <BackLink route={`${base}/collections/[id]`} />
       <PageHeader title={c.title} description={c.description || undefined} />
       <CollectionEditor c={c} home={home} base={base} coverUrl={cover} />
     </>
@@ -110,7 +109,7 @@ export async function PreviewPage({ base, id, searchParams }: { base: ManageBase
         .then(({ data: d, error: e }) => (e ? null : (d as Session & { hidden: { blanks?: number[] } })));
   return (
     <>
-      <Back href={`${base}/collections/${c.id}`} label={c.title} />
+      <BackLink route={`${base}/collections/[id]/preview`} params={{ id: c.id }} label={c.title} />
       <PageHeader title="Preview activities" description="Exactly what members will see (choices and shuffles change each time). Nothing here is recorded." />
       <ActivityPreview base={base} collectionId={c.id} items={items} item={item} activity={activity} difficulty={difficulty} segment={segment} short={short} preview={preview} />
     </>
@@ -125,7 +124,7 @@ export async function NewChallengePage({ base }: { base: ManageBase }) {
   const collections = home.collections.filter((c) => c.status === "published");
   return (
     <>
-      <Back href={base} label="Memory verses" />
+      <BackLink route={`${base}/challenges/new`} />
       <PageHeader title="New group challenge" description="Members join only if they choose to, and see only a shared total once enough people share. Adults only; family challenges arrive with Phase 10." />
       {!home.can_publish && !leader ? (
         <Alert tone="info" title="Only memory verse publishers and authorized group leaders can run challenges." />
@@ -148,7 +147,7 @@ export async function ChallengePage({ base, id }: { base: ManageBase; id: string
   if (!ch) notFound();
   return (
     <>
-      <Back href={base} label="Memory verses" />
+      <BackLink route={`${base}/challenges/[id]`} />
       <PageHeader eyebrow={`${ch.group?.name ?? "Group"} challenge`} title={ch.title} />
       <ChallengeView base={base} challenge={ch} />
     </>

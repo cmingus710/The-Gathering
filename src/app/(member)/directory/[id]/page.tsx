@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DirectoryProfileView } from "@/components/profile/directory-profile";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { getDirectoryMember, type DirectoryProfile } from "@/lib/directory/queries";
@@ -31,9 +30,7 @@ export default async function DirectoryMemberPage({ params }: PageProps<"/direct
 
   return (
     <>
-      <Link href="/directory" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Directory
-      </Link>
+      <BackLink route="/directory/[id]" />
       {profile.id === viewer.id ? (
         <Alert tone="info" title="This is how other members see you." className="mb-5" live={false}>
           <ButtonLink href="/profile/edit" variant="ghost" size="sm" className="-ml-3">

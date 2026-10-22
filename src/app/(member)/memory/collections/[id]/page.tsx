@@ -1,11 +1,11 @@
-import { ArrowLeft, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MemoryNav } from "@/components/memory/nav";
 import { PassageText } from "@/components/memory/passage";
 import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -34,9 +34,7 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
   const cover = c.cover_path ? (await signMemoryPaths(supabase, [c.cover_path])).get(c.cover_path) : undefined;
   return (
     <>
-      <Link href="/memory/collections" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Collections
-      </Link>
+      <BackLink route="/memory/collections/[id]" />
       <PageHeader eyebrow={c.mine ? "My collection" : (c.group_name ?? "Church collection")} title={c.title} description={c.description || undefined} />
       <MemoryNav current="collections" />
       {cover ? (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ContentDetail } from "@/components/media/content-detail";
+import { BackLink } from "@/components/ui/back-link";
 import { isUuid, readingHref } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
 import { getSiteUrl } from "@/lib/site-url";
@@ -30,11 +30,7 @@ export default async function AssignmentPage({ params }: PageProps<"/reading/ass
   }
   return (
     <>
-      <p className="mb-4">
-        <Link href="/reading" className="font-semibold text-primary hover:underline">
-          Church reading
-        </Link>
-      </p>
+      <BackLink route="/reading/assignments/[id]" />
       <ContentDetail item={page.item} urls={page.urls} transcripts={page.transcripts} member origin={getSiteUrl()} />
     </>
   );

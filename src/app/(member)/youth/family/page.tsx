@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
@@ -24,8 +25,8 @@ export default async function FamilyPage({ searchParams }: PageProps<"/youth/fam
   const { data, failed } = await youthRead<Family>("youth_family");
   return (
     <>
+      <BackLink route="/youth/family" />
       <PageHeader
-        eyebrow="Youth & Families"
         title="Family dashboard"
         description="Children you're a verified guardian for, what's coming up, and anything waiting on you."
         actions={<ButtonLink href="/youth/family/request" variant="secondary">Link a child</ButtonLink>}

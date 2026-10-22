@@ -1,9 +1,10 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { IconMark, LogoPlaque } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/community/notification-bell";
 import { CommunityRealtimeProvider } from "@/components/community/realtime-provider";
 import { ThemeControl } from "@/components/theme/theme-control";
+import { ReturnViewRecorder } from "@/components/ui/back-link";
 import { cn } from "@/components/ui/cn";
 import type { UnreadCounts } from "@/lib/community/types";
 import { getSupabasePublicConfig } from "@/lib/env";
@@ -50,6 +51,9 @@ export async function MemberShell({
         <a href="#main" className="skip-link">
           Skip to content
         </a>
+        <Suspense fallback={null}>
+          <ReturnViewRecorder />
+        </Suspense>
 
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh">
           <Link href="/home" className="mx-4 mb-2 mt-5 flex justify-center rounded-card" aria-label={`${settings.churchName} home`}>

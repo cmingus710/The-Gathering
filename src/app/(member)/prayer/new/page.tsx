@@ -1,9 +1,8 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CommunityText } from "@/components/community/community-text";
 import { RequestComposer } from "@/components/prayer/request-composer";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -17,9 +16,7 @@ export default async function NewPrayerPage() {
   const [groups, guidance] = await Promise.all([tryCommunityRpc<GroupOption[]>("prayer_my_groups"), tryCommunityRpc<PrayerGuidance>("prayer_guidance")]);
   return (
     <>
-      <Link href="/prayer" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Prayer
-      </Link>
+      <BackLink route="/prayer/new" />
       <PageHeader title="Share a prayer request" description="Choose who can see it. You can save a private draft first, and change or remove it later." />
       {!groups || !guidance ? (
         <Alert tone="error" title="Prayer requests are unavailable right now." />

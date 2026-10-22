@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { SelectField, TextAreaField } from "@/components/ui/field";
@@ -58,7 +58,8 @@ export default async function DiscussionPage({ params }: PageProps<"/youth/discu
   const leader = d.role === "leader";
   return (
     <>
-      <PageHeader eyebrow={<Link href={`/youth/groups/${d.group_id}`} className="hover:underline">{d.group}</Link>} title={`${d.kind === "prayer" ? "Prayer: " : ""}${d.title}`} />
+      <BackLink route="/youth/discussions/[id]" params={{ group: d.group_id }} label={d.group} />
+      <PageHeader title={`${d.kind === "prayer" ? "Prayer: " : ""}${d.title}`} />
       <div className="space-y-6">
         <Card>
           <AudienceNote audience={d.audience} />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContentDetail } from "@/components/media/content-detail";
 import { PRIVACY_COPY } from "@/components/media/workbook-view";
+import { BackLink } from "@/components/ui/back-link";
 import { isUuid } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
 import { teachingViewer } from "@/lib/media/viewer";
@@ -28,16 +29,14 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
   const answered = workbook?.answers.filter((a) => a.state !== "removed" && a.body.trim()).length ?? 0;
   return (
     <>
-      <p className="mb-4 flex flex-wrap gap-x-4 gap-y-1">
-        <Link href="/lessons" className="font-semibold text-primary hover:underline">
-          All Sunday lessons
-        </Link>
+      <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-4 sm:mb-4">
+        <BackLink route="/lessons/[id]" inRow />
         {workbook ? (
-          <Link href="/lessons/workbooks" className="font-semibold text-primary hover:underline">
+          <Link href="/lessons/workbooks" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
             My workbooks
           </Link>
         ) : null}
-      </p>
+      </div>
       {workbook && (workbook.blocks.length || workbook.answers.length || workbook.note) ? (
         <Link href={`/lessons/${id}/workbook`} className="interactive mb-6 flex items-center gap-3 rounded-card border border-primary bg-primary-soft p-4 hover:bg-surface-muted/60">
           <NotebookPen className="size-6 shrink-0 text-primary" aria-hidden="true" />

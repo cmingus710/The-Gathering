@@ -6,6 +6,7 @@ import { allTimeZones } from "@/app/admin/events/series";
 import { EnrollmentStatus } from "@/components/bible/enrollment-status";
 import { ProgressSummary } from "@/components/bible/progress";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, SectionHeading } from "@/components/ui/card";
@@ -74,11 +75,7 @@ export default async function PlanPage({ params }: PageProps<"/bible/plans/[id]"
 
   return (
     <>
-      <p className="mb-4">
-        <Link href="/bible" className="font-semibold text-primary hover:underline">
-          Bible reading
-        </Link>
-      </p>
+      <BackLink route="/bible/plans/[id]" />
       <header className="mb-6 grid gap-5 sm:grid-cols-[minmax(0,16rem)_1fr] sm:items-start">
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL

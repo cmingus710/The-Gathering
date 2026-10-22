@@ -1,10 +1,11 @@
-import { ArrowLeft, ChevronRight, HandHelping, ShieldCheck } from "lucide-react";
+import { ChevronRight, HandHelping, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { PrayerRow } from "@/components/prayer/prayer-row";
 import { Alert } from "@/components/ui/alert";
+import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
 import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -40,9 +41,7 @@ export default async function TeamWorkspacePage({ searchParams }: PageProps<"/pr
   return (
     <>
       <LiveRefresh />
-      <Link href="/prayer" className="mb-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-primary hover:underline">
-        <ArrowLeft className="size-4" aria-hidden="true" /> Prayer
-      </Link>
+      <BackLink route="/prayer/team" />
       <PageHeader title="Prayer & care workspace" description="Confidential. Please don't copy details out of this space, and share only what someone needs to help." />
       <div className="space-y-10">
         {canCare ? (
