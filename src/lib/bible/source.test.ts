@@ -6,8 +6,8 @@ import type { ProviderConfig } from "./types";
 /**
  * The API adapter is tested only against recorded response shapes. This
  * proves request building, parsing, error handling, key handling, and
- * caching rules; it does not prove the live service works (see
- * docs/bible-sources.md).
+ * caching rules. The live service was confirmed separately in production
+ * (docs/bible-sources.md).
  */
 const provider: ProviderConfig = { provider: "api_bible", ref: "de4e12af7f28f599-02", credential_env: "TEST_API_BIBLE_KEY", cache_days: null };
 const tr = { id: "11111111-1111-1111-1111-111111111111", text_version: 0 };

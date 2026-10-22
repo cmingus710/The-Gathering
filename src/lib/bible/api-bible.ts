@@ -5,8 +5,8 @@ import type { Verse } from "./types";
  * API.Bible (American Bible Society) adapter: request building and response
  * parsing, kept free of I/O so it can be tested with recorded shapes.
  *
- * Not verified against the live service from this environment (its API
- * hosts are unreachable here). It follows the published v1 REST shape:
+ * Confirmed working in production with the church's key (2026-10-22). It
+ * follows the published v1 REST shape:
  * GET /v1/bibles lists the Bibles the key can use, and each one's `id` (the
  * bible_id, e.g. "de4e12af7f28f599-01", never the shorter dblId) goes in
  * GET /v1/bibles/{bibleId}/passages/{passageId}, with an `api-key` header,

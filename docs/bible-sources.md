@@ -10,7 +10,7 @@ The app never generates, paraphrases, completes, or combines scripture. Every ve
 | Source | How members get text | Status in this build |
 | --- | --- | --- |
 | **Stored text** (structured import) | Verses imported from a CSV/TSV/verse-per-line file, reviewed, and published into the database | **Works and tested** (database tests + unit tests) |
-| **API.Bible** (American Bible Society) | Fetched on the server per passage with the church's key | **Adapter built, tested only against recorded response shapes. Not verified live** (see below) |
+| **API.Bible** (American Bible Society) | Fetched on the server per passage with the church's key | **Works in production** with the church's key and licensed translations (confirmed 2026-10-22); unit tests use recorded response shapes (see below) |
 | **Bible PDF** | Never shown to members. Kept as a private reference for administrators | Upload, checks, and restricted preview work |
 
 ### The church hasn't chosen a translation yet
