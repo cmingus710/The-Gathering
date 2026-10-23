@@ -193,9 +193,23 @@ export const ADMIN_NAV: AdminNavItem[] = [
     requires: [CAPABILITIES.prayerModerate],
   },
   {
+    key: "prayer-library",
+    label: "Prayer Library",
+    href: "/admin/prayer/library",
+    icon: "prayer",
+    requires: [CAPABILITIES.prayerModerate],
+  },
+  {
     key: "prayer-settings",
     label: "Prayer settings",
     href: "/admin/prayer/settings",
+    icon: "settings",
+    requires: [CAPABILITIES.settingsManage],
+  },
+  {
+    key: "prayer-library-categories",
+    label: "Prayer Library categories",
+    href: "/admin/prayer/library/categories",
     icon: "settings",
     requires: [CAPABILITIES.settingsManage],
   },

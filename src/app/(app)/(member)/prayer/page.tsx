@@ -1,15 +1,14 @@
 import { ChevronRight, HandHelping, PenSquare } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CommunityText } from "@/components/community/community-text";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { Icon } from "@/components/icons/icon";
 import { PrayerRow } from "@/components/prayer/prayer-row";
+import { PrayerTabs } from "@/components/prayer/prayer-tabs";
 import { SearchPanel } from "@/components/prayer/search-panel";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
-import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
 import { menuArtSource } from "@/lib/home/launcher";
@@ -95,13 +94,7 @@ export default async function PrayerHomePage({ searchParams }: PageProps<"/praye
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0 space-y-4">
-          <SegmentedTrack label="Prayer views" className="max-w-full overflow-x-auto">
-            {VIEWS.map((v) => (
-              <Link key={v} href={`/prayer?view=${v}`} className={segmentClass(v === view)} aria-current={v === view ? "page" : undefined}>
-                {VIEW_LABEL[v]}
-              </Link>
-            ))}
-          </SegmentedTrack>
+          <PrayerTabs active={view} />
 
           {view !== "answered" ? (
             <form method="get" action="/prayer" className="flex flex-wrap items-end gap-3" aria-label="Filter requests">

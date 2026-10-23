@@ -376,3 +376,13 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - anon-executable public functions: 34 (unchanged);
   - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
   - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-12-record-notification-channel-overrides.sql`. `20261112000100` is recorded (`created_by = notification-channel-overrides`), 74 versions in history.
+
+## Prayer Library (2026-11-13)
+
+- **New (additive; no applied migration was edited):** `20261113000100_prayer_library`:
+  - new private tables `prayer.library_categories`, `library_prayers`, `library_prayer_categories`, `library_saves`, `library_reports` (RLS on, no client grants), seeded categories only;
+  - new nullable column `prayer.moderation_log.library_report_id`;
+  - new trigger `profiles_prayer_library_names` (after update of `full_name`, `preferred_name` on `public.profiles`) to keep contributor names searchable;
+  - new `public.prayer_library_*` functions granted to `authenticated` only; anon baseline unchanged.
+- **Order:** apply before deploying the app. See [prayer-library.md](prayer-library.md#release-steps).
+- **Hosted:** not applied.

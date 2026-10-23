@@ -8,6 +8,7 @@ The short version of every administrative job, with links to the detailed guides
 | Church settings, announcements | Admin → Church settings, Announcements | below |
 | Community and moderation | Admin → Community, Moderation | [community-moderation-guide.md](community-moderation-guide.md), [messaging-privacy-guide.md](messaging-privacy-guide.md) |
 | Prayer and care | Admin → Prayer reports, Prayer settings | [prayer-care-guide.md](prayer-care-guide.md), [prayer-privacy-guide.md](prayer-privacy-guide.md) |
+| Prayer Library | Admin → Prayer Library (moderators), Prayer Library categories (settings managers) | [prayer-library.md](prayer-library.md) |
 | Gallery | Admin → Gallery | [gallery-guide.md](gallery-guide.md), [media-consent-workflow.md](media-consent-workflow.md) |
 | Events | Admin → Events | [events-guide.md](events-guide.md) |
 | Teaching content, media, podcasts | Admin → Teaching content, Media library, Podcasts | [media-guide.md](media-guide.md), [podcast-guide.md](podcast-guide.md), [media-limitations.md](media-limitations.md) |
