@@ -7,7 +7,7 @@ export type EntryLink =
   | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null };
 
 const ITEM_HREF = { devotional: "/devotionals/", lesson: "/lessons/", book: "/reading/books/", book_assignment: "/reading/assignments/" } as const;
-const ITEM_NAME = { devotional: "devotional", lesson: "Sunday lesson", book: "church book", book_assignment: "church reading assignment" } as const;
+const ITEM_NAME = { devotional: "devotional", lesson: "Sunday lesson", book: "book", book_assignment: "reading assignment" } as const;
 
 /**
  * What an entry is about. Linked teaching or plan days are named only while

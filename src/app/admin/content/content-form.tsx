@@ -562,7 +562,7 @@ export function ContentForm({
             <CheckboxField name="featured" label="Feature it" hint="Shown first where featured content appears." defaultChecked={v ? v.featured === "on" : (item?.featured ?? false)} />
           ) : null}
           {canPublish && kind === "book" ? (
-            <CheckboxField name="book_current" label="This is the current church book" defaultChecked={v ? v.book_current === "on" : (item?.book_current ?? false)} />
+            <CheckboxField name="book_current" label="This is the current book" defaultChecked={v ? v.book_current === "on" : (item?.book_current ?? false)} />
           ) : null}
           <TextField label="Attribution" name="attribution" maxLength={300} defaultValue={v?.attribution ?? item?.attribution ?? ""} optional hint="Shown to members, for example for licensed material." />
           <TextField label="Display order" name="sort_order" type="number" inputMode="numeric" min={0} max={100000} defaultValue={v?.sort_order ?? String(item?.sort_order ?? 100)} hint="Lower numbers appear first among items on the same date." />

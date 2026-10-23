@@ -1,8 +1,8 @@
-# Church reading: Kindle and Audible (Phase 13)
+# Books: Kindle and Audible (Phase 13)
 
 ## What members get
 
-**Church reading** (`/reading`) shows each current book as one card: the book (cover, author, the member's own progress) and, under it, this week's assignment for that book. Both open the same page. Other weeks and books already read follow.
+**Books** (`/reading`) shows each current book as one card: the book (cover, author, the member's own progress) and, under it, this week's assignment for that book. Both open the same page. Other weeks and books already read follow.
 
 Each book has **one reading page** (`/reading/books/<id>`), in this order:
 
@@ -15,7 +15,7 @@ Each book has **one reading page** (`/reading/books/<id>`), in this order:
 
 A book without assignments shows 1–3 and 6 only.
 
-**Which assignment is current:** the same rule as the home page and Church reading: it has started and hasn't ended on today's date in the church's time zone (`media.church_today()`); when several overlap, the latest start wins. Never "the one edited last".
+**Which assignment is current:** the same rule as the home page and Books: it has started and hasn't ended on today's date in the church's time zone (`media.church_today()`); when several overlap, the latest start wins. Never "the one edited last".
 
 **More than one plan:** a book's assignments for one audience form one plan: church-wide, or one group's. A member who can see more than one gets a **Reading plan** switch. **My place in the book** is one record for the book; done states belong to each assignment, so plans never mix.
 

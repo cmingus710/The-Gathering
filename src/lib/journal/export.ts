@@ -24,9 +24,9 @@ function linkLine(link: ExportedEntry["link"]): string | null {
     case "lesson":
       return link.available && link.title ? `${link.kind === "lesson" ? "Sunday lesson" : "Devotional"}: ${link.title}` : `A ${link.kind === "lesson" ? "Sunday lesson" : "devotional"} that is no longer available`;
     case "book":
-      return link.available && link.title ? `Church book: ${link.title}` : "A church book that is no longer available";
+      return link.available && link.title ? `Book: ${link.title}` : "A book that is no longer available";
     case "book_assignment":
-      return link.available && link.title ? `Church reading assignment: ${link.title}` : "A church reading assignment that is no longer available";
+      return link.available && link.title ? `Reading assignment: ${link.title}` : "A reading assignment that is no longer available";
     default:
       return null;
   }
