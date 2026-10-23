@@ -339,4 +339,4 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - `memory.collection_visible` carries the youth rule;
   - no licensed collections exist yet. AMP, NIV, and NASB were already permitted for memory (3 permission rows, unchanged), so all three are eligible in the database. The app also requires the API key on the server.
   - Anon-executable public functions: 34 (unchanged by this migration).
-  - **Not recorded in history yet.** `supabase/manual/2026-11-11-record-memory-licensed-collections.sql` adds only the history row.
+  - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-11-record-memory-licensed-collections.sql`. `20261111000100` is recorded (`created_by = memory-licensed-collections`), 73 versions in history.
