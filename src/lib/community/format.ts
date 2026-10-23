@@ -1,5 +1,6 @@
 import { Marked, type TokenizerAndRendererExtension, type Tokens } from "marked";
-import { isSafeHref } from "@/lib/announcements/markdown";
+import { classifyHref } from "@/lib/links/policy";
+import { renderLink } from "@/lib/links/render";
 import { ANY_MENTION_SOURCE, type MentionRef } from "./mentions";
 
 /**
@@ -10,8 +11,9 @@ import { ANY_MENTION_SOURCE, type MentionRef } from "./mentions";
  * - headings render as bold paragraphs (posts can't shout over the page);
  * - Markdown images render as their alt text (photos and videos are
  *   separate attachments, served through an access-checked route);
- * - links are kept only for http(s), mailto, and same-site paths, open with
- *   rel="nofollow ugc noopener noreferrer", and anything else becomes text;
+ * - links follow the shared link policy (lib/links): same-site pages, web
+ *   pages (in a new tab, rel="nofollow ugc noopener noreferrer"), and
+ *   checked email and phone links; anything else becomes text;
  * - tables and horizontal rules render as plain text;
  * - @mentions render as "@Name" in the mention style, using the current
  *   name the server sends with the post (`mentions`): a person
@@ -33,23 +35,9 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-const SAFE_COMMUNITY_PROTOCOL = /^(https?:|mailto:)/i;
-
+/** Whether a link destination may be used in community text (see lib/links/policy). */
 export function isSafeCommunityHref(href: string): boolean {
-  if (!isSafeHref(href)) return false;
-  const trimmed = href.trim();
-  if (trimmed.startsWith("/")) return true;
-  if (!SAFE_COMMUNITY_PROTOCOL.test(trimmed.replace(/[\u0000- ]/g, ""))) return false;
-  if (/^https?:/i.test(trimmed)) {
-    try {
-      const url = new URL(trimmed);
-      // No credentials in links (e.g. https://bank.example@evil.example).
-      return !url.username && !url.password;
-    } catch {
-      return false;
-    }
-  }
-  return true;
+  return classifyHref(href) !== null;
 }
 
 type MentionToken = Tokens.Generic & { label: string; id: string; kind: "member" | "group" };
@@ -95,11 +83,7 @@ const marked = new Marked({
       return `<p><strong>${this.parser.parseInline(tokens)}</strong></p>\n`;
     },
     link({ href, tokens }: Tokens.Link) {
-      const text = this.parser.parseInline(tokens);
-      if (!href || !isSafeCommunityHref(href)) return text;
-      const external = /^(https?:|mailto:)/i.test(href.trim());
-      const rel = external ? ` rel="nofollow ugc noopener noreferrer"` : "";
-      return `<a href="${escapeHtml(href.trim())}"${rel}>${text}</a>`;
+      return renderLink(href, this.parser.parseInline(tokens), { ugc: true });
     },
     image({ text }: Tokens.Image) {
       return escapeHtml(text);

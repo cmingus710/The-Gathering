@@ -6,6 +6,7 @@ import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, type FormState } from "@/lib/forms";
+import { linkProblem } from "@/lib/links/validate";
 import { normalizeAudibleUrl, normalizeKindleUrl, parseSpotify } from "@/lib/media/embeds";
 import { isUuid, isYmd } from "@/lib/media/format";
 import { parseFraming } from "@/lib/media/framing";
@@ -55,8 +56,12 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   if (summary.length > 600) err("summary", "Keep the summary under 600 characters.");
   const body = String(formData.get("body") ?? "");
   if (body.length > 40_000) err("body", "The text is too long (40,000 characters at most).");
+  const bodyLinks = linkProblem(body);
+  if (bodyLinks) err("body", bodyLinks);
   const notes = String(formData.get("notes") ?? "");
   if (notes.length > 40_000) err("notes", "The notes are too long.");
+  const notesLinks = linkProblem(notes);
+  if (notesLinks) err("notes", notesLinks);
   const questions = lines(formData.get("questions"));
   if (questions.length > 20 || questions.some((q) => q.length > 500)) err("questions", "Up to 20 questions, each under 500 characters.");
 

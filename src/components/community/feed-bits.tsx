@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, type ComponentProps } from "react";
 import { cn } from "@/components/ui/cn";
+import { registerUnsaved } from "@/components/links/unsaved";
 import { initials } from "@/lib/directory/format";
 
 /**
@@ -56,15 +57,18 @@ const drafts = new Set<string>();
 
 /**
  * Registers an unsent draft (text or chosen files) so leaving or reloading
- * the page asks first. Collapsing comments keeps drafts, so only a real
- * page exit can lose one.
+ * the page asks first, and links in rendered content open in a new tab.
+ * Collapsing comments keeps drafts, so only a real page exit can lose one.
  */
 export function useDraftGuard(key: string, dirty: boolean) {
   useEffect(() => {
     if (dirty) drafts.add(key);
     else drafts.delete(key);
+    // Links in posts and comments open in a new tab while a draft is unsent.
+    const unregister = registerUnsaved(`draft:${key}`, () => drafts.has(key));
     return () => {
       drafts.delete(key);
+      unregister();
     };
   }, [key, dirty]);
   useEffect(() => {

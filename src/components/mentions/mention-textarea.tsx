@@ -6,6 +6,7 @@ import { AtSign, Users, X } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { mentionSuggestionsAction, type MentionPlace } from "@/app/(app)/(member)/mention-actions";
 import { AutoGrowTextarea } from "@/components/community/feed-bits";
+import { LinkButton, useLinkTools } from "@/components/links/link-tools";
 import { cn } from "@/components/ui/cn";
 import { MemberAvatar } from "@/components/profile/member-avatar";
 import {
@@ -35,6 +36,8 @@ type Props = Omit<ComponentProps<"textarea">, "value" | "onChange" | "name" | "d
   /** Where the text will be shared, which decides who and which groups can be mentioned. */
   place: MentionPlace | null;
   minRows?: number;
+  /** Show the Link button (and link editing) under the box. On by default. */
+  links?: boolean;
 };
 
 type Option = { kind: "member"; item: MentionSuggestion } | { kind: "group"; item: GroupSuggestion };
@@ -69,8 +72,13 @@ export function groupNotice(g: Pick<GroupSuggestion, "name" | "notify" | "reach"
  * Backspace into a name removes the whole mention. For a group, a short
  * note says whether it will notify anyone. The form gets the text with the
  * mention markup in a hidden field; the server checks every mention again.
+ *
+ * Links: the Link button under the box (or Ctrl/⌘+K) and paste add links
+ * without typing any syntax, and a bar under the box edits, opens, or
+ * removes the link the caret is in (see useLinkTools). Links never wrap or
+ * change a mention.
  */
-export function MentionTextarea({ name, value, onValueChange, place, minRows, className, ref: outerRef, onKeyDown, ...rest }: Props) {
+export function MentionTextarea({ name, value, onValueChange, place, minRows, className, ref: outerRef, onKeyDown, links = true, ...rest }: Props) {
   const { text, mentions } = useMemo(() => parseMentions(value), [value]);
   const inner = useRef<HTMLTextAreaElement | null>(null);
   const box = useRef<HTMLDivElement | null>(null);
@@ -92,6 +100,7 @@ export function MentionTextarea({ name, value, onValueChange, place, minRows, cl
   const placeKey = place ? JSON.stringify(place) : "";
   const groupInfo = chosenInfo.key === placeKey ? chosenInfo.groups : {};
   const open = !!query && query.start !== dismissed && !!place;
+  const linkTools = useLinkTools(inner, { protectedRanges: () => mentions, enabled: links });
 
   const setRefs = (el: HTMLTextAreaElement | null) => {
     inner.current = el;
@@ -290,6 +299,15 @@ export function MentionTextarea({ name, value, onValueChange, place, minRows, cl
         }}
         onBlur={() => setQuery(null)}
       />
+      {links ? (
+        <>
+          {linkTools.bar}
+          <div className="mt-0.5 flex flex-wrap items-center">
+            <LinkButton tools={linkTools} className="-ml-1" />
+          </div>
+          {linkTools.dialog}
+        </>
+      ) : null}
       <ul
         id={listId}
         role="listbox"

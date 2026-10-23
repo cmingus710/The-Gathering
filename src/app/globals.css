@@ -550,6 +550,24 @@ h3 {
 .prose-gathering a:hover {
   color: var(--color-primary-hover);
 }
+.prose-gathering a:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.2em;
+}
+/* Links to other websites (they open in a new tab) end with a small
+   "leaving" arrow; screen readers hear "opens in a new tab" instead. */
+.prose-gathering a.link-external::after {
+  content: "";
+  display: inline-block;
+  width: 0.72em;
+  height: 0.72em;
+  margin-left: 0.18em;
+  vertical-align: 0.02em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7'/%3E%3Cpath d='M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7'/%3E%3Cpath d='M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 /* @mentions in posts, comments, and prayer requests: a person's name (linked
    to their directory entry when listed) or a group (linked to its page when
    the reader may see it, with a small group icon). Labels that can't be

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { withSafeLinks } from "@/lib/links/validate";
 import { zonedLocalToUtc } from "@/lib/time";
 
 export const ANNOUNCEMENT_INTENTS = ["save_draft", "schedule", "publish_now", "update"] as const;
@@ -6,7 +7,7 @@ export type AnnouncementIntent = (typeof ANNOUNCEMENT_INTENTS)[number];
 
 const base = z.object({
   title: z.string().trim().min(1, "Enter a title.").max(160, "Use 160 characters or fewer."),
-  body: z.string().max(20000, "The announcement is too long (20,000 characters maximum)."),
+  body: withSafeLinks(z.string().max(20000, "The announcement is too long (20,000 characters maximum).")),
   visibility: z.enum(["public", "members"], { error: "Choose who can see this announcement." }),
   pinned: z.boolean(),
   publishAt: z.string().trim(),
