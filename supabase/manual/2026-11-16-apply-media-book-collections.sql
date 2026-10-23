@@ -1,3 +1,34 @@
+-- Book collections · Apply migration 20261116000100_media_book_collections
+-- to the hosted project.
+--
+-- Use this only if supabase/manual/2026-11-16-record-media-book-collections.sql
+-- stopped with "objects are missing" (the migration was never applied).
+--
+-- It copies supabase/migrations/20261116000100_media_book_collections.sql
+-- verbatim and records it under its repository version (created_by =
+-- media-book-collections). All or nothing: one transaction; a second run, or
+-- a run after the objects exist, stops at the preflight with "Nothing was
+-- changed".
+--
+-- Run once in the SQL editor of The Gathering project:
+--   https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
+begin;
+
+do $preflight$
+begin
+  if to_regclass('media.topics') is null or to_regprocedure('public.media_admin_topic_save(text)') is null then
+    raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
+  end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261116000100')
+     or to_regprocedure('public.media_books(uuid, text)') is not null then
+    raise exception 'Nothing was changed: 20261116000100 is already applied. If it has no history row, run the record script.';
+  end if;
+end
+$preflight$;
+
+-- =========================================================================
+-- 20261116000100_media_book_collections.sql
+-- =========================================================================
 -- Books · collections from topics (additive).
 --
 -- A book's existing topics (media.item_topics, the "Organize → Topics" field)
@@ -41,7 +72,7 @@ $$;
 
 -- Merge topics whose names only differ by capitalization or whitespace into
 -- the oldest of them, keeping every assignment.
-create temporary table topic_merge on commit drop as
+create temporary table topic_merge as
 with keyed as (
   select t.id, t.created_at, lower(media.topic_name(t.name)) as k from media.topics t
 ), canon as (
@@ -58,6 +89,7 @@ on conflict do nothing;
 delete from media.topics t using topic_merge m where t.id = m.dup_id;
 
 update media.topics set name = media.topic_name(name) where name <> media.topic_name(name);
+drop table topic_merge;
 
 alter table media.topics add constraint topics_name_normalized check (name = media.topic_name(name));
 
@@ -170,3 +202,9 @@ $$;
 revoke all on function media.topic_name(text) from public, anon, authenticated, service_role;
 revoke all on function public.media_book_collections(), public.media_books(uuid, text) from public, anon, authenticated, service_role;
 grant execute on function public.media_book_collections(), public.media_books(uuid, text) to authenticated;
+-- =========================================================================
+
+insert into supabase_migrations.schema_migrations (version, name, created_by)
+values ('20261116000100', 'media_book_collections', 'media-book-collections');
+
+commit;

@@ -5,7 +5,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Books · collections from topics (20261115000100): a book's topics group it
+ * Books · collections from topics (20261116000100): a book's topics group it
  * into collections on the Books page, counts and covers include only books
  * the viewer can open, topic names are normalized and deduplicated, and
  * topics elsewhere behave as before. Synthetic data only.
@@ -15,7 +15,7 @@ type Collection = { id: string; name: string; count: number; covers: Json[] };
 type Collections = { all: { count: number; covers: Json[] }; collections: Collection[] };
 type Books = { collection: { id: string; name: string } | null; q: string | null; total: number; books: Json[] };
 
-const MIGRATION = "20261115000100";
+const MIGRATION = "20261116000100";
 
 describeDb("book collections: existing topics before the migration", () => {
   let db: TestDb;

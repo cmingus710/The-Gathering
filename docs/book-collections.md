@@ -21,7 +21,7 @@ Books on the member **Books** page (`/reading`) are grouped into **collections**
 
 Everything is decided in the database by `media.item_visible`, the same rule every other read uses: published (or a scheduled time that has passed), not expired, not archived, and the member's audience (approved members, or active membership of the book's group). Collection counts, cover previews, and search results include only books the reader can open. A collection with none (empty, restricted, or unknown) is left out and reads as "not found" if linked directly, so restricted titles, covers, and counts never show.
 
-## Database (20261115000100_media_book_collections.sql)
+## Database (20261116000100_media_book_collections.sql)
 
 - `media.topic_name(text)`: trims a name and collapses runs of whitespace (including no-break spaces) to one space. A new check, `topics_name_normalized`, keeps every stored name in that form. The existing unique index on `lower(btrim(name))` then also stops capitalization and spacing duplicates.
 - One-time cleanup: topics that collide once normalized are merged into the oldest one (assignments moved, none lost), and the remaining names are normalized.
@@ -47,6 +47,11 @@ No applied migration was edited. The pages work before the migration is applied:
 
 ## Release steps
 
-1. Merge the PR after review.
-2. Apply `20261115000100_media_book_collections.sql` to the hosted project, then check that `media.topics` has no duplicate `lower(name)` values and that the counts in `media.item_topics` match.
-3. Deploy. Open Books as a member and confirm that **Rob's Reads** appears with its books.
+The migration was first numbered `20261115000100`, but `main` uses that version for the Prayer Library, which is already recorded on hosted. It is now `20261116000100`, with the same body apart from one fix: the temporary merge table is dropped explicitly, so the file also works when run statement by statement.
+
+1. In the hosted SQL editor, run `supabase/manual/2026-11-16-record-media-book-collections.sql`. It checks that the collection functions, the name check, and the grants exist, then records `20261116000100`. It changes nothing else.
+2. If it stops with "objects are missing", the migration was never applied. Run `supabase/manual/2026-11-16-apply-media-book-collections.sql` instead. It is the migration verbatim plus the history row, in one transaction.
+3. Check: `select version, name from supabase_migrations.schema_migrations where version = '20261116000100';` returns one row, and `select lower(name), count(*) from media.topics group by 1 having count(*) > 1;` returns none.
+4. Open Books as a member and confirm that **Rob's Reads** appears with its books.
+
+Either order works: before the migration, the Books page simply leaves out Collections.

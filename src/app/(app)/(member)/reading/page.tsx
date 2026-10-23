@@ -51,7 +51,7 @@ export default async function ReadingPage() {
     supabase.rpc("media_book_collections"),
   ]);
   // Collections from book topics, counted and previewed over books this reader can open
-  // (absent before 20261115000100 is applied: the section is left out).
+  // (absent before 20261116000100 is applied: the section is left out).
   const collections = shelves.error ? null : (shelves.data as BookCollections | null);
   // The member's own book progress (Phase 13); absent before that migration is applied.
   const progress: MyProgress = new Map(
