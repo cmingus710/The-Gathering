@@ -67,6 +67,8 @@ export type ThreadPage = { pinned: ThreadCard[]; items: ThreadCard[]; next_curso
 
 export type Category = { id: string; name: string; description: string; threads: number; last_activity_at: string | null };
 
+export type GroupMentionNotify = "leaders" | "members" | "off";
+
 export type GroupCard = {
   id: string;
   name: string;
@@ -76,6 +78,8 @@ export type GroupCard = {
   visibility: "discoverable" | "hidden";
   accepts_requests: boolean;
   status: "active" | "archived";
+  /** "Who can notify this group through @mentions?"; absent before migration 20261108000100. */
+  mention_notify?: GroupMentionNotify;
   my_role: "member" | "leader" | null;
   my_request: boolean;
   my_invitation: string | null;
@@ -134,7 +138,7 @@ export type ConversationPage = {
 export type NotificationItem = {
   id: string;
   kind: string;
-  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care" | "teaching" | "gallery" | "reading" | "memory" | "youth" | "mentions";
+  category: "forum" | "groups" | "messages" | "moderation" | "events" | "prayer" | "care" | "teaching" | "gallery" | "reading" | "memory" | "youth" | "mentions" | "group_mentions";
   title: string;
   url: string;
   count: number;
@@ -241,7 +245,7 @@ export type FeedPost = ThreadCard & {
   reactions: Reactions | null;
   comment_count: number;
   attachments: Attachment[];
-  /** People mentioned in the text (null when the text isn't shown); absent before migration 20261107000100. */
+  /** People and groups mentioned in the text (null when the text isn't shown); absent before migration 20261107000100. */
   mentions?: MentionRef[] | null;
   can_moderate: boolean;
   can_reply: boolean;

@@ -3,6 +3,7 @@ import {
   applyTextEdit,
   findMentionQuery,
   insertMention,
+  mentionedGroups,
   mentionedPeople,
   mentionLabel,
   mentionsAsText,
@@ -33,6 +34,20 @@ describe("mention markup", () => {
     const { mentions } = parseMentions(`${markup} @[Ann Rivers](mention:${ann})`);
     expect(mentions).toHaveLength(3);
     expect(mentionedPeople(mentions)).toBe(2);
+  });
+
+  it("round-trips group mentions and counts them apart from people", () => {
+    const choir = "3b241101-e2bb-4255-8caf-4136c566a962";
+    const both = `${markup} with @[Choir](group:${choir})`;
+    const { text, mentions } = parseMentions(both);
+    expect(text).toBe("Hi @Ann Rivers and @Ben Rowe! with @Choir");
+    expect(mentions.map((m) => m.kind ?? "member")).toEqual(["member", "member", "group"]);
+    expect(serializeMentions(text, mentions)).toBe(both);
+    expect(mentionedPeople(mentions)).toBe(2);
+    expect(mentionedGroups(mentions)).toBe(1);
+    expect(mentionsAsText(both)).toBe("Hi @Ann Rivers and @Ben Rowe! with @Choir");
+    const r = insertMention("Hey @ch", [], { start: 4, end: 7 }, { id: choir, name: "Choir", kind: "group" });
+    expect(serializeMentions(r.text, r.mentions)).toBe(`Hey @[Choir](group:${choir}) `);
   });
 
   it("shows plain @names for previews", () => {

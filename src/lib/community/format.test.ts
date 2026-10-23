@@ -54,8 +54,8 @@ describe("renderCommunityText mentions", () => {
     expect(html).toBe(`<p>Thanks <a href="/directory/${ann}" class="mention">@Annie Rivers</a>!</p>\n`);
   });
 
-  it("shows plain text when the member isn't listed, isn't recorded, or can't be shown", () => {
-    expect(renderCommunityText(`@[Ben Rowe](mention:${ben})`, { mentions: [{ id: ben, name: "Ben Rowe", listed: false }] })).toBe("<p>@Ben Rowe</p>\n");
+  it("shows a label that can't be clicked when the member isn't listed, and plain text when not recorded or can't be shown", () => {
+    expect(renderCommunityText(`@[Ben Rowe](mention:${ben})`, { mentions: [{ id: ben, name: "Ben Rowe", listed: false }] })).toBe('<p><span class="mention">@Ben Rowe</span></p>\n');
     expect(renderCommunityText(`@[Ben Rowe](mention:${ben})`)).toBe("<p>@Ben Rowe</p>\n");
     expect(renderCommunityText(`@[Former Name](mention:${ben})`, { mentions: [{ id: ben, name: null, listed: false }] })).toBe("<p>@Former Name</p>\n");
   });
@@ -72,6 +72,33 @@ describe("renderCommunityText mentions", () => {
     expect(html).toContain('href="mailto:office@example.org"');
     expect(html).toContain("or @ben");
     expect(html.match(/class="mention"/g)).toHaveLength(1);
+  });
+});
+
+describe("renderCommunityText group mentions", () => {
+  const choir = "3b241101-e2bb-4255-8caf-4136c566a962";
+  const ann = "0f8fad5b-d9cb-469f-a165-70867728950e";
+
+  it("links a group the reader may see, marked as a group, with its current name", () => {
+    const html = renderCommunityText(`Thanks @[Choir](group:${choir})`, { mentions: [{ id: choir, kind: "group", name: "Sanctuary Choir", listed: true }] });
+    expect(html).toBe(`<p>Thanks <a href="/groups/${choir}" class="mention mention-group">@Sanctuary Choir<span class="sr-only"> (group)</span></a></p>\n`);
+  });
+
+  it("shows a group the reader can't see as a label, never a link", () => {
+    const html = renderCommunityText(`@[Group](group:${choir})`, { mentions: [{ id: choir, kind: "group", name: null, listed: false }] });
+    expect(html).toBe('<p><span class="mention mention-group">@Group<span class="sr-only"> (group)</span></span></p>\n');
+    expect(renderCommunityText(`@[Choir](group:${choir})`)).toBe("<p>@Choir</p>\n");
+  });
+
+  it("never confuses a group and a person with the same id", () => {
+    const html = renderCommunityText(`@[Ann](mention:${ann}) @[Choir](group:${ann})`, { mentions: [{ id: ann, name: "Ann", listed: true }] });
+    expect(html).toContain(`<a href="/directory/${ann}" class="mention">@Ann</a>`);
+    expect(html).toContain("@Choir</p>");
+  });
+
+  it("escapes group labels", () => {
+    const html = renderCommunityText(`@[<script>x</script>](group:${choir})`, { mentions: [{ id: choir, kind: "group", name: "<i>y</i>", listed: true }] });
+    expect(html).not.toMatch(/<script|<i>/);
   });
 });
 

@@ -1,10 +1,12 @@
 /**
- * @mentions in Community posts and comments.
+ * @mentions in Community posts and comments and in prayer requests and
+ * prayer comments: one shared set of helpers for both.
  *
  * Stored text carries each mention as `@[Display name](mention:<member id>)`
- * (the database validates every id on save and records it; see
- * 20261107000100_community_mentions.sql). Only that markup is a mention:
- * an email address or "@home" typed by hand stays plain text.
+ * or, for a group, `@[Group name](group:<group id>)` (the database validates
+ * every id on save and records it; see 20261107000100_community_mentions.sql
+ * and 20261108000100_mentions_groups_prayer.sql). Only that markup is a
+ * mention: an email address or "@home" typed by hand stays plain text.
  *
  * In the composer the member sees and edits plain text ("@Ann Rivers") while
  * the mentions are tracked as ranges over it; `serializeMentions` turns the
@@ -12,18 +14,45 @@
  * of it, removes the whole mention, so a half-edited name never stays linked.
  */
 export const MENTION_LIMIT = 10;
+/** The default group limit; the church can change it (community.settings), and the server enforces it. */
+export const GROUP_MENTION_LIMIT = 3;
 export const MENTION_LABEL_MAX = 80;
 
 /** Matches one mention: 1 = label, 2 = member id (same shape the database accepts). */
 export const MENTION_SOURCE = String.raw`@\[([^\[\]\n]{1,80})\]\(mention:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)`;
 
-export type Mention = { id: string; name: string; start: number; end: number };
+/** Matches one person or group mention: 1 = label, 2 = "mention" | "group", 3 = id. */
+export const ANY_MENTION_SOURCE = String.raw`@\[([^\[\]\n]{1,80})\]\((mention|group):([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)`;
 
-/** A mention as returned with a post or comment: the member's current name (null when they can't be shown) and whether their directory entry may be linked. */
-export type MentionRef = { id: string; name: string | null; listed: boolean };
+export type MentionKind = "member" | "group";
 
-/** A suggestion in the composer's list. */
+export type Mention = { id: string; name: string; start: number; end: number; kind?: MentionKind };
+
+/**
+ * A mention as returned with a post, comment, or prayer request: the current
+ * name (null when it can't be shown to this reader) and whether it may be
+ * linked (a member's directory entry, or a group the reader may see).
+ * `kind` is absent for people.
+ */
+export type MentionRef = { id: string; name: string | null; listed: boolean; kind?: MentionKind };
+
+/** A person in the composer's list. */
 export type MentionSuggestion = { id: string; name: string; photoUrl: string | null; detail: string | null };
+
+/**
+ * Whether choosing a group notifies its members: `notify` (and `reach`
+ * people), or why not: only leaders and moderators may (`leaders`), only
+ * members may (`members`), the group turned it off (`off`), or the post is
+ * anonymous (`anonymous`).
+ */
+export type GroupNotify = "notify" | "leaders" | "members" | "off" | "anonymous";
+
+/** A group in the composer's list. */
+export type GroupSuggestion = { id: string; name: string; imageUrl: string | null; notify: GroupNotify; reach: number | null };
+
+export type MentionSuggestions = { members: MentionSuggestion[]; groups: GroupSuggestion[]; unavailable?: "team" | "private" | null };
+
+const kindOf = (k: string | undefined): MentionKind => (k === "group" ? "group" : "member");
 
 /** A label safe to put inside the markup's brackets. */
 export function mentionLabel(name: string): string {
@@ -31,20 +60,22 @@ export function mentionLabel(name: string): string {
   return clean || "Member";
 }
 
-export function mentionMarkup(name: string, id: string): string {
-  return `@[${mentionLabel(name)}](mention:${id.toLowerCase()})`;
+export function mentionMarkup(name: string, id: string, kind: MentionKind = "member"): string {
+  return `@[${mentionLabel(name)}](${kind === "group" ? "group" : "mention"}:${id.toLowerCase()})`;
 }
 
 /** Markup → the text the member edits, with each mention's range in it. */
 export function parseMentions(markup: string): { text: string; mentions: Mention[] } {
-  const re = new RegExp(MENTION_SOURCE, "g");
+  const re = new RegExp(ANY_MENTION_SOURCE, "g");
   const mentions: Mention[] = [];
   let text = "";
   let last = 0;
   for (let m = re.exec(markup); m; m = re.exec(markup)) {
     text += markup.slice(last, m.index);
     const shown = `@${m[1]}`;
-    mentions.push({ id: m[2].toLowerCase(), name: m[1], start: text.length, end: text.length + shown.length });
+    const found: Mention = { id: m[3].toLowerCase(), name: m[1], start: text.length, end: text.length + shown.length };
+    if (m[2] === "group") found.kind = "group";
+    mentions.push(found);
     text += shown;
     last = m.index + m[0].length;
   }
@@ -57,7 +88,7 @@ export function serializeMentions(text: string, mentions: Mention[]): string {
   let last = 0;
   for (const m of [...mentions].sort((a, b) => a.start - b.start)) {
     if (m.start < last || text.slice(m.start, m.end) !== `@${m.name}`) continue;
-    out += text.slice(last, m.start) + mentionMarkup(m.name, m.id);
+    out += text.slice(last, m.start) + mentionMarkup(m.name, m.id, kindOf(m.kind));
     last = m.end;
   }
   return out + text.slice(last);
@@ -65,7 +96,12 @@ export function serializeMentions(text: string, mentions: Mention[]): string {
 
 /** Different people mentioned (the limit counts people, not mentions). */
 export function mentionedPeople(mentions: Mention[]): number {
-  return new Set(mentions.map((m) => m.id)).size;
+  return new Set(mentions.filter((m) => kindOf(m.kind) === "member").map((m) => m.id)).size;
+}
+
+/** Different groups mentioned. */
+export function mentionedGroups(mentions: Mention[]): number {
+  return new Set(mentions.filter((m) => m.kind === "group").map((m) => m.id)).size;
 }
 
 /**
@@ -123,12 +159,12 @@ export function findMentionQuery(text: string, caret: number, mentions: Mention[
   return { start, query: m[2] };
 }
 
-/** Replaces the typed "@query" with a mention of the chosen member. */
+/** Replaces the typed "@query" with a mention of the chosen member or group. */
 export function insertMention(
   text: string,
   mentions: Mention[],
   at: { start: number; end: number },
-  person: { id: string; name: string },
+  person: { id: string; name: string; kind?: MentionKind },
 ): { text: string; mentions: Mention[]; caret: number } {
   const name = mentionLabel(person.name);
   const shown = `@${name}`;
@@ -140,6 +176,7 @@ export function insertMention(
     .filter((m) => m.end <= at.start || m.start >= at.end)
     .map((m) => (m.start >= at.end ? { ...m, start: m.start + delta, end: m.end + delta } : m));
   const added: Mention = { id: person.id.toLowerCase(), name, start: at.start, end: at.start + shown.length };
+  if (person.kind === "group") added.kind = "group";
   return { text: nextText, mentions: [...shifted, added].sort((a, b) => a.start - b.start), caret: at.start + shown.length + spacer.length };
 }
 
@@ -156,5 +193,5 @@ export function removeMention(text: string, mentions: Mention[], target: Mention
 
 /** Plain text for places that can't show links (previews): "@Name". */
 export function mentionsAsText(markup: string): string {
-  return markup.replace(new RegExp(MENTION_SOURCE, "g"), "@$1");
+  return markup.replace(new RegExp(ANY_MENTION_SOURCE, "g"), "@$1");
 }

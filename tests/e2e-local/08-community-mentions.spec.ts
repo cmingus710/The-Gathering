@@ -86,7 +86,7 @@ test("keyboard: @ and a name suggest people; arrows and Enter mention them", asy
   await post.getByRole("button", { name: /^Comment/ }).click();
   const box = post.getByRole("textbox", { name: "Write a comment" });
   await box.pressSequentially("Thanks @Synth");
-  const list = post.getByRole("listbox", { name: "People you can mention" });
+  const list = post.getByRole("listbox", { name: "People and groups you can mention" });
   await expect(list.getByRole("option", { name: /Synthetic Admin/ })).toBeVisible();
   // Never the author, never a pending account.
   await expect(list.getByRole("option", { name: /Synthetic Member|Synthetic Pending/ })).toHaveCount(0);
@@ -116,17 +116,17 @@ test("people with the same name are told apart by what they share; opted-out mem
   await page.goto(`/community/t/${thread}`);
   const box = page.getByRole("textbox", { name: "Write a comment" });
   await box.pressSequentially("@Ruth");
-  const options = page.getByRole("listbox", { name: "People you can mention" }).getByRole("option");
+  const options = page.getByRole("listbox", { name: "People and groups you can mention" }).getByRole("option");
   await expect(options).toHaveCount(2);
   await expect(options.nth(0)).toContainText("Ruth Mentionable");
   await expect(options.filter({ hasText: "Springfield, IL" })).toHaveCount(1);
   await expect(options.filter({ hasText: "Shelbyville, IL" })).toHaveCount(1);
   await shot(page, "duplicate-names");
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("listbox", { name: "People you can mention" })).toBeHidden();
+  await expect(page.getByRole("listbox", { name: "People and groups you can mention" })).toBeHidden();
   await box.fill("");
   await box.pressSequentially("ruth@example.org ");
-  await expect(page.getByRole("listbox", { name: "People you can mention" })).toBeHidden();
+  await expect(page.getByRole("listbox", { name: "People and groups you can mention" })).toBeHidden();
   await page.close();
 });
 

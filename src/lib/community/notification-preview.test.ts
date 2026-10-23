@@ -41,10 +41,19 @@ describe("bell notification previews", () => {
     expect(previewLine("forum", "unknown_kind")).toBe("Open to see the details.");
   });
 
+  it("never shows a prayer request's title for prayer mentions", () => {
+    for (const kind of ["prayer_mention", "prayer_group_mention"]) {
+      const p = toPreview({ ...base, category: kind === "prayer_mention" ? "mentions" : "group_mentions", kind, title: "You were mentioned in a prayer request: “Surgery for Anna”" });
+      expect(p.title).toBe("Prayer mention");
+      expect(p.generic).toBe(true);
+      expect(JSON.stringify(p)).not.toContain("Anna");
+    }
+  });
+
   it("maps every category to exactly one filter, and unknown filters to All", () => {
     const mapped = PANEL_FILTERS.flatMap((f) => ("categories" in f ? [...f.categories] : []));
     expect(new Set(mapped).size).toBe(mapped.length);
-    expect(mapped.sort()).toEqual(["care", "events", "forum", "gallery", "groups", "memory", "mentions", "messages", "moderation", "prayer", "reading", "teaching", "youth"]);
+    expect(mapped.sort()).toEqual(["care", "events", "forum", "gallery", "group_mentions", "groups", "memory", "mentions", "messages", "moderation", "prayer", "reading", "teaching", "youth"]);
     expect(panelFilter("nope").key).toBe("all");
     expect(panelFilter("events").key).toBe("events");
   });

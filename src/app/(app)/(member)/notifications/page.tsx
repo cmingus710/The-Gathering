@@ -27,6 +27,7 @@ const ICON = {
   memory: BookMarked,
   youth: Sprout,
   mentions: AtSign,
+  group_mentions: UsersRound,
 } as const;
 
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {

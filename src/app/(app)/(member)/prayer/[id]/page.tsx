@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CommunityText } from "@/components/community/community-text";
 import { LiveRefresh } from "@/components/community/live-refresh";
 import { ToggleForm } from "@/components/community/toggle-form";
+import { CommentFocus } from "@/components/prayer/comment-focus";
 import { CommentComposer, CommentItem, UpdateComposer, UpdateItem } from "@/components/prayer/conversation";
 import { AuthorStatusControls, IdentityLookup, RequestModeration } from "@/components/prayer/controls";
 import { PrayButton } from "@/components/prayer/pray-button";
@@ -16,7 +17,7 @@ import { Card } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { exactTime, relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
-import { audienceDescription, STATUS_LABEL } from "@/lib/prayer/format";
+import { AUDIENCE_LABEL, audienceDescription, STATUS_LABEL } from "@/lib/prayer/format";
 import type { PrayerDetail } from "@/lib/prayer/types";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { followAction, setCommentsAction } from "../actions";
@@ -38,10 +39,16 @@ export default async function PrayerRequestPage({ params, searchParams }: PagePr
   await requireApprovedMember(`/prayer/${id}`);
   if (!UUID.test(id)) notFound();
   const sp = await searchParams;
-  const n = Math.min(Math.max(Number(sp.n) || 50, 50), 200);
+  // A link to one comment (a mention notification) opens enough of the
+  // conversation to show it; the position is counted among the comments
+  // this reader may see, so it never reveals others.
+  const focus = typeof sp.comment === "string" && UUID.test(sp.comment) ? sp.comment : null;
+  const position = focus ? await tryCommunityRpc<number>("prayer_comment_position", { p_request: id, p_comment: focus }) : null;
+  const n = Math.min(Math.max(Number(sp.n) || 50, position ? Math.ceil(position / 50) * 50 : 50, 50), 1000);
   const [r, { settings }] = await Promise.all([tryCommunityRpc<PrayerDetail>("prayer_request", { p_id: id, p_limit: n }), getChurchSettings()]);
   // Missing, hidden, archived, or outside the reader's audience: the same "not found".
   if (!r) notFound();
+  const focusShown = !!focus && r.comments.some((c) => c.id === focus);
   const tz = settings.timezone;
   const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
   const published = r.audience !== "private";
@@ -60,6 +67,11 @@ export default async function PrayerRequestPage({ params, searchParams }: PagePr
       <LiveRefresh />
       <BackLink route="/prayer/[id]" />
       {saved ? <Alert tone="success" title={saved} className="mb-4" /> : null}
+      {focus && !focusShown ? (
+        <Alert tone="info" title="That comment isn't available" className="mb-4">
+          It may have been removed or hidden, or it was shared with a smaller audience before this request was widened.
+        </Alert>
+      ) : null}
 
       <article aria-labelledby="request-title" className="space-y-5">
         <header>
@@ -100,7 +112,7 @@ export default async function PrayerRequestPage({ params, searchParams }: PagePr
         ) : null}
 
         <Card>
-          <CommunityText source={r.body} />
+          <CommunityText source={r.body} mentions={r.mentions} />
           {published && r.status !== "archived" ? (
             <div className="mt-5">
               <PrayButton requestId={r.id} initialCount={r.prayer_count} initialPraying={r.praying} disabled={!r.can_pray && !r.praying} />
@@ -196,17 +208,22 @@ export default async function PrayerRequestPage({ params, searchParams }: PagePr
               <p className="rounded-card border border-border bg-surface px-5 py-4 text-text-secondary">No comments yet.</p>
             )}
             {r.comments_has_more ? (
-              n < 200 ? (
+              n < 1000 ? (
                 <ButtonLink href={`/prayer/${r.id}?n=${n + 50}`} variant="secondary" size="sm" scroll={false}>
                   Show more comments
                 </ButtonLink>
               ) : (
-                <p className="text-text-secondary">The first 200 comments are shown.</p>
+                <p className="text-text-secondary">The first 1,000 comments are shown.</p>
               )
             ) : null}
+            {focusShown ? <CommentFocus id={focus!} /> : null}
             {r.can_comment ? (
               <Card>
-                <CommentComposer requestId={r.id} anonymousRequester={r.mine && r.anonymous} />
+                <CommentComposer
+                  requestId={r.id}
+                  anonymousRequester={r.mine && r.anonymous}
+                  audienceLabel={r.audience === "group" ? (r.group?.name ?? "your group") : AUDIENCE_LABEL[r.audience].toLowerCase()}
+                />
               </Card>
             ) : commentsClosedReason ? (
               <Alert tone="info" title={commentsClosedReason} />

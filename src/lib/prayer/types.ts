@@ -1,3 +1,5 @@
+import type { MentionRef } from "@/lib/community/mentions";
+
 /** Shapes returned by the prayer_* and care_* database functions. */
 export type Audience = "private" | "group" | "team" | "church";
 export type RequestStatus = "open" | "answered" | "closed" | "archived";
@@ -39,6 +41,8 @@ export type PrayerComment = {
   mine: boolean;
   created_at: string;
   edited_at: string | null;
+  /** People and groups mentioned (null when the text isn't shown); absent before migration 20261108000100. */
+  mentions?: MentionRef[] | null;
 };
 
 export type PrayerUpdate = {
@@ -53,6 +57,8 @@ export type PrayerUpdate = {
 
 export type PrayerDetail = PrayerCard & {
   body: string;
+  /** People and groups mentioned in the request; absent before migration 20261108000100. */
+  mentions?: MentionRef[];
   comments_enabled: boolean;
   mod_locked: boolean;
   edited_at: string | null;

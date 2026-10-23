@@ -7,7 +7,7 @@ import type { NotificationCategory, NotificationItem } from "./types";
  *
  * - Prayer, care, messages, youth, and moderation never show their title
  *   there, because titles in those categories can name a request, a child, or
- *   a report. They get a generic label; opening it shows the real content
+ *   a report. Nor do prayer mentions (which are in the mention categories). They get a generic label; opening it shows the real content
  *   after the usual access check.
  * - Every other title is shortened.
  * - No destination URL is sent: each row opens /notifications/open/<id>,
@@ -21,6 +21,12 @@ export const PRIVATE_PREVIEW: Partial<Record<NotificationCategory, string>> = {
   messages: "New message",
   youth: "Youth & Families update",
   moderation: "Moderation update",
+};
+
+/** Kinds in non-private categories that still carry a private title (a prayer request's). */
+export const PRIVATE_KIND_PREVIEW: Record<string, { title: string; line: string }> = {
+  prayer_mention: { title: "Prayer mention", line: "You were mentioned in a prayer request." },
+  prayer_group_mention: { title: "Prayer mention", line: "Your group was mentioned in a prayer request." },
 };
 
 export const PREVIEW_TITLE_MAX = 90;
@@ -57,6 +63,7 @@ export const CATEGORY_LABEL: Record<NotificationCategory, string> = {
   memory: "Memory verses",
   youth: "Youth & Families",
   mentions: "Mentions",
+  group_mentions: "Group mentions",
 };
 
 const PRIVATE_LINE: Partial<Record<NotificationCategory, string>> = {
@@ -87,10 +94,11 @@ const KIND_LINE: Record<string, string> = {
   memory_practice_reminder: "A reminder to practice your memory verses.",
   memory_challenge_milestone: "A challenge you share in reached a milestone.",
   mention: "Someone mentioned you in Community.",
+  group_mention: "Your group was mentioned in Community.",
 };
 
 export function previewLine(category: NotificationCategory, kind: string): string {
-  return PRIVATE_LINE[category] ?? KIND_LINE[kind] ?? "Open to see the details.";
+  return PRIVATE_LINE[category] ?? PRIVATE_KIND_PREVIEW[kind]?.line ?? KIND_LINE[kind] ?? "Open to see the details.";
 }
 
 /**
@@ -100,7 +108,7 @@ export function previewLine(category: NotificationCategory, kind: string): strin
 export const PANEL_FILTERS = [
   { key: "all", label: "All" },
   { key: "unread", label: "Unread" },
-  { key: "community", label: "Community", categories: ["forum", "groups", "messages", "moderation", "mentions"] },
+  { key: "community", label: "Community", categories: ["forum", "groups", "messages", "moderation", "mentions", "group_mentions"] },
   { key: "events", label: "Events", categories: ["events"] },
   { key: "prayer", label: "Prayer & Care", categories: ["prayer", "care"] },
   { key: "teaching", label: "Teaching & Photos", categories: ["teaching", "gallery"] },
@@ -123,7 +131,7 @@ export function abbreviate(text: string, max = PREVIEW_TITLE_MAX): string {
 }
 
 export function toPreview(n: Pick<NotificationItem, "id" | "kind" | "category" | "title" | "created_at" | "read">): NotificationPreview {
-  const generic = PRIVATE_PREVIEW[n.category];
+  const generic = PRIVATE_PREVIEW[n.category] ?? PRIVATE_KIND_PREVIEW[n.kind]?.title;
   return {
     id: n.id,
     kind: n.kind,

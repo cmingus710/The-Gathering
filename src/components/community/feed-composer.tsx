@@ -10,7 +10,7 @@ import { LIMITS } from "@/lib/community/format";
 import { initialFormState } from "@/lib/forms";
 import { AttachmentPicker } from "./attachment-picker";
 import { InitialsAvatar, useDraftGuard } from "./feed-bits";
-import { MentionTextarea } from "./mention-textarea";
+import { MentionTextarea } from "@/components/mentions/mention-textarea";
 
 export type ComposerPlace = { kind: "category" | "group"; id: string; name: string };
 
@@ -178,7 +178,7 @@ export function FeedComposer({
           minRows={3}
           value={body}
           onValueChange={setBody}
-          place={selected ? { categoryId: selected.kind === "category" ? selected.id : null, groupId: selected.kind === "group" ? selected.id : null } : null}
+          place={selected ? { module: "community", categoryId: selected.kind === "category" ? selected.id : null, groupId: selected.kind === "group" ? selected.id : null } : null}
           placeholder="Share something with your church community…"
           aria-invalid={fe.body ? true : undefined}
           aria-describedby={`${id}-format`}
@@ -189,7 +189,7 @@ export function FeedComposer({
             Formatting help
           </summary>
           <p id={`${id}-format`} className="pb-1 text-meta text-text-secondary">
-            You can use **bold**, _italic_, lists, &gt; quotes, and links. Type @ and a name to mention someone who can see this post.
+            You can use **bold**, _italic_, lists, &gt; quotes, and links. Type @ and a name to mention someone who can see this post, or a group.
           </p>
         </details>
       </div>

@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
+import type { GroupMentionNotify } from "@/lib/community/types";
 import { MAX_COVER_BYTES } from "@/lib/events/limits";
 import { initialFormState, type FormState } from "@/lib/forms";
 import {
@@ -16,6 +17,7 @@ import {
   leaderSearch,
   leaveGroupAction,
   memberAction,
+  mentionNotifyAction,
   requestJoinAction,
   respondInvitationAction,
   revokeInvitationAction,
@@ -276,6 +278,49 @@ export function LeaderPicker({ groupId }: { groupId: string }) {
       search={leaderSearch}
       render={(p) => <AppointOne groupId={groupId} person={p} />}
     />
+  );
+}
+
+const MENTION_OPTIONS: Array<{ value: GroupMentionNotify; label: string; hint: string }> = [
+  {
+    value: "leaders",
+    label: "Leaders and moderators only (recommended)",
+    hint: "Anyone who can see the group can mention it, but only its leaders, and church community moderators who belong to it, notify its members.",
+  },
+  { value: "members", label: "Group members", hint: "Any member of the group can notify everyone in it who can see the post or prayer request." },
+  { value: "off", label: "No one", hint: "The group can still be mentioned, but no one is notified." },
+];
+
+/**
+ * "Who can notify this group through @mentions?" Mentioning a group (a link
+ * to it) is separate from notifying its members; this decides the second.
+ */
+export function MentionNotifyForm({ groupId, value }: { groupId: string; value: GroupMentionNotify }) {
+  const [state, action] = useActionState<FormState, FormData>(mentionNotifyAction, initialFormState);
+  return (
+    <form action={action} className="space-y-4">
+      <FormMessage state={state} />
+      <Hidden values={{ groupId }} />
+      <fieldset className="space-y-2">
+        <legend className="mb-1 font-semibold">Who can notify this group through @mentions?</legend>
+        {MENTION_OPTIONS.map((o) => (
+          <label key={o.value} className="flex cursor-pointer items-start gap-3 rounded-tile border border-border bg-surface px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
+            <input type="radio" name="mentionNotify" value={o.value} defaultChecked={value === o.value} className="mt-1 size-5 shrink-0 accent-primary" />
+            <span>
+              <span className="block font-semibold">{o.label}</span>
+              <span className="block text-meta text-text-secondary">{o.hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <p className="text-meta text-text-secondary">
+        Only members who can already see a post or prayer request are notified, never more than once for the same post, and members who join later aren&apos;t
+        notified about earlier mentions. Members can turn these off under Notifications → Settings → My group is mentioned.
+      </p>
+      <SubmitButton size="sm" pendingText="Saving…">
+        Save mention setting
+      </SubmitButton>
+    </form>
   );
 }
 

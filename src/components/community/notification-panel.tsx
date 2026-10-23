@@ -45,6 +45,7 @@ const ICON = {
   memory: BookMarked,
   youth: Sprout,
   mentions: AtSign,
+  group_mentions: UsersRound,
 } as const;
 
 type Page = { items: NotificationPreview[]; has_more: boolean; timezone: string; has_read: boolean };

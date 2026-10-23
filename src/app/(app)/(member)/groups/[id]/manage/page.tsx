@@ -9,7 +9,7 @@ import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { signGroupImages, tryCommunityRpc } from "@/lib/community/queries";
 import type { GroupDetail, ReportSummary, Roster } from "@/lib/community/types";
-import { DecideRequest, GroupDetailsForm, InvitePicker, LeaderPicker, MemberControls, RevokeInvitation } from "../../group-forms";
+import { DecideRequest, GroupDetailsForm, InvitePicker, LeaderPicker, MemberControls, MentionNotifyForm, RevokeInvitation } from "../../group-forms";
 
 export const metadata: Metadata = { title: "Manage group" };
 
@@ -115,6 +115,15 @@ export default async function ManageGroupPage({ params }: PageProps<"/groups/[id
               {reports.length ? `${reports.length} open ${reports.length === 1 ? "report" : "reports"} to review.` : "No open reports."}{" "}
               <span className="text-text-secondary">Reports about a group leader go to the church&apos;s community moderators instead.</span>
             </p>
+          </section>
+        ) : null}
+
+        {group.status === "active" && group.mention_notify ? (
+          <section aria-labelledby="mentions-heading">
+            <SectionHeading id="mentions-heading">@Mentions</SectionHeading>
+            <Card>
+              <MentionNotifyForm groupId={id} value={group.mention_notify} />
+            </Card>
           </section>
         ) : null}
 

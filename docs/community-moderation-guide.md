@@ -54,6 +54,7 @@ Edit at **Administration → Community**. Members must accept the current guidel
 - **Hidden:** visible only to members and community administrators. Join by invitation.
 - A group always has at least one active leader. To remove the last leader, appoint another first or archive the group. Archived groups are read-only; open invitations and requests close.
 - Removing someone (or them leaving) ends their access immediately and cancels their group-event registrations (the waitlist moves up), with no event email.
+- **@Mentions** (Manage → @Mentions): leaders choose who can notify the group's members by mentioning it: leaders and moderators only (default), any member, or no one. Anyone can still mention a discoverable group as a link; a hidden group can only be mentioned inside itself. Changes are audited. See [community-mentions.md](community-mentions.md#group-controls-for-group-leaders).
 
 ## Photos and videos in discussions (Phase 13)
 

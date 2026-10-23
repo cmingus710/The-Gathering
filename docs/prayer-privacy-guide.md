@@ -44,6 +44,14 @@ Your updates show as "The requester". Your comments on your own request also sho
 - **Follow** a request to hear about new comments and updates. You follow your own requests and ones you comment on automatically.
 - **Report** anything inappropriate. A prayer moderator sees only the item you reported.
 
+## Mentioning people and groups
+
+- Type **@** and a name in a request or a comment to let someone, or one of the church's groups, know about it. Only people and groups who can **already see** the request are suggested; mentioning someone never shares it with anyone else, never changes the audience, and doesn't say the request is about them or that they agreed to it. Ask before sharing someone else's story.
+- The audience stays shown next to the text. If you change it so that someone you mentioned couldn't see the request, you're told before saving and can remove the mention; the audience is never widened to fit.
+- **Confidential (prayer team) requests** can't mention anyone. **Private drafts** aren't sent to anyone until you share them.
+- **Anonymous requests stay anonymous:** people you mention are told only "You were mentioned in a prayer request". Groups can be named but are never notified from an anonymous request.
+- A group's members are notified only if the group allows you to (see the group's @Mentions setting), and only those who can already see the request. Prayer mention email and push never include the title, the text, or anyone's name. See [community-mentions.md](community-mentions.md).
+
 ## Statuses
 
 Open → Answered (with an optional dated update sharing how) → Closed (stays readable, no new comments or prayers) → **Archived** (only you can see it). Restoring from the archive asks you to confirm the audience again. **Delete** removes the request with its updates, comments, and prayers for everyone.

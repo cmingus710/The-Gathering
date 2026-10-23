@@ -3,7 +3,7 @@
 import { CircleAlert, Globe, Lock, Send } from "lucide-react";
 import { useActionState, useState } from "react";
 import { AttachmentPicker } from "@/components/community/attachment-picker";
-import { MentionTextarea, type MentionPlace } from "@/components/community/mention-textarea";
+import { MentionTextarea, type MentionPlace } from "@/components/mentions/mention-textarea";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { cn } from "@/components/ui/cn";
@@ -33,7 +33,7 @@ export function AudienceNotice({ audience, place }: { audience: "church" | "grou
   );
 }
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. Type @ and a name to mention someone.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. Type @ and a name to mention someone or a group.";
 
 /**
  * New or edited discussion. Fields are controlled, so the text survives a
@@ -67,8 +67,8 @@ export function ThreadComposer({
   const [uploading, setUploading] = useState(false);
   const fe = state.fieldErrors ?? {};
   const mentionPlace: MentionPlace = hidden.threadId
-    ? { threadId: hidden.threadId }
-    : { categoryId: hidden.categoryId || null, groupId: hidden.groupId || null };
+    ? { module: "community", threadId: hidden.threadId }
+    : { module: "community", categoryId: hidden.categoryId || null, groupId: hidden.groupId || null };
   const bodyError = fe.body?.[0];
   return (
     <form action={formAction} className="space-y-5">
