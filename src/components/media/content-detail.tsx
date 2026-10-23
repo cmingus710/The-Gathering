@@ -16,11 +16,19 @@ import { BookAccess } from "./book-access";
 import { EmbedPlayer } from "./embed-player";
 import { FramedImage } from "./framed-image";
 import { ItemCard, itemCover } from "./item-card";
+import { QuestionNotes, type NotesLink } from "./question-notes";
 import { BookmarkButton, CompleteToggle } from "./toggles";
 import { VideoList } from "./video-list";
 import { VideoUsedIn } from "./video-card";
 
 const QUESTION_TITLE: Record<string, string> = { devotional: "Reflection questions", assignment: "Discussion questions" };
+
+/** The journal link for notes on an item's questions (a church reading assignment links as 'book_assignment'). */
+function notesLink(item: ItemDetail): NotesLink {
+  if (item.kind === "devotional" || item.kind === "lesson") return { kind: item.kind, media_item_id: item.id };
+  if (item.kind === "assignment") return { kind: "book_assignment", media_item_id: item.id };
+  return null;
+}
 
 export function FileRow({ a }: { a: Attachment }) {
   const ext = a.mime?.includes("presentation") ? "PowerPoint" : a.mime === "application/pdf" ? "PDF" : a.kind === "audio" ? "Audio" : "File";
@@ -215,13 +223,7 @@ export function ContentDetail({
       {item.questions.length ? (
         <section aria-labelledby="questions-heading" className="rounded-card border border-border bg-surface p-5">
           <SectionHeading id="questions-heading">{QUESTION_TITLE[item.kind] ?? "Discussion questions"}</SectionHeading>
-          <ol className="list-decimal space-y-2 pl-6">
-            {item.questions.map((q, i) => (
-              <li key={i} className="whitespace-pre-line [overflow-wrap:anywhere]">
-                {q}
-              </li>
-            ))}
-          </ol>
+          <QuestionNotes questions={item.questions} title={item.title} link={notesLink(item)} canNote={member && !preview} />
         </section>
       ) : null}
 

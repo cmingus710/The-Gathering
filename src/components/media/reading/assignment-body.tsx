@@ -4,6 +4,7 @@ import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { formatDay } from "@/lib/media/format";
 import type { PlanAssignment } from "@/lib/media/reading-plan";
 import { FileRow } from "../content-detail";
+import { QuestionNotes } from "../question-notes";
 import { CompleteToggle } from "../toggles";
 import { VideoList } from "../video-list";
 
@@ -43,13 +44,13 @@ export function AssignmentBody({ a, canNote, headingLevel = "h3" }: { a: PlanAss
       {a.questions.length ? (
         <div>
           <H className="mb-1.5 font-semibold">Discussion questions</H>
-          <ol className="list-decimal space-y-1.5 pl-6">
-            {a.questions.map((q, i) => (
-              <li key={i} className="whitespace-pre-line [overflow-wrap:anywhere]">
-                {q}
-              </li>
-            ))}
-          </ol>
+          <QuestionNotes
+            questions={a.questions}
+            title={a.title}
+            link={{ kind: "book_assignment", media_item_id: a.id }}
+            canNote={canNote}
+            headingLevel={H === "h3" ? "h4" : "h5"}
+          />
         </div>
       ) : null}
       {files.length ? (
