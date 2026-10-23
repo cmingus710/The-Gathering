@@ -2,10 +2,11 @@
 
 import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useCroppedFileInput } from "@/components/media/use-cropped-file-input";
 import { CheckboxField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { initialFormState } from "@/lib/forms";
+import { initialFormState, type FormState } from "@/lib/forms";
 import { coverAction, duplicatePlanAction, importStageAction, planStatusAction } from "./actions";
 
 export function StatusControls({
@@ -88,13 +89,32 @@ export function DuplicateForm({ planId, title, mode, canEdit }: { planId: string
 }
 
 export function CoverForm({ planId, hasCover, alt }: { planId: string; hasCover: boolean; alt: string | null }) {
-  const [state, action] = useActionState(coverAction, initialFormState);
+  // Counts successful saves, so the image picker starts over after one.
+  const [state, action] = useActionState<FormState & { saves?: number }, FormData>(async (prev, formData) => {
+    const result = await coverAction(prev, formData);
+    return { ...result, saves: (prev.saves ?? 0) + (result.status === "success" ? 1 : 0) };
+  }, initialFormState);
+  // Plan pages show the cover at 16:9.
+  const cover = useCroppedFileInput({ aspect: 16 / 9, frameLabel: "16:9", savedKey: state.saves ?? 0 });
   return (
     <div className="space-y-3">
       <FormMessage state={state} />
       <form action={action} className="space-y-3">
         <input type="hidden" name="id" value={planId} />
-        <TextField label="Cover image" name="cover" type="file" accept="image/png,image/jpeg,image/webp" hint="PNG, JPEG, or WebP up to 4 MB. Re-encoded without location data." />
+        <TextField
+          label="Cover image"
+          name="cover"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hint="PNG, JPEG, or WebP up to 4 MB. You can crop it to the plan page's 16:9 frame or keep it whole. Re-encoded without location data."
+          {...cover.inputProps}
+        />
+        {cover.preview ? (
+          // eslint-disable-next-line @next/next/no-img-element -- local object-URL preview
+          <img src={cover.preview} alt="" className="aspect-[16/9] w-full max-w-md rounded-tile bg-surface-muted object-cover" />
+        ) : null}
+        {cover.controls}
+        {cover.dialog}
         <TextField label="Image description" name="cover_alt" defaultValue={alt ?? ""} maxLength={300} optional hint="For people using screen readers." />
         <SubmitButton variant="secondary" size="sm" pendingText="Uploading…">
           {hasCover ? "Replace cover" : "Add cover"}

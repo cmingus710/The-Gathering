@@ -1,10 +1,21 @@
+import type { Framing } from "./framing";
+
 /** Shapes returned by the media_* database functions (see the Phase 7 migrations). */
 export type ItemKind = "devotional" | "lesson" | "episode" | "book" | "assignment" | "playlist" | "video";
 export type Audience = "public" | "members" | "group";
 export type ItemState = "draft" | "scheduled" | "live" | "expired" | "archived";
 export type AssetKind = "audio" | "video" | "image" | "document" | "captions" | "external_video";
 
-export type Cover = { asset_id: string; path: string; variant_path: string | null; alt: string; width: number | null; height: number | null };
+export type Cover = {
+  asset_id: string;
+  path: string;
+  variant_path: string | null;
+  alt: string;
+  width: number | null;
+  height: number | null;
+  /** How this item (or series) positions the shared image; null = centred (whole cover for books). */
+  framing?: Framing | null;
+};
 export type Person = { id: string; name: string; role: "author" | "speaker" | "host" | "contributor" };
 
 /** What the shared video player needs (media.video_json): identifiers only, never embed code. */
@@ -118,6 +129,7 @@ export type ItemAdmin = {
   notes: string;
   questions: string[];
   cover_asset_id: string | null;
+  cover_framing?: Framing | null;
   cover_alt: string | null;
   status: "draft" | "scheduled" | "published" | "archived";
   state: ItemState;

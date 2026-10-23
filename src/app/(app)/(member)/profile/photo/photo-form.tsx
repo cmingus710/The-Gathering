@@ -1,135 +1,131 @@
 "use client";
 
-import { Trash2, Upload } from "lucide-react";
+/* eslint-disable @next/next/no-img-element -- local object-URL preview of the cropped photo */
+import { Crop, LoaderCircle, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { ImageCropper } from "@/components/media/image-cropper";
 import { MemberAvatar } from "@/components/profile/member-avatar";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
+import { CENTRED, type Framing } from "@/lib/media/framing";
+import { ImageDecodeError, loadEditableImage, renderFramed, type EditableImage } from "@/lib/media/image-edit";
 import { removePhotoAction, uploadPhotoAction } from "../actions";
 
 const OUTPUT = 768;
 const ACCEPT = "image/png,image/jpeg,image/webp";
 const MAX_BYTES = 15 * 1024 * 1024;
+const SQUARE = [{ id: "square", label: "Square", aspect: 1 }];
 
-type Crop = { zoom: number; x: number; y: number };
-const CENTRE: Crop = { zoom: 1, x: 0, y: 0 };
-
-/** Source rectangle for a square crop of the image at the given zoom and offset (-100..100). */
-function sourceRect(w: number, h: number, c: Crop) {
-  const side = Math.min(w, h) / c.zoom;
-  const maxX = (w - side) / 2;
-  const maxY = (h - side) / 2;
-  return { sx: maxX + (c.x / 100) * maxX, sy: maxY + (c.y / 100) * maxY, side };
-}
-
-function Range({ id, label, value, min, max, step, onChange, valueText }: { id: string; label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; valueText: string }) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="flex justify-between font-semibold">
-        {label} <span className="font-normal text-text-secondary">{valueText}</span>
-      </label>
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        aria-valuetext={valueText}
-        onChange={(e) => onChange(Number(e.currentTarget.value))}
-        className="h-11 w-full cursor-pointer accent-primary"
-      />
-    </div>
-  );
-}
+/** The chosen photo and how it's framed; the original stays on this device. */
+type Chosen = { image: EditableImage; framing: Framing; cropped: { file: File; url: string } | null };
 
 /**
- * Choose, position, and upload a photo. The crop happens in the browser so
- * the original never leaves the device; the server validates and re-encodes
- * whatever it receives. Without JavaScript the form still works and the
- * server centre-crops the uploaded image.
+ * Choose, frame, and upload a photo. The photo opens in the shared cropper
+ * (square, shown in a circle as everywhere else); the cropped copy is
+ * previewed here and only replaces the current photo after "Save". Cancel
+ * at any step keeps the current photo. The crop happens in the browser so
+ * the original never leaves the device; the server validates and
+ * re-encodes whatever it receives. Without JavaScript the form still works
+ * and the server centre-crops the uploaded image.
  */
 export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; photoUrl: string | null; hasPhoto: boolean; shared: boolean }) {
   const [state, action] = useActionState(uploadPhotoAction, initialFormState);
   const [removeState, removeAction] = useActionState(removePhotoAction, initialFormState);
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [crop, setCrop] = useState<Crop>(CENTRE);
+  const [chosen, setChosen] = useState<Chosen | null>(null);
+  const [cropping, setCropping] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
-  // Draw the live preview.
+  const chosenRef = useRef(chosen);
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !image) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const { sx, sy, side } = sourceRect(image.naturalWidth, image.naturalHeight, crop);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
-  }, [image, crop]);
+    chosenRef.current = chosen;
+  });
+
+  // Free the decoded photo and preview when leaving the page.
+  useEffect(
+    () => () => {
+      const c = chosenRef.current;
+      c?.image.release();
+      if (c?.cropped) URL.revokeObjectURL(c.cropped.url);
+    },
+    [],
+  );
+
+  function discard() {
+    const c = chosenRef.current;
+    c?.image.release();
+    if (c?.cropped) URL.revokeObjectURL(c.cropped.url);
+    setChosen(null);
+    setCropping(false);
+  }
 
   // Once the server accepts the photo, clear the local selection.
   useEffect(() => {
     if (state.status !== "success") return;
-    startTransition(() => {
-      setImage(null);
-      setCrop(CENTRE);
-    });
+    startTransition(discard);
     formRef.current?.reset();
   }, [state]);
 
-  function choose(file: File | undefined) {
-    setLocalError(null);
-    setImage(null);
-    setCrop(CENTRE);
+  async function choose(file: File | undefined) {
+    // No file means the picker was dismissed: keep everything as it was.
     if (!file) return;
+    setLocalError(null);
     if (!ACCEPT.split(",").includes(file.type)) return setLocalError("Choose a PNG, JPEG, or WebP image.");
     if (file.size > MAX_BYTES) return setLocalError("That image is too large. Choose one under 15 MB.");
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      if (img.naturalWidth < 128 || img.naturalHeight < 128) return setLocalError("Choose an image at least 128 × 128 pixels.");
-      setImage(img);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      setLocalError("We couldn't read that image. Try a different one.");
-    };
-    img.src = url;
+    setOpening(true);
+    try {
+      const image = await loadEditableImage(file);
+      if (image.width < 128 || image.height < 128) {
+        image.release();
+        return setLocalError("Choose an image at least 128 × 128 pixels.");
+      }
+      discard();
+      setChosen({ image, framing: CENTRED, cropped: null });
+      setCropping(true);
+    } catch (e) {
+      setLocalError(e instanceof ImageDecodeError ? "We couldn't read that image. Try a different one." : "Something went wrong opening that photo. Try again.");
+    } finally {
+      setOpening(false);
+    }
+  }
+
+  async function apply(framing: Framing) {
+    if (!chosen) return;
+    setPreparing(true);
+    setLocalError(null);
+    try {
+      const file = await renderFramed(chosen.image, { aspect: 1, framing, maxSide: OUTPUT, type: "image/jpeg", name: "photo.jpg" });
+      if (chosen.cropped) URL.revokeObjectURL(chosen.cropped.url);
+      setChosen({ ...chosen, framing, cropped: { file, url: URL.createObjectURL(file) } });
+      setCropping(false);
+    } catch {
+      setLocalError("We couldn't prepare that photo. Try again, or choose a different one.");
+    } finally {
+      setPreparing(false);
+    }
+  }
+
+  function cancelCrop() {
+    // Cancelling the first crop drops the new photo; cancelling an edit keeps the last crop.
+    if (chosen?.cropped) setCropping(false);
+    else discard();
   }
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
-    if (!image) return; // no JS-side image: let the browser submit the original
+    if (!chosen?.cropped) return; // nothing chosen here: let the browser submit (or the server explain)
     e.preventDefault();
-    const out = document.createElement("canvas");
-    out.width = OUTPUT;
-    out.height = OUTPUT;
-    const ctx = out.getContext("2d");
-    if (!ctx) return;
-    const { sx, sy, side } = sourceRect(image.naturalWidth, image.naturalHeight, crop);
-    ctx.drawImage(image, sx, sy, side, side, 0, 0, OUTPUT, OUTPUT);
-    out.toBlob(
-      (blob) => {
-        if (!blob) return setLocalError("We couldn't prepare that photo. Try a different one.");
-        const fd = new FormData();
-        fd.set("photo", new File([blob], "photo.jpg", { type: "image/jpeg" }));
-        startTransition(() => action(fd));
-      },
-      "image/jpeg",
-      0.9,
-    );
+    const fd = new FormData();
+    fd.set("photo", chosen.cropped.file);
+    startTransition(() => action(fd));
   }
 
-  const zoomText = `${Math.round(crop.zoom * 100)}%`;
-  const xText = crop.x === 0 ? "Centred" : crop.x < 0 ? `${-crop.x}% left` : `${crop.x}% right`;
-  const yText = crop.y === 0 ? "Centred" : crop.y < 0 ? `${-crop.y}% up` : `${crop.y}% down`;
+  const pendingPreview = chosen?.cropped?.url ?? null;
 
   return (
     <div className="space-y-6">
@@ -141,25 +137,47 @@ export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; 
       ) : null}
 
       <div className="flex flex-wrap items-center gap-5">
-        <MemberAvatar name={name} photoUrl={photoUrl} size="lg" />
+        {pendingPreview ? (
+          <img src={pendingPreview} alt="" className="size-28 shrink-0 rounded-full bg-surface-muted object-cover ring-2 ring-primary ring-offset-2 ring-offset-surface" />
+        ) : (
+          <MemberAvatar name={name} photoUrl={photoUrl} size="lg" />
+        )}
         <div className="space-y-1">
-          <p className="font-semibold">{hasPhoto ? "Current photo" : "No photo yet"}</p>
+          <p className="font-semibold">{pendingPreview ? "New photo (not saved yet)" : hasPhoto ? "Current photo" : "No photo yet"}</p>
           <p className="text-meta text-text-secondary">
-            {hasPhoto ? (shared ? "Shown to approved members." : "Hidden from other members.") : "Members see your initials."}{" "}
+            {pendingPreview
+              ? hasPhoto
+                ? "Your current photo stays until you save."
+                : "Save to start using it."
+              : hasPhoto
+                ? shared
+                  ? "Shown to approved members."
+                  : "Hidden from other members."
+                : "Members see your initials."}{" "}
             <Link href="/profile/privacy" className="font-semibold text-primary underline underline-offset-2">
               Privacy
             </Link>
           </p>
+          {pendingPreview ? (
+            <div className="flex flex-wrap gap-1 pt-1">
+              <Button variant="secondary" size="sm" icon={<Crop className="size-4" aria-hidden="true" />} onClick={() => setCropping(true)} aria-haspopup="dialog">
+                Edit crop
+              </Button>
+              <Button variant="ghost" size="sm" icon={<X className="size-4" aria-hidden="true" />} onClick={discard}>
+                Cancel new photo
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
 
       <form ref={formRef} action={action} onSubmit={submit} encType="multipart/form-data" className="space-y-5">
         <div className="space-y-1.5">
           <label htmlFor="photo" className="block font-semibold">
-            {hasPhoto ? "Choose a new photo" : "Choose a photo"}
+            {hasPhoto || pendingPreview ? "Choose a different photo" : "Choose a photo"}
           </label>
           <p id="photo-hint" className="text-meta text-text-secondary">
-            PNG, JPEG, or WebP, at least 128 × 128 pixels. You can position it before saving.
+            PNG, JPEG, or WebP, at least 128 × 128 pixels. You can position and zoom it before saving.
           </p>
           <input
             ref={inputRef}
@@ -169,37 +187,44 @@ export function PhotoForm({ name, photoUrl, hasPhoto, shared }: { name: string; 
             accept={ACCEPT}
             aria-describedby="photo-hint"
             aria-invalid={state.fieldErrors?.photo ? true : undefined}
-            onChange={(e) => choose(e.currentTarget.files?.[0])}
+            aria-busy={opening || undefined}
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+              // The photo is held here; clearing the field lets the same file be chosen again.
+              if (file) e.currentTarget.value = "";
+              void choose(file);
+            }}
             className="block w-full text-meta file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-full file:border-0 file:bg-surface-muted file:px-4 file:font-semibold file:text-text"
           />
+          {opening ? (
+            <p role="status" className="flex items-center gap-2 text-meta text-text-secondary">
+              <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Opening the photo…
+            </p>
+          ) : null}
         </div>
-
-        {image ? (
-          <fieldset className="grid gap-5 sm:grid-cols-[12rem_1fr] sm:items-start">
-            <legend className="mb-3 font-semibold">Position your photo</legend>
-            <canvas
-              ref={canvasRef}
-              width={384}
-              height={384}
-              role="img"
-              aria-label={`Preview of your photo at ${zoomText} zoom, horizontally ${xText.toLowerCase()}, vertically ${yText.toLowerCase()}`}
-              className="size-48 rounded-full bg-surface-muted"
-            />
-            <div className="space-y-3">
-              <Range id="crop-zoom" label="Zoom" min={1} max={3} step={0.05} value={crop.zoom} valueText={zoomText} onChange={(zoom) => setCrop((c) => ({ ...c, zoom }))} />
-              <Range id="crop-x" label="Left / right" min={-100} max={100} step={5} value={crop.x} valueText={xText} onChange={(x) => setCrop((c) => ({ ...c, x }))} />
-              <Range id="crop-y" label="Up / down" min={-100} max={100} step={5} value={crop.y} valueText={yText} onChange={(y) => setCrop((c) => ({ ...c, y }))} />
-              <Button variant="ghost" size="sm" onClick={() => setCrop(CENTRE)}>
-                Reset position
-              </Button>
-            </div>
-          </fieldset>
-        ) : null}
 
         <SubmitButton pendingText="Uploading…" icon={<Upload className="size-4" aria-hidden="true" />}>
           {hasPhoto ? "Save new photo" : "Save photo"}
         </SubmitButton>
       </form>
+
+      {chosen && cropping ? (
+        <ImageCropper
+          image={chosen.image}
+          title="Position your photo"
+          description="Members see it in a circle."
+          shapes={SQUARE}
+          mask="circle"
+          initialFraming={chosen.framing}
+          previews={[{ label: "In lists", aspect: 1, round: true }]}
+          applyLabel="Use photo"
+          busy={preparing}
+          busyLabel="Preparing…"
+          error={localError}
+          onCancel={cancelCrop}
+          onApply={({ framing }) => void apply(framing)}
+        />
+      ) : null}
 
       {hasPhoto ? (
         <div className="border-t border-border pt-5">

@@ -9,6 +9,7 @@ import { errorState, formValues, type FormState } from "@/lib/forms";
 import { linkProblem } from "@/lib/links/validate";
 import { normalizeAudibleUrl, normalizeKindleUrl, parseSpotify } from "@/lib/media/embeds";
 import { isUuid, isYmd } from "@/lib/media/format";
+import { parseFraming } from "@/lib/media/framing";
 import { parseReferenceList } from "@/lib/media/scripture";
 import type { ItemKind } from "@/lib/media/types";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -182,8 +183,30 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   const { data, error } = await supabase.rpc("media_admin_item_save", { p_id: id, p: p, p_client_key: id ? null : clientKey });
   if (error || !data) return errorState(dbErrorMessage(error), { values });
   const savedId = (data as { id: string }).id;
+  const framed = await saveCoverFraming(supabase, formData, { p_item: savedId, p_series: null });
+  if (!framed) return errorState("Your changes were saved, but not the cover's position. Select Reposition and save again.", { values });
   revalidatePath("/admin/content");
   redirect(`/admin/content/${savedId}?saved=${id ? "saved" : "created"}`);
+}
+
+/**
+ * Saves how this item or series positions its cover (the shared library
+ * image is never changed). Only when the form carried the field; a
+ * different cover saved meanwhile is left centred. False on failure.
+ */
+async function saveCoverFraming(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  formData: FormData,
+  target: { p_item: string | null; p_series: string | null },
+): Promise<boolean> {
+  if (!formData.has("cover_framing")) return true;
+  const cover = formData.get("cover_asset_id");
+  if (!isUuid(cover)) return true;
+  const framing = parseFraming(formData.get("cover_framing"));
+  const { error } = await supabase.rpc("media_admin_cover_framing_save", { ...target, p_cover: cover, p_framing: framing });
+  // Before migration 20261110000100 the function doesn't exist: covers stay centred, which is fine unless a position was chosen.
+  if (error && !framing && (error.code === "PGRST202" || error.code === "42883")) return true;
+  return !error;
 }
 
 const statusSchema = z.object({
@@ -248,7 +271,7 @@ export async function saveSeriesAction(_prev: FormState, formData: FormData): Pr
   if (!["any", "lesson", "devotional", "episode"].includes(scope)) return errorState("Choose where the series is used.", { values });
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
-  const { error } = await supabase.rpc("media_admin_series_save", {
+  const { data: seriesId, error } = await supabase.rpc("media_admin_series_save", {
     p_id: isUuid(formData.get("id")) ? formData.get("id") : null,
     p_scope: scope,
     p_title: title,
@@ -257,7 +280,9 @@ export async function saveSeriesAction(_prev: FormState, formData: FormData): Pr
     p_archived: formData.get("archived") === "on",
   });
   if (error) return errorState(dbErrorMessage(error), { values });
+  const framed = await saveCoverFraming(supabase, formData, { p_item: null, p_series: seriesId as string });
   revalidatePath("/admin/content/library");
+  if (!framed) return errorState("The series was saved, but not the cover's position. Select Reposition and save again.", { values });
   return { status: "success", message: "Series saved." };
 }
 

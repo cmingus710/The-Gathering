@@ -8,11 +8,13 @@ import { SectionHeading } from "@/components/ui/card";
 import { formatBytes } from "@/lib/media/files";
 import { formatDay, itemDate, itemHref, KIND_LABEL, speakers } from "@/lib/media/format";
 import { spotifyEmbed } from "@/lib/media/embeds";
+import { parseFraming } from "@/lib/media/framing";
 import { videoAttachments } from "@/lib/media/videos";
 import type { Attachment, ItemDetail } from "@/lib/media/types";
 import { AudioCard } from "./audio-card";
 import { BookAccess } from "./book-access";
 import { EmbedPlayer } from "./embed-player";
+import { FramedImage } from "./framed-image";
 import { ItemCard, itemCover } from "./item-card";
 import { BookmarkButton, CompleteToggle } from "./toggles";
 import { VideoList } from "./video-list";
@@ -129,7 +131,17 @@ export function ContentDetail({
         ) : null}
       </header>
 
-      {cover && !video ? <img src={cover} alt={item.cover?.alt ?? ""} className="max-h-[28rem] w-full rounded-card object-cover" /> : null}
+      {cover && !video ? (
+        item.kind === "book" ? (
+          // The whole portrait cover, never cropped to a landscape strip.
+          <img src={cover} alt={item.cover?.alt ?? ""} className="max-h-[28rem] w-auto max-w-full rounded-card object-contain" />
+        ) : item.cover?.framing ? (
+          // Positioned for this item in the editor's 16:9 frame.
+          <FramedImage src={cover} alt={item.cover.alt ?? ""} framing={parseFraming(item.cover.framing)} className="aspect-[16/9] w-full rounded-card" />
+        ) : (
+          <img src={cover} alt={item.cover?.alt ?? ""} className="max-h-[28rem] w-full rounded-card object-cover" />
+        )
+      ) : null}
 
       {videos.length ? (
         <section aria-label={videos.length > 1 ? "Videos" : "Video"}>

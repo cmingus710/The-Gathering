@@ -41,6 +41,9 @@ export function SeriesForm({ series, canUpload, imageMaxMb }: { series: Taxonomy
           canUpload={canUpload}
           maxUploadMb={imageMaxMb}
           saveLabel={series ? "Save series" : "Add series"}
+          framingName="cover_framing"
+          defaultFraming={series?.cover_framing}
+          frame="series"
         />
       </fieldset>
       {series ? <CheckboxField id={`series-archived-${key}`} name="archived" label="Archived (hidden from members)" defaultChecked={series.archived} /> : null}

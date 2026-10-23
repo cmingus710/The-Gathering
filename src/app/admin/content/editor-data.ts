@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Framing } from "@/lib/media/framing";
 import type { AssetRow, ItemKind, ItemState } from "@/lib/media/types";
 
 export type EditorOptions = {
@@ -12,7 +13,7 @@ export type EditorOptions = {
 };
 
 export type Taxonomy = {
-  series: Array<{ id: string; scope: string; title: string; description: string; cover_asset_id: string | null; archived: boolean; items: number }>;
+  series: Array<{ id: string; scope: string; title: string; description: string; cover_asset_id: string | null; cover_framing?: Framing | null; archived: boolean; items: number }>;
   people: Array<{ id: string; name: string; archived: boolean; items: number }>;
   topics: Array<{ id: string; name: string; items: number }>;
 };

@@ -2,9 +2,10 @@
 
 /* eslint-disable @next/next/no-img-element -- object-URL and signed-URL previews */
 import { Bold, Heading2, Italic, List, ListOrdered } from "lucide-react";
-import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useActionState, useId, useMemo, useRef, useState } from "react";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { LinkTextAreaField, replaceRange } from "@/components/links/link-tools";
+import { useCroppedFileInput } from "@/components/media/use-cropped-file-input";
 import { AnnouncementStatusBadge, PinnedBadge, VisibilityBadge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { CheckboxField, TextField } from "@/components/ui/field";
@@ -53,14 +54,15 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
   const [visibility, setVisibility] = useState<"public" | "members">((v?.visibility as "public" | "members") ?? initial.visibility);
   const [pinned, setPinned] = useState(v ? v.pinned === "on" : initial.pinned);
   const [imageAlt, setImageAlt] = useState(v?.imageAlt ?? initial.imageAlt);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  // Cards and the announcement page show the image at 16:9.
+  const imageFile = useCroppedFileInput({ aspect: 16 / 9, frameLabel: "16:9", savedKey: initial.imageUrl });
+  const filePreview = imageFile.preview;
   const [removeImage, setRemoveImage] = useState(false);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const tabsId = useId();
   const fe = state.fieldErrors ?? {};
 
-  useEffect(() => () => (filePreview ? URL.revokeObjectURL(filePreview) : undefined), [filePreview]);
 
   const imageUrl = filePreview ?? (removeImage ? null : initial.imageUrl);
   const isLiveOrScheduled = initial.effective === "live" || initial.effective === "scheduled" || initial.effective === "expired";
@@ -164,7 +166,7 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
               <label htmlFor="field-image" className="block font-semibold">
                 {initial.imageUrl ? "Replace image" : "Add an image"} <span className="font-normal text-text-secondary">(optional)</span>
               </label>
-              <p id="field-image-hint" className="text-meta text-text-secondary">PNG, JPEG, or WebP, up to 4 MB. Wide images work best.</p>
+              <p id="field-image-hint" className="text-meta text-text-secondary">PNG, JPEG, or WebP, up to 4 MB. You can crop it to the 16:9 frame it&apos;s shown in, or keep it whole.</p>
               <input
                 id="field-image"
                 name="image"
@@ -172,10 +174,10 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
                 accept="image/png,image/jpeg,image/webp"
                 aria-describedby={`field-image-hint${fe.image ? " field-image-error" : ""}`}
                 aria-invalid={fe.image ? true : undefined}
+                {...imageFile.inputProps}
                 onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  setFilePreview(f ? URL.createObjectURL(f) : null);
-                  if (f) setRemoveImage(false);
+                  if (e.target.files?.[0]) setRemoveImage(false);
+                  imageFile.inputProps.onChange(e);
                 }}
                 className="block w-full text-meta file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-border-strong file:bg-surface file:px-4 file:font-semibold hover:file:bg-primary-soft"
               />
@@ -185,6 +187,8 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
                   {fe.image[0]}
                 </p>
               ) : null}
+              {imageFile.controls}
+              {imageFile.dialog}
             </div>
             {initial.imageUrl && !filePreview ? (
               <CheckboxField label="Remove the current image" name="removeImage" checked={removeImage} onChange={(e) => setRemoveImage(e.target.checked)} />
