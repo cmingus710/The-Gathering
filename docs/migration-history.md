@@ -369,4 +369,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - replaced with the same signatures and grants, changing only the preference lookup: `community.notify`, `community.email_items`, `community.op_push_claim` (`community.pref` → `community.delivery_pref`), `membership.enqueue_approval_alert`, `membership.op_alert_claim` (`alert_settings.enabled` → `membership.alerts_on()`).
   - No row is rewritten and nothing changes for delivery until an administrator changes a setting: both overrides start off and every type starts allowed. Anon baseline unchanged.
 - **Order:** apply the migration before deploying the app. Without it, Church settings shows "Notification settings couldn't be loaded" for the new section; everything else works.
-- **Hosted:** not applied.
+- **Hosted (2026-10-23):** the owner ran the migration in the SQL editor. Read-only check afterwards:
+  - `community.channel_policy` has both rows with `all_types` false and nothing disabled; RLS on;
+  - `community.notify`, `email_items`, `op_push_claim` use `community.delivery_pref`; `membership.enqueue_approval_alert` and `op_alert_claim` use `membership.alerts_on()`;
+  - `notification_channel_set` is executable by `authenticated`, not `anon`; `authenticated` can't execute `community.channel_allows` or read `community.channel_policy`;
+  - anon-executable public functions: 34 (unchanged);
+  - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
+  - **Not yet recorded:** run `supabase/manual/2026-11-12-record-notification-channel-overrides.sql` to add the history row (`created_by = notification-channel-overrides`).
