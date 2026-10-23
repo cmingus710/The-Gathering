@@ -4,10 +4,10 @@
  * hold several paragraphs; the editor sends one form entry per question.
  */
 
-/** Matches the database: bible.plan_days holds up to 5 (each cut at 500), media.items up to 20. */
+/** Matches the database: bible.plan_days holds up to 5 (each cut at 1,000), media.items up to 20. */
 export const QUESTION_LIMITS = {
-  day: { max: 5, maxLength: 500 },
-  content: { max: 20, maxLength: 500 },
+  day: { max: 5, maxLength: 1000 },
+  content: { max: 20, maxLength: 1000 },
 } as const;
 
 /**
@@ -48,7 +48,7 @@ export function readQuestions(
   // Numbered the way the editor shows them, empty fields included.
   const fields = formData.getAll(name).map((v) => (typeof v === "string" ? cleanQuestion(v) : ""));
   const long = fields.findIndex((q) => q.length > maxLength);
-  if (long >= 0) return { ok: false, message: `Question ${long + 1} is ${fields[long].length.toLocaleString("en-US")} characters. Keep each question to ${maxLength} or fewer.` };
+  if (long >= 0) return { ok: false, message: `Question ${long + 1} is ${fields[long].length.toLocaleString("en-US")} characters. Keep each question to ${maxLength.toLocaleString("en-US")} or fewer.` };
   const questions = fields.filter(Boolean);
   if (questions.length > max) return { ok: false, message: `Up to ${max} questions. Remove ${questions.length - max} to save.` };
   return { ok: true, questions };

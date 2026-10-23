@@ -450,3 +450,14 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`media_book_collections`, `media-book-collections`); `books_fn = true`, `anon_can_call = false`.
+
+## Questions up to 1,000 characters (2026-11-17)
+
+- **New (additive; no applied migration was edited):** `20261117000100_question_length`:
+  - `bible.clean_questions(jsonb)` (used by every day save, revision, and import) keeps up to 1,000 characters of each reflection question instead of cutting at 500. Still at most 5, trimmed, empty ones dropped;
+  - the `journal.entries.question` check (`entries_question_check`) allows 1,000 characters, so a journal answer can link to any question a day can hold. Every value the old check allowed is still allowed; no row is rewritten (adding the check re-validates existing rows).
+  - `media.items.questions` has no per-question length in the database (the app checks it), so content questions need nothing here. No signature, grant, or policy changes.
+- **Operator script:** `supabase/manual/2026-11-17-apply-question-length.sql`, one transaction. The preflight requires `20261026000500` and refuses a second run. It post-checks that a 1,000-character question is kept whole and the journal check was widened. History row `created_by = question-length`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261117000100`. A rerun stopped at the preflight.
+- **Order: apply before deploying the app change.** The app now accepts questions up to 1,000 characters. Until the migration is applied, a Bible plan day question longer than 500 characters would be cut at 500 when saved, and "Write privately" on such a question would be refused. Content (devotional, lesson, assignment) questions work either way.
+- **Hosted:** not applied yet.

@@ -150,8 +150,8 @@ export function QuestionListField({
                 {near ? (
                   <p id={`${textId}-count`} className={cn("text-meta", tooLong ? "font-medium text-danger" : "text-text-secondary")}>
                     {tooLong
-                      ? `${it.text.length.toLocaleString("en-US")} characters. Shorten this question to ${maxLength} or fewer to save.`
-                      : `${it.text.length.toLocaleString("en-US")} of ${maxLength} characters`}
+                      ? `${it.text.length.toLocaleString("en-US")} characters. Shorten this question to ${maxLength.toLocaleString("en-US")} or fewer to save.`
+                      : `${it.text.length.toLocaleString("en-US")} of ${maxLength.toLocaleString("en-US")} characters`}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-1">

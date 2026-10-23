@@ -21,7 +21,7 @@ No role can see members' progress, bookmarks, highlights, notes, or journals. Pl
 
 Plans can have any number of days (they needn't be 365). February 29 is accepted only in leap years. Dates are calendar dates, so daylight-saving changes never move a reading.
 
-Each day is a **reading** (one or more passages), a **catch-up** day (passages optional), or a **rest** day (no passages, never counted as missed, no reminder). Days can have a heading, up to 5 reflection questions (each in its own box; a question can run to several paragraphs, up to 500 characters; use **Add Question**, **Move up/down**, and **Remove**, and empty boxes are left out when you save), supporting notes (bold, italic, lists, links), a linked discussion, and related published devotionals or lessons.
+Each day is a **reading** (one or more passages), a **catch-up** day (passages optional), or a **rest** day (no passages, never counted as missed, no reminder). Days can have a heading, up to 5 reflection questions (each in its own box; a question can run to several paragraphs, up to 1,000 characters; use **Add Question**, **Move up/down**, and **Remove**, and empty boxes are left out when you save), supporting notes (bold, italic, lists, links), a linked discussion, and related published devotionals or lessons.
 
 ## Creating a plan
 
