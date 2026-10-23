@@ -12,6 +12,7 @@ import { ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
+import { loadMemoryOptions, unavailableNote } from "@/lib/memory/eligibility";
 import { formatDay } from "@/lib/memory/format";
 import { signMemoryPaths } from "@/lib/memory/storage";
 import type { Collection, Item } from "@/lib/memory/types";
@@ -24,8 +25,13 @@ export const metadata: Metadata = { title: "Verse collection" };
 
 type Detail = Collection & { mine: boolean; items: Item[]; challenges: Array<{ id: string; title: string; starts_on: string; ends_on: string }> };
 
-export default async function CollectionPage({ params }: PageProps<"/memory/collections/[id]">) {
-  const { id } = await params;
+// Licensed verses are fetched from API.Bible when shown; beyond this many on
+// one page, each is fetched only when the member asks (?read=<verse id>).
+const LICENSED_INLINE = 12;
+
+export default async function CollectionPage({ params, searchParams }: PageProps<"/memory/collections/[id]">) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const read = typeof sp.read === "string" ? sp.read : null;
   await requireLearner(`/memory/collections/${id}`);
   const supabase = await requireClient();
   const { data, error } = await supabase.rpc("memory_collection", { p_id: id });
@@ -33,6 +39,11 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
   const c = data as Detail | null;
   if (!c) return <Alert tone="error" title="This collection couldn't be loaded right now." />;
   const cover = c.cover_path ? (await signMemoryPaths(supabase, [c.cover_path])).get(c.cover_path) : undefined;
+  // A licensed version, by the shared eligibility rule: its permission and
+  // its connection on this server. While unavailable, nothing new starts in
+  // it; verses, progress, and history stay, and nothing is substituted.
+  const licensed = !c.mine && c.translation.source_kind === "api";
+  const unavailable = licensed ? unavailableNote(await loadMemoryOptions(supabase), c.translation.id, c.translation.code) : null;
   return (
     <>
       <BackLink route="/memory/collections/[id]" />
@@ -41,6 +52,18 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
       {cover ? (
         // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL; never through the image cache
         <img src={cover} alt={c.cover_alt ?? ""} className="mb-6 aspect-[16/7] w-full max-w-3xl rounded-card object-cover" />
+      ) : null}
+      {unavailable ? (
+        <Alert tone="warning" title={`Memory practice in ${c.translation.code} isn't available right now.`} className="mb-6">
+          <p>
+            Your verses from this collection, your progress, and your history are kept, and no other version is used instead.{" "}
+            {c.translation_choice ? "You may still add these verses in another version that's available for memory practice." : `Practice resumes when ${c.translation.code} is available again.`}
+          </p>
+        </Alert>
+      ) : licensed ? (
+        <p className="mb-6 text-meta text-text-secondary">
+          {c.translation.name} ({c.translation.code}) is licensed: each verse is shown exactly as published, and you practice it with flashcards and self-check.
+        </p>
       ) : null}
       {c.goal_note || c.goal_sessions_per_week ? (
         <p className="mb-6 text-text-secondary">
@@ -61,8 +84,8 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
         </section>
       ) : null}
       <ol className="space-y-4">
-        {c.items.map((i) => (
-          <li key={i.id} className="rounded-card border border-border bg-surface p-4 shadow-(--elev-card) sm:p-5">
+        {c.items.map((i, n) => (
+          <li key={i.id} id={`item-${i.id}`} className="scroll-mt-24 rounded-card border border-border bg-surface p-4 shadow-(--elev-card) sm:p-5">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-title font-semibold">
                 {i.position}. {i.title ? `${i.title} · ` : ""}
@@ -71,7 +94,13 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
               {i.starts_on && i.ends_on ? <span className="text-meta text-text-secondary">{formatDay(i.starts_on)} – {formatDay(i.ends_on)}</span> : null}
             </div>
             {c.mine ? null : <ItemTranslationNote item={i} className="mb-2 text-meta text-text-secondary" />}
-            <PassageText passage={i.passage} />
+            {i.passage.source_kind === "api" && n >= LICENSED_INLINE && read !== i.id ? (
+              <a href={`?read=${i.id}#item-${i.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary hover:underline">
+                Show the text<span className="sr-only"> of {i.passage.label}</span>
+              </a>
+            ) : (
+              <PassageText passage={i.passage} />
+            )}
             {i.note ? (
               <aside className="mt-3 rounded-tile bg-surface-muted/50 p-3 text-meta" aria-label="Note">
                 <p className="whitespace-pre-line">{i.note}</p>
@@ -81,15 +110,23 @@ export default async function CollectionPage({ params }: PageProps<"/memory/coll
               {i.card ? (
                 <>
                   <StageBadge stage={i.card.stage} />
-                  <ButtonLink href={`/memory/practice/${i.card.id}`} size="sm">
-                    Practice
-                  </ButtonLink>
+                  {i.card.modes && !i.card.modes.length ? (
+                    <ButtonLink href={`/memory/verses/${i.card.id}`} size="sm" variant="secondary">
+                      Practice paused · open verse
+                    </ButtonLink>
+                  ) : (
+                    <ButtonLink href={`/memory/practice/${i.card.id}`} size="sm">
+                      Practice
+                    </ButtonLink>
+                  )}
                   {!i.card.current_version ? (
                     <ButtonLink href={`/memory/verses/${i.card.id}`} size="sm" variant="secondary">
                       Updated text available
                     </ButtonLink>
                   ) : null}
                 </>
+              ) : unavailable && !i.translation_choice ? (
+                <p className="text-meta text-text-secondary">Not available to add right now.</p>
               ) : (
                 <AddVerseButton itemId={i.id} choiceIn={i.translation_choice ? c.id : null} />
               )}

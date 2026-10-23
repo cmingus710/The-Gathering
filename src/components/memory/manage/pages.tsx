@@ -5,6 +5,7 @@ import { BackLink } from "@/components/ui/back-link";
 import { Card, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { todayIn } from "@/lib/bible/dates";
+import { versionChoices } from "@/lib/memory/eligibility";
 import { signMemoryPaths } from "@/lib/memory/storage";
 import type { Activity, Challenge, Difficulty, Session } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -12,7 +13,7 @@ import { ChallengeForm } from "./challenge-form";
 import { CollectionEditor } from "./collection-editor";
 import { CollectionForm } from "./collection-form";
 import { ManageHome } from "./manage-home";
-import { ActivityPreview } from "./preview";
+import { ActivityPreview, LicensedPreview } from "./preview";
 import type { AdminCollection, AdminHome, ManageBase } from "./types";
 
 /**
@@ -48,18 +49,23 @@ export async function NewCollectionPage({ base }: { base: ManageBase }) {
   const { home } = await load(base);
   if (!home) return <Alert tone="error" title="Memory verses couldn't be loaded right now." />;
   const leader = base === "/memory/lead";
+  const choices = versionChoices(home.translations);
+  const usable = choices.filter((t) => t.eligible);
+  const defaultTranslation = usable.some((t) => t.id === home.default_translation_id) ? home.default_translation_id : (usable[0]?.id ?? null);
   return (
     <>
       <BackLink route={`${base}/collections/new`} />
       <PageHeader title="New collection" description="Start with the details; then add verses by reference from the approved Bible source." />
-      {!home.translations.length ? (
-        <Alert tone="info" title="No Bible version with stored text is active yet." />
+      {!usable.length ? (
+        <Alert tone="info" title="No Bible version is available for memory verses yet.">
+          {choices.length ? choices.map((t) => t.note).join(" ") : "Publish a Bible version first."}
+        </Alert>
       ) : (
         <Card>
           <CollectionForm
             base={base}
-            translations={home.translations}
-            defaultTranslation={home.default_translation_id}
+            translations={choices}
+            defaultTranslation={defaultTranslation}
             groups={leader ? home.led_groups : home.groups.map((g) => ({ id: g.id, name: g.name }))}
             leaderOnly={leader}
             timezone={home.church_timezone}
@@ -70,7 +76,7 @@ export async function NewCollectionPage({ base }: { base: ManageBase }) {
   );
 }
 
-export async function CollectionPage({ base, id }: { base: ManageBase; id: string }) {
+export async function CollectionPage({ base, id, preview }: { base: ManageBase; id: string; preview?: string | null }) {
   if (!isUuid(id)) notFound();
   const { supabase, home } = await load(base);
   const { data, error } = await supabase.rpc("memory_admin_collection", { p_id: id });
@@ -82,7 +88,7 @@ export async function CollectionPage({ base, id }: { base: ManageBase; id: strin
     <>
       <BackLink route={`${base}/collections/[id]`} />
       <PageHeader title={c.title} description={c.description || undefined} />
-      <CollectionEditor c={c} home={home} base={base} coverUrl={cover} />
+      <CollectionEditor c={c} home={home} base={base} coverUrl={cover} preview={preview ?? null} />
     </>
   );
 }
@@ -97,6 +103,17 @@ export async function PreviewPage({ base, id, searchParams }: { base: ManageBase
   const items = c.items.filter((i) => !i.retired);
   const item = items.find((i) => i.id === one(searchParams.item)) ?? items[0];
   if (!item) return <Alert tone="info" title="Add a verse to preview activities." />;
+  // Licensed versions: no stored text to build activities from. The preview
+  // shows the fetched text and only the activities that version permits.
+  if (item.passage.source_kind === "api") {
+    return (
+      <>
+        <BackLink route={`${base}/collections/[id]/preview`} params={{ id: c.id }} label={c.title} />
+        <PageHeader title="Preview activities" description="Exactly what members will see. Nothing here is recorded." />
+        <LicensedPreview base={base} collectionId={c.id} items={items} item={item} modes={c.translation.memory_modes ?? []} />
+      </>
+    );
+  }
   const activity = (["read_repeat", "flashcards", "missing_words", "word_order", "type_verse", "self_check"].includes(one(searchParams.activity)) ? one(searchParams.activity) : "missing_words") as Activity;
   const difficulty = (["guided", "growing", "challenge"].includes(one(searchParams.difficulty)) ? one(searchParams.difficulty) : "guided") as Difficulty;
   const short = one(searchParams.short) === "1";

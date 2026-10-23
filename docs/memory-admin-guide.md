@@ -17,7 +17,7 @@ Roles: **Memory verse editor** and **Memory verse publisher** (Administration �
 
 ## Scripture source
 
-Verses come only from the church's approved Bible versions (Phase 8, **Administration → Bible sources**). A collection uses one version for all its verses. Only versions whose text is stored here can be memorized: scoring needs the exact wording on the server, and API translations may not be stored. Today that's the public-domain WEB (and ASV once imported).
+Verses come only from the church's approved Bible versions (Phase 8, **Administration → Bible sources**). A collection uses one version for all its verses: a published version whose text is stored here (the public-domain WEB and ASV), or a published licensed version (NIV, NASB, AMP through API.Bible) whose memory permission a Bible source manager has recorded and whose API key is set on the server. Licensed text is never stored (see [Licensed versions](#licensed-versions-apibible)). Draft versions are never listed.
 
 You choose a passage by reference (book, chapter, verses; up to 30 verses and 900 words). The exact text is captured as a passage version with its translation, text version, and a content hash. You never type or edit scripture. Titles, notes, and hints are editorial and are always shown apart from the verse.
 
@@ -40,7 +40,23 @@ The **current memory verse** (Memory home, the home card, reminders) is any vers
 
 ### Licensed versions (API.Bible)
 
-Bible source managers decide, per licensed version, whether members may memorize it: **Administration → Bible sources → (version) → Memory verses**. Record what you checked (dashboard, license, publisher terms) and tick *Offer … for memory verses, shown unchanged*. Only unchanged-text practice can be enabled: the verse page, flashcards, and self-check. The text is never stored. Church and group collections still use stored-text versions; members can choose a licensed version for an assigned verse only when the collection allows a choice. Details, the per-mode assessment, and the open questions for API.Bible: [memory-provider-practice.md](memory-provider-practice.md).
+Bible source managers decide, per licensed version, whether members may memorize it: **Administration → Bible sources → (version) → Memory verses**. Record what you checked (dashboard, license, publisher terms) and tick *Offer … for memory verses, shown unchanged*. Only unchanged-text practice can be enabled: the verse page, flashcards, and self-check. The text is never stored. Details, the per-mode assessment, and the open questions for API.Bible: [memory-provider-practice.md](memory-provider-practice.md).
+
+**In collections.** The *Bible version* selector on a new collection lists every published version:
+
+- Stored-text versions, and licensed versions that are confirmed and connected, can be chosen. Licensed ones are marked *licensed, flashcards and self-check only*.
+- Other published licensed versions are listed disabled under *Not available for memory verses*, each with the reason below the selector: *not confirmed for memory verses* (no permission recorded) or *not connected on this server* (the API key setting is missing). Being published doesn't make a version eligible.
+
+With a licensed version:
+
+- **Adding a verse** fetches the passage from API.Bible to check it. Only its reference, API.Bible passage ID, verse numbers, word count, and a one-way fingerprint are kept.
+- **Show the text** fetches it again, shown unchanged with its copyright and usage reporting. If the publisher has revised the wording, it says so; **Use the current wording** (publishers) points the verse at it with an explanation for members, who each choose when to switch.
+- **Preview activities** shows the fetched text and the activities members get (flashcards and self-check). Read & repeat, missing words, word order, typed recall, hints from the text, and reference practice aren't offered, whatever collection the verse is in.
+- **Duplicate** copies licensed verses with the wording they were added with.
+- **Members may practice in their own Bible version** works as for stored text: off, everyone practices in the collection's version; on, each member may choose another eligible version for themselves.
+- **Youth:** licensed collections aren't shown to youth accounts and can't be assigned to youth groups.
+
+**If the permission is withdrawn or the key is removed**, the collection page says the version isn't available and why. Adding verses, publishing, duplicating, and new practice in that version stop. Collections, verses, members' cards, progress, and history are kept. Nothing is switched to another version. Practice resumes on the same cards when the version is available again.
 
 ### After publishing
 

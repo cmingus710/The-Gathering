@@ -9,7 +9,11 @@ import { errorState, formValues, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { zonedLocalToUtc } from "@/lib/time";
 import { requireClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadMemoryOptions, memoryEligibility, ineligibleNote } from "./eligibility";
+import { fetchMemoryText, type Ref } from "./provider";
 import { removeMemoryObjects, uploadMemoryObject } from "./storage";
+import type { Passage } from "./types";
 
 /**
  * Memory verse management for staff (/admin/memory) and authorized group
@@ -30,6 +34,28 @@ const num = (f: FormData, k: string) => {
   const v = str(f, k);
   return /^\d{1,3}$/.test(v) ? Number(v) : null;
 };
+
+/**
+ * A licensed version's verse: fetched here through the existing API.Bible
+ * integration, and only what the database keeps (fingerprint, verse
+ * numbers, word count, passage ID) is returned, never the text. {} for a
+ * stored-text version.
+ */
+async function licensedPayload(supabase: SupabaseClient, translation: string, ref: Ref): Promise<{ provider?: unknown } | { error: string }> {
+  const text = await fetchMemoryText(supabase, translation, ref);
+  if (text.status === "stored") return {};
+  if (text.status !== "ok") return { error: `${text.message} Nothing was changed.` };
+  return { provider: text.payload };
+}
+
+/** The collection's version and, for one verse, its passage (from the database, never the form). */
+async function collectionFacts(supabase: SupabaseClient, id: string, item?: string) {
+  const { data } = await supabase.rpc("memory_admin_collection", { p_id: id });
+  const c = data as { translation: { id: string; source_kind?: string }; items: Array<{ id: string; passage: Passage }> } | null;
+  return c
+    ? { translation: c.translation.id, licensed: c.translation.source_kind === "api", passage: item ? (c.items.find((i) => i.id === item)?.passage ?? null) : null }
+    : null;
+}
 
 function refresh(base: string) {
   revalidatePath(base, "layout");
@@ -58,6 +84,13 @@ export async function saveCollectionAction(_prev: FormState, formData: FormData)
   if (formData.has("translation_choice_field")) p.translation_choice = formData.get("translation_choice") === "on";
   if (formData.has("timezone")) p.timezone = str(formData, "timezone");
   const supabase = await requireClient();
+  // The shared eligibility rule: the database checks the version's memory
+  // permission; a licensed version must also be connected on this server.
+  if (typeof p.translation_id === "string" && p.translation_id) {
+    const t = (await loadMemoryOptions(supabase)).find((o) => o.id === p.translation_id);
+    const e = t ? memoryEligibility(t) : null;
+    if (t && e && !e.eligible) return errorState(ineligibleNote(t.code, e.reason), { values });
+  }
   const { data, error } = await supabase.rpc("memory_admin_collection_save", {
     p_id: id,
     p,
@@ -97,6 +130,13 @@ export async function collectionStatusAction(_prev: FormState, formData: FormDat
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when)) return errorState("Choose when to publish.");
     at = zonedLocalToUtc(when, tz)?.toISOString() ?? null;
     if (!at) return errorState("That time doesn't exist in the collection's time zone.");
+  }
+  if (action === "publish" || action === "schedule") {
+    // A licensed version is published only while it can actually be fetched here.
+    const facts = await collectionFacts(supabase, id);
+    const t = facts ? (await loadMemoryOptions(supabase)).find((o) => o.id === facts.translation) : null;
+    const e = t ? memoryEligibility(t) : null;
+    if (t && e && !e.eligible) return errorState(`${ineligibleNote(t.code, e.reason)} Nothing was published.`);
   }
   const { error } = await supabase.rpc("memory_admin_collection_status", { p_id: id, p_action: action === "schedule" ? "publish" : action, p_at: at });
   if (error) return errorState(dbErrorMessage(error));
@@ -150,13 +190,17 @@ export async function addItemAction(_prev: FormState, formData: FormData): Promi
   const ev = num(formData, "end_verse") ?? sv;
   if (!id || !/^[1-3A-Z][A-Z0-9]{2}$/.test(book) || !sc || !sv || !ec || !ev) return errorState("Choose a book, chapter, and verses.", { values });
   const supabase = await requireClient();
+  const facts = await collectionFacts(supabase, id);
+  if (!facts) return errorState("Collection not found.", { values });
+  const licensed = facts.licensed ? await licensedPayload(supabase, facts.translation, { book, sc, sv, ec, ev }) : {};
+  if ("error" in licensed) return errorState(licensed.error, { values });
   const { error } = await supabase.rpc("memory_admin_item_add", {
     p_collection: id,
-    p: { book, sc, sv, ec, ev, title: str(formData, "title"), note: String(formData.get("note") ?? ""), hint: str(formData, "hint"), starts_on: str(formData, "starts_on"), ends_on: str(formData, "ends_on") },
+    p: { book, sc, sv, ec, ev, title: str(formData, "title"), note: String(formData.get("note") ?? ""), hint: str(formData, "hint"), starts_on: str(formData, "starts_on"), ends_on: str(formData, "ends_on"), ...licensed },
   });
   if (error) return errorState(dbErrorMessage(error), { values });
   refresh(base);
-  return { status: "success", message: "Verse added." };
+  return { status: "success", message: "provider" in licensed ? "Verse added. Its wording was checked with API.Bible; no text was stored." : "Verse added." };
 }
 
 export async function saveItemAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -181,13 +225,25 @@ export async function itemOpAction(_prev: FormState, formData: FormData): Promis
   const op = str(formData, "op");
   if (!id) return errorState("Verse not found.");
   const supabase = await requireClient();
+  // A licensed verse's current wording, fetched now (the database keeps no text to compare).
+  let provider: unknown = null;
+  const collection = uuid.safeParse(formData.get("collection_id")).data;
+  if (op === "update_text" && collection) {
+    const facts = await collectionFacts(supabase, collection, id);
+    const p = facts?.passage;
+    if (p?.source_kind === "api") {
+      const licensed = await licensedPayload(supabase, p.translation.id, { book: p.book, sc: p.start_chapter, sv: p.start_verse, ec: p.end_chapter, ev: p.end_verse });
+      if ("error" in licensed) return errorState(licensed.error);
+      provider = "provider" in licensed ? licensed.provider : null;
+    }
+  }
   const call =
     op === "up" || op === "down"
       ? supabase.rpc("memory_admin_item_move", { p_item: id, p_direction: op === "up" ? -1 : 1 })
       : op === "remove"
         ? supabase.rpc("memory_admin_item_remove", { p_item: id })
         : op === "update_text"
-          ? supabase.rpc("memory_admin_item_update_text", { p_item: id, p_reason: str(formData, "reason") })
+          ? supabase.rpc("memory_admin_item_update_text", { p_item: id, p_reason: str(formData, "reason"), p_provider: provider })
           : null;
   if (!call) return errorState("Unknown action.");
   const { error } = await call;

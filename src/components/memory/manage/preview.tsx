@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LicensedPassageText } from "@/components/memory/licensed-passage";
 import { cn } from "@/components/ui/cn";
 import { Card, SectionHeading } from "@/components/ui/card";
 import { ACTIVITIES, DIFFICULTIES } from "@/lib/memory/format";
@@ -136,4 +137,50 @@ function PreviewBody({ p }: { p: Session & { hidden: { blanks?: number[] } } }) 
         </ul>
       );
   }
+}
+
+/**
+ * A licensed version's verse: no stored text to build activities from, so
+ * staff see the fetched passage (unchanged, with copyright and usage
+ * reporting) and exactly which activities that version permits.
+ */
+export function LicensedPreview({ base, collectionId, items, item, modes }: { base: ManageBase; collectionId: string; items: AdminItem[]; item: AdminItem; modes: Activity[] }) {
+  const chip = (active: boolean) =>
+    cn("inline-flex min-h-11 items-center rounded-full border px-4 text-meta font-semibold", active ? "border-primary bg-primary-soft" : "border-border bg-surface hover:bg-surface-muted");
+  const code = item.passage.translation.code;
+  const offered = ACTIVITIES.filter((a) => modes.includes(a.key));
+  const withheld = ACTIVITIES.filter((a) => !modes.includes(a.key));
+  return (
+    <div className="space-y-6">
+      <nav aria-label="Verse" className="flex flex-wrap gap-2">
+        {items.map((i) => (
+          <Link key={i.id} href={`${base}/collections/${collectionId}/preview?item=${i.id}`} className={chip(i.id === item.id)} aria-current={i.id === item.id ? "true" : undefined}>
+            {i.passage.label}
+          </Link>
+        ))}
+      </nav>
+      <Card className="space-y-4">
+        <SectionHeading id="what">What a member sees</SectionHeading>
+        {offered.length ? (
+          <ul className="list-disc space-y-1 pl-5">
+            {offered.map((a) => (
+              <li key={a.key}>
+                <span className="font-semibold">{a.label}:</span>{" "}
+                {a.key === "flashcards"
+                  ? `the front shows the reference (${item.passage.label}); the back shows the whole passage, unchanged.`
+                  : "the member sees the reference, recites, then reveals the whole passage, unchanged, and records how it went. No hints from the text."}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Memory practice in {code} isn&apos;t available right now, so members can&apos;t start any activity for this verse. Their progress is kept.</p>
+        )}
+        <p className="text-meta text-text-secondary">
+          Not offered for {code}: {withheld.map((a) => a.label.toLowerCase()).join(", ")}, and reference practice (passage → reference). {code} is licensed; these
+          would hide, rearrange, or excerpt its words, which its permission doesn&apos;t cover.
+        </p>
+        <LicensedPassageText passage={item.passage} />
+      </Card>
+    </div>
+  );
 }

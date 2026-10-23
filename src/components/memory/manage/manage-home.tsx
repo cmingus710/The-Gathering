@@ -38,9 +38,10 @@ export function ManageHome({ data, challenges, base }: { data: AdminHome; challe
         }
       />
       <div className="space-y-8">
-        {!data.translations.length ? (
-          <EmptyState glyph="memory" title="No Bible version with stored text is active">
-            Memory practice needs a translation whose text is stored here (Administration → Bible sources).
+        {!data.translations.some((t) => t.memory_eligible) ? (
+          <EmptyState glyph="memory" title="No Bible version is available for memory verses">
+            Memory practice needs a published translation whose text is stored here, or a licensed one whose terms a Bible source manager has confirmed for
+            memory verses (Administration → Bible sources).
           </EmptyState>
         ) : null}
         <section aria-labelledby="cols">

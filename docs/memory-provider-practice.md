@@ -1,6 +1,6 @@
 # Memory verses in licensed API versions (NIV, NASB, AMP)
 
-Migration `20261106000100_memory_provider_practice`. Status: **built and gated**. Nothing is offered to members until a Bible source manager records, per version, that its own terms permit memory practice.
+Migrations `20261106000100_memory_provider_practice` (members' own verses) and `20261111000100_memory_licensed_collections` (church and group collections). Status: **built and gated**. Nothing is offered to members until a Bible source manager records, per version, that its own terms permit memory practice.
 
 ## What the official guidance establishes
 
@@ -76,7 +76,49 @@ What's preserved:
 - default and per-verse translation choice;
 - existing progress;
 - all public-domain practice;
-- assignments: a licensed version can be chosen for an assignment only when the collection allows a choice, and church collections stay stored-text only.
+- assignments: a licensed version can be chosen for an assigned verse when the collection allows a choice; since `20261111000100` a church or group collection can also use one (below).
+
+## Church and group collections
+
+Migration `20261111000100_memory_licensed_collections`. It reuses everything above: the same passages without text, fingerprints, permission table, practice modes, server-side fetches, cache, and FUMS reporting. There's no second integration.
+
+**One eligibility rule** for every memory selector (`memory.translation_eligibility` in the database, `src/lib/memory/eligibility.ts` in the app):
+
+| Version | Offered? |
+| --- | --- |
+| Published, text stored here | Yes |
+| Published, licensed, memory permission recorded, API key set on the server | Yes, marked *licensed, flashcards and self-check only* |
+| Published, licensed, no permission recorded | Disabled: *not confirmed for memory verses* |
+| Published, licensed, permission recorded, key setting missing | Disabled: *not connected on this server* |
+| Draft or retired | Not listed |
+
+Being published never stands in for the memory permission. The database can't see the server's environment, so the app adds the key check before it offers a version or saves or publishes a collection. The database enforces the rest.
+
+**What's stored per assigned licensed verse:** the same as a member's own licensed verse (reference, passage ID, verse numbers, word count, fingerprint), plus the editorial title, note, hint, and dates. The text never is, so admin and member pages fetch it through `fetchMemoryText` whenever they show it (1-day in-memory cache, copyright from the API, FUMS on every display). Staff see a verse's text on request (*Show the text*), not every verse at once.
+
+**Practice:** an assigned licensed verse becomes a card on the existing licensed path (`memory.provider_session_start`). Only flashcards and self-check exist, and they're refused in the database otherwise. A collection, assignment, challenge, or award unlocks no other mode. Assignment windows, reminders, challenges, and the *collection explored* award read attempts and cards as before. Each attempt counts once; replayed submits count nothing.
+
+**Fixed version or member choice:** unchanged. Off, the collection's version is required (`memory_card_add` and `memory_card_change_translation` refuse others). On, each member may add or move an assigned verse to another eligible version for themselves. The collection, its passages, and other members never change.
+
+**Wording changes:** the fingerprint shows staff that the published wording changed. *Use the current wording* calls `memory_admin_item_update_text(item, reason, provider)` and records the change in `memory.item_versions`. Members on the earlier wording are asked to switch, as for stored text. A member who already started the new wording on their own isn't asked again.
+
+**Permission withdrawn or key removed:** no new collections, verses, publishing, duplicates, or cards in that version, and sessions are refused. Collections stay visible with their verses, and cards, progress, and history are kept. Pages explain the state. Nothing is switched to another version.
+
+**Youth:** licensed collections are hidden from youth accounts (`memory.collection_visible`). They're excluded from youth learning assignments and guardian-led practice. Stored-text collections are unchanged. Opening licensed collections to youth is a separate decision.
+
+**Setup, per version, once approved:**
+
+1. A Bible source manager records the version's terms under **Administration → Bible sources → (version) → Memory verses** (see the next section for what to check). This PR changes no permission.
+2. The version's API key setting (for example `API_BIBLE_KEY`) is set in Vercel for the environment, and `API_BIBLE_BASE_URL` is unset or an API.Bible address.
+3. The version then appears enabled in **Administration → Memory verses → New collection → Bible version**.
+
+**Verification (2026-10-23, local only):**
+
+- **Database** (`tests/db/memory-licensed-collections.test.ts`, 18 tests, PostgreSQL 16 from every migration). Covers: eligibility (published-only, draft never listed, permission required); creating NIV, NASB, and AMP collections; group leaders; adding verses from the app's fetch; publishing; duplicating; restricted modes refused; fixed version vs member choice; challenge counts with replays; the *collection explored* award once; no licensed wording in any memory table or the audit log; staff wording updates; permission withdrawn and restored; youth accounts; public-domain collections.
+- **Full suite:** `npm test` with `TEST_DATABASE_URL`, serial: 1172 passed. Lint and typecheck pass.
+- **Browser** (`tests/e2e-local/10-memory-licensed-collections.spec.ts`, local `supabase start` with every migration and the seed, production build, Chromium, desktop and Pixel 7): 6 passed. The two administrator flows run on desktop only. The server had a synthetic `API_BIBLE_KEY`, and API.Bible wasn't reachable, so every licensed fetch shows the outage state. No real NIV, NASB, or AMP text was fetched or shown. Set `MEMORY_SHOTS=<folder>` to save screenshots.
+- **Screenshots** (synthetic data): [docs/screenshots/memory-licensed-collections/](screenshots/memory-licensed-collections/).
+- **Not verified:** a successful fetch with the church's real key (needs a deployment with the key, after approval).
 
 ## Before enabling NIV, NASB, or AMP
 

@@ -339,3 +339,23 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Record script:** `supabase/manual/2026-11-10-record-media-cover-framing.sql`. It creates, replaces, and grants nothing: it checks every object above by md5 and the grants, requires `20261109000200`, then inserts version `20261110000100` (`created_by = media-cover-framing`). One transaction; any difference or a second run stops with "Nothing was changed".
 - **Rehearsal (local, PostgreSQL 16):** on a fresh build of every migration with a history row for `20261109000200`, the script recorded the version, and a second run stopped. With one function body altered, it stopped and named that function.
 - **Recorded (2026-10-23):** the owner ran the record script. Read-only check afterwards: `20261110000100` recorded as `media_cover_framing` (`created_by = media-cover-framing`), 72 versions in history, with `20261109000100` / `20261109000200` still `media_video_kind` / `media_videos`. Applied and recorded; nothing left to do on hosted.
+
+## Licensed versions in memory collections (2026-11-11)
+
+- **New (additive; no applied migration was edited):** `20261111000100_memory_licensed_collections`:
+  - no table or column changes;
+  - new private helpers `memory.translation_eligibility`, `memory.translation_problem`, `memory.licensed`;
+  - new `public.memory_translation_options()` and the overload `public.memory_admin_item_update_text(uuid, text, jsonb)` (the 2-argument signature delegates to it), granted to `authenticated` only;
+  - replaced with the same signatures and grants: `memory.collection_visible` (licensed collections hidden from youth accounts), `memory.translation_brief`, `memory.collection_json`, `memory.member_item_json`, `memory.card_json`, `memory.suitability`; `public.memory_admin_home`, `memory_admin_collection_save`, `memory_admin_collection_status`, `memory_admin_collection_duplicate`, `memory_admin_item_add`, `memory_admin_preview`, `memory_card_add`; `youth.child_items`, `public.youth_learning_options`, `youth_learning_assign`.
+  - No row is rewritten. `memory.provider_permissions` is untouched, so nothing new is offered until a version's terms are recorded. Anon baseline unchanged. See [memory-provider-practice.md](memory-provider-practice.md#church-and-group-collections).
+- **Operator script:** `supabase/manual/2026-11-11-apply-memory-licensed-collections.sql`, one transaction. The preflight requires `20261106000100` and refuses a second run. It post-checks grants and that the helpers stay private. History row `created_by = memory-licensed-collections`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with their history rows, the script applied and recorded the version. A rerun stopped at the preflight.
+- **Order:** apply the migration before deploying the app (the admin memory pages call `memory_translation_options` and pass the API fetch to `memory_admin_item_add`).
+- **Version:** written as `20261109000100`, renumbered to `20261111000100` because `main` and hosted use `20261109000100`/`200` (media videos) and hosted has `20261110000100` (media cover framing).
+- **Hosted (2026-10-23):** the owner ran the migration in the SQL editor. Read-only check afterwards:
+  - all 22 new and replaced functions are identical to the repository's (md5 of `pg_get_functiondef`);
+  - `memory_translation_options` is executable by `authenticated` and not by `anon`, and `memory.translation_eligibility` isn't executable by clients;
+  - `memory.collection_visible` carries the youth rule;
+  - no licensed collections exist yet. AMP, NIV, and NASB were already permitted for memory (3 permission rows, unchanged), so all three are eligible in the database. The app also requires the API key on the server.
+  - Anon-executable public functions: 34 (unchanged by this migration).
+  - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-11-record-memory-licensed-collections.sql`. `20261111000100` is recorded (`created_by = memory-licensed-collections`), 73 versions in history.

@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Eye } from "lucide-react";
 import Link from "next/link";
+import { LicensedPassageText } from "@/components/memory/licensed-passage";
 import { PassageText } from "@/components/memory/passage";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { Card, SectionHeading } from "@/components/ui/card";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { BOOK_LIST } from "@/lib/bible/books";
+import { unavailableNote, versionChoices } from "@/lib/memory/eligibility";
 import { addItemAction, collectionStatusAction, coverAction, itemOpAction, saveItemAction, sequenceAction } from "@/lib/memory/manage-actions";
 import { audienceLabel, collectionStatus, formatDay } from "@/lib/memory/format";
 import { utcToZonedLocal } from "@/lib/time";
@@ -20,10 +22,15 @@ import type { AdminCollection, AdminHome, ManageBase } from "./types";
  * duplicate, delete (unused drafts only), verses with their assignment
  * windows, editorial notes and hints, order, and text-version updates.
  * Scripture is chosen by reference from the approved source and never typed
- * or edited here.
+ * or edited here. A licensed version's verses keep no text: each is fetched
+ * through API.Bible only when staff open it (?preview=<verse id>).
  */
-export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollection; home: AdminHome; base: ManageBase; coverUrl?: string }) {
+export function CollectionEditor({ c, home, base, coverUrl, preview }: { c: AdminCollection; home: AdminHome; base: ManageBase; coverUrl?: string; preview: string | null }) {
   const st = collectionStatus(c);
+  const licensed = c.translation.source_kind === "api";
+  const choices = versionChoices(home.translations);
+  // The shared eligibility rule, for this collection's version now.
+  const unavailable = c.status === "archived" ? null : unavailableNote(home.translations, c.translation.id, c.translation.code);
   const editable = c.status === "draft" || c.can_publish;
   const leader = base === "/memory/lead";
   const groups = leader ? home.led_groups : home.groups.map((g) => ({ id: g.id, name: g.name }));
@@ -33,11 +40,26 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={st.tone}>{st.label}</Badge>
         <span className="text-meta text-text-secondary">
-          {audienceLabel(c)} · {c.translation.name} ({c.translation.code}){c.translation_choice ? " or the member's own version" : " required"} · {c.item_count} verses
+          {audienceLabel(c)} · {c.translation.name} ({c.translation.code}{licensed ? ", licensed" : ""}){c.translation_choice ? " or the member's own version" : " required"} · {c.item_count} verses
           {c.scheduled && c.publish_at ? ` · appears ${formatDay(c.publish_at.slice(0, 10))}` : ""}
         </span>
       </div>
       {!editable ? <Alert tone="info" title="This collection is published. A memory verse publisher can change it." /> : null}
+      {unavailable ? (
+        <Alert tone="warning" title={`Memory practice in ${c.translation.code} isn't available right now.`}>
+          <p>
+            {unavailable} Members keep this collection&apos;s verses, their progress, and their history, and no other version is used instead. New verses,
+            publishing, and new practice in {c.translation.code} wait until it&apos;s available again.
+          </p>
+        </Alert>
+      ) : licensed ? (
+        <Alert tone="info" live={false} title={`${c.translation.code} is a licensed version.`}>
+          <p>
+            Its text is fetched from API.Bible whenever it&apos;s shown, with its copyright and usage reporting, and is never stored here. Members practice it with
+            flashcards and self-check only; activities that hide or rearrange words aren&apos;t offered.
+          </p>
+        </Alert>
+      ) : null}
 
       <section aria-labelledby="publishing">
         <SectionHeading id="publishing">Publishing</SectionHeading>
@@ -103,7 +125,7 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
         <section aria-labelledby="details">
           <SectionHeading id="details">Details</SectionHeading>
           <Card>
-            <CollectionForm base={base} collection={c} translations={home.translations} defaultTranslation={home.default_translation_id} groups={groups} leaderOnly={leader} timezone={home.church_timezone} />
+            <CollectionForm base={base} collection={c} translations={choices} defaultTranslation={home.default_translation_id} groups={groups} leaderOnly={leader} timezone={home.church_timezone} />
           </Card>
         </section>
       ) : null}
@@ -150,7 +172,7 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
         </SectionHeading>
         <ol className="space-y-4">
           {c.items.map((i) => (
-            <li key={i.id} className={`rounded-card border border-border bg-surface p-4 ${i.retired ? "opacity-70" : ""}`}>
+            <li key={i.id} id={`item-${i.id}`} className={`scroll-mt-24 rounded-card border border-border bg-surface p-4 ${i.retired ? "opacity-70" : ""}`}>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="font-semibold">
                   {i.retired ? "Retired · " : `${i.position}. `}
@@ -168,10 +190,40 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
                   ))}
                 </ul>
               ) : null}
-              <details className="mt-3">
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold text-primary">Show the text</summary>
-                <PassageText passage={i.passage} className="mt-2" />
-              </details>
+              {i.passage.source_kind === "api" ? (
+                preview === i.id ? (
+                  <LicensedPassageText
+                    passage={i.passage}
+                    className="mt-3"
+                    changed={
+                      !i.retired && c.can_publish ? (
+                        <ActionForm action={itemOpAction} hidden={{ base, item_id: i.id, op: "update_text", collection_id: c.id }} className="mt-3 space-y-2 rounded-tile border border-primary/50 bg-primary-soft/40 p-3">
+                          <p className="font-semibold">The publisher has revised this wording since the verse was added.</p>
+                          <p className="text-meta">
+                            The text above is the current wording. Updating points this verse at it. Members keep their practice of the earlier wording and are asked whether
+                            to switch; nothing switches silently.
+                          </p>
+                          <TextField id={`${i.id}-reason`} label="Explanation for members" name="reason" required maxLength={500} />
+                          <SubmitButton size="sm" pendingText="Updating…">
+                            Use the current wording
+                          </SubmitButton>
+                        </ActionForm>
+                      ) : (
+                        <p className="mt-3 text-meta">The publisher has revised this wording since the verse was added. A memory verse publisher can update it.</p>
+                      )
+                    }
+                  />
+                ) : (
+                  <Link href={`${base}/collections/${c.id}?preview=${i.id}#item-${i.id}`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-primary hover:underline">
+                    Show the text<span className="sr-only"> of {i.passage.label}</span>
+                  </Link>
+                )
+              ) : (
+                <details className="mt-3">
+                  <summary className="min-h-11 cursor-pointer py-2 font-semibold text-primary">Show the text</summary>
+                  <PassageText passage={i.passage} className="mt-2" />
+                </details>
+              )}
               {!i.retired && editable ? (
                 <>
                   <ActionForm action={saveItemAction} hidden={{ base, item_id: i.id }} className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -230,9 +282,16 @@ export function CollectionEditor({ c, home, base, coverUrl }: { c: AdminCollecti
         {!c.items.length ? <p className="text-text-secondary">No verses yet.</p> : null}
       </section>
 
-      {editable && c.status !== "archived" ? (
+      {editable && c.status !== "archived" && !unavailable ? (
         <section aria-labelledby="add">
-          <SectionHeading id="add" description={`Choose by reference from ${c.translation.code}. The exact approved text is captured; long passages are split into practice parts automatically.`}>
+          <SectionHeading
+            id="add"
+            description={
+              licensed
+                ? `Choose by reference from ${c.translation.code}. The passage is fetched from API.Bible to check it; only its reference, passage ID, verse numbers, word count, and a one-way fingerprint of the wording are kept.`
+                : `Choose by reference from ${c.translation.code}. The exact approved text is captured; long passages are split into practice parts automatically.`
+            }
+          >
             Add a verse
           </SectionHeading>
           <Card>

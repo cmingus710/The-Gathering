@@ -60,7 +60,14 @@ export default async function AssignmentPage() {
               {i.card ? (
                 <>
                   <StageBadge stage={i.card.stage} />
-                  <ButtonLink href={`/memory/practice/${i.card.id}`}>Practice</ButtonLink>
+                  {i.card.modes && !i.card.modes.length ? (
+                    // Practice in this version is paused (e.g. a licensed version's permission was withdrawn); progress is kept.
+                    <ButtonLink href={`/memory/verses/${i.card.id}`} variant="secondary">
+                      Practice paused · open verse
+                    </ButtonLink>
+                  ) : (
+                    <ButtonLink href={`/memory/practice/${i.card.id}`}>Practice</ButtonLink>
+                  )}
                   {!i.card.current_version ? <ButtonLink href={`/memory/verses/${i.card.id}`} variant="secondary">Updated text available</ButtonLink> : null}
                 </>
               ) : (
