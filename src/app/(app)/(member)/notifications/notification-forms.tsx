@@ -9,6 +9,7 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { MySettings, NotificationCategory } from "@/lib/community/types";
 import { initialFormState } from "@/lib/forms";
+import { ALL_OFF_TEXT, ALL_ON_TEXT } from "@/lib/notifications/channels";
 import { markReadAction, pushSubscribeAction, pushTestAction, pushUnsubscribeAction, saveQuietHoursAction, savePrefsAction } from "./actions";
 
 export function MarkReadButton({ id, label }: { id?: string; label: string }) {
@@ -53,13 +54,29 @@ const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string 
   youth: { label: "Youth & Families", hint: "Updates for children you're a verified guardian of (announcements, registrations, permission forms, consent changes, reminders) and, for leaders and reviewers, youth reports. Email and push only say there's an update: never a child's name, an event, or any details." },
 };
 
-export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]; pushAvailable: boolean }) {
+export function PrefsForm({
+  prefs,
+  pushAvailable,
+  channelAll,
+}: {
+  prefs: MySettings["prefs"];
+  pushAvailable: boolean;
+  channelAll: { push_all: boolean; email_all: boolean };
+}) {
   const [state, action] = useActionState(savePrefsAction, initialFormState);
+  const [pushAll, setPushAll] = useState(channelAll.push_all);
+  const [emailAll, setEmailAll] = useState(channelAll.email_all);
   return (
     <form action={action} className="space-y-6">
       <FormMessage state={state} />
       {/* Only categories the database reports (each phase's categories appear once its migrations are applied). */}
       <input type="hidden" name="categories" value={(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).join(",")} />
+      <div className="grid gap-3 border-b border-border pb-5 sm:grid-cols-2">
+        {pushAvailable ? (
+          <AllChannelField channel="push" label="All push notifications" checked={pushAll} onChange={setPushAll} />
+        ) : null}
+        <AllChannelField channel="email" label="All email notifications" checked={emailAll} onChange={setEmailAll} />
+      </div>
       {(Object.keys(CATEGORY_INFO) as NotificationCategory[]).filter((c) => prefs[c]).map((c) => (
         <fieldset key={c} className="space-y-3 border-b border-border pb-5 last:border-0">
           <legend className="font-bold">{CATEGORY_INFO[c].label}</legend>
@@ -67,7 +84,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
           <div className="grid gap-3 sm:grid-cols-3">
             <CheckboxField name={`${c}.in_app`} label="In the app" defaultChecked={prefs[c]!.in_app} disabled={c === "moderation"} />
             {c === "events" ? null : (
-              <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
+              <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email} disabled={emailAll} aria-describedby="email-all-status">
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
                 {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" || c === "mentions" || c === "group_mentions" ? null : (
@@ -78,12 +95,33 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
                 )}
               </SelectField>
             )}
-            {pushAvailable ? <CheckboxField name={`${c}.push`} label="Push on my devices" defaultChecked={prefs[c]!.push} /> : null}
+            {pushAvailable ? (
+              <CheckboxField name={`${c}.push`} label="Push on my devices" defaultChecked={prefs[c]!.push} disabled={pushAll} aria-describedby="push-all-status" />
+            ) : null}
           </div>
         </fieldset>
       ))}
       <SubmitButton pendingText="Saving…">Save preferences</SubmitButton>
     </form>
+  );
+}
+
+function AllChannelField({ channel, label, checked, onChange }: { channel: "push" | "email"; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="rounded-card border border-border p-4">
+      <input type="hidden" name={`${channel}_all_shown`} value="1" />
+      <CheckboxField
+        name={`${channel}_all`}
+        id={`${channel}-all`}
+        label={label}
+        checked={checked}
+        onChange={(e) => onChange(e.currentTarget.checked)}
+        aria-describedby={`${channel}-all-status`}
+      />
+      <p id={`${channel}-all-status`} role="status" className="mt-2 text-meta text-text-secondary">
+        {checked ? ALL_ON_TEXT : ALL_OFF_TEXT}
+      </p>
+    </div>
   );
 }
 

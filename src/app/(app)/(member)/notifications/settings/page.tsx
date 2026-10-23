@@ -31,6 +31,8 @@ export default async function NotificationSettingsPage() {
   const push = getPushConfig();
   const supabase = await createClient();
   const teaching = supabase ? await supabase.rpc("media_prefs") : null;
+  const all = supabase ? await supabase.rpc("community_my_channel_all") : null;
+  const channelAll = all && !all.error ? (all.data as { push_all: boolean; email_all: boolean }) : { push_all: false, email_all: false };
   const muted = teaching && !teaching.error ? new Set(((teaching.data as { muted?: string[] } | null)?.muted ?? []) as string[]) : null;
   return (
     <>
@@ -43,7 +45,7 @@ export default async function NotificationSettingsPage() {
           <section aria-labelledby="prefs-heading">
             <SectionHeading id="prefs-heading">What you hear about</SectionHeading>
             <Card>
-              <PrefsForm prefs={settings.prefs} pushAvailable={!!push} />
+              <PrefsForm prefs={settings.prefs} pushAvailable={!!push} channelAll={channelAll} />
             </Card>
           </section>
           {muted ? (

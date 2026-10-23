@@ -4,7 +4,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Kindle book URL beside the Audible link (20261113000100): partial saves of
+ * Kindle book URL beside the Audible link (20261114000100): partial saves of
  * a book's reading details, the wider Kindle link check (Amazon country
  * stores, a.co), who may change the links, and what members see for books
  * with both links, one, or neither. Synthetic data only.

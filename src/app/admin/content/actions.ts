@@ -224,7 +224,7 @@ async function saveBookDetails(
   const { error } = await supabase.rpc("media_admin_book_details_patch", { p_item: item, p: patch });
   if (!error) return null;
   if (error.code !== "PGRST202" && error.code !== "42883") return dbErrorMessage(error);
-  // Before migration 20261113000100: merge with the stored details and use the Phase 13 save.
+  // Before migration 20261114000100: merge with the stored details and use the Phase 13 save.
   const current = await supabase.rpc("media_admin_book_details", { p_item: item });
   if (current.error || !current.data) return dbErrorMessage(current.error);
   const d = { ...(current.data as Required<BookDetailsPatch>), ...patch };

@@ -1,5 +1,5 @@
 -- Kindle book URL beside Audible · Apply migration
--- 20261113000100_media_book_kindle_link to the hosted project.
+-- 20261114000100_media_book_kindle_link to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
 -- approves applying it (docs/phase-13/reading-kindle-audible.md, "Kindle
@@ -12,7 +12,7 @@
 -- existing rows) and adds public.media_admin_book_details_patch(uuid, jsonb),
 -- granted to `authenticated` only. No other function, table, or grant changes.
 --
--- It copies supabase/migrations/20261113000100_media_book_kindle_link.sql
+-- It copies supabase/migrations/20261114000100_media_book_kindle_link.sql
 -- verbatim and records it under its repository version (created_by =
 -- media-book-kindle-link). All or nothing: one transaction; out of order or
 -- a second run stops at the preflight with "Nothing was changed".
@@ -27,15 +27,15 @@ begin
   if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261031000400') then
     raise exception 'Nothing was changed: the church reading step (20261031000400) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261113000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261114000100')
      or to_regprocedure('public.media_admin_book_details_patch(uuid, jsonb)') is not null then
-    raise exception 'Nothing was changed: 20261113000100 is already applied.';
+    raise exception 'Nothing was changed: 20261114000100 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261113000100_media_book_kindle_link.sql
+-- 20261114000100_media_book_kindle_link.sql
 -- =========================================================================
 -- Church reading · Kindle book URL beside the Audible link (additive).
 --
@@ -139,6 +139,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261113000100', 'media_book_kindle_link', 'media-book-kindle-link');
+values ('20261114000100', 'media_book_kindle_link', 'media-book-kindle-link');
 
 commit;
