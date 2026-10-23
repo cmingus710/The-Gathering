@@ -7,9 +7,11 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, type FormState } from "@/lib/forms";
 import { isUuid, isYmd } from "@/lib/media/format";
+import { parseVideoUrl } from "@/lib/media/embeds";
 import { reencodeWebp } from "@/lib/media/images";
 import { downloadObject, removePaths, uploadBytes } from "@/lib/media/storage";
 import type { Photo } from "@/lib/media/types";
+import { checkVideo } from "@/lib/media/video-provider";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,20 +89,23 @@ export async function reviewPhotoAction(formData: FormData): Promise<void> {
     }
     const { data } = await supabase.rpc("media_admin_album", { p_id: albumId, p_status: "pending" });
     const photo = ((data as { photos?: Photo[] } | null)?.photos ?? []).find((p) => p.id === photoId);
-    if (!photo?.review_display_path || !photo.review_thumb_path) redirect(back(`error=${encodeURIComponent("That photo is no longer waiting for review.")}`));
-    const [d, t] = await Promise.all([
-      downloadObject(supabase, "media-uploads", photo.review_display_path, 8 * 1024 * 1024),
-      downloadObject(supabase, "media-uploads", photo.review_thumb_path, 2 * 1024 * 1024),
-    ]);
-    const [dOut, tOut] = await Promise.all([d ? reencodeWebp(d, 2048, 82) : null, t ? reencodeWebp(t, 480, 74) : null]);
-    if (!dOut || !tOut) redirect(back(`error=${encodeURIComponent("The photo couldn't be processed. Reject it and ask for a different file.")}`));
-    const stem = `gallery/${albumId}/${photoId}/${randomBytes(9).toString("base64url")}`;
-    display = `${stem}-display.webp`;
-    thumb = `${stem}-thumb.webp`;
-    const ok = (await uploadBytes(supabase, "media", display, dOut, "image/webp")) && (await uploadBytes(supabase, "media", thumb, tOut, "image/webp"));
-    if (!ok) {
-      await removePaths(supabase, "media", [display, thumb]);
-      redirect(back(`error=${encodeURIComponent("The published copies couldn't be stored. Try again.")}`));
+    // Album videos reference a library video: nothing to re-encode.
+    if (photo?.kind !== "video") {
+      if (!photo?.review_display_path || !photo.review_thumb_path) redirect(back(`error=${encodeURIComponent("That photo is no longer waiting for review.")}`));
+      const [d, t] = await Promise.all([
+        downloadObject(supabase, "media-uploads", photo.review_display_path, 8 * 1024 * 1024),
+        downloadObject(supabase, "media-uploads", photo.review_thumb_path, 2 * 1024 * 1024),
+      ]);
+      const [dOut, tOut] = await Promise.all([d ? reencodeWebp(d, 2048, 82) : null, t ? reencodeWebp(t, 480, 74) : null]);
+      if (!dOut || !tOut) redirect(back(`error=${encodeURIComponent("The photo couldn't be processed. Reject it and ask for a different file.")}`));
+      const stem = `gallery/${albumId}/${photoId}/${randomBytes(9).toString("base64url")}`;
+      display = `${stem}-display.webp`;
+      thumb = `${stem}-thumb.webp`;
+      const ok = (await uploadBytes(supabase, "media", display, dOut, "image/webp")) && (await uploadBytes(supabase, "media", thumb, tOut, "image/webp"));
+      if (!ok) {
+        await removePaths(supabase, "media", [display, thumb]);
+        redirect(back(`error=${encodeURIComponent("The published copies couldn't be stored. Try again.")}`));
+      }
     }
   }
 
@@ -159,4 +164,45 @@ export async function resolveReportAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/admin/gallery/reports");
   redirect("/admin/gallery/reports?saved=1");
+}
+
+/**
+ * A gallery moderator adds a video to an album: a ready library video, or a
+ * YouTube/Vimeo link (an existing library record for the same video is
+ * reused; nothing is downloaded). It waits in "Waiting for review" so the
+ * people-under-18 review and youth photo consent apply before members see it.
+ */
+export async function addAlbumVideoAction(formData: FormData): Promise<void> {
+  await requireCapability(CAPABILITIES.galleryModerate, "/admin/gallery");
+  const albumId = formData.get("album");
+  if (!isUuid(albumId)) redirect("/admin/gallery");
+  const back = (q: string) => `/admin/gallery/${albumId}?${q}#add-video`;
+  const assetId = formData.get("asset");
+  const url = String(formData.get("url") ?? "").trim();
+  const caption = String(formData.get("caption") ?? "").slice(0, 500);
+  const ref = url ? parseVideoUrl(url) : null;
+  if (!isUuid(assetId) && !ref) {
+    redirect(back(`error=${encodeURIComponent(url ? "Paste a YouTube or Vimeo video link (not embed code)." : "Choose a library video or paste a video link.")}`));
+  }
+  const supabase = await createClient();
+  if (!supabase) redirect(back("error=unavailable"));
+  const check = !isUuid(assetId) && ref ? await checkVideo(ref) : null;
+  const { data, error } = await supabase.rpc("media_admin_album_video_add", {
+    p_album: albumId,
+    p_asset: isUuid(assetId) ? assetId : null,
+    p_provider: ref?.provider ?? null,
+    p_ref: ref?.id ?? null,
+    p_hash: ref?.provider === "vimeo" ? ref.hash : null,
+    p_url: url || null,
+    p_title: check?.title ?? null,
+    p_caption: caption,
+  });
+  if (error || !data) redirect(back(`error=${encodeURIComponent(dbErrorMessage(error, "The video couldn't be added."))}`));
+  if (check) {
+    const { data: row } = await supabase.rpc("media_admin_album", { p_id: albumId, p_status: "pending" });
+    const added = ((row as { photos?: Photo[] } | null)?.photos ?? []).find((p) => p.id === data);
+    if (added?.video) await supabase.rpc("media_admin_video_check_save", { p_id: added.video.asset_id, p_status: check.status, p_thumb: check.thumb });
+  }
+  revalidatePath(`/admin/gallery/${albumId}`);
+  redirect(`/admin/gallery/${albumId}?saved=video_added#photo-${data as string}`);
 }

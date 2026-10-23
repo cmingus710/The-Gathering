@@ -37,6 +37,26 @@ const KIND_ICON: Record<string, React.ReactNode> = {
 
 const NOTICES: Record<string, string> = { removed: "The file was removed and its stored copies deleted." };
 
+/** A short "can members find it?" label for library videos (details on the file's page). */
+function VideoReachBadge({ a }: { a: AssetRow }) {
+  if (a.kind !== "video" && a.kind !== "external_video") return null;
+  if (a.provider_status === "unavailable" || a.provider_status === "not_embeddable") return <Badge tone="danger">Can&apos;t play here</Badge>;
+  const p = a.publishing;
+  if (!p) return null;
+  const page = p.standalone.find((x) => x.state !== "archived");
+  if (page) {
+    return page.state === "live" ? (
+      <Badge tone="success">{page.audience === "group" ? "Published video (one group)" : "Published video"}</Badge>
+    ) : (
+      <Badge tone="warning">Video page: {page.state === "scheduled" ? "scheduled" : page.state === "expired" ? "expired" : "draft"}</Badge>
+    );
+  }
+  const live = p.attached.filter((x) => x.state === "live").length + p.albums.filter((x) => x.status === "approved" && x.album_status === "published").length;
+  if (live) return <Badge tone="info">Inside {live} published {live === 1 ? "page or album" : "pages or albums"}</Badge>;
+  if (p.attached.length || p.albums.length || p.blocks) return <Badge tone="warning">Used only in unpublished content</Badge>;
+  return <Badge tone="warning">Library only: not visible to members</Badge>;
+}
+
 export default async function MediaLibraryPage({ searchParams }: PageProps<"/admin/media">) {
   const viewer = await requireAnyCapability(
     [CAPABILITIES.mediaManage, CAPABILITIES.contentEdit, CAPABILITIES.contentPublish, CAPABILITIES.podcastsManage],
@@ -45,15 +65,18 @@ export default async function MediaLibraryPage({ searchParams }: PageProps<"/adm
   const canManage = viewer.capabilities.has(CAPABILITIES.mediaManage);
   const sp = await searchParams;
   const kind = typeof sp.kind === "string" && KINDS.some(([k]) => k === sp.kind) ? sp.kind : "";
-  const status = typeof sp.status === "string" && ["uploading", "processing", "ready", "failed", "removed"].includes(sp.status) ? sp.status : null;
+  const status = typeof sp.status === "string" && ["uploading", "processing", "ready", "failed", "removed", "needs_decision"].includes(sp.status) ? sp.status : null;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 80) : "";
   const page = Math.max(0, Number(sp.page) || 0);
   const supabase = await requireClient();
-  const [list, settings, storage] = await Promise.all([
+  const [list, settings, storage, undecided] = await Promise.all([
     supabase.rpc("media_admin_assets", { p_kind: kind || null, p_status: status, p_q: q || null, p_limit: 40, p_offset: page * 40 }),
     supabase.rpc("media_admin_settings"),
     canManage ? supabase.rpc("media_admin_storage") : Promise.resolve({ data: null, error: null }),
+    // Ready videos not used anywhere (before 20261109000200 this filter matches nothing).
+    status === "needs_decision" ? Promise.resolve(null) : supabase.rpc("media_admin_assets", { p_kind: null, p_status: "needs_decision", p_q: null, p_limit: 1, p_offset: 0 }),
   ]);
+  const undecidedCount = undecided && !undecided.error ? ((undecided.data as { total?: number } | null)?.total ?? 0) : 0;
   const items = ((list.data as { items: AssetRow[] } | null)?.items ?? []) as AssetRow[];
   const total = (list.data as { total: number } | null)?.total ?? 0;
   const s = (settings.data ?? {}) as Record<string, number>;
@@ -82,6 +105,15 @@ export default async function MediaLibraryPage({ searchParams }: PageProps<"/adm
         }
       />
       {notice ? <Alert tone="success" title={notice} className="mb-6" /> : null}
+      {undecidedCount ? (
+        <Alert tone="warning" title={`${undecidedCount} video${undecidedCount === 1 ? " isn't" : "s aren't"} visible to members yet`} className="mb-6">
+          Library videos are never shown on their own. Each needs a decision: publish it as a video, attach it to a lesson, devotional, or reading, add it to a
+          Media gallery album, or leave it in the library.{" "}
+          <Link href={{ query: { status: "needs_decision" } }} className="font-semibold underline">
+            Show them
+          </Link>
+        </Alert>
+      ) : null}
       {list.error ? <Alert tone="error" title="The media library couldn't be loaded. If Phase 7 hasn't been applied to the database yet, apply it first." className="mb-6" /> : null}
 
       {canManage ? (
@@ -146,6 +178,7 @@ export default async function MediaLibraryPage({ searchParams }: PageProps<"/adm
               <option value="uploading">Uploading</option>
               <option value="failed">Failed</option>
               <option value="removed">Removed</option>
+              <option value="needs_decision">Videos not used anywhere yet</option>
             </select>
           </div>
           <button type="submit" className="min-h-11 rounded-full border border-border-strong bg-surface px-4 font-semibold hover:bg-surface-muted">
@@ -175,6 +208,7 @@ export default async function MediaLibraryPage({ searchParams }: PageProps<"/adm
                     <AssetStatusBadge status={a.status} />
                     {a.kind !== "external_video" && a.kind !== "image" ? <RightsBadge rights={a.rights} confirmed={!!a.rights_confirmed_at} /> : null}
                     {a.public_ok ? <Badge tone="info">Approved for public use</Badge> : null}
+                    <VideoReachBadge a={a} />
                   </span>
                 </Link>
               </li>

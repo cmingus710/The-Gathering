@@ -52,7 +52,7 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts", order: 58, status: "available", href: "/podcasts" },
   { id: "reading", label: "Church Reading", art: "church-reading", glyph: "reading", order: 59, status: "available", href: "/reading" },
   { id: "music", label: "Music", art: "music", glyph: "music", order: 62, status: "available", href: "/music" },
-  { id: "gallery", label: "Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
+  { id: "gallery", label: "Media Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
   // Bible reading plans and the reader (Phase 8), with the supplied Bible art.
   { id: "bible", label: "Bible Reading", art: "bible", glyph: "bible", order: 54, status: "available", href: "/bible" },
   // Scripture memory (Phase 9), with the supplied Memory Verses art.

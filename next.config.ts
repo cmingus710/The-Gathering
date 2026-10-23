@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|complete-profile|api|community|groups|messages|notifications|design|devotionals|lessons|podcasts|media|reading|music|gallery|saved|bible|journal|memory|youth|youth-activate|prayer|events)/:path*",
+        source: "/(home|announcements|directory|profile|giving|give|admin|account-status|complete-profile|api|community|groups|messages|notifications|design|devotionals|lessons|podcasts|media|reading|music|gallery|videos|saved|bible|journal|memory|youth|youth-activate|prayer|events)/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];

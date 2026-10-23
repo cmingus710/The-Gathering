@@ -45,7 +45,8 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "podcasts", label: "Podcasts", icon: "podcasts", section: "learn", status: "available", href: "/podcasts" },
   { key: "reading", label: "Church reading", icon: "reading", section: "learn", status: "available", href: "/reading" },
   { key: "music", label: "Music", icon: "music", section: "learn", status: "available", href: "/music" },
-  { key: "gallery", label: "Gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
+  { key: "videos", label: "Videos", icon: "media", section: "learn", status: "available", href: "/videos" },
+  { key: "gallery", label: "Media gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },
   { key: "media", label: "Search teaching & media", icon: "media", section: "learn", status: "available", href: "/media" },
   { key: "saved", label: "Saved", icon: "media", section: "you", status: "available", href: "/saved" },
   // Phase 13: one place for profile, sign-in, notifications, appearance, privacy, and access.
@@ -137,7 +138,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   },
   {
     key: "gallery",
-    label: "Gallery",
+    label: "Media gallery",
     href: "/admin/gallery",
     icon: "gallery",
     requires: [],

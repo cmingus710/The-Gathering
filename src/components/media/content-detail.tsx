@@ -7,14 +7,16 @@ import { Alert } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/ui/card";
 import { formatBytes } from "@/lib/media/files";
 import { formatDay, itemDate, itemHref, KIND_LABEL, speakers } from "@/lib/media/format";
-import { spotifyEmbed, videoEmbed } from "@/lib/media/embeds";
+import { spotifyEmbed } from "@/lib/media/embeds";
+import { videoAttachments } from "@/lib/media/videos";
 import type { Attachment, ItemDetail } from "@/lib/media/types";
 import { AudioCard } from "./audio-card";
 import { BookAccess } from "./book-access";
 import { EmbedPlayer } from "./embed-player";
 import { ItemCard, itemCover } from "./item-card";
-import { NativeVideo } from "./native-video";
 import { BookmarkButton, CompleteToggle } from "./toggles";
+import { VideoList } from "./video-list";
+import { VideoUsedIn } from "./video-card";
 
 const QUESTION_TITLE: Record<string, string> = { devotional: "Reflection questions", assignment: "Discussion questions" };
 
@@ -51,7 +53,6 @@ export function ContentDetail({
   urls,
   transcripts,
   member,
-  origin,
   preview = false,
   book,
 }: {
@@ -59,14 +60,16 @@ export function ContentDetail({
   urls: Map<string, string>;
   transcripts: Record<string, string>;
   member: boolean;
-  origin: string;
+  /** Unused since the shared video player (kept so existing pages compile unchanged). */
+  origin?: string;
   preview?: boolean;
   /** Phase 13 book extras (Kindle link and the member's reading panel), rendered after "Read or listen". */
   book?: { kindleUrl: string | null; panel?: ReactNode };
 }) {
   const day = itemDate(item);
   const byline = speakers(item);
-  const video = item.attachments.find((a) => a.role === "video");
+  const videos = videoAttachments(item.attachments);
+  const video = videos[0];
   const audio = item.attachments.find((a) => a.role === "audio");
   const files = item.attachments.filter((a) => a.role !== "audio" && a.role !== "video");
   const cover = itemCover(item, urls, "large");
@@ -128,29 +131,20 @@ export function ContentDetail({
 
       {cover && !video ? <img src={cover} alt={item.cover?.alt ?? ""} className="max-h-[28rem] w-full rounded-card object-cover" /> : null}
 
-      {video ? (
-        <section aria-label="Video">
-          {video.kind === "external_video" && video.provider && video.provider_ref ? (
-            <EmbedPlayer
-              title={item.title}
-              embed={videoEmbed(
-                video.provider === "youtube" ? { provider: "youtube", id: video.provider_ref } : { provider: "vimeo", id: video.provider_ref, hash: video.provider_hash },
-                { origin, autoplay: true },
-              )}
-            />
-          ) : (
-            <NativeVideo
-              assetId={video.asset_id}
-              itemId={item.id}
-              title={item.title}
-              poster={cover}
-              captions={video.captions}
-              resumeAt={item.progress[`a:${video.asset_id}`]?.position}
-              saveProgressFor={member && !preview}
-            />
-          )}
+      {videos.length ? (
+        <section aria-label={videos.length > 1 ? "Videos" : "Video"}>
+          <VideoList
+            attachments={item.attachments}
+            title={item.title}
+            itemId={item.id}
+            poster={cover}
+            progress={item.progress}
+            saveProgress={member && !preview}
+          />
         </section>
       ) : null}
+
+      {item.kind === "video" && item.used_in?.length ? <VideoUsedIn uses={item.used_in} /> : null}
 
       {audio ? (
         <AudioCard
@@ -286,10 +280,10 @@ export function ContentDetail({
         </section>
       ) : null}
 
-      {preview && video?.kind === "external_video" && item.audience !== "public" ? (
+      {preview && videos.some((v) => v.kind === "external_video") && item.audience !== "public" ? (
         <Alert tone="info" title="External video privacy">
-          This page is limited to {item.audience === "group" ? "one group" : "members"}, but the video itself is on {video.provider === "vimeo" ? "Vimeo" : "YouTube"}. Its privacy
-          is set there.
+          This page is limited to {item.audience === "group" ? "one group" : "members"}, but the video itself is on {video?.provider === "vimeo" ? "Vimeo" : "YouTube"}.
+          Its privacy is set there: an unlisted video can be watched by anyone who has its link.
         </Alert>
       ) : null}
     </article>

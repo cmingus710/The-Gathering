@@ -22,6 +22,7 @@ export function NativeVideo({
   captions,
   resumeAt,
   saveProgressFor,
+  preload = "metadata",
 }: {
   assetId: string;
   itemId: string;
@@ -30,6 +31,8 @@ export function NativeVideo({
   captions: Array<{ asset_id: string; label: string; language: string }>;
   resumeAt?: number | null;
   saveProgressFor: boolean;
+  /** "none" in lists and galleries: nothing is downloaded until Play. */
+  preload?: "none" | "metadata";
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const id = `video:${assetId}`;
@@ -100,7 +103,7 @@ export function NativeVideo({
           ref={ref}
           controls
           playsInline
-          preload="metadata"
+          preload={preload}
           poster={poster ?? undefined}
           className="aspect-video w-full bg-black"
           aria-label={title}

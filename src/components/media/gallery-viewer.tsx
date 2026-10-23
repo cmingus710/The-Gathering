@@ -9,15 +9,16 @@ import { Button } from "@/components/ui/button";
 
 export type ViewerPhoto = { id: string; thumb: string | null; display: string | null; alt: string; caption: string; width: number | null; height: number | null };
 
-const REASONS = [
-  { value: "removal_request", label: "I'm in this photo and want it removed" },
+const reasons = (noun: string) => [
+  { value: "removal_request", label: `I'm in this ${noun} and want it removed` },
   { value: "privacy", label: "It shares something private" },
   { value: "minor", label: "It shows a child without permission" },
   { value: "inappropriate", label: "It's inappropriate" },
   { value: "other", label: "Something else" },
 ];
 
-function ReportForm({ photoId, onDone }: { photoId: string; onDone: () => void }) {
+/** Report or removal request for an album photo or video (both are album entries). */
+export function ReportForm({ photoId, onDone, noun = "photo" }: { photoId: string; onDone: () => void; noun?: "photo" | "video" }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   return message?.ok ? (
@@ -39,7 +40,7 @@ function ReportForm({ photoId, onDone }: { photoId: string; onDone: () => void }
         });
       }}
     >
-      <p className="text-meta text-text-secondary">Only gallery moderators see reports. They can hide the photo while they look into it.</p>
+      <p className="text-meta text-text-secondary">Only Media gallery moderators see reports. They can hide the {noun} while they look into it.</p>
       {message && !message.ok ? (
         <p role="alert" className="text-meta font-semibold text-danger">
           {message.text}
@@ -47,7 +48,7 @@ function ReportForm({ photoId, onDone }: { photoId: string; onDone: () => void }
       ) : null}
       <fieldset className="space-y-1">
         <legend className="font-semibold">What&apos;s wrong?</legend>
-        {REASONS.map((r, i) => (
+        {reasons(noun).map((r, i) => (
           <label key={r.value} className="flex min-h-11 cursor-pointer items-center gap-3">
             <input type="radio" name="reason" value={r.value} required defaultChecked={i === 0} className="size-5 accent-primary" />
             {r.label}

@@ -1,0 +1,11 @@
+-- Videos for member discovery, part 1: a new kind of teaching content.
+--
+-- A published standalone video is a media.items row of kind 'video' that
+-- points at one library asset (YouTube/Vimeo reference or uploaded MP4)
+-- through media.item_media. It shares publishing, audiences, scheduling,
+-- topics and tags, search, bookmarks, and notifications with every other
+-- kind. A library asset on its own is never shown to members.
+--
+-- PostgreSQL can't use a new enum value in the transaction that adds it, so
+-- the value is added here and used in 20261109000200.
+alter type media.item_kind add value if not exists 'video';

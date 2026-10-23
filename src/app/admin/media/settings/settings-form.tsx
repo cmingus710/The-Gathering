@@ -52,7 +52,7 @@ export function MediaSettingsForm({ values, sections }: { values: Record<string,
     <form action={action} className="space-y-6" noValidate>
       <FormMessage state={state} />
       {sections.library ? group("Media library", LIBRARY) : null}
-      {sections.gallery ? group("Photo galleries", GALLERY) : null}
+      {sections.gallery ? group("Media gallery", GALLERY) : null}
       {sections.feeds ? group("External podcast feeds", FEEDS) : null}
       <SubmitButton pendingText="Saving…">Save limits</SubmitButton>
     </form>
