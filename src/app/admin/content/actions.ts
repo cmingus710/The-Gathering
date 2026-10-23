@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import { zonedLocalToUtc } from "@/lib/time";
 
 const UNAVAILABLE = "The content service is unavailable. Nothing was saved.";
-const KINDS: ItemKind[] = ["devotional", "lesson", "episode", "book", "assignment", "playlist"];
+const KINDS: ItemKind[] = ["devotional", "lesson", "video", "episode", "book", "assignment", "playlist"];
 
 /** Which role a name in the people fields gets, per kind. */
 const PEOPLE_ROLE: Partial<Record<ItemKind, "author" | "speaker" | "host">> = { devotional: "author", lesson: "speaker", episode: "host" };
@@ -199,7 +199,7 @@ async function saveCoverFraming(
   if (!isUuid(cover)) return true;
   const framing = parseFraming(formData.get("cover_framing"));
   const { error } = await supabase.rpc("media_admin_cover_framing_save", { ...target, p_cover: cover, p_framing: framing });
-  // Before migration 20261109000100 the function doesn't exist: covers stay centred, which is fine unless a position was chosen.
+  // Before migration 20261110000100 the function doesn't exist: covers stay centred, which is fine unless a position was chosen.
   if (error && !framing && (error.code === "PGRST202" || error.code === "42883")) return true;
   return !error;
 }

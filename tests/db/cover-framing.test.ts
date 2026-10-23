@@ -6,7 +6,7 @@ const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 type Json = Record<string, unknown>;
 
 /**
- * Cover framing per use (20261109000100): one library image used as the
+ * Cover framing per use (20261110000100): one library image used as the
  * cover of two lessons and a series keeps a separate position in each, the
  * image itself is untouched, a different cover starts centred again, and
  * only the people who may save the item may position its cover. Every

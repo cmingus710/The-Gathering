@@ -5,6 +5,7 @@ import { formatDay } from "@/lib/media/format";
 import type { PlanAssignment } from "@/lib/media/reading-plan";
 import { FileRow } from "../content-detail";
 import { CompleteToggle } from "../toggles";
+import { VideoList } from "../video-list";
 
 /** "Oct 1 – Oct 7, 2026", or the start date alone. */
 export function assignmentDates(a: Pick<PlanAssignment, "starts_on" | "ends_on">): string {
@@ -28,6 +29,7 @@ export function AssignmentBody({ a, canNote, headingLevel = "h3" }: { a: PlanAss
       {a.instructions ? <p className="text-lg font-semibold leading-snug">{a.instructions}</p> : null}
       {a.summary && !a.body.trim() ? <p className="text-text-secondary">{a.summary}</p> : null}
       {a.body.trim() ? <MarkdownBody source={a.body} className="reading-body" /> : null}
+      <VideoList attachments={a.attachments} title={a.title} itemId={a.id} />
       {a.scripture_refs.length ? (
         <ul aria-label="Scripture" className="flex flex-wrap gap-1.5">
           {a.scripture_refs.map((r) => (

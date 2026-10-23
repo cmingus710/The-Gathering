@@ -1,6 +1,6 @@
-# Photo galleries: moderation and privacy guide (Phase 7)
+# Media gallery (formerly Photo galleries): moderation and privacy guide (Phase 7)
 
-Albums and photo review are under **Admin → Photo galleries** (`/admin/gallery`). Gallery moderators (`gallery.moderate`) manage albums and review photos; event coordinators (`events.manage`) can create albums for events but can't approve photos.
+Albums and photo review are under **Admin → Media gallery** (`/admin/gallery`; the addresses didn't change with the rename). Media gallery moderators (`gallery.moderate`) manage albums, review photos, and add videos; event coordinators (`events.manage`) can create albums for events but can't approve photos.
 
 ## Albums
 
@@ -9,6 +9,10 @@ Albums and photo review are under **Admin → Photo galleries** (`/admin/gallery
 - **Uploads open:** whether members who can see the album may add photos.
 - **Event link** (optional): shown only to people who can see that event.
 - **Cover:** any approved photo; otherwise the first approved photo.
+
+## Videos in albums
+
+Gallery moderators add videos under **Add a video** on the album's admin page: a ready library video (YouTube, Vimeo, or uploaded MP4) or a pasted YouTube/Vimeo link (the existing library record is reused). Each video waits under **Waiting for review** and is approved with the same people-under-18 review and youth photo-consent guard as photos. Members see videos with a Play button and **All / Photos / Videos** filters, and can **Report or ask to remove** under each one. Members can't add videos; their photo uploads are unchanged. See [videos-guide.md](videos-guide.md).
 
 ## Member uploads
 

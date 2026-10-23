@@ -1,7 +1,7 @@
 import type { Framing } from "./framing";
 
 /** Shapes returned by the media_* database functions (see the Phase 7 migrations). */
-export type ItemKind = "devotional" | "lesson" | "episode" | "book" | "assignment" | "playlist";
+export type ItemKind = "devotional" | "lesson" | "episode" | "book" | "assignment" | "playlist" | "video";
 export type Audience = "public" | "members" | "group";
 export type ItemState = "draft" | "scheduled" | "live" | "expired" | "archived";
 export type AssetKind = "audio" | "video" | "image" | "document" | "captions" | "external_video";
@@ -17,6 +17,28 @@ export type Cover = {
   framing?: Framing | null;
 };
 export type Person = { id: string; name: string; role: "author" | "speaker" | "host" | "contributor" };
+
+/** What the shared video player needs (media.video_json): identifiers only, never embed code. */
+export type VideoInfo = {
+  asset_id: string;
+  kind: "video" | "external_video";
+  title: string;
+  provider: "youtube" | "vimeo" | null;
+  provider_ref: string | null;
+  provider_hash: string | null;
+  duration_seconds: number | null;
+  width: number | null;
+  height: number | null;
+  /** A provider thumbnail exists (served through /api/media/<asset>/thumb). */
+  has_thumb: boolean;
+  /** The last provider check found it unavailable or not embeddable. */
+  unavailable: boolean;
+  attribution: string | null;
+  captions: Caption[];
+};
+
+/** Other content the viewer can open that shows the same standalone video. */
+export type VideoUse = { id: string; kind: ItemKind; title: string; book: { id: string } | null };
 
 export type ItemCard = {
   id: string;
@@ -45,6 +67,9 @@ export type ItemCard = {
   media: { audio: boolean | null; video: boolean | null; duration_seconds: number | null } | null;
   bookmarked: boolean;
   completed: boolean;
+  /** Standalone videos only: what to play, and where else it appears. */
+  video?: VideoInfo | null;
+  used_in?: VideoUse[] | null;
 };
 
 export type Caption = { asset_id: string; language: string; label: string };
@@ -72,6 +97,10 @@ export type Attachment = {
   rights?: string | null;
   rights_confirmed: boolean;
   attribution: string | null;
+  /** The contextual caption an administrator gave this attachment (item_media.label). */
+  caption?: string | null;
+  has_thumb?: boolean;
+  unavailable?: boolean;
   captions: Caption[];
 };
 
@@ -183,14 +212,29 @@ export type AssetRow = {
   ready_at: string | null;
   replaced_by: string | null;
   usage_count?: number;
+  provider_status?: ProviderStatus | null;
+  publishing?: VideoPublishing | null;
+};
+
+export type ProviderStatus = "ok" | "unavailable" | "not_embeddable" | "error";
+
+/** Where a library video is published (media.video_publishing), for administrators. */
+export type VideoPublishing = {
+  standalone: Array<{ id: string; title: string; state: ItemState; audience: Audience; group_name: string | null; publish_at: string | null; expires_at: string | null }>;
+  attached: Array<{ id: string; kind: ItemKind; title: string; state: ItemState; audience: Audience; group_name: string | null; role: string; members_only: boolean }>;
+  albums: Array<{ id: string; title: string; album_status: string; status: string; audience: Audience; group_name: string | null }>;
+  blocks: number;
 };
 
 export type AssetDetail = AssetRow & {
   transcript: string | null;
-  usage: Array<{ type: "item" | "show" | "series"; id: string; kind: string; title: string; status: string; role: string }>;
+  usage: Array<{ type: "item" | "show" | "series" | "album"; id: string; kind: string; title: string; status: string; role: string }>;
   captions: AssetRow[];
   rights_confirmed_by: string | null;
   created_by: string | null;
+  provider_checked_at?: string | null;
+  video?: VideoInfo | null;
+  can_publish_video?: boolean;
 };
 
 export type Show = {
@@ -246,6 +290,7 @@ export type Album = {
   event: { series_id: string; title: string } | null;
   cover: { photo_id: string; thumb_path: string; alt: string } | null;
   photo_count: number;
+  video_count?: number;
   can_upload: boolean;
 };
 
@@ -253,6 +298,9 @@ export type Photo = {
   id: string;
   album_id: string;
   status: "uploading" | "processing" | "pending" | "approved" | "rejected" | "hidden" | "removed" | "failed";
+  /** Album videos are rows of kind "video" that reference a library video. */
+  kind?: "photo" | "video";
+  video?: VideoInfo | null;
   caption: string;
   alt_text: string;
   width: number | null;

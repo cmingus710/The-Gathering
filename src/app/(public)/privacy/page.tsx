@@ -257,7 +257,7 @@ export default async function PrivacyPage() {
         <p>
           The app is meant for adults. Youth features are available only when the church turns them on under its youth
           policy, and they require a parent or guardian&apos;s authorization, verified by the church. Youth accounts
-          can&apos;t use the member directory, direct messages, community, groups, prayer, giving, or the gallery. Photos of
+          can&apos;t use the member directory, direct messages, community, groups, prayer, giving, or the Media gallery. Photos of
           children are shown only with a guardian&apos;s recorded consent. If you believe a child has created an account
           without permission, please contact us and we&apos;ll remove it.
         </p>

@@ -1,42 +1,8 @@
--- Media cover framing · Apply migration 20261109000100_media_cover_framing to the hosted project.
---
--- Run once in the SQL editor of The Gathering project, ONLY after the owner
--- approves applying it (docs/media-cropping.md, "Before merging"):
---   https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
---
--- Additive: one nullable jsonb column on media.items and media.series
--- (cover_framing, null = centred, today's look), two check constraints, a
--- trigger pair that clears a framing when the cover image changes, one new
--- editor function (media_admin_cover_framing_save, granted to
--- `authenticated`), and create-or-replace of media.cover_json,
--- public.media_series and public.media_admin_taxonomy with the framing
--- added to what they return (same signatures). No existing rows change.
---
--- It copies supabase/migrations/20261109000100_media_cover_framing.sql
--- verbatim and records it under its repository version (created_by =
--- media-cover-framing). All or nothing: one transaction; out of order or a
--- second run stops at the preflight with "Nothing was changed".
-begin;
-
-do $preflight$
-begin
-  if to_regclass('media.items') is null or to_regclass('media.series') is null or to_regprocedure('media.cover_json(media.items, uuid, boolean)') is null then
-    raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
-  end if;
-  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261108000100') then
-    raise exception 'Nothing was changed: the previous step (20261108000100) is not recorded. Run the steps in order.';
-  end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261109000100')
-     or exists (select 1 from information_schema.columns where table_schema = 'media' and table_name = 'items' and column_name = 'cover_framing') then
-    raise exception 'Nothing was changed: 20261109000100 is already applied.';
-  end if;
-end
-$preflight$;
-
--- =========================================================================
--- 20261109000100_media_cover_framing.sql
--- =========================================================================
 -- Media · cover framing per use (additive).
+--
+-- First written as 20261109000100, renumbered because that version (and
+-- 20261109000200) belong to the video migrations merged in #47. The body
+-- is unchanged.
 --
 -- A library image can be the cover of many lessons, devotionals, episodes,
 -- books, and series. Until now each place showed it centre-cropped. This
@@ -258,29 +224,3 @@ $$;
 revoke execute on function media.clean_framing(jsonb), media.reset_cover_framing() from public, anon, authenticated;
 revoke execute on function public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb) from public, anon, service_role;
 grant execute on function public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb) to authenticated;
-
--- =========================================================================
--- Checks (any failure rolls everything back)
--- =========================================================================
-do $check$
-begin
-  if not has_function_privilege('authenticated', 'public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb)', 'execute')
-     or has_function_privilege('anon', 'public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb)', 'execute') then
-    raise exception 'Nothing was changed: media_admin_cover_framing_save has the wrong grants. Send this message to the developer.';
-  end if;
-  if has_function_privilege('authenticated', 'media.clean_framing(jsonb)', 'execute') then
-    raise exception 'Nothing was changed: a private helper would be callable through the API. Send this message to the developer.';
-  end if;
-  if (select count(*) from pg_trigger where tgname in ('items_reset_cover_framing', 'series_reset_cover_framing')) <> 2 then
-    raise exception 'Nothing was changed: the cover triggers are missing. Send this message to the developer.';
-  end if;
-  if exists (select 1 from media.items where cover_framing is not null) or exists (select 1 from media.series where cover_framing is not null) then
-    raise exception 'Nothing was changed: existing covers were not left centred. Send this message to the developer.';
-  end if;
-end
-$check$;
-
-insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261109000100', 'media_cover_framing', 'media-cover-framing');
-
-commit;

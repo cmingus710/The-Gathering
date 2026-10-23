@@ -299,16 +299,37 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Order:** the app can be deployed first. Community person suggestions fall back to `community_mention_search`; group and Prayer suggestions stay empty and the group setting is hidden until the migration exists.
 - **Hosted:** not applied. Needs the owner's approval.
 
-## Media cover framing (2026-11-09)
+## Videos: publishing, discovery, attachments, and the Media gallery (2026-11-09)
 
-- **New (additive; no applied migration was edited):** `20261109000100_media_cover_framing`:
+- **New (additive; no applied migration was edited):** `20261109000100_media_video_kind` (adds `video` to `media.item_kind`; its own transaction, since a new enum value can't be used where it's added) and `20261109000200_media_videos`:
+  - dropped index `media.item_media_one_video_idx` (several ordered videos per item; `item_media.label` is the caption) and added `item_media_item_role_idx`;
+  - `video` added to the `member_prefs_muted_kinds_check` constraint (nothing removed);
+  - nullable columns `media.assets.provider_status`, `provider_checked_at`, `provider_thumb_url` (Vimeo image host only); `media.photos.kind` (`photo` | `video`, default `photo`, so every existing row stays a photo) and `asset_id` (references `media.assets`, on delete restrict), with check `photos_video`, `photos_approved_files` relaxed for video rows only, index `photos_asset_idx`, and unique `photos_video_once_idx`;
+  - triggers `item_media_video_item` (a standalone video has exactly one video) and `assets_album_videos_follow_replacement`;
+  - new functions: `media_admin_video_link_add`, `media_admin_video_check_save`, `media_admin_video_publish`, `media_admin_album_video_add` (authenticated only); `media_video_thumb` (anon and authenticated; rechecks access like `media_file`); `media_search(text, integer, text)` replaces `media_search(text, integer)` (optional `p_kind`; the two-argument call still works) with the same grants; private `media.video_json`, `media.video_publishing`, `media.external_video_upsert`, and the two trigger functions;
+  - replaced with the same signatures (current definitions plus the video cases): `media.asset_used_visibly`, `asset_usage`, `attachments_json`, `item_card`, `matches`, `photo_json`, `album_json`, `after_review`; `public.media_admin_item_status`, `media_admin_external_video_save` (reuses an existing record for the same video), `media_admin_assets`, `media_admin_asset`, `media_album`, `media_my_photos`, `media_admin_photo_review`, `media_admin_album_cover`;
+  - the `gallery_moderator` role's display name becomes "Media gallery moderator" (key, grants, and holders unchanged), and the `gallery.moderate` description mentions videos.
+  - No content, file, album, or photo is published, hidden, or widened. Anon baseline: 34 (adds `media_video_thumb`). See [videos-guide.md](videos-guide.md).
+- **Operator script:** `supabase/manual/2026-11-09-apply-media-videos.sql`, two transactions (one per migration). Preflights require `20261108000100` (then step 1) and refuse a second run. Post-checks grants, private helpers, both triggers, and that no existing row changed kind. History rows `created_by = media-videos`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261108000100`, the script applied and recorded both versions; a rerun stopped at the preflight. The full test suite (95 files, 1162 tests) passed on a fresh build.
+- **Order:** the app can be deployed first (search without a type filter, existing pages, and the library keep working; Videos stays empty and video publishing and album videos report an error until the migration exists). Apply before announcing videos to members.
+- **Hosted:** not applied. Needs the owner's approval.
+
+## Media cover framing (2026-11-10)
+
+- **New (additive; no applied migration was edited):** `20261110000100_media_cover_framing` (first written as `20261109000100`, renumbered because that version and `20261109000200` belong to the video migrations merged in #47; the body is unchanged):
   - nullable `cover_framing jsonb` on `media.items` and `media.series` (`{x, y, zoom}`; null = centred, the current look), with check constraints written as plain expressions;
   - triggers `items_reset_cover_framing` / `series_reset_cover_framing` clear it when the cover image changes;
   - private helpers `media.clean_framing`, `media.reset_cover_framing` (no API grants);
   - new editor function `public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb)`, granted to `authenticated` only (content editors; publishers once an item is scheduled, published, or archived; audited);
-  - replaced with the same signatures: `media.cover_json`, `public.media_series`, `public.media_admin_taxonomy` (framing added to what they return).
+  - replaced with the same signatures: `media.cover_json`, `public.media_series`, `public.media_admin_taxonomy` (framing added to what they return). The video migration replaces none of these; its `media.item_card` builds covers through `media.cover_json`, so cards carry the framing.
   - No existing rows change. Anon baseline unchanged. See [media-cropping.md](media-cropping.md).
-- **Operator script:** `supabase/manual/2026-11-09-apply-media-cover-framing.sql`, one transaction. The preflight requires `20261108000100` and refuses a second run. It post-checks the grants, that the private helper isn't callable, the two triggers, and that existing covers stayed centred. History row `created_by = media-cover-framing`.
-- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261108000100`, the script applied; a rerun stopped at the preflight.
-- **Order:** the app can be deployed first (covers stay centred; saving without choosing a position works).
-- **Hosted:** not applied. Needs the owner's approval.
+- **Hosted (2026-10-23):** the owner applied it while it was still numbered `20261109000100`. That version is recorded for `media_video_kind`, so cover framing has no history row of its own. Read-only check afterwards:
+  - `20261108000100`, `20261109000100` (`media_video_kind`) and `20261109000200` (`media_videos`) recorded, 71 versions in history, and none for cover framing;
+  - all 11 objects identical to a fresh local build of every migration (md5 of the six function bodies, both check constraints, both triggers, plus `media.item_card` from the video migration);
+  - `media_admin_cover_framing_save` executable by `authenticated` and not `anon`; `media.clean_framing` not callable by clients;
+  - no item or series has a framing yet (all covers centred);
+  - anon-executable public functions: 34 (unchanged from the video migration).
+- **Record script:** `supabase/manual/2026-11-10-record-media-cover-framing.sql`. It creates, replaces, and grants nothing: it checks every object above by md5 and the grants, requires `20261109000200`, then inserts version `20261110000100` (`created_by = media-cover-framing`). One transaction; any difference or a second run stops with "Nothing was changed".
+- **Rehearsal (local, PostgreSQL 16):** on a fresh build of every migration with a history row for `20261109000200`, the script recorded the version, and a second run stopped. With one function body altered, it stopped and named that function.
+- **Status:** objects applied and verified. The history row is written when the owner runs the record script.

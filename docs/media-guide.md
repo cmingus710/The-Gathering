@@ -1,6 +1,6 @@
 # Teaching, media, and publishing: administration guide (Phase 7)
 
-This guide covers the media library and the teaching sections: Devotionals, Sunday lessons, church podcast episodes, Church reading, and Music & playlists. Podcast shows and feeds are covered in [podcast-guide.md](podcast-guide.md), photo galleries in [gallery-guide.md](gallery-guide.md), and what members see and what outside services can and can't do in [media-limitations.md](media-limitations.md).
+This guide covers the media library and the teaching sections: Devotionals, Sunday lessons, Videos, church podcast episodes, Church reading, and Music & playlists. Podcast shows and feeds are covered in [podcast-guide.md](podcast-guide.md), the Media gallery in [gallery-guide.md](gallery-guide.md), publishing and attaching videos in [videos-guide.md](videos-guide.md), and what members see and what outside services can and can't do in [media-limitations.md](media-limitations.md).
 
 ## Where things are
 
@@ -25,7 +25,7 @@ Super administrators hold all five Phase 7 capabilities. Everyone else gets them
 | Content publisher | `content.edit`, `content.publish` | Everything above plus publish, schedule, unpublish, archive, expiry, featured; choose **Public** (with confirmation) | Upload files (needs media manager), manage podcasts or galleries |
 | Media manager | `media.manage` | Upload, describe, set rights, add captions and transcripts, replace, remove unused files, review storage and cleanup | Publish content |
 | Podcast manager | `podcasts.manage` | Shows, external feeds, the public RSS feed | Publish episodes (needs `content.publish`) |
-| Gallery moderator | `gallery.moderate` | Albums, photo review, reports | Anything outside galleries |
+| Media gallery moderator | `gallery.moderate` | Albums, photo review, album videos, reports | Anything outside the Media gallery |
 | Event coordinator (Phase 4) | `events.manage` | Create albums linked to events | Approve photos |
 
 None of these capabilities opens private messages, prayer, care, journals, giving, or member records. Listening history and bookmarks are private to each member; there is no admin view of who watched or listened to what.
@@ -34,7 +34,7 @@ None of these capabilities opens private messages, prayer, care, journals, givin
 
 1. **Draft.** An editor creates the item and fills in title, summary, body (Markdown), cover image and alt text, people, topics, series, tags, and scripture references (normalized, e.g. "John 3:16–18"). Kind-specific fields: devotional date, lesson date, episode and season numbers, book author and Audible link, assignment start and end dates and instructions, Spotify playlist link.
    **Cover image** (content editor and series editor): **Upload image** sends a file from this device (desktop file picker, or the phone's photo/file picker) through the normal library pipeline (same limits, checks, and re-encoding; media manager role only) and selects it when it's ready; **Choose from media library** opens a searchable picker of ready images. The current cover stays until a replacement finishes uploading, a failed upload can be retried without losing anything typed on the page, and **Remove** only detaches the image (the library file is kept). Nothing changes, and nothing is published, until the form is saved. A cover not approved for public use isn't shown to visitors on public content.
-2. **Attach files** from the library. Each attachment has a role (audio, video, handout, slides, resource). Attachments are **members-only by default**; only files with confirmed rights and **Allowed for public use** reach visitors on a public item.
+2. **Attach files** from the library. Each attachment has a role (audio, video, handout, slides, resource). Attachments are **members-only by default**; only files with confirmed rights and **Allowed for public use** reach visitors on a public item. **Videos** (several per item, ordered, each with an optional caption) are chosen in the editor's **Videos** section from the library or by pasting a YouTube/Vimeo link, also for church books and reading assignments; see [videos-guide.md](videos-guide.md).
 3. **Preview.** The preview renders exactly the member page (without bookmarks or progress).
 4. **Publish or schedule** (publisher). With a future publish time the item becomes **Scheduled** and goes live at that time without anyone opening the app: the database scheduler (`events-worker`, every 5 minutes) runs `media.tick()`, and every page applies the publish and expiry times on each read. Optional **expiry** hides the item afterwards.
 5. **Audience.** **Approved members** is the default. **One group** limits it to that group's active members. **Public** is for devotionals, lessons, and church episodes only, needs a publisher, and requires typing the confirmation. Books, assignments, and playlists can't be public; galleries are never public.
@@ -47,7 +47,7 @@ Access is rechecked on every read: if an item's audience narrows, or a member le
 
 - **Uploads go straight from the browser to private Supabase Storage** with a one-time signed token, never through the app server. Files over 6 MB use resumable (TUS) uploads; each file shows progress and can be cancelled or retried without creating duplicates.
 - **Server-side checks after upload:** the stored bytes are sniffed (the declared type and extension aren't trusted), sizes are checked against the limits, images are re-encoded (removing location and camera data), and audio/video duration and dimensions are recorded. Status moves uploading → processing → ready, or failed with a reason.
-- **Accepted:** audio MP3/M4A (AAC); video MP4 (H.264/AAC); images JPEG/PNG/WebP/HEIC; documents PDF and PPTX (no macros); captions WebVTT (sanitized). YouTube and Vimeo videos are added as **external references** (no file is stored).
+- **Accepted:** audio MP3/M4A (AAC); video MP4 (H.264/AAC); images JPEG/PNG/WebP/HEIC; documents PDF and PPTX (no macros); captions WebVTT (sanitized). YouTube and Vimeo videos are added as **external references** (no file is stored). Adding a link that is already in the library reuses the existing record. A library file is never shown to members on its own: publish a video with **Publish for members…** on its page, attach it to content, or add it to a Media gallery album ([videos-guide.md](videos-guide.md)).
 - **Transcripts** are added on the file's page (paste or generate from a caption file).
 - **Usage before removal:** each file lists every item, show, or series using it. A file in use can't be removed; **Replace** swaps it everywhere at once and keeps the old file until you remove it.
 - **Rights:** source, attribution, rights type (church owned, licensed, used with permission, public domain), and notes. Rights must be confirmed before a file can be marked for public use, and before an item using church-hosted media can be published.

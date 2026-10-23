@@ -19,6 +19,8 @@ const ANON = [
   "media_can_read_object", "media_devotional_day", "media_external_episode", "media_facets", "media_file", "media_item",
   "media_items", "media_job", "media_podcast_episodes", "media_public_artwork", "media_public_episode_audio", "media_public_feed", "media_public_hit",
   "media_search", "media_series", "media_show", "media_shows", "media_transcript",
+  // Video thumbnails (20261109000200): rechecks the caller's access to the video, like media_file.
+  "media_video_thumb",
 ];
 const APP_SCHEMAS = ["public", "community", "events", "giving", "media", "prayer", "bible", "journal", "memory", "youth", "membership"];
 

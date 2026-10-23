@@ -77,7 +77,7 @@ export default async function MediaConsentPage({ searchParams }: PageProps<"/adm
     <>
       <PageHeader
         title="Photo consent"
-        description="Link photos to the children shown, by hand (nothing recognizes faces). A photo can't be published, or unhidden, until every linked child has member-gallery consent for that album's event. To view the images, also hold the Gallery moderator role."
+        description="Link photos to the children shown, by hand (nothing recognizes faces). A photo can't be published, or unhidden, until every linked child has member-gallery consent for that album's event. To view the images, also hold the Media gallery moderator role."
       />
       {failed || !data ? <Alert tone="error" title="The review queue couldn't be loaded right now." /> : null}
       <div className="space-y-10">

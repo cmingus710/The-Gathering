@@ -15,6 +15,7 @@ const GLYPH: Record<ItemKind, IconName> = {
   book: "reading",
   assignment: "reading",
   playlist: "music",
+  video: "media",
 };
 
 export function itemCover(item: Pick<Item, "cover">, urls: Map<string, string>, prefer: "small" | "large" = "small"): string | null {

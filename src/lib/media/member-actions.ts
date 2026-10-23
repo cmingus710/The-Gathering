@@ -25,14 +25,16 @@ export async function completeAssignmentAction(id: string, done: boolean): Promi
   return { ok: !error };
 }
 
-const MUTABLE = ["devotional", "lesson", "episode", "assignment", "playlist", "gallery"];
+const MUTABLE = ["devotional", "lesson", "episode", "assignment", "playlist", "video", "gallery"];
 
 /** Which new-content notices the member wants (all on unless muted). */
 export async function saveTeachingPrefsAction(formData: FormData): Promise<void> {
   const supabase = await createClient();
   if (!supabase) return;
   const muted = MUTABLE.filter((k) => formData.get(`notify_${k}`) !== "on");
-  await supabase.rpc("media_prefs_save", { p_muted: muted });
+  const { error } = await supabase.rpc("media_prefs_save", { p_muted: muted });
+  // Before 20261109000200 the database doesn't know "video" yet: save the rest.
+  if (error && muted.includes("video")) await supabase.rpc("media_prefs_save", { p_muted: muted.filter((k) => k !== "video") });
   revalidatePath("/notifications/settings");
 }
 

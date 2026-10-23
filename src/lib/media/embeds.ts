@@ -74,6 +74,15 @@ export function parseVideoUrl(input: string): VideoRef | null {
   return parseYouTube(input) ?? parseVimeo(input);
 }
 
+/** A stored library reference (media.assets provider columns), revalidated before use. */
+export function storedVideoRef(v: { provider: string | null; provider_ref: string | null; provider_hash?: string | null }): VideoRef | null {
+  if (v.provider === "youtube" && v.provider_ref && YOUTUBE_ID.test(v.provider_ref)) return { provider: "youtube", id: v.provider_ref };
+  if (v.provider === "vimeo" && v.provider_ref && VIMEO_ID.test(v.provider_ref)) {
+    return { provider: "vimeo", id: v.provider_ref, hash: v.provider_hash && VIMEO_HASH.test(v.provider_hash) ? v.provider_hash : null };
+  }
+  return null;
+}
+
 /** open.spotify.com/[intl-xx/]<kind>/<id>, with or without tracking query. */
 export function parseSpotify(input: string, allowed: readonly SpotifyKind[] = ["playlist", "show", "episode"]): SpotifyRef | null {
   const url = parseUrl(input);

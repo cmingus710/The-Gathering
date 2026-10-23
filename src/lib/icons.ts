@@ -18,7 +18,7 @@ export const GLYPHS = {
   lessons: { label: "Sunday Lessons", concept: "Open Bible on a lectern" },
   reading: { label: "Church Reading", concept: "A closed book with a gold ribbon marker" },
   music: { label: "Music", concept: "Two joined notes; the beam in gold" },
-  gallery: { label: "Gallery", concept: "Stacked photos with a gold sun over hills" },
+  gallery: { label: "Media gallery", concept: "Stacked photos with a gold sun over hills" },
   media: { label: "Teaching & media", concept: "A play mark in gold inside a rounded screen" },
   youth: { label: "Youth", concept: "Energetic figures joined at the hands" },
   giving: { label: "Giving", concept: "An open hand supporting a heart" },

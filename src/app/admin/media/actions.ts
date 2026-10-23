@@ -8,7 +8,8 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { getSupabasePublicConfig } from "@/lib/env";
 import { errorState, formValues, type FormState } from "@/lib/forms";
-import { parseVideoUrl } from "@/lib/media/embeds";
+import { parseVideoUrl, storedVideoRef } from "@/lib/media/embeds";
+import { checkVideo } from "@/lib/media/video-provider";
 import { declaredMime, sniffAsset, vttToTranscript, type AssetKind } from "@/lib/media/files";
 import { LIBRARY_VARIANTS, processImage } from "@/lib/media/images";
 import { createUploadToken, downloadObject, readRange, removePaths, uploadBytes } from "@/lib/media/storage";
@@ -250,15 +251,18 @@ export async function addExternalVideoAction(_prev: FormState, formData: FormDat
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
   const canonical = ref.provider === "youtube" ? `https://www.youtube.com/watch?v=${ref.id}` : ref.hash ? `https://vimeo.com/${ref.id}/${ref.hash}` : `https://vimeo.com/${ref.id}`;
+  // The provider's oEmbed answer: whether it can be embedded, and its real title.
+  const check = await checkVideo(ref);
   const { data, error } = await supabase.rpc("media_admin_external_video_save", {
     p_id: null,
     p_provider: ref.provider,
     p_ref: ref.id,
     p_hash: ref.provider === "vimeo" ? ref.hash : null,
     p_url: canonical,
-    p_title: title || (ref.provider === "youtube" ? "YouTube video" : "Vimeo video"),
+    p_title: title || check.title || (ref.provider === "youtube" ? "YouTube video" : "Vimeo video"),
   });
   if (error || !data) return errorState(dbErrorMessage(error), { values });
+  await supabase.rpc("media_admin_video_check_save", { p_id: data, p_status: check.status, p_thumb: check.thumb });
   revalidatePath("/admin/media");
   redirect(`/admin/media/${data as string}?saved=added`);
 }
@@ -360,4 +364,34 @@ export async function saveMediaSettingsAction(_prev: FormState, formData: FormDa
   if (error) return errorState(dbErrorMessage(error, "The settings couldn't be saved. Check that each value is within its allowed range."), { values });
   revalidatePath("/admin/media/settings");
   return { status: "success", message: "Settings saved." };
+}
+
+/** Asks YouTube/Vimeo again whether a library video can be played here, and records the answer. */
+export async function checkVideoAction(formData: FormData): Promise<void> {
+  await requireCapability(CAPABILITIES.mediaManage, "/admin/media");
+  const assetId = id.safeParse(formData.get("id")).data;
+  if (!assetId) redirect("/admin/media");
+  const supabase = await createClient();
+  if (!supabase) redirect(`/admin/media/${assetId}?error=unavailable`);
+  const { data } = await supabase.rpc("media_admin_asset", { p_id: assetId });
+  const ref = data ? storedVideoRef(data as { provider: string | null; provider_ref: string | null; provider_hash: string | null }) : null;
+  if (!ref) redirect(`/admin/media/${assetId}`);
+  const check = await checkVideo(ref);
+  await supabase.rpc("media_admin_video_check_save", { p_id: assetId, p_status: check.status, p_thumb: check.thumb });
+  revalidatePath(`/admin/media/${assetId}`);
+  redirect(`/admin/media/${assetId}?saved=checked`);
+}
+
+/** "Publish for members": a draft video page for this library video (or the existing one), opened in the editor. */
+export async function publishVideoAction(formData: FormData): Promise<void> {
+  await requireCapability(CAPABILITIES.contentEdit, "/admin/media");
+  const assetId = id.safeParse(formData.get("id")).data;
+  if (!assetId) redirect("/admin/media");
+  const supabase = await createClient();
+  if (!supabase) redirect(`/admin/media/${assetId}?error=unavailable`);
+  const { data, error } = await supabase.rpc("media_admin_video_publish", { p_asset: assetId });
+  if (error || !data) redirect(`/admin/media/${assetId}?error=${encodeURIComponent(dbErrorMessage(error, "The video page couldn't be created."))}`);
+  const r = data as { id: string; created: boolean };
+  revalidatePath("/admin/content");
+  redirect(`/admin/content/${r.id}?saved=${r.created ? "video_created" : "video_existing"}`);
 }
