@@ -293,7 +293,7 @@ export function useLinkTools(ref: RefObject<HTMLTextAreaElement | null>, options
   return { open, active, bar, dialog: dialogNode };
 }
 
-/** The toolbar button: icon-only (`tool`, next to other formatting tools) or icon and word (`chip`). */
+/** The toolbar button, icon and words: outlined (`tool`, in a formatting toolbar) or plain (`chip`, under a comment box). */
 export function LinkButton({ tools, variant = "chip", className }: { tools: LinkTools; variant?: "tool" | "chip"; className?: string }) {
   const label = tools.active ? "Edit link" : "Insert link";
   return (
@@ -308,14 +308,15 @@ export function LinkButton({ tools, variant = "chip", className }: { tools: Link
       title={`${label} (Ctrl+K)`}
       className={cn(
         variant === "tool"
-          ? "flex size-11 items-center justify-center rounded-control border border-border-strong bg-surface hover:bg-primary-soft"
+          ? "inline-flex min-h-11 items-center gap-1.5 rounded-control border border-border-strong bg-surface px-3 text-meta font-semibold text-text hover:bg-primary-soft"
           : "inline-flex min-h-11 items-center gap-1.5 rounded-control px-2.5 text-meta font-semibold text-primary hover:bg-primary-soft",
         "focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary",
         className,
       )}
     >
       <Link2 className="size-4" aria-hidden="true" />
-      {variant === "chip" ? <span aria-hidden="true">{tools.active ? "Edit link" : "Link"}</span> : null}
+      {/* Always named in words, so it's easy to find next to icon-only tools. */}
+      <span aria-hidden="true">{label}</span>
     </button>
   );
 }
