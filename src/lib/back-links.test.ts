@@ -53,6 +53,10 @@ describe("back link route map", () => {
   });
 
   it("uses the stated fallback when a page has no parent of its own", () => {
+    expect(backTarget("/reading/books/[id]")).toEqual({ href: "/reading", label: "Books" });
+    expect(backTarget("/reading/books/[id]", { params: { collection: ID }, label: "Rob's Reads" })).toEqual({ href: `/reading/collections/${ID}`, label: "Rob's Reads" });
+    expect(backTarget("/reading/books/[id]", { params: { collection: "all" }, label: "All Books" })).toEqual({ href: "/reading/collections/all", label: "All Books" });
+    expect(backTarget("/reading/collections/[id]")).toEqual({ href: "/reading", label: "Books" });
     expect(backTarget("/podcasts/episodes/[id]", { params: { show: ID }, label: "Sunday sermons" })).toEqual({ href: `/podcasts/shows/${ID}`, label: "Sunday sermons" });
     expect(backTarget("/podcasts/episodes/[id]", { params: { show: null }, label: "ignored" })).toEqual({ href: "/podcasts", label: "Podcasts" });
     expect(backTarget("/community/new", { query: { category: ID } })).toEqual({ href: `/community?category=${ID}`, label: "Community" });
@@ -85,6 +89,8 @@ describe("returning to a filtered list", () => {
     expect(validReturnView("/events", `/events?view=month&month=2026-11&category=${ID}`)).toBe(`/events?view=month&month=2026-11&category=${ID}`);
     expect(validReturnView("/prayer", "/prayer?view=mine&status=answered")).toBe("/prayer?view=mine&status=answered");
     expect(validReturnView("/directory", "/directory?q=Smith&page=2")).toBe("/directory?q=Smith&page=2");
+    expect(validReturnView(`/reading/collections/${ID}`, `/reading/collections/${ID}?q=birds&deleted=1`)).toBe(`/reading/collections/${ID}?q=birds`);
+    expect(validReturnView("/reading/collections/all", `/reading/collections/${ID}?q=birds`)).toBeNull();
     expect(validReturnView("/events", "/events")).toBe("/events");
   });
 

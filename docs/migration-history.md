@@ -418,3 +418,21 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
     - `prayer.library_prayers` exists with no prayers; 26 active categories (the seed);
     - `prayer_library_list` is executable by `authenticated`, not `anon`;
     - anon-executable public functions: 34 (unchanged).
+
+## Book collections (2026-11-16)
+
+- **New (additive; no applied migration was edited):** `20261116000100_media_book_collections` (written as `20261115000100`, renumbered because that version is `prayer_library` on `main` and hosted):
+  - new immutable `media.topic_name(text)` (not granted to API roles) and check `topics_name_normalized` on `media.topics`;
+  - one-time merge of topics whose names differ only in capitalization or whitespace (assignments moved to the oldest topic), then name normalization;
+  - `public.media_admin_topic_save(text)` replaced (normalizes, reuses, safe against concurrent creation);
+  - new `public.media_book_collections()` and `public.media_books(uuid, text)` granted to `authenticated` only; anon baseline unchanged.
+- **Operator scripts:**
+  - `supabase/manual/2026-11-16-record-media-book-collections.sql` records the version after checking objects and grants.
+  - `supabase/manual/2026-11-16-apply-media-book-collections.sql` applies the migration verbatim and records it, for when the objects are missing.
+  - Both refuse a second run. History row `created_by = media-book-collections`.
+- **Rehearsal (local, PostgreSQL 16):** on databases built from every earlier migration:
+  - the record script stopped ("objects are missing") where the migration was absent, and the apply script then applied and recorded it;
+  - where the migration's SQL had been run statement by statement, the apply script stopped and the record script recorded it;
+  - second runs of both stopped at the preflight.
+- **Hosted (2026-10-23):** the owner reported running the migration while it was still numbered `20261115000100`. That version was already recorded as `prayer_library`. So the run either was skipped (CLI) or left the objects without a history row (SQL editor). Not verified from here; step 1 of [book-collections.md](book-collections.md#release-steps) settles which.
+

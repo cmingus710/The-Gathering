@@ -18,6 +18,7 @@ import { initialFormState } from "@/lib/forms";
 import { KIND_LABEL } from "@/lib/media/format";
 import type { Attachment, ItemAdmin, ItemKind } from "@/lib/media/types";
 import { saveContentAction } from "./actions";
+import { TopicsField } from "./topics-field";
 import type { AssetChoice, EditorData } from "./editor-data";
 
 type DocAttachment = { asset_id: string; role: "handout" | "slides" | "resource"; label: string; members_only: boolean };
@@ -126,6 +127,7 @@ export function ContentForm({
   const people = item?.people ?? [];
   const live = item && item.status !== "draft";
   const readOnly = !!live && !canPublish;
+  const topicNames = data.taxonomy.topics.map((t) => t.name);
 
   return (
     <form action={action} className="space-y-6" noValidate>
@@ -418,14 +420,24 @@ export function ContentForm({
                 ))}
             </SelectField>
           ) : null}
-          <TextField
-            label="Topics"
-            name="topics"
+          {/* Starts over from the saved topics (in their saved spelling) after a successful save. */}
+          <TopicsField
+            key={item?.updated_at ?? "new"}
             defaultValue={v?.topics ?? item?.topics.map((t) => t.name).join(", ") ?? ""}
-            optional
-            hint="Separated by commas. New topics are created as you save."
+            topics={topicNames}
+            hint={
+              kind === "book"
+                ? "Topics create collections on the Books page. Assign multiple topics to show a book in multiple collections. Separate topics with commas."
+                : "Separated by commas. New topics are created as you save."
+            }
           />
-          <TextField label="Tags" name="tags" defaultValue={v?.tags ?? item?.tags.join(", ") ?? ""} optional hint="Separated by commas." />
+          <TextField
+            label="Tags"
+            name="tags"
+            defaultValue={v?.tags ?? item?.tags.join(", ") ?? ""}
+            optional
+            hint={kind === "book" ? "Separated by commas. Extra search words for this book; tags don't create collections." : "Separated by commas."}
+          />
           {kind !== "playlist" ? (
             <TextAreaField
               label="Scripture references"

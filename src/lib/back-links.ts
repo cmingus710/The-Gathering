@@ -74,7 +74,9 @@ export const BACK_ROUTES = {
   "/podcasts/episodes/[id]": { parent: "/podcasts/shows/[show]", label: "the show", orphan: { parent: "/podcasts", label: "Podcasts" } },
   "/podcasts/external/[id]": { parent: "/podcasts/shows/[show]", label: "the show" },
   "/music/[id]": { parent: "/music", label: "Music & playlists" },
-  "/reading/books/[id]": { parent: "/reading", label: "Books" },
+  // A book opened from a collection (?from=) goes back to that collection; otherwise to Books.
+  "/reading/books/[id]": { parent: "/reading/collections/[collection]", label: "the collection", orphan: { parent: "/reading", label: "Books" } },
+  "/reading/collections/[id]": { parent: "/reading", label: "Books" },
   "/reading/assignments/[id]": { parent: "/reading", label: "Books" },
   "/gallery/[id]": { parent: "/gallery", label: "Media gallery" },
   "/gallery/mine": { parent: "/gallery", label: "Media gallery" },
@@ -196,6 +198,7 @@ export const RETURN_VIEWS: Array<{ path: RegExp; params: Record<string, Check> }
   { path: /^\/podcasts\/shows\/[0-9a-f-]{36}$/, params: { q: (v) => v.length <= 80, page: re(SMALL_INT) } },
   { path: /^\/music$/, params: { show: re(SMALL_INT) } },
   { path: /^\/devotionals$/, params: { date: re(DATE) } },
+  { path: /^\/reading\/collections\/(all|[0-9a-f-]{36})$/, params: { q: (v) => v.length <= 80 } },
   { path: /^\/devotionals\/archive$/, params: { month: re(MONTH) } },
 ];
 
