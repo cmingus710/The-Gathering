@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanQuestion, questionId, readQuestions } from "./questions";
+import { cleanQuestion, QUESTION_LIMITS, questionId, readQuestions } from "./questions";
 
 const form = (...qs: string[]) => {
   const fd = new FormData();
@@ -28,6 +28,16 @@ describe("readQuestions", () => {
     const r = readQuestions(form("", "short", "x".repeat(501)), "questions", { max: 5, maxLength: 500 });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toMatch(/^Question 3 is 501 characters/);
+  });
+});
+
+describe("question limits", () => {
+  it("allow 1,000 characters per question on plan days and content", () => {
+    for (const limits of [QUESTION_LIMITS.day, QUESTION_LIMITS.content]) {
+      expect(readQuestions(form("y".repeat(1000)), "questions", limits).ok).toBe(true);
+      const r = readQuestions(form("y".repeat(1001)), "questions", limits);
+      expect(r).toEqual({ ok: false, message: "Question 1 is 1,001 characters. Keep each question to 1,000 or fewer." });
+    }
   });
 });
 

@@ -2,6 +2,7 @@ import { toCsv } from "@/lib/giving/csv";
 import { CsvError, headerKey, parseCsv } from "./csv";
 import { isValidYmd } from "./dates";
 import { formatPassage, parsePassages, toDb, type Passage } from "./reference";
+import { QUESTION_LIMITS } from "@/lib/questions";
 
 /**
  * Reading plan CSV import. The plan's schedule decides the key column
@@ -97,7 +98,7 @@ export function parsePlanCsv(text: string, mode: PlanMode): ImportResult {
     if (kind === "reading" && !passagesText) rowErrors.push("A reading day needs passages.");
     const questions = get("questions") ? get("questions").split("|").map((q) => q.trim()).filter(Boolean) : [];
     if (questions.length > 5) rowErrors.push("At most 5 reflection questions per day.");
-    if (questions.some((q) => q.length > 500)) rowErrors.push("Each question must be 500 characters or fewer.");
+    if (questions.some((q) => q.length > QUESTION_LIMITS.day.maxLength)) rowErrors.push(`Each question must be ${QUESTION_LIMITS.day.maxLength.toLocaleString("en-US")} characters or fewer.`);
     const heading = get("heading") || null;
     if (heading && heading.length > 160) rowErrors.push("Headings must be 160 characters or fewer.");
     const notes = get("notes");

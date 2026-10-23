@@ -485,6 +485,14 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       await rpc(as(publisher), "bible_admin_day_revise", [d, j({ questions: [long, "Who could you share this with?", "What do you notice?"] }), "Lead with the rest question", "revise"]);
       expect((await rpc<Json>(as(m1), "bible_day", [d])).questions).toEqual([long, "Who could you share this with?", "What do you notice?"]);
       expect(((await rpc<Json>(as(m1), "journal_entry", [answer])).link as Json).question).toBe(long);
+      // Up to 1,000 characters per question, kept whole and answerable; longer is cut at 1,000.
+      const full = "q".repeat(999) + "?";
+      await rpc(as(publisher), "bible_admin_day_revise", [d, j({ questions: [full, "x".repeat(1200)] }), "Longer question", "revise"]);
+      const qs = (await rpc<Json>(as(m1), "bible_day", [d])).questions as string[];
+      expect(qs[0]).toBe(full);
+      expect(qs[1]).toHaveLength(1000);
+      const e2 = (await rpc<Json>(as(m1), "journal_entry_create", [randomUUID(), "Long", "synthetic answer", j({ kind: "assignment", day_id: d, question: full })])).id as string;
+      expect(((await rpc<Json>(as(m1), "journal_entry", [e2])).link as Json).question).toBe(full);
     });
 
     it("needs an explicit correction to change a past day, and never deletes published days", async () => {
