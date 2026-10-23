@@ -412,4 +412,9 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - new trigger `profiles_prayer_library_names` (after update of `full_name`, `preferred_name` on `public.profiles`) to keep contributor names searchable;
   - new `public.prayer_library_*` functions granted to `authenticated` only; anon baseline unchanged.
 - **Order:** apply before deploying the app. See [prayer-library.md](prayer-library.md#release-steps).
-- **Hosted (2026-10-23):** the owner applied the migration's SQL in the SQL editor before the renumbering. `20261113000100` was already recorded as `member_notification_all`, so the library has no history row yet. `supabase/manual/2026-11-15-record-prayer-library.sql` checks the library's objects and records `20261115000100` (`created_by = prayer-library`); it changes nothing else.
+- **Hosted (2026-10-23):** the owner applied the migration's SQL in the SQL editor before the renumbering. `20261113000100` was already recorded as `member_notification_all`, so the library had no history row. `supabase/manual/2026-11-15-record-prayer-library.sql` checks the library's objects and records `20261115000100` (`created_by = prayer-library`); it changes nothing else.
+  - **Recorded (2026-10-23):** the owner ran the record script. Read-only check afterwards:
+    - `20261115000100` is recorded as `prayer_library` (`created_by = prayer-library`), after `20261113000100` (`member_notification_all`) and `20261114000100` (`media_book_kindle_link`); 77 versions in history;
+    - `prayer.library_prayers` exists with no prayers; 26 active categories (the seed);
+    - `prayer_library_list` is executable by `authenticated`, not `anon`;
+    - anon-executable public functions: 34 (unchanged).
