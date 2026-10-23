@@ -27,7 +27,15 @@ This page covers what members see, the group setting for leaders, members' notif
 - **Confidential (prayer team) requests** take no mentions, so team membership is never probed and the care team's boundary is unchanged. **Private drafts** aren't checked or notified; mentions are checked, recorded, and sent only when the draft is shared.
 - **Anonymous requests** (and the requester's anonymous comments): mentioned people are told "You were mentioned in a prayer request", with no name anywhere. Groups can be referenced but are never notified from anonymous content, since "a leader of this group wrote it" would narrow down who. Suggestions are based on the request's audience only, never on the writer's own access, so they can't single out the writer.
 
-Screenshots of #44 (synthetic data, local stack): [docs/community-mentions/](community-mentions/). Screenshots for groups and Prayer: [docs/community-mentions/groups-prayer/](community-mentions/groups-prayer/) when taken (see Verification).
+Screenshots of #44 (synthetic data, local stack): [docs/community-mentions/](community-mentions/). Screenshots for groups and Prayer (synthetic data, local stack): [docs/community-mentions/groups-prayer/](community-mentions/groups-prayer/).
+
+| Group suggestions | Phone, tap a group | Reference only | Group setting |
+| --- | --- | --- | --- |
+| ![](community-mentions/groups-prayer/desktop-group-suggestions.png) | ![](community-mentions/groups-prayer/mobile-group-suggestions-touch.png) | ![](community-mentions/groups-prayer/desktop-group-reference-only.png) | ![](community-mentions/groups-prayer/desktop-group-setting.png) |
+
+| Prayer composer | Audience change explained | Prayer comment revealed | Settings |
+| --- | --- | --- | --- |
+| ![](community-mentions/groups-prayer/desktop-prayer-composer.png) | ![](community-mentions/groups-prayer/desktop-prayer-audience-problem.png) | ![](community-mentions/groups-prayer/mobile-prayer-comment-revealed.png) | ![](community-mentions/groups-prayer/mobile-settings.png) |
 
 | Phone, suggestions | Same name, different cities | Phone, tap to choose | Rendered |
 | --- | --- | --- | --- |
@@ -113,6 +121,7 @@ All people, groups, posts, prayer requests, and notification destinations in tes
   - `tests/db/community-mentions.test.ts` (19 tests, from #44) updated for refusing ineligible mentions.
 - **Unit:** `src/lib/community/mentions.test.ts`, `format.test.ts`, and `notification-preview.test.ts` cover group markup round-trips, rendering and escaping, links and labels, and the generic panel preview for prayer mentions.
 - **Browser (local stack):** `tests/e2e-local/09-group-prayer-mentions.spec.ts` on desktop and Pixel 7: group suggestions and notices, reference-only for non-leaders, the group setting, the prayer composer (audience in view, confidential explained, sharing), prayer comment links revealing the comment, the list staying inside a phone viewport and tap selection, settings, and an axe check. `08-community-mentions.spec.ts` is updated for the new list name. Set `MENTION_SHOTS=<folder>` to save screenshots.
+  - Result (local `supabase start` with every migration and the seed, production build, Chromium): spec 09 13 passed and 1 phone-only test skipped on desktop; spec 08 11 passed and 1 skipped. In a run of the whole walkthrough suite, the only failures were outside mentions: email templates and Google sign-in not configured on the local stack (01, 06), and three checks already out of date on `main` (02's "Report this discussion" button and 05's header notifications link moved into menus, 03's duplicate youth text). #44's comment-reveal check (08) sometimes loses focus on desktop when it runs right after other specs; it passes alone.
 - **Not verified here:** hosted Supabase, physical phones (real on-screen keyboards, VoiceOver/TalkBack), and real email or push delivery.
 
 ## Release

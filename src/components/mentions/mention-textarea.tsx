@@ -79,8 +79,9 @@ export function MentionTextarea({ name, value, onValueChange, place, minRows, cl
   const [dismissed, setDismissed] = useState<number | null>(null);
   // The latest answer from the server, for the query it answered.
   const [answer, setAnswer] = useState<{ key: string; data: MentionSuggestions }>({ key: "", data: { members: [], groups: [] } });
-  // What each chosen group will do (known for groups chosen in this session).
-  const [groupInfo, setGroupInfo] = useState<Record<string, GroupSuggestion>>({});
+  // What each chosen group will do, for the place it was chosen in (a
+  // prayer request's audience can change afterwards; the note then goes).
+  const [chosenInfo, setChosenInfo] = useState<{ key: string; groups: Record<string, GroupSuggestion> }>({ key: "", groups: {} });
   const [active, setActive] = useState(0);
   const [above, setAbove] = useState(false);
   const [maxHeight, setMaxHeight] = useState(288);
@@ -89,6 +90,7 @@ export function MentionTextarea({ name, value, onValueChange, place, minRows, cl
   const peopleFull = mentionedPeople(mentions) >= MENTION_LIMIT;
   const groupsFull = mentionedGroups(mentions) >= GROUP_MENTION_LIMIT;
   const placeKey = place ? JSON.stringify(place) : "";
+  const groupInfo = chosenInfo.key === placeKey ? chosenInfo.groups : {};
   const open = !!query && query.start !== dismissed && !!place;
 
   const setRefs = (el: HTMLTextAreaElement | null) => {
@@ -182,7 +184,7 @@ export function MentionTextarea({ name, value, onValueChange, place, minRows, cl
   const choose = (option: Option) => {
     if (!query) return;
     const next = insertMention(text, mentions, { start: query.start, end: query.caret }, { ...option.item, kind: option.kind });
-    if (option.kind === "group") setGroupInfo((g) => ({ ...g, [option.item.id]: option.item }));
+    if (option.kind === "group") setChosenInfo((c) => ({ key: placeKey, groups: { ...(c.key === placeKey ? c.groups : {}), [option.item.id]: option.item } }));
     commit(next, next.caret);
     setQuery(null);
     inner.current?.focus();

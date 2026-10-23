@@ -136,7 +136,7 @@ test("Prayer: the audience stays in view, and an audience change explains mentio
   await page.goto("/prayer/new");
   await page.getByLabel("Title").fill(`[TEST] Mentions ${stamp}`);
   const body = page.getByRole("textbox", { name: "Your request" });
-  await expect(page.getByText(/Seen by church members\./)).toBeVisible();
+  await expect(page.locator("#main").getByText(/Seen by church members\./)).toBeVisible();
   await body.pressSequentially("Please pray with @Synth");
   const members = list(page).getByRole("group", { name: "Members" });
   await expect(members.getByRole("option", { name: /Synthetic Admin/ })).toBeVisible();
@@ -177,7 +177,7 @@ test("Prayer comments: a mention links to the comment and reveals it", async ({ 
   const page = await as(browser, MEMBER);
   await page.goto(`/prayer/${request}`);
   const box = page.getByRole("textbox", { name: "Share encouragement" });
-  await expect(page.getByText(/Seen by church members, the people who can read this request/)).toBeVisible();
+  await expect(page.locator("#main").getByText(/Seen by church members, the people who can read this request/)).toBeVisible();
   await box.pressSequentially("Thank you @Synth");
   await expect(list(page).getByRole("option", { name: /Synthetic Admin/ })).toBeVisible();
   await page.keyboard.press("Enter");
