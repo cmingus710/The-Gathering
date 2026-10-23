@@ -42,7 +42,7 @@ export function journalMarkdown(entries: ExportedEntry[], exportedAt: string): s
     out.push(`*${meta}*`, ``);
     const link = linkLine(e.link);
     if (link) out.push(`> ${link}`, ``);
-    if (e.link?.question) out.push(`> Question: ${e.link.question}`, ``);
+    if (e.link?.question) out.push(`> Question: ${e.link.question.replace(/\n/g, "\n> ")}`, ``);
     out.push(e.body.trim(), ``);
   }
   return out.join("\n");

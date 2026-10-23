@@ -3,8 +3,10 @@
 import { useActionState, useState } from "react";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { QuestionListField } from "@/components/ui/question-list-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
+import { QUESTION_LIMITS } from "@/lib/questions";
 import { addPublishedDayAction, reviseDayAction, saveDayAction } from "./actions";
 
 export type AdminDay = {
@@ -51,6 +53,13 @@ export function DayForm({
   const handler = variant === "draft" ? saveDayAction : variant === "revise" ? reviseDayAction : addPublishedDayAction;
   const [state, action] = useActionState(handler, initialFormState);
   const [kind, setKind] = useState(day?.kind ?? "reading");
+  // After "Add day" succeeds the form is ready for the next day, so the question list starts over.
+  const [seen, setSeen] = useState(state);
+  const [added, setAdded] = useState(0);
+  if (state !== seen) {
+    setSeen(state);
+    if (!day && state.status === "success") setAdded((n) => n + 1);
+  }
   const v = (k: string, d: string) => state.values?.[k] ?? d;
   const threads = options.threads.filter((t) => (plan.audience === "members" ? t.group_id === null : t.group_id === plan.group_id));
   const linked = new Set(day?.links.map((l) => l.id) ?? []);
@@ -83,13 +92,15 @@ export function DayForm({
         />
       ) : null}
       <TextField label="Heading" name="heading" optional maxLength={160} defaultValue={v("heading", day?.heading ?? "")} />
-      <TextAreaField
+      <QuestionListField
+        key={added}
         label="Reflection questions"
         name="questions"
         optional
-        rows={3}
-        defaultValue={v("questions", day?.questions.join("\n") ?? "")}
-        hint="One per line, up to 5. Members answer privately in their journal; nothing is posted for them."
+        initial={day?.questions ?? []}
+        max={QUESTION_LIMITS.day.max}
+        maxLength={QUESTION_LIMITS.day.maxLength}
+        hint="Each question can be several paragraphs. Members answer privately in their journal; nothing is posted for them."
         error={state.fieldErrors?.questions}
       />
       <TextAreaField label="Supporting notes" name="notes" optional rows={3} maxLength={4000} defaultValue={v("notes", day?.notes ?? "")} hint="Shown above the passages. Bold, italic, lists, and links are supported." />

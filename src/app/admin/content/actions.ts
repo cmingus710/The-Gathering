@@ -12,6 +12,7 @@ import { normalizeTopicNames } from "@/lib/media/book-collections";
 import { isUuid, isYmd } from "@/lib/media/format";
 import { parseFraming } from "@/lib/media/framing";
 import { parseReferenceList } from "@/lib/media/scripture";
+import { QUESTION_LIMITS, readQuestions } from "@/lib/questions";
 import type { ItemKind } from "@/lib/media/types";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { dbErrorMessage } from "@/lib/supabase/errors";
@@ -24,11 +25,6 @@ const KINDS: ItemKind[] = ["devotional", "lesson", "video", "episode", "book", "
 /** Which role a name in the people fields gets, per kind. */
 const PEOPLE_ROLE: Partial<Record<ItemKind, "author" | "speaker" | "host">> = { devotional: "author", lesson: "speaker", episode: "host" };
 
-const lines = (v: FormDataEntryValue | null) =>
-  String(v ?? "")
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
 const names = (v: FormDataEntryValue | null) =>
   String(v ?? "")
     .split(/[,\n]/)
@@ -63,8 +59,9 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   if (notes.length > 40_000) err("notes", "The notes are too long.");
   const notesLinks = linkProblem(notes);
   if (notesLinks) err("notes", notesLinks);
-  const questions = lines(formData.get("questions"));
-  if (questions.length > 20 || questions.some((q) => q.length > 500)) err("questions", "Up to 20 questions, each under 500 characters.");
+  const read = readQuestions(formData, "questions", QUESTION_LIMITS.content);
+  if (!read.ok) err("questions", read.message);
+  const questions = read.ok ? read.questions : [];
 
   const audience = String(formData.get("audience") ?? "members");
   if (!["public", "members", "group"].includes(audience)) err("audience", "Choose who can see it.");

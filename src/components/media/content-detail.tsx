@@ -217,7 +217,9 @@ export function ContentDetail({
           <SectionHeading id="questions-heading">{QUESTION_TITLE[item.kind] ?? "Discussion questions"}</SectionHeading>
           <ol className="list-decimal space-y-2 pl-6">
             {item.questions.map((q, i) => (
-              <li key={i}>{q}</li>
+              <li key={i} className="whitespace-pre-line [overflow-wrap:anywhere]">
+                {q}
+              </li>
             ))}
           </ol>
         </section>

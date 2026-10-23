@@ -11,6 +11,7 @@ import { parsePassages, toDb } from "@/lib/bible/reference";
 import { removeBibleObjects, uploadBibleObject } from "@/lib/bible/storage";
 import { processEventCover } from "@/lib/events/images";
 import { errorState, formValues, type FormState } from "@/lib/forms";
+import { QUESTION_LIMITS, readQuestions } from "@/lib/questions";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -160,8 +161,9 @@ function dayPayload(formData: FormData, mode: string): { ok: true; p: Record<str
   } else {
     p.passages = [];
   }
-  p.questions = str(formData, "questions").split("\n").map((q) => q.trim()).filter(Boolean).slice(0, 6);
-  if ((p.questions as string[]).length > 5) return { ok: false, message: "At most 5 reflection questions.", field: "questions" };
+  const questions = readQuestions(formData, "questions", QUESTION_LIMITS.day);
+  if (!questions.ok) return { ok: false, message: questions.message, field: "questions" };
+  p.questions = questions.questions;
   p.discussion_thread_id = str(formData, "discussion_thread_id") || null;
   p.links = formData.getAll("links").map(String).filter((x) => uuid.safeParse(x).success).slice(0, 10);
   return { ok: true, p };

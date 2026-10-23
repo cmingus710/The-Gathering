@@ -19,6 +19,7 @@ import { kindLabel } from "@/lib/bible/format";
 import { resolveText, type TextResult } from "@/lib/bible/source";
 import type { Enrollment, PassagePayload, PlanCard, PlanPassage, Translation } from "@/lib/bible/types";
 import { isUuid } from "@/lib/media/format";
+import { questionId } from "@/lib/questions";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { requireClient } from "@/lib/supabase/server";
 
@@ -209,9 +210,9 @@ export default async function DayPage({ params, searchParams }: PageProps<"/bibl
           <ul className="space-y-3">
             {day.questions.map((q, i) => (
               <li key={i} className="rounded-card border border-border bg-surface p-4">
-                <p className="font-semibold">{q}</p>
+                <p className="font-semibold whitespace-pre-line [overflow-wrap:anywhere]">{q}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ButtonLink href={`/journal/new?${new URLSearchParams({ day: day.id, q: String(i) })}`} size="sm" variant="secondary" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
+                  <ButtonLink href={`/journal/new?${new URLSearchParams({ day: day.id, qid: questionId(q) })}`} size="sm" variant="secondary" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
                     Write privately
                   </ButtonLink>
                   {day.discussion ? (
