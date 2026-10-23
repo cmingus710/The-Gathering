@@ -24,7 +24,7 @@ const AUDIENCE_ICON: Record<Audience, ReactNode> = {
   private: <Lock className="size-4" aria-hidden="true" />,
 };
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, and links. Type @ and a name to mention someone or a group who can see it. Attachments aren't available yet.";
+const FORMAT_HINT = "You can use **bold**, _italic_, and lists. Add a link with the Link button, or paste an address over selected words. Type @ and a name to mention someone or a group who can see it. Attachments aren't available yet.";
 
 /** Why a chosen mention can't stay with the chosen audience. */
 function problemText(m: Mention, audienceLabel: string): string {

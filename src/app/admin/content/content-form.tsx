@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useId, useMemo, useState } from "react";
 import type { ImageChoice } from "@/app/admin/media/picker-actions";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
+import { LinkTextAreaField } from "@/components/links/link-tools";
 import { CoverImageField } from "@/components/media/cover-image-field";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -205,7 +206,7 @@ export function ContentForm({
 
         <Section
           title={kind === "devotional" ? "Devotional" : kind === "lesson" ? "Written summary" : kind === "book" || kind === "playlist" ? "Description" : kind === "assignment" ? "Details" : "Episode notes"}
-          description="Formatting: **bold**, *italic*, ## heading, - list, [link text](https://…). HTML isn't allowed."
+          description="Add links with the Link button (or Ctrl+K), or paste an address over selected words. Formatting: **bold**, *italic*, ## heading, - list. HTML isn't allowed."
         >
           <div role="tablist" aria-label="Text" className="flex w-fit rounded-control border border-border-strong p-0.5">
             {(["write", "preview"] as const).map((t) => (
@@ -224,13 +225,13 @@ export function ContentForm({
             ))}
           </div>
           <div id={`${tabs}-write-panel`} role="tabpanel" aria-labelledby={`${tabs}-write`} hidden={tab !== "write"}>
-            <TextAreaField label={<span className="sr-only">Text</span>} name="body" rows={14} value={body} onChange={(e) => setBody(e.target.value)} error={fe.body} />
+            <LinkTextAreaField label={<span className="sr-only">Text</span>} name="body" rows={14} value={body} onChange={(e) => setBody(e.target.value)} error={fe.body} />
           </div>
-          <div id={`${tabs}-preview-panel`} role="tabpanel" aria-labelledby={`${tabs}-preview`} hidden={tab !== "preview"} tabIndex={0} className="rounded-control border border-border bg-background p-4">
+          <div id={`${tabs}-preview-panel`} role="tabpanel" aria-labelledby={`${tabs}-preview`} hidden={tab !== "preview"} tabIndex={0} data-links-new-tab className="rounded-control border border-border bg-background p-4">
             {body.trim() ? <MarkdownBody source={body} /> : <p className="text-text-secondary">Nothing written yet.</p>}
           </div>
           {kind === "lesson" ? (
-            <TextAreaField
+            <LinkTextAreaField
               label="Notes shown to members"
               name="notes"
               rows={8}

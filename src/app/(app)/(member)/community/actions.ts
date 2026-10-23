@@ -8,6 +8,7 @@ import { requireApprovedMember } from "@/lib/auth/viewer";
 import { deleteAttachmentFiles, type AttachmentFiles } from "@/lib/community/attachment-files";
 import { ATTACHMENT_LIMITS } from "@/lib/community/attachments";
 import { LIMITS } from "@/lib/community/format";
+import { withSafeLinks } from "@/lib/links/validate";
 import { deliverCommunityNow } from "@/lib/community/server";
 import type { Reactions } from "@/lib/community/types";
 import { errorState, type FormState } from "@/lib/forms";
@@ -58,7 +59,7 @@ function attachmentsFrom(formData: FormData): { ids: string[]; alts: string[] } 
 
 const threadSchema = z.object({
   title: z.string().trim().min(3, "Give your discussion a title of at least 3 characters.").max(LIMITS.title, `Keep the title to ${LIMITS.title} characters.`),
-  body: z.string().trim().min(1, "Write something to share.").max(LIMITS.thread, `Keep it to ${LIMITS.thread.toLocaleString()} characters.`),
+  body: withSafeLinks(z.string().trim().min(1, "Write something to share.").max(LIMITS.thread, `Keep it to ${LIMITS.thread.toLocaleString()} characters.`)),
 });
 
 export async function createThreadAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -139,7 +140,7 @@ export async function deleteThreadAction(_prev: FormState, formData: FormData): 
   redirect(/^\/(community|groups)(\/[A-Za-z0-9/_-]*)?$/.test(back) ? `${back}?deleted=1` : "/community?deleted=1");
 }
 
-const replySchema = z.string().trim().min(1, "Write a reply first.").max(LIMITS.reply, `Keep replies to ${LIMITS.reply.toLocaleString()} characters.`);
+const replySchema = withSafeLinks(z.string().trim().min(1, "Write a reply first.").max(LIMITS.reply, `Keep replies to ${LIMITS.reply.toLocaleString()} characters.`));
 
 export async function replyAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = uuid.safeParse(formData.get("threadId")).data;

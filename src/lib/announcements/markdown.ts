@@ -1,4 +1,6 @@
 import { Marked, type Tokens } from "marked";
+import { classifyHref } from "@/lib/links/policy";
+import { renderLink } from "@/lib/links/render";
 
 /**
  * Renders the announcement Markdown subset to safe HTML, identically on the
@@ -6,12 +8,12 @@ import { Marked, type Tokens } from "marked";
  *
  * Safety model (no HTML sanitizer needed because nothing unsafe is emitted):
  * - Raw HTML in the source is escaped and shown as text.
- * - Links are kept only for http(s), mailto, tel, and same-site paths.
+ * - Links follow the shared link policy (lib/links): same-site pages, web
+ *   pages (opening in a new tab), and checked email and phone links; any
+ *   other destination renders as its text.
  * - Inline images are not rendered (announcements have one vetted image field).
  * - Headings are shifted down one level; the page owns the <h1>.
  */
-const SAFE_PROTOCOL = /^(https?:|mailto:|tel:)/i;
-
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -21,15 +23,9 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** Whether a link destination may be used (see lib/links/policy). */
 export function isSafeHref(href: string): boolean {
-  const trimmed = href.trim();
-  // Browsers drop tabs and newlines inside URLs, so "/\t/evil.example" would
-  // become the protocol-relative "//evil.example". No real link needs them.
-  if (/[\u0000-\u001f\u007f]/.test(trimmed)) return false;
-  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("\\")) return true;
-  // Strip characters browsers ignore inside schemes (e.g. "java\tscript:").
-  const normalized = trimmed.replace(/[\u0000- ]/g, "");
-  return SAFE_PROTOCOL.test(normalized);
+  return classifyHref(href) !== null;
 }
 
 const marked = new Marked({
@@ -45,12 +41,7 @@ const marked = new Marked({
       return `<h${level}>${this.parser.parseInline(tokens)}</h${level}>\n`;
     },
     link({ href, title, tokens }: Tokens.Link) {
-      const text = this.parser.parseInline(tokens);
-      if (!href || !isSafeHref(href)) return text;
-      const external = /^https?:/i.test(href.trim());
-      const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
-      const rel = external ? ` rel="noopener noreferrer nofollow"` : "";
-      return `<a href="${escapeHtml(href.trim())}"${titleAttr}${rel}>${text}</a>`;
+      return renderLink(href, this.parser.parseInline(tokens), { title });
     },
     image({ text }: Tokens.Image) {
       return escapeHtml(text);
@@ -67,7 +58,7 @@ export function markdownExcerpt(source: string, maxLength = 180): string {
   const text = (source ?? "")
     .replace(/<[^>]*>/g, " ")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[((?:\\.|[^\]\\])*)\]\((?:<[^>]*>|[^)]*)\)/g, (_, text: string) => text.replace(/\\([[\]])/g, "$1"))
     .replace(/[#>*_`~-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();

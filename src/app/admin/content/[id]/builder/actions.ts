@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
+import { linkProblem } from "@/lib/links/validate";
 import { isUuid } from "@/lib/media/format";
 import { ANSWERABLE, checkScriptureRef, isBlockKind, type AdminBlock, type BlockKind } from "@/lib/media/workbook";
 import { dbErrorMessage } from "@/lib/supabase/errors";
@@ -59,6 +60,8 @@ export async function saveBlockAction(itemId: string, input: BlockInput, baseRev
   const note = String(input.teacher_note ?? "");
   if (heading.length > 200) return { ok: false, error: "The heading can be at most 200 characters." };
   if (body.length > 20_000) return { ok: false, error: "The text can be at most 20,000 characters." };
+  const bodyLinks = linkProblem(body);
+  if (bodyLinks) return { ok: false, error: bodyLinks };
   if (note.length > 10_000) return { ok: false, error: "The teacher note can be at most 10,000 characters." };
   if (ANSWERABLE.has(input.kind) && !prompt) return { ok: false, error: "Write the question members will answer." };
   if (prompt.length > 1000) return { ok: false, error: "A question can be at most 1,000 characters." };
