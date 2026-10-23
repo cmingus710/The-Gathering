@@ -35,7 +35,7 @@ const STATUS: Record<AlertAdmin["recent"][number]["status"], { label: string; to
  * settings.manage holders (the page checks; the database functions check
  * again and refuse everyone else).
  */
-export async function MembershipAlertsSection({ timeZone }: { timeZone: string }) {
+export async function MembershipAlertsSection({ timeZone, emailAll }: { timeZone: string; emailAll: boolean }) {
   const supabase = await createClient();
   const { data, error } = supabase ? await supabase.rpc("membership_alert_admin") : { data: null, error: true };
   const admin = data as AlertAdmin | null;
@@ -53,7 +53,7 @@ export async function MembershipAlertsSection({ timeZone }: { timeZone: string }
         </Alert>
       ) : (
         <div className="space-y-8">
-          <EnabledForm enabled={admin.enabled} recipientCount={admin.recipients.length} />
+          <EnabledForm enabled={admin.enabled} recipientCount={admin.recipients.length} emailAll={emailAll} />
           <section aria-labelledby="alert-recipients-heading" className="space-y-4">
             <h3 id="alert-recipients-heading" className="text-lg font-bold">
               Recipients

@@ -359,3 +359,14 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - no licensed collections exist yet. AMP, NIV, and NASB were already permitted for memory (3 permission rows, unchanged), so all three are eligible in the database. The app also requires the API key on the server.
   - Anon-executable public functions: 34 (unchanged by this migration).
   - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-11-record-memory-licensed-collections.sql`. `20261111000100` is recorded (`created_by = memory-licensed-collections`), 73 versions in history.
+
+## Church notification channel overrides (2026-11-12)
+
+- **New (additive; no applied migration was edited):** `20261112000100_notification_channel_overrides`:
+  - new private table `community.channel_policy` (rows `push` and `email`: `all_types` false, `disabled_types` empty), RLS on, no client grants;
+  - new private helpers `community.channel_types`, `community.channel_allows`, `community.delivery_pref`, `membership.alerts_on`;
+  - new `public.notification_channels_admin()` and `public.notification_channel_set(text, boolean, text[])` (settings.manage, audited as `notifications.channel_changed`), granted to `authenticated` only;
+  - replaced with the same signatures and grants, changing only the preference lookup: `community.notify`, `community.email_items`, `community.op_push_claim` (`community.pref` → `community.delivery_pref`), `membership.enqueue_approval_alert`, `membership.op_alert_claim` (`alert_settings.enabled` → `membership.alerts_on()`).
+  - No row is rewritten and nothing changes for delivery until an administrator changes a setting: both overrides start off and every type starts allowed. Anon baseline unchanged.
+- **Order:** apply the migration before deploying the app. Without it, Church settings shows "Notification settings couldn't be loaded" for the new section; everything else works.
+- **Hosted:** not applied.

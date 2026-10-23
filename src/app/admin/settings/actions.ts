@@ -5,6 +5,7 @@ import { z } from "zod";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, validationErrorState, type FormState } from "@/lib/forms";
+import { readChannelForm } from "@/lib/notifications/channels";
 import { readGatheringRows, settingsSchema, SOCIAL_NETWORKS } from "@/lib/settings/schema";
 import { createClient } from "@/lib/supabase/server";
 import { LIMITS, validateImageFile } from "@/lib/uploads";
@@ -173,4 +174,31 @@ export async function removeMembershipAlertRecipientAction(_prev: FormState, for
   if (error) return errorState(alertError(error, "The recipient couldn't be removed. Please try again."));
   revalidatePath("/admin/settings");
   return { status: "success", message: "Recipient removed." };
+}
+
+// Church-wide push and email settings per notification type (settings.manage;
+// the database re-checks, validates the types, and records the change).
+
+export async function saveNotificationChannelAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireCapability(CAPABILITIES.settingsManage, "/admin/settings");
+  const submission = readChannelForm(formData);
+  if (!submission) return errorState("That notification channel couldn't be found.");
+  const supabase = await createClient();
+  if (!supabase) return errorState(UNAVAILABLE);
+  const { error } = await supabase.rpc("notification_channel_set", {
+    p_channel: submission.channel,
+    p_all: submission.all,
+    p_disabled: submission.disabled,
+  });
+  if (error) {
+    if (error.code === "42501") return errorState("You don't have permission to change notification settings.");
+    if (error.code === "22023" && error.message) return errorState(error.message);
+    return errorState("The setting couldn't be saved. Please try again.");
+  }
+  revalidatePath("/admin/settings");
+  const noun = submission.channel === "push" ? "Push" : "Email";
+  return {
+    status: "success",
+    message: submission.all ? `${noun} notification settings saved. All types are on.` : `${noun} notification settings saved.`,
+  };
 }
