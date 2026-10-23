@@ -2,7 +2,7 @@
 
 Choosing a photo anywhere in the app can now be cancelled at every step without losing anything. Photos open in one shared cropper before anything is uploaded or replaced. How a photo is framed depends on where it's shown.
 
-This page covers the picker investigation, what changed on each screen, how framing is stored, phone image handling, verification, and how to release it. Migration: `20261110000100_media_cover_framing.sql` (applied to the hosted project; see [migration-history.md](migration-history.md#media-cover-framing-2026-11-10)).
+This page covers the picker investigation, what changed on each screen, how framing is stored, phone image handling, verification, and how to release it. Migration: `20261110000100_media_cover_framing.sql` (applied to and recorded on the hosted project; see [migration-history.md](migration-history.md#media-cover-framing-2026-11-10)).
 
 ## 1. Photo-picker cancellation
 
@@ -148,5 +148,5 @@ Desktop: [profile cropper](media-cropping/desktop-profile-cropper.png), [cover r
 ## 6. Release
 
 1. Review and merge the pull request (not merged by Claude).
-2. **Database:** the migration objects are on the hosted project and match the repository. To add the missing history row, run `supabase/manual/2026-11-10-record-media-cover-framing.sql` once in the SQL editor. It changes nothing else.
+2. **Database:** done. The migration is applied to the hosted project, matches the repository, and is recorded as `20261110000100` (via `supabase/manual/2026-11-10-record-media-cover-framing.sql`).
 3. **Order:** the app can be deployed now. Covers stay centred until someone repositions them.
