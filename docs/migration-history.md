@@ -385,4 +385,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - new `public.community_my_channel_all()` and `public.community_set_channel_all(boolean, boolean)` (approved members, own settings only), granted to `authenticated` only.
   - No per-category preference row is rewritten. Anon baseline unchanged.
 - **Order:** apply the migration before deploying the app. Without it, Notification settings shows both overrides off, and saving preferences reports an error from the missing function.
-- **Hosted:** not applied.
+- **Hosted (2026-10-23):** the owner ran the migration in the SQL editor. Read-only check afterwards:
+  - `push_all` and `email_all` on `community.member_settings` are boolean, not null, default false; no member has either on;
+  - `community.delivery_pref` applies them under `community.channel_allows`;
+  - `community_set_channel_all` and `community_my_channel_all` are executable by `authenticated`, not `anon`; `community.delivery_pref` isn't executable by clients;
+  - anon-executable public functions: 34 (unchanged); none granted to PUBLIC;
+  - md5 of `pg_get_functiondef`: `delivery_pref` `ded4f6c48665cb51d7d66156ec2df239`, `community_my_channel_all` `91f2118aa1c0bd84c4c1a39a6dce54da`, `community_set_channel_all` `46208a488bc2ec1cc66d8ba52ad20b5f` (not yet compared with the repository's);
+  - **Not yet recorded:** run `supabase/manual/2026-11-13-record-member-notification-all.sql` to add the history row (`created_by = member-notification-all`).
