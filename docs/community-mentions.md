@@ -65,7 +65,7 @@ Decision for the owner: email defaults to **off**, like Discussions, so turning 
 
 All people and notification destinations in these tests are synthetic. Email and push are only claimed in tests and never sent.
 
-## Before merging
+## Release
 
-1. With the owner's approval, apply `supabase/manual/2026-11-07-apply-community-mentions.sql` in the hosted SQL editor. It's one transaction, checks it's running in order, and records version `20261107000100`. Until it's applied, the suggestion list stays empty (its function doesn't exist yet) and posts save exactly as before, so deploying the app first is harmless.
-2. After applying it, run the schema and community fingerprint checks (`supabase/tests/schema-fingerprint.sql`, `community-fingerprint.sql`) and compare them with a fresh local build.
+- **Merged:** #44 on 2026-10-22, deployed to production.
+- **Hosted migration:** applied on 2026-10-22 with `supabase/manual/2026-11-07-apply-community-mentions.sql`. Both fingerprint checks match a fresh local build; see [migration-history.md](migration-history.md#community-mentions-2026-11-07).
