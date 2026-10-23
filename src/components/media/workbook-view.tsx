@@ -8,30 +8,40 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { videoEmbed } from "@/lib/media/embeds";
 import { formatBytes } from "@/lib/media/files";
 import { formatDay } from "@/lib/media/format";
 import { acceptQuestionChangeAction, deleteAnswerAction, deleteWorkbookAction } from "@/lib/media/workbook-actions";
 import type { WorkbookPage } from "@/lib/media/workbook-page";
 import type { BlockAsset, WorkbookAnswer, WorkbookBlock } from "@/lib/media/workbook";
 import { AudioCard } from "./audio-card";
-import { EmbedPlayer } from "./embed-player";
-import { NativeVideo } from "./native-video";
+import { VideoPlayer } from "./video-player";
 import { WorkbookText } from "./workbook-text";
 
 export const PRIVACY_COPY = "Your answers are private. Teachers and administrators can't see them.";
 
-function MediaBlock({ asset, itemId, title, origin }: { asset: BlockAsset; itemId: string; title: string; origin: string }) {
-  if (asset.kind === "external_video" && asset.provider && asset.provider_ref) {
+function MediaBlock({ asset, itemId, title }: { asset: BlockAsset; itemId: string; title: string }) {
+  if (asset.kind === "external_video" || asset.kind === "video") {
     return (
-      <EmbedPlayer
+      <VideoPlayer
         title={title}
-        embed={videoEmbed(asset.provider === "youtube" ? { provider: "youtube", id: asset.provider_ref } : { provider: "vimeo", id: asset.provider_ref, hash: asset.provider_hash }, { origin })}
+        itemId={itemId}
+        video={{
+          asset_id: asset.asset_id,
+          kind: asset.kind,
+          title: asset.title,
+          provider: asset.provider,
+          provider_ref: asset.provider_ref,
+          provider_hash: asset.provider_hash,
+          duration_seconds: asset.duration_seconds,
+          width: null,
+          height: null,
+          has_thumb: asset.kind === "external_video" && asset.provider === "youtube",
+          unavailable: false,
+          attribution: asset.attribution,
+          captions: asset.captions,
+        }}
       />
     );
-  }
-  if (asset.kind === "video") {
-    return <NativeVideo assetId={asset.asset_id} itemId={itemId} title={title} captions={asset.captions} saveProgressFor={false} />;
   }
   if (asset.kind === "audio") {
     return (
@@ -89,7 +99,7 @@ function Changed({ answer, itemId, preview }: { answer: WorkbookAnswer; itemId: 
   );
 }
 
-function Block({ block, page, userId, origin, index }: { block: WorkbookBlock; page: WorkbookPage; userId: string | null; origin: string; index: number }) {
+function Block({ block, page, userId, index }: { block: WorkbookBlock; page: WorkbookPage; userId: string | null; index: number }) {
   const { workbook } = page;
   const itemId = workbook.lesson?.id ?? "";
   const answer = workbook.answers.find((a) => a.block_id === block.id) ?? null;
@@ -127,7 +137,7 @@ function Block({ block, page, userId, origin, index }: { block: WorkbookBlock; p
 
       {block.kind === "media" && block.asset ? (
         <div className="space-y-2">
-          <MediaBlock asset={block.asset} itemId={itemId} title={block.heading ?? block.asset.title} origin={origin} />
+          <MediaBlock asset={block.asset} itemId={itemId} title={block.heading ?? block.asset.title} />
           {block.caption ? <p className="text-meta text-text-secondary">{block.caption}</p> : null}
         </div>
       ) : null}
@@ -209,7 +219,7 @@ function ScriptureBlock({ block, page }: { block: WorkbookBlock; page: WorkbookP
  * The workbook page body, shared by the member page and the editor's
  * preview (which passes the same member projection, no answers).
  */
-export function WorkbookView({ page, userId, origin }: { page: WorkbookPage; userId: string | null; origin: string }) {
+export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: string | null; /** Unused since the shared video player. */ origin?: string }) {
   const { workbook } = page;
   const lesson = workbook.lesson;
   const removed = workbook.answers.filter((a) => a.state === "removed");
@@ -233,7 +243,7 @@ export function WorkbookView({ page, userId, origin }: { page: WorkbookPage; use
       </header>
 
       {workbook.blocks.length ? (
-        workbook.blocks.map((b, i) => <Block key={b.id} block={b} page={page} userId={userId} origin={origin} index={i} />)
+        workbook.blocks.map((b, i) => <Block key={b.id} block={b} page={page} userId={userId} index={i} />)
       ) : (
         <Alert tone="info" title="This lesson has no workbook yet.">
           You can still keep private notes below.

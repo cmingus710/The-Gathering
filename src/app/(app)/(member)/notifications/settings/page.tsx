@@ -21,7 +21,8 @@ const TEACHING_KINDS: Array<{ kind: string; label: string }> = [
   { kind: "episode", label: "Church podcast episodes" },
   { kind: "assignment", label: "Reading assignments" },
   { kind: "playlist", label: "Playlists" },
-  { kind: "gallery", label: "New photos in albums" },
+  { kind: "video", label: "Videos" },
+  { kind: "gallery", label: "New photos and videos in the Media gallery" },
 ];
 
 export default async function NotificationSettingsPage() {
@@ -47,8 +48,8 @@ export default async function NotificationSettingsPage() {
           </section>
           {muted ? (
             <section aria-labelledby="teaching-heading">
-              <SectionHeading id="teaching-heading" description="Which new teaching and photos to hear about. Turning one off skips it everywhere: app, email, and push.">
-                New teaching and photos
+              <SectionHeading id="teaching-heading" description="Which new teaching, videos, and photos to hear about. Turning one off skips it everywhere: app, email, and push.">
+                New teaching, videos, and photos
               </SectionHeading>
               <Card>
                 <form action={saveTeachingPrefsAction} className="space-y-4">

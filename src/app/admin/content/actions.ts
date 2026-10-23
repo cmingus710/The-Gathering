@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import { zonedLocalToUtc } from "@/lib/time";
 
 const UNAVAILABLE = "The content service is unavailable. Nothing was saved.";
-const KINDS: ItemKind[] = ["devotional", "lesson", "episode", "book", "assignment", "playlist"];
+const KINDS: ItemKind[] = ["devotional", "lesson", "video", "episode", "book", "assignment", "playlist"];
 
 /** Which role a name in the people fields gets, per kind. */
 const PEOPLE_ROLE: Partial<Record<ItemKind, "author" | "speaker" | "host">> = { devotional: "author", lesson: "speaker", episode: "host" };

@@ -28,6 +28,7 @@ import { AssignmentBody, assignmentDates } from "./assignment-body";
 import { PrivateNotes } from "./private-notes";
 import { ReadMore } from "./read-more";
 import { ScrollToSelected } from "./scroll-to-selected";
+import { VideoList } from "../video-list";
 
 export type BookExtras = {
   kindle_url: string | null;
@@ -304,6 +305,13 @@ export function BookReadingView({
             assignmentNotes={planDetails}
           />
         </section>
+
+        {item.attachments.some((a) => a.role === "video") ? (
+          <section aria-labelledby="videos-heading">
+            <SectionHeading id="videos-heading">Videos</SectionHeading>
+            <VideoList attachments={item.attachments} title={item.title} itemId={item.id} />
+          </section>
+        ) : null}
 
         {files.length ? (
           <section aria-labelledby="files-heading">

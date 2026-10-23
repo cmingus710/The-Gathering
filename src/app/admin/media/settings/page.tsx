@@ -23,7 +23,7 @@ export default async function MediaSettingsPage() {
           </Link>
         }
         title="Media limits"
-        description="Upload sizes, gallery limits, and how often external podcast feeds refresh."
+        description="Upload sizes, Media gallery limits, and how often external podcast feeds refresh."
       />
       {error || !data ? (
         <Alert tone="error" title="Settings couldn't be loaded." />

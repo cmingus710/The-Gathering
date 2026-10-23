@@ -12,7 +12,7 @@ import { formatDay } from "@/lib/media/format";
 import type { Album } from "@/lib/media/types";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Gallery" };
+export const metadata: Metadata = { title: "Media gallery" };
 
 export default async function GalleryAdminPage({ searchParams }: PageProps<"/admin/gallery">) {
   await requireAnyCapability([CAPABILITIES.galleryModerate, CAPABILITIES.eventsManage], "/admin/gallery");
@@ -28,11 +28,11 @@ export default async function GalleryAdminPage({ searchParams }: PageProps<"/adm
     <>
       <PageHeader
         eyebrow="Teaching & media"
-        title="Photo galleries"
+        title="Media gallery"
         description={
           d.can_moderate
-            ? "Albums for approved members or one group (never public). Member photos wait for your approval."
-            : "Create albums for your events. Gallery moderators publish albums and review photos."
+            ? "Albums of photos and videos for approved members or one group (never public). Member photos and added videos wait for your approval."
+            : "Create albums for your events. Media gallery moderators publish albums, review photos, and add videos."
         }
         actions={
           <>
@@ -57,7 +57,7 @@ export default async function GalleryAdminPage({ searchParams }: PageProps<"/adm
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{a.title}</span>
                   <span className="block truncate text-meta text-text-secondary">
-                    {[a.album_on ? formatDay(a.album_on, "short") : null, `${a.photo_count} published`, a.event?.title].filter(Boolean).join(" · ")}
+                    {[a.album_on ? formatDay(a.album_on, "short") : null, `${a.photo_count} photos`, a.video_count ? `${a.video_count} videos` : null, a.event?.title].filter(Boolean).join(" · ")}
                   </span>
                 </span>
                 <span className="flex flex-wrap gap-1.5">

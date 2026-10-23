@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AssetStatusBadge, RightsBadge } from "@/components/media/badges";
-import { EmbedPlayer } from "@/components/media/embed-player";
+import { ReasonList } from "@/components/media/reason-list";
 import { UploadPanel } from "@/components/media/upload-panel";
+import { VideoPlayer } from "@/components/media/video-player";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
@@ -14,12 +15,13 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
 import { formatBytes } from "@/lib/media/files";
 import { durationLabel, formatDuration, isUuid, KIND_LABEL } from "@/lib/media/format";
-import { videoEmbed } from "@/lib/media/embeds";
 import { signPaths } from "@/lib/media/storage";
 import type { AssetDetail, AssetRow, ItemKind } from "@/lib/media/types";
-import { getSiteUrl } from "@/lib/site-url";
+import { videoAssetReasons } from "@/lib/media/visibility";
+import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
-import { removeAssetAction, replaceAssetAction, transcriptFromCaptionsAction } from "../actions";
+import { formatDateTime } from "@/lib/time";
+import { checkVideoAction, publishVideoAction, removeAssetAction, replaceAssetAction, transcriptFromCaptionsAction } from "../actions";
 import { AssetDetailsForm, TranscriptForm } from "./forms";
 
 export const metadata: Metadata = { title: "Media file" };
@@ -28,6 +30,7 @@ const SAVED: Record<string, string> = {
   added: "Video added. Add details and rights below.",
   replaced: "Replaced everywhere it was used. The old file was removed.",
   transcript: "Transcript filled in from the captions. Review it before saving changes.",
+  checked: "Checked with the provider.",
 };
 
 export default async function MediaAssetPage({ params, searchParams }: PageProps<"/admin/media/[id]">) {
@@ -40,7 +43,7 @@ export default async function MediaAssetPage({ params, searchParams }: PageProps
   if (!isUuid(id)) notFound();
   const sp = await searchParams;
   const supabase = await requireClient();
-  const { data, error } = await supabase.rpc("media_admin_asset", { p_id: id });
+  const [{ data, error }, { settings }] = await Promise.all([supabase.rpc("media_admin_asset", { p_id: id }), getChurchSettings()]);
   if (error || !data) notFound();
   const a = data as AssetDetail;
   const [signed, candidates] = await Promise.all([
@@ -53,6 +56,8 @@ export default async function MediaAssetPage({ params, searchParams }: PageProps
   const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
   const errorMessage = typeof sp.error === "string" ? (sp.error === "unavailable" ? "The media service is unavailable." : sp.error.slice(0, 300)) : undefined;
   const hosted = a.kind !== "external_video";
+  const isVideo = a.kind === "video" || a.kind === "external_video";
+  const standalone = a.publishing?.standalone.find((s) => s.state !== "archived") ?? null;
 
   return (
     <>
@@ -85,17 +90,18 @@ export default async function MediaAssetPage({ params, searchParams }: PageProps
             ) : a.kind === "audio" ? (
               // Previews go through the same access-checked route as members' playback.
               <audio controls preload="none" src={`/api/media/${a.id}/play`} className="w-full" />
+            ) : isVideo && a.video ? (
+              <>
+                <VideoPlayer video={a.video} title={a.title} />
+                {a.kind === "external_video" ? (
+                  <p className="mt-1 text-meta text-text-secondary">
+                    This video&apos;s privacy is set on {a.provider === "vimeo" ? "Vimeo" : "YouTube"}, not in this app. An unlisted video isn&apos;t protected by
+                    membership: anyone with its link can watch it there.
+                  </p>
+                ) : null}
+              </>
             ) : a.kind === "video" ? (
               <video controls preload="metadata" src={`/api/media/${a.id}/play`} className="aspect-video w-full rounded-tile bg-black" />
-            ) : a.kind === "external_video" && a.provider && a.provider_ref ? (
-              <EmbedPlayer
-                title={a.title}
-                embed={videoEmbed(
-                  a.provider === "youtube" ? { provider: "youtube", id: a.provider_ref } : { provider: "vimeo", id: a.provider_ref, hash: a.provider_hash },
-                  { origin: getSiteUrl(), autoplay: true },
-                )}
-                note="This video's privacy is set on the provider, not in this app."
-              />
             ) : a.kind === "document" ? (
               <a href={`/api/media/${a.id}/file`} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
                 Open the document
@@ -116,13 +122,16 @@ export default async function MediaAssetPage({ params, searchParams }: PageProps
                 {a.usage.map((u) => (
                   <li key={`${u.type}-${u.id}-${u.role}`} className="flex flex-wrap items-center gap-2 px-4 py-3">
                     <Link
-                      href={u.type === "item" ? `/admin/content/${u.id}` : u.type === "show" ? `/admin/podcasts/${u.id}` : "/admin/content/library"}
+                      href={
+                        u.type === "item" ? `/admin/content/${u.id}` : u.type === "show" ? `/admin/podcasts/${u.id}` : u.type === "album" ? `/admin/gallery/${u.id}` : "/admin/content/library"
+                      }
                       className="min-w-0 flex-1 truncate font-semibold hover:underline"
                     >
                       {u.title}
                     </Link>
                     <span className="text-meta text-text-secondary">
-                      {u.type === "item" ? KIND_LABEL[u.kind as ItemKind] : u.type === "show" ? "Podcast show" : "Series"} · {u.role} · {u.status}
+                      {u.type === "item" ? KIND_LABEL[u.kind as ItemKind] : u.type === "show" ? "Podcast show" : u.type === "album" ? "Media gallery album" : "Series"} · {u.role} ·{" "}
+                      {u.status}
                     </span>
                   </li>
                 ))}
@@ -169,6 +178,43 @@ export default async function MediaAssetPage({ params, searchParams }: PageProps
         </div>
 
         <div className="space-y-6">
+          {isVideo && a.publishing !== undefined && a.status !== "removed" ? (
+            <Card>
+              <SectionHeading description="Whether members can find this video, and why.">Members&apos; access</SectionHeading>
+              <ReasonList reasons={videoAssetReasons(a, (iso) => formatDateTime(iso, settings.timezone))} />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {standalone ? (
+                  <Link href={`/admin/content/${standalone.id}`} className="inline-flex min-h-11 items-center rounded-full border border-border-strong px-4 font-semibold hover:bg-surface-muted">
+                    Open its video page
+                  </Link>
+                ) : a.can_publish_video && a.status === "ready" ? (
+                  <form action={publishVideoAction}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <SubmitButton size="sm" pendingText="Creating…">
+                      Publish for members…
+                    </SubmitButton>
+                  </form>
+                ) : null}
+                {canManage && a.kind === "external_video" ? (
+                  <form action={checkVideoAction}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <SubmitButton size="sm" variant="secondary" pendingText="Checking…">
+                      {a.provider_checked_at ? "Check again" : `Check with ${a.provider === "vimeo" ? "Vimeo" : "YouTube"}`}
+                    </SubmitButton>
+                  </form>
+                ) : null}
+              </div>
+              {!standalone && a.can_publish_video && a.status === "ready" ? (
+                <p className="mt-3 text-meta text-text-secondary">
+                  “Publish for members” creates a draft video page that reuses this file (nothing is copied). You then set its title, description, thumbnail, topics,
+                  audience, and date, preview it, and publish it. Nothing is visible until it&apos;s published.
+                </p>
+              ) : null}
+              {a.provider_checked_at ? (
+                <p className="mt-2 text-meta text-text-secondary">Last checked {formatDateTime(a.provider_checked_at, settings.timezone)}.</p>
+              ) : null}
+            </Card>
+          ) : null}
           {canManage ? (
             <Card>
               <SectionHeading>Details and rights</SectionHeading>

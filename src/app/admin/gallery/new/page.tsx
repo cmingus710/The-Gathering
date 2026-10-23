@@ -18,7 +18,7 @@ export default async function NewAlbumPage() {
       <PageHeader
         eyebrow={
           <Link href="/admin/gallery" className="hover:underline">
-            Gallery
+            Media gallery
           </Link>
         }
         title="New album"
