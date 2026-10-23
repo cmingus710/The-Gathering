@@ -33,6 +33,9 @@ export const BACK_ROUTES = {
   "/prayer/serve/[id]": { parent: "/prayer/serve", label: "Ways to help" },
   "/prayer/team": { parent: "/prayer", label: "Prayer" },
   "/prayer/team/care/[id]": { parent: "/prayer/team", label: "the workspace" },
+  "/prayer/library/new": { parent: "/prayer/library", label: "Prayer Library" },
+  "/prayer/library/[id]": { parent: "/prayer/library", label: "Prayer Library" },
+  "/prayer/library/[id]/edit": { parent: "/prayer/library/[id]", label: "the prayer" },
 
   // Connect
   "/community/t/[id]": { parent: "/community", label: "Community" },
@@ -184,6 +187,10 @@ export const RETURN_VIEWS: Array<{ path: RegExp; params: Record<string, Check> }
       status: oneOf("active", "open", "answered", "closed", "archived", "all"),
       audience: oneOf("any", "church", "group", "team", "private"),
     },
+  },
+  {
+    path: /^\/prayer\/library$/,
+    params: { view: oneOf("library", "mine", "saved"), topic: re(UUID), purpose: re(UUID), use: re(UUID) },
   },
   { path: /^\/directory$/, params: { q: (v) => v.length <= 80, page: re(SMALL_INT) } },
   { path: /^\/community$/, params: { group: re(UUID), category: re(UUID) } },

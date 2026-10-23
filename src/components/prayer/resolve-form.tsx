@@ -5,10 +5,19 @@ import { prayerResolveAction } from "@/app/admin/prayer/actions";
 import { TextAreaField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { initialFormState } from "@/lib/forms";
+import { initialFormState, type FormState } from "@/lib/forms";
 
-export function PrayerResolveForm({ reportId, closed }: { reportId: string; closed: boolean }) {
-  const [state, action] = useActionState(prayerResolveAction, initialFormState);
+/** Close or reopen a prayer report; `resolve` defaults to prayer request reports (the library passes its own). */
+export function PrayerResolveForm({
+  reportId,
+  closed,
+  resolve = prayerResolveAction,
+}: {
+  reportId: string;
+  closed: boolean;
+  resolve?: (prev: FormState, formData: FormData) => Promise<FormState>;
+}) {
+  const [state, action] = useActionState(resolve, initialFormState);
   if (closed) {
     return (
       <form action={action} className="space-y-2">

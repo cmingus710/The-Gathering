@@ -27,7 +27,8 @@ src/
                      (public events open to visitors)
     (member)/community, groups, messages, notifications   Phase 5 (approved members)
     admin/community, admin/moderation                     Phase 5 administration
-    (member)/prayer        prayer requests, care requests, ways to help, team workspace (Phase 6)
+    (member)/prayer        prayer requests, care requests, ways to help, team workspace (Phase 6);
+                           /prayer/library: the member-contributed Prayer Library
     admin/prayer           prayer reports, settings, sensitive-access log (Phase 6)
     (member)/bible, journal  Bible reading plans, reader, bookmarks; My Journal (Phase 8)
     admin/bible            reading plans and Bible sources (Phase 8)

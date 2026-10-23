@@ -32,11 +32,16 @@ export default async function PrayerModerationPage({ searchParams }: PageProps<"
         title="Prayer reports"
         description="Reported prayer content within your scope. You see only the reported item, never other requests. Confidential (team) reports need prayer team access too."
         actions={
-          viewer.capabilities.has(CAPABILITIES.prayerIdentity) ? (
-            <ButtonLink href="/admin/prayer/access" variant="secondary" size="sm">
-              Sensitive-access log
+          <>
+            <ButtonLink href="/admin/prayer/library" variant="secondary" size="sm">
+              Prayer Library reports
             </ButtonLink>
-          ) : null
+            {viewer.capabilities.has(CAPABILITIES.prayerIdentity) ? (
+              <ButtonLink href="/admin/prayer/access" variant="secondary" size="sm">
+                Sensitive-access log
+              </ButtonLink>
+            ) : null}
+          </>
         }
       />
       <div className="space-y-10">
