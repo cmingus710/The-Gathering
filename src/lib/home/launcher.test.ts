@@ -24,7 +24,7 @@ describe("launcher config", () => {
   it("shows only implemented sections, in order", () => {
     const ids = launcherItemsFor(none).map((i) => i.id);
     expect(ids).toEqual([
-      "directory", "events", "community", "messages", "groups", "bible", "memory-verses", "prayer",
+      "directory", "events", "community", "messages", "groups", "bible", "journal", "memory-verses", "prayer",
       "devotionals", "lessons", "podcasts", "reading", "music", "gallery", "youth",
       "announcements", "notifications", "profile",
     ]);

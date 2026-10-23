@@ -55,6 +55,8 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "gallery", label: "Media Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
   // Bible reading plans and the reader (Phase 8), with the supplied Bible art.
   { id: "bible", label: "Bible Reading", art: "bible", glyph: "bible", order: 54, status: "available", href: "/bible" },
+  // The private journal: the tile only links there; the page and its data stay owner-only.
+  { id: "journal", label: "My Journal", art: "journal", glyph: "journal", order: 54.25, status: "available", href: "/journal" },
   // Scripture memory (Phase 9), with the supplied Memory Verses art.
   { id: "memory-verses", label: "Memory Verses", art: "memory-verses", glyph: "memory", order: 54.5, status: "available", href: "/memory" },
   // Youth ministry and families (Phase 10), with the supplied Youth art.

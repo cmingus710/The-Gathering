@@ -64,6 +64,14 @@
     "height": 1254
   },
   {
+    "name": "journal",
+    "subject": "closed gold leather journal with a strap, ribbon bookmark, and gold pen",
+    "color": "royal navy",
+    "asset": "assets/brand/source/journal.png",
+    "width": 1254,
+    "height": 1254
+  },
+  {
     "name": "lessons",
     "subject": "closed burgundy book with raised gold play triangle",
     "color": "dusty burgundy",
