@@ -46,7 +46,7 @@ Open a lesson and choose **Open workbook** to follow along during the service.
 
 ## Books
 
-- A book page has **Read in Kindle** and **Listen in Audible**. These open Amazon or Audible, where you sign in with your own account. You need your own access to the book; the church's copy doesn't give you access, and the book can't be read or played inside the app.
+- A book page has **Read on Kindle** and **Listen on Audible** (each only when the church has added that link). These open Amazon or Audible (or, on a phone with the app installed, your device may offer the Kindle or Audible app), where you sign in with your own account. You need your own access to the book; the church's copy doesn't give you access, and the book can't be read or played inside the app.
 - Record where you are (Want to read, Reading, Finished, plus an optional note such as "Chapter 4").
 - **Write privately** keeps notes in My Journal.
 
