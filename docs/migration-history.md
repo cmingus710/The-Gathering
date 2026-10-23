@@ -375,4 +375,4 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - `notification_channel_set` is executable by `authenticated`, not `anon`; `authenticated` can't execute `community.channel_allows` or read `community.channel_policy`;
   - anon-executable public functions: 34 (unchanged);
   - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
-  - **Not yet recorded:** run `supabase/manual/2026-11-12-record-notification-channel-overrides.sql` to add the history row (`created_by = notification-channel-overrides`).
+  - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-12-record-notification-channel-overrides.sql`. `20261112000100` is recorded (`created_by = notification-channel-overrides`), 74 versions in history.
