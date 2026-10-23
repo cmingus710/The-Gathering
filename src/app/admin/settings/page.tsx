@@ -3,10 +3,13 @@ import { Alert } from "@/components/ui/alert";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
+import type { NotificationChannelsAdmin } from "@/lib/notifications/channels";
 import { getChurchSettings } from "@/lib/settings/queries";
+import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_TIMEZONE } from "@/lib/time";
 import { BrandAssetForm } from "./branding-form";
 import { MembershipAlertsSection } from "./membership-alerts";
+import { NotificationChannelsSection } from "./notification-channels";
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Church settings" };
@@ -19,6 +22,9 @@ export default async function SettingsPage() {
   const all = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [DEFAULT_TIMEZONE];
   const timeZones = [...COMMON_ZONES, ...all.filter((z) => !COMMON_ZONES.includes(z))];
   if (!timeZones.includes(settings.timezone)) timeZones.unshift(settings.timezone);
+  const supabase = available ? await createClient() : null;
+  const channels = supabase ? await supabase.rpc("notification_channels_admin") : null;
+  const notificationChannels = channels && !channels.error ? (channels.data as NotificationChannelsAdmin) : null;
 
   return (
     <>
@@ -42,7 +48,8 @@ export default async function SettingsPage() {
               <BrandAssetForm asset="icon" currentUrl={settings.iconUrl} isDefault={!settings.iconPath} />
             </div>
           </Card>
-          <MembershipAlertsSection timeZone={settings.timezone} />
+          <NotificationChannelsSection admin={notificationChannels} />
+          <MembershipAlertsSection timeZone={settings.timezone} emailAll={notificationChannels?.email.all ?? false} />
         </div>
       )}
     </>

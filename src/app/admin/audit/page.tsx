@@ -32,6 +32,8 @@ function describe(e: Entry, names: Map<string, string>): string {
       return `Removed the ${String(d.role).replace(/_/g, " ")} role from ${target}`;
     case "settings.updated":
       return `Updated church settings (${(d.fields as string[]).join(", ").replace(/_/g, " ")})`;
+    case "notifications.channel_changed":
+      return `Changed church ${d.channel} notification settings (${d.all ? "all types on" : `individual settings apply${d.disabled?.length ? `; off: ${(d.disabled as string[]).join(", ").replace(/_/g, " ")}` : ""}`})`;
     case "announcement.created":
       return `Created an announcement (${d.status})`;
     case "announcement.status_changed":
