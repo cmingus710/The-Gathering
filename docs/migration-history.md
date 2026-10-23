@@ -460,4 +460,11 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script:** `supabase/manual/2026-11-17-apply-question-length.sql`, one transaction. The preflight requires `20261026000500` and refuses a second run. It post-checks that a 1,000-character question is kept whole and the journal check was widened. History row `created_by = question-length`.
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261117000100`. A rerun stopped at the preflight.
 - **Order: apply before deploying the app change.** The app now accepts questions up to 1,000 characters. Until the migration is applied, a Bible plan day question longer than 500 characters would be cut at 500 when saved, and "Write privately" on such a question would be refused. Content (devotional, lesson, assignment) questions work either way.
-- **Hosted:** not applied yet.
+- **Hosted:** **Applied (2026-10-23):** the owner ran `supabase/manual/2026-11-17-apply-question-length.sql` in the SQL editor. Read-only check afterwards: `20261117000100` recorded as `question_length` (`created_by = question-length`). That script is one transaction that records the version only after its post-checks pass (a 1,000-character question kept whole, the journal question check widened), so the row means the changes are in place. The app change merged after this (cmingus710/The-Gathering#64). Applied and recorded; nothing left to do on hosted.
+    - The read-only check used:
+
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261117000100';
+      ```
+
+      Expected: one row (`question_length`, `question-length`).
