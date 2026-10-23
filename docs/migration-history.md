@@ -298,3 +298,16 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261107000100`, the script applied and recorded the version; a rerun stopped at the preflight. `supabase start` (CLI 2.121) also applied the full migration set and seed.
 - **Order:** the app can be deployed first. Community person suggestions fall back to `community_mention_search`; group and Prayer suggestions stay empty and the group setting is hidden until the migration exists.
 - **Hosted:** not applied. Needs the owner's approval.
+
+## Licensed versions in memory collections (2026-11-09)
+
+- **New (additive; no applied migration was edited):** `20261109000100_memory_licensed_collections`:
+  - no table or column changes;
+  - new private helpers `memory.translation_eligibility`, `memory.translation_problem`, `memory.licensed`;
+  - new `public.memory_translation_options()` and the overload `public.memory_admin_item_update_text(uuid, text, jsonb)` (the 2-argument signature delegates to it), granted to `authenticated` only;
+  - replaced with the same signatures and grants: `memory.collection_visible` (licensed collections hidden from youth accounts), `memory.translation_brief`, `memory.collection_json`, `memory.member_item_json`, `memory.card_json`, `memory.suitability`; `public.memory_admin_home`, `memory_admin_collection_save`, `memory_admin_collection_status`, `memory_admin_collection_duplicate`, `memory_admin_item_add`, `memory_admin_preview`, `memory_card_add`; `youth.child_items`, `public.youth_learning_options`, `youth_learning_assign`.
+  - No row is rewritten. `memory.provider_permissions` is untouched, so nothing new is offered until a version's terms are recorded. Anon baseline unchanged. See [memory-provider-practice.md](memory-provider-practice.md#church-and-group-collections).
+- **Operator script:** `supabase/manual/2026-11-09-apply-memory-licensed-collections.sql`, one transaction. The preflight requires `20261106000100` and refuses a second run. It post-checks grants and that the helpers stay private. History row `created_by = memory-licensed-collections`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with their history rows, the script applied and recorded the version. A rerun stopped at the preflight.
+- **Order:** apply the migration before deploying the app (the admin memory pages call `memory_translation_options` and pass the API fetch to `memory_admin_item_add`).
+- **Hosted:** not applied. Needs the owner's approval.

@@ -60,7 +60,7 @@ export type Item = {
   passage: Passage;
   /** The collection lets members practice in another stored version. */
   translation_choice?: boolean;
-  card?: { id: string; stage: Stage; sessions: number; review_ready: boolean; current_version: boolean; translation?: { id: string; code: string; name: string } } | null;
+  card?: { id: string; stage: Stage; sessions: number; review_ready: boolean; current_version: boolean; modes?: Activity[]; translation?: { id: string; code: string; name: string } } | null;
   collection?: { id: string; title: string; kind?: string; goal_note?: string | null; goal_sessions_per_week?: number | null };
 };
 
@@ -73,7 +73,8 @@ export type Collection = {
   audience: "members" | "group" | "personal";
   group_id: string | null;
   group_name: string | null;
-  translation: { id: string; code: string; name: string };
+  /** source_kind "api": a licensed version; memory_available: its memory practice is permitted now (20261109000100). */
+  translation: { id: string; code: string; name: string; source_kind?: "database" | "api"; memory_available?: boolean; memory_modes?: Activity[] };
   /** Members may practice in their own version (false: the collection's version is required). */
   translation_choice: boolean;
   kind: "collection" | "sequence";

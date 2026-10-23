@@ -6,13 +6,16 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 import { saveCollectionAction } from "@/lib/memory/manage-actions";
+import type { VersionChoice } from "@/lib/memory/eligibility";
 import type { Collection } from "@/lib/memory/types";
 import type { ManageBase } from "./types";
 
 /**
  * Collection details. Audience, Bible version, and kind can change only
  * while it's a draft (published collections keep them; duplicate to make a
- * new version).
+ * new version). The version list comes from the shared memory eligibility
+ * rule: stored-text versions and permitted, connected licensed ones can be
+ * chosen; other published versions are listed disabled with the reason.
  */
 export function CollectionForm({
   base,
@@ -25,7 +28,7 @@ export function CollectionForm({
 }: {
   base: ManageBase;
   collection?: Collection;
-  translations: Array<{ id: string; code: string; name: string }>;
+  translations: VersionChoice[];
   defaultTranslation: string | null;
   groups: Array<{ id: string; name: string }>;
   leaderOnly: boolean;
@@ -36,6 +39,10 @@ export function CollectionForm({
   const draft = !collection || collection.status === "draft";
   const [audience, setAudience] = useState<string>(collection?.audience ?? (leaderOnly ? "group" : "members"));
   const v = (k: string, d: string) => state.values?.[k] ?? d;
+  const eligible = translations.filter((t) => t.eligible);
+  const blocked = translations.filter((t) => !t.eligible);
+  const [version, setVersion] = useState<string>(v("translation_id", collection?.translation.id ?? defaultTranslation ?? eligible[0]?.id ?? ""));
+  const chosen = translations.find((t) => t.id === version);
   return (
     <form action={action} className="space-y-4">
       <FormMessage state={state} />
@@ -67,18 +74,50 @@ export function CollectionForm({
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField label="Bible version" name="translation_id" defaultValue={v("translation_id", collection?.translation.id ?? defaultTranslation ?? translations[0]?.id ?? "")} hint="Every verse in the collection uses this version. It's never switched silently.">
-              {translations.map((t) => (
+            <SelectField
+              label="Bible version"
+              name="translation_id"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+              hint={
+                chosen?.licensed && chosen.eligible
+                  ? `${chosen.code} is licensed: its text is fetched from API.Bible when shown and never stored here. Members practice it with flashcards and self-check only. Every verse uses this version; it's never switched silently.`
+                  : "Every verse in the collection uses this version. It's never switched silently."
+              }
+            >
+              {eligible.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} ({t.code})
+                  {t.name} ({t.code}){t.licensed ? ": licensed, flashcards and self-check only" : ""}
                 </option>
               ))}
+              {collection && !translations.some((t) => t.id === collection.translation.id) ? (
+                // Its version is no longer published: kept selected (and not submitted), never replaced silently.
+                <option value={collection.translation.id} disabled>
+                  {collection.translation.name} ({collection.translation.code}): not published
+                </option>
+              ) : null}
+              {blocked.length ? (
+                <optgroup label="Not available for memory verses">
+                  {blocked.map((t) => (
+                    <option key={t.id} value={t.id} disabled>
+                      {t.name} ({t.code}): {t.reason === "not_configured" ? "not connected on this server" : "not confirmed for memory verses"}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </SelectField>
             <SelectField label="Kind" name="kind" defaultValue={v("kind", collection?.kind ?? "collection")} hint="A sequence assigns one verse after another, week by week.">
               <option value="collection">Collection</option>
               <option value="sequence">Multiweek sequence</option>
             </SelectField>
           </div>
+          {blocked.length ? (
+            <ul className="space-y-1 text-meta text-text-secondary" aria-label="Versions not available for memory verses">
+              {blocked.map((t) => (
+                <li key={t.id}>{t.note}</li>
+              ))}
+            </ul>
+          ) : null}
           <input type="hidden" name="timezone" value={collection?.timezone ?? timezone} />
         </>
       ) : (
@@ -95,7 +134,7 @@ export function CollectionForm({
             defaultChecked={collection?.translation_choice ?? false}
             hint={
               draft
-                ? "Off: everyone practices in the version above. On: each member may choose another version that's available for memory practice; the collection itself never changes. After publishing this can be turned on but not off."
+                ? "Off: everyone practices in the version above. On: each member may choose another version that's available for memory practice (only the practice that version allows); the collection itself never changes. After publishing this can be turned on but not off."
                 : "Each member may choose another version for themselves; the collection itself never changes. Once on, it stays on for this collection."
             }
           />

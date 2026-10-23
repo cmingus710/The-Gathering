@@ -1,3 +1,4 @@
+import type { MemoryOption } from "@/lib/memory/eligibility";
 import type { Collection, Item } from "@/lib/memory/types";
 
 export type ManageBase = "/admin/memory" | "/memory/lead";
@@ -7,7 +8,8 @@ export type AdminHome = {
   can_publish: boolean;
   led_groups: Array<{ id: string; name: string }>;
   collections: Collection[];
-  translations: Array<{ id: string; code: string; name: string }>;
+  /** Every published version with its memory eligibility (public.memory_translation_options). */
+  translations: MemoryOption[];
   default_translation_id: string | null;
   groups: Array<{ id: string; name: string; visibility: string; authorized: boolean }>;
   church_timezone: string;

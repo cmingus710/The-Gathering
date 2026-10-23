@@ -1,6 +1,7 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect } from "react";
 
 declare global {
   interface Window {
@@ -44,4 +45,13 @@ export function FumsTracker({ ids }: { ids: string[] }) {
       }}
     />
   );
+}
+
+/**
+ * Reports one display of API.Bible text rendered on the server; several on
+ * one page share the single script load.
+ */
+export function FumsReport({ id }: { id: string | null }) {
+  useEffect(() => trackFums(id), [id]);
+  return null;
 }
