@@ -283,3 +283,18 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - all four triggers present;
   - `community_mention_search` executable by `authenticated` and not by `anon`, and no `community` function executable by clients;
   - anon-executable public functions: 33 (unchanged).
+
+## Mentions: groups and Prayer (2026-11-08)
+
+- **New (additive; no applied migration was edited):** `20261108000100_mentions_groups_prayer`:
+  - columns `community.groups.mention_notify` (`leaders` | `members` | `off`, default `leaders`, so every existing group starts there) and `community.settings.group_mention_limit` (default 3);
+  - private tables (RLS on, no API grants) `community.group_mentions`, `prayer.mentions`, `prayer.group_mentions`, and `community.mention_deliveries` (one row per content and person ever notified; backfilled from `community.mentions` rows already notified);
+  - triggers `requests_mentions_check` / `requests_mentions_sync` / `requests_mentions_status` / `requests_mentions_deleted` on `prayer.requests`, `comments_mentions_check` / `comments_mentions_sync` / `comments_mentions_status` on `prayer.comments`, `threads_mentions_status` / `posts_mentions_status` on Community content, `group_members_mentions_cancel` and `profiles_mentions_cancel` for losing access;
+  - notification kinds `group_mention`, `prayer_mention`, `prayer_group_mention` and category `group_mentions` added to the check constraints (nothing removed);
+  - new member functions, granted to `authenticated` only: `community_mention_suggest`, `prayer_mention_suggest`, `prayer_mention_check`, `prayer_comment_position`, `community_group_set_mention_notify`; plus private `community.*` and `prayer.*` helpers;
+  - replaced with the same signatures: `community.mentions_clean` (now refuses ineligible mentions instead of turning them into text) and `mentions_sync`, `mention_plain`, `group_card`, `kind_category`, `pref`, `notify`, `notification_visible`, `notification_json`, `notification_email_item`, `op_push_claim`, `thread_card`, `feed_card`, `post_json`, `comment_json`, `prayer.card`, `prayer.comment_json`; `public.community_mention_search`, `community_my_settings`, `community_set_pref`, `community_notification_panel`, `prayer_request` (now opens up to 1,000 comments for comment links).
+  - Existing posts, requests, groups (other than the new default column), settings, and preferences are unchanged. Anon baseline unchanged. See [community-mentions.md](community-mentions.md).
+- **Operator script:** `supabase/manual/2026-11-08-apply-mentions-groups-prayer.sql`, one transaction. The preflight requires `20261107000100` and refuses a second run. It post-checks the five grants, that private helpers aren't callable, the seven triggers, and the group default. History row `created_by = mentions-groups-prayer`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261107000100`, the script applied and recorded the version; a rerun stopped at the preflight. `supabase start` (CLI 2.121) also applied the full migration set and seed.
+- **Order:** the app can be deployed first. Community person suggestions fall back to `community_mention_search`; group and Prayer suggestions stay empty and the group setting is hidden until the migration exists.
+- **Hosted:** not applied. Needs the owner's approval.

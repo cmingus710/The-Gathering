@@ -182,6 +182,18 @@ export async function saveGroupAction(_prev: FormState, formData: FormData): Pro
   return done(groupId, "Group details saved.");
 }
 
+/** "Who can notify this group through @mentions?" (the group's managers only; enforced by the database). */
+export async function mentionNotifyAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const groupId = uuid.safeParse(formData.get("groupId")).data;
+  await requireApprovedMember(groupId ? `/groups/${groupId}/manage` : "/groups");
+  const value = String(formData.get("mentionNotify") ?? "");
+  if (!groupId || !["leaders", "members", "off"].includes(value)) return errorState("Choose who can notify this group.");
+  const { error } = await rpc("community_group_set_mention_notify", { p_group: groupId, p_value: value });
+  if (error) return errorState(dbErrorMessage(error, "That setting couldn't be saved. Please try again."));
+  revalidatePath(`/groups/${groupId}`, "layout");
+  return { status: "success", message: "Mention setting saved." };
+}
+
 export async function inviteSearch(groupId: string, query: string): Promise<Array<{ id: string; name: string }>> {
   await requireApprovedMember("/groups");
   if (!uuid.safeParse(groupId).success) return [];

@@ -61,7 +61,6 @@ describeDb("community mentions", () => {
   const mentionNotices = async (id: string) => (await notifs(id)).filter((n) => n.kind === "mention");
   const rows = (thread: string, post: string | null = null) =>
     db.raw<Json>("select profile_id, removed_at, notified_at from community.mentions where target_id = $1 order by created_at, profile_id", [post ?? thread]);
-  const threadBody = async (id: string) => (await db.raw<{ body: string }>("select body from community.threads where id = $1", [id]))[0].body;
 
   beforeAll(async () => {
     db = await TestDb.create();
@@ -174,26 +173,29 @@ describeDb("community mentions", () => {
       expect((await mentionNotices(ann)).map((n) => n.url)).not.toContain(`/community/t/${t}`);
     });
 
-    it("turns forged or ineligible mentions into plain text and never notifies them", async () => {
-      const forged = randomUUID();
-      const body = [ann, optedOut, pending, suspended, youth, blocker, forged, rob].map((id) => tag("Someone Else", id)).join(" ");
-      const t = await post(rob, body);
-      const saved = await threadBody(t);
-      // Only Ann (eligible) and Rob himself (self-mention, never notified) stay mentions.
-      expect(saved.match(/\(mention:/g)).toHaveLength(2);
-      expect(saved).toContain(`(mention:${ann})`);
-      expect(saved).toContain(`(mention:${rob})`);
-      expect(saved).toContain("@Someone Else");
-      expect((await rows(t)).map((r) => r.profile_id).sort()).toEqual([ann, rob].sort());
+    it("refuses forged or ineligible mentions, naming them, and saves nothing", async () => {
+      // 20261108000100: a save that mentions anyone who can't be mentioned is
+      // refused with a message naming them, instead of quietly becoming text.
+      for (const id of [optedOut, pending, suspended, youth, blocker, randomUUID()]) {
+        await fresh();
+        await fails(as(rob), "community_thread_create", [category, null, "Synthetic refused", `Hi ${tag("Someone Else", id)}`, randomUUID()],
+          /@Someone Else can't be mentioned here/);
+      }
+      expect(await db.raw("select 1 from community.threads where title = 'Synthetic refused'")).toEqual([]);
       for (const id of [optedOut, blocker]) expect(await mentionNotices(id)).toEqual([]);
-      expect((await db.raw("select 1 from community.notifications where kind = 'mention' and profile_id = any ($1)", [[pending, suspended, youth, forged]]))).toEqual([]);
+      expect(await db.raw("select 1 from community.notifications where kind = 'mention' and profile_id = any ($1)", [[pending, suspended, youth]])).toEqual([]);
+      // Eligible people and the author themself are fine; the author is never notified.
+      const t = await post(rob, `${tag("Ann Rivers", ann)} and me ${tag("Rob Webb", rob)}`);
+      expect((await rows(t)).map((r) => r.profile_id).sort()).toEqual([ann, rob].sort());
       expect((await db.raw<Json>("select notified_at from community.mentions where target_id = $1 and profile_id = $2", [t, rob]))[0].notified_at).toBeNull();
     });
 
     it("never lets a mention reach outside a group", async () => {
-      const t = await post(rob, `${tag("Ann Rivers", ann)} ${tag("Ben Rowe", ben)}`, { group });
+      await fresh();
+      await fails(as(rob), "community_thread_create", [null, group, "Synthetic mention post", `${tag("Ann Rivers", ann)} ${tag("Ben Rowe", ben)}`, randomUUID()],
+        /@Ben Rowe can't be mentioned here. You can mention only members who can already see this post/);
+      const t = await post(rob, `${tag("Ann Rivers", ann)} hello`, { group });
       expect((await rows(t)).map((r) => r.profile_id)).toEqual([ann]);
-      expect(await threadBody(t)).toContain("@Ben Rowe");
       expect((await mentionNotices(ben)).map((n) => n.url)).not.toContain(`/community/t/${t}`);
       expect(await rpc(as(ben), "community_feed_post", [t])).toBeNull();
       const [n] = (await mentionNotices(ann)).filter((x) => x.url === `/community/t/${t}`);

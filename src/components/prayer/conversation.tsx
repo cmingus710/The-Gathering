@@ -4,6 +4,7 @@ import { MessageCircleHeart, Pencil, Send, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addUpdateAction, commentAction, deleteCommentAction, deleteUpdateAction, editCommentAction, editUpdateAction } from "@/app/(app)/(member)/prayer/actions";
 import { CommunityText } from "@/components/community/community-text";
+import { MentionTextarea } from "@/components/mentions/mention-textarea";
 import { Button } from "@/components/ui/button";
 import { CheckboxField, TextAreaField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -17,6 +18,50 @@ import { PrayerReportDialog } from "./report-dialog";
 
 function Edited({ at }: { at: string | null }) {
   return at ? <span className="text-text-secondary"> · edited</span> : null;
+}
+
+/** The comment box's label with @mentions (the visible label is kept short). */
+function MentionField({
+  id,
+  label,
+  hint,
+  value,
+  onValueChange,
+  requestId,
+  anonymous,
+  autoFocus,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  requestId: string;
+  anonymous: boolean;
+  autoFocus?: boolean;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block font-semibold text-text">
+        {label}
+      </label>
+      <MentionTextarea
+        id={id}
+        name="body"
+        required
+        maxLength={PRAYER_LIMITS.comment}
+        minRows={3}
+        value={value}
+        onValueChange={onValueChange}
+        place={{ module: "prayer", requestId, anonymous }}
+        aria-describedby={`${id}-hint`}
+        autoFocus={autoFocus}
+      />
+      <p id={`${id}-hint`} className="text-meta text-text-secondary">
+        {hint}
+      </p>
+    </div>
+  );
 }
 
 /** One comment. Authors edit/delete; others report; moderators in scope hide/restore. */
@@ -47,7 +92,16 @@ export function CommentItem({ c, requestId, canModerate, canEdit }: { c: PrayerC
           <FormMessage state={state} />
           <input type="hidden" name="commentId" value={c.id} />
           <input type="hidden" name="requestId" value={requestId} />
-          <TextAreaField label="Edit your comment" name="body" required maxLength={PRAYER_LIMITS.comment} rows={3} value={body} onChange={(e) => setBody(e.target.value)} autoFocus />
+          <MentionField
+            id={`edit-${c.id}`}
+            label="Edit your comment"
+            hint="Type @ and a name to mention someone or a group who can see this request."
+            value={body}
+            onValueChange={setBody}
+            requestId={requestId}
+            anonymous={c.anonymous}
+            autoFocus
+          />
           <div className="flex gap-2">
             <SubmitButton size="sm" pendingText="Saving…">
               Save
@@ -58,7 +112,7 @@ export function CommentItem({ c, requestId, canModerate, canEdit }: { c: PrayerC
           </div>
         </form>
       ) : c.body ? (
-        <CommunityText source={c.body} />
+        <CommunityText source={c.body} mentions={c.mentions} />
       ) : null}
       {c.status !== "deleted" && !editing ? (
         <div className="mt-3 flex flex-wrap items-center gap-1">
@@ -139,7 +193,7 @@ export function UpdateItem({ u, requestId, canEdit }: { u: PrayerUpdate; request
  * The requester of an anonymous request comments as "The requester" unless
  * they choose to show their name, which is explained first.
  */
-export function CommentComposer({ requestId, anonymousRequester }: { requestId: string; anonymousRequester: boolean }) {
+export function CommentComposer({ requestId, anonymousRequester, audienceLabel }: { requestId: string; anonymousRequester: boolean; audienceLabel: string }) {
   const [state, action] = useActionState(commentAction, initialFormState);
   const [body, setBody] = useState("");
   const [named, setNamed] = useState(false);
@@ -163,7 +217,15 @@ export function CommentComposer({ requestId, anonymousRequester }: { requestId: 
       <p ref={status} tabIndex={-1} role="status" className="sr-only outline-none">
         {state.status === "success" ? state.message : ""}
       </p>
-      <TextAreaField label="Share encouragement" name="body" required maxLength={PRAYER_LIMITS.comment} rows={3} value={body} onChange={(e) => setBody(e.target.value)} hint="Keep it kind and brief. Only people who can read this request will see it." />
+      <MentionField
+        id={`comment-body-${requestId}`}
+        label="Share encouragement"
+        hint={`Keep it kind and brief. Seen by ${audienceLabel}, the people who can read this request. Type @ and a name to let someone (or a group) who can already see it know; it never shares the request with anyone else.`}
+        value={body}
+        onValueChange={setBody}
+        requestId={requestId}
+        anonymous={anonymousRequester && !named}
+      />
       {anonymousRequester ? (
         <div className="space-y-2">
           <CheckboxField label="Show my name on this comment" name="named" checked={named} onChange={(e) => setNamed(e.target.checked)} hint="Your request is anonymous. By default your comments show as “The requester”." />

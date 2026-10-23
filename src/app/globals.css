@@ -550,16 +550,34 @@ h3 {
 .prose-gathering a:hover {
   color: var(--color-primary-hover);
 }
-/* @mentions in community posts: the member's name, linked to their directory entry. */
-.prose-gathering a.mention {
+/* @mentions in posts, comments, and prayer requests: a person's name (linked
+   to their directory entry when listed) or a group (linked to its page when
+   the reader may see it, with a small group icon). Labels that can't be
+   clicked keep the accent but not the link colour. */
+.prose-gathering .mention {
   font-weight: 600;
   text-decoration: none;
   border-radius: 0.375rem;
   padding: 0 0.15em;
   background: var(--color-primary-soft);
+  overflow-wrap: anywhere;
+}
+.prose-gathering span.mention {
+  color: var(--color-text);
 }
 .prose-gathering a.mention:hover {
   text-decoration: underline;
+}
+.prose-gathering .mention-group::before {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.2em;
+  vertical-align: -0.1em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .prose-gathering ul {
   list-style: disc;

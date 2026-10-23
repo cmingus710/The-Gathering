@@ -1,6 +1,6 @@
 import { Marked, type TokenizerAndRendererExtension, type Tokens } from "marked";
 import { isSafeHref } from "@/lib/announcements/markdown";
-import { MENTION_SOURCE, type MentionRef } from "./mentions";
+import { ANY_MENTION_SOURCE, type MentionRef } from "./mentions";
 
 /**
  * Community posts and replies use a smaller Markdown subset than
@@ -13,10 +13,15 @@ import { MENTION_SOURCE, type MentionRef } from "./mentions";
  * - links are kept only for http(s), mailto, and same-site paths, open with
  *   rel="nofollow ugc noopener noreferrer", and anything else becomes text;
  * - tables and horizontal rules render as plain text;
- * - @mentions (`@[Name](mention:<id>)`) render as "@Name": a link to the
- *   member's directory entry only when the server says they're listed
- *   (`mentions`), with their current name; otherwise plain text with the
- *   name written in the post. Nothing in the markup becomes HTML.
+ * - @mentions render as "@Name" in the mention style, using the current
+ *   name the server sends with the post (`mentions`): a person
+ *   (`@[Name](mention:<id>)`) links to their directory entry only when
+ *   they're listed, and a group (`@[Name](group:<id>)`) links to its page
+ *   only when the reader may see it, marked with a group icon and "(group)"
+ *   for screen readers. Otherwise it's a label that can't be clicked; a
+ *   mention the server didn't send (never recorded, or someone who can't be
+ *   shown any more) is plain text with the name as written. Nothing in the
+ *   markup becomes HTML.
  * Direct messages are plain text (no Markdown at all).
  */
 function escapeHtml(value: string): string {
@@ -47,7 +52,7 @@ export function isSafeCommunityHref(href: string): boolean {
   return true;
 }
 
-type MentionToken = Tokens.Generic & { label: string; id: string };
+type MentionToken = Tokens.Generic & { label: string; id: string; kind: "member" | "group" };
 
 // Set only for the duration of one synchronous parse (see renderCommunityText).
 let currentMentions: Map<string, MentionRef> | null = null;
@@ -60,15 +65,21 @@ const mentionExtension: TokenizerAndRendererExtension = {
     return i < 0 ? undefined : i;
   },
   tokenizer(src: string) {
-    const m = new RegExp(`^${MENTION_SOURCE}`).exec(src);
+    const m = new RegExp(`^${ANY_MENTION_SOURCE}`).exec(src);
     if (!m) return undefined;
-    return { type: "mention", raw: m[0], label: m[1], id: m[2].toLowerCase() };
+    return { type: "mention", raw: m[0], label: m[1], id: m[3].toLowerCase(), kind: m[2] === "group" ? "group" : "member" };
   },
   renderer(token) {
-    const { label, id } = token as MentionToken;
-    const ref = currentMentions?.get(id);
+    const { label, id, kind } = token as MentionToken;
+    const ref = currentMentions?.get(`${kind}:${id}`);
     const name = escapeHtml(`@${ref?.name ?? label}`);
-    return ref?.listed ? `<a href="/directory/${escapeHtml(id)}" class="mention">${name}</a>` : name;
+    if (kind === "group") {
+      const inner = `${name}<span class="sr-only"> (group)</span>`;
+      if (ref?.listed && ref.name) return `<a href="/groups/${escapeHtml(id)}" class="mention mention-group">${inner}</a>`;
+      return ref ? `<span class="mention mention-group">${inner}</span>` : name;
+    }
+    if (ref?.listed) return `<a href="/directory/${escapeHtml(id)}" class="mention">${name}</a>`;
+    return ref?.name ? `<span class="mention">${name}</span>` : name;
   },
 };
 
@@ -109,7 +120,7 @@ const marked = new Marked({
  * it every mention is plain "@Name" text.
  */
 export function renderCommunityText(source: string, opts: { mentions?: MentionRef[] | null } = {}): string {
-  currentMentions = new Map((opts.mentions ?? []).map((m) => [m.id.toLowerCase(), m]));
+  currentMentions = new Map((opts.mentions ?? []).map((m) => [`${m.kind === "group" ? "group" : "member"}:${m.id.toLowerCase()}`, m]));
   try {
     return marked.parse(source ?? "") as string;
   } finally {

@@ -32,7 +32,14 @@ export function MarkReadButton({ id, label }: { id?: string; label: string }) {
 
 const CATEGORY_INFO: Record<NotificationCategory, { label: string; hint: string }> = {
   forum: { label: "Discussions", hint: "Replies to your discussions and ones you follow." },
-  mentions: { label: "Someone mentions me", hint: "When someone @mentions you in a Community post or comment. Push only says someone mentioned you; email names who mentioned you only for church-wide posts." },
+  mentions: {
+    label: "Someone mentions me",
+    hint: "When someone @mentions you in a Community post or comment, or in a prayer request or prayer comment you can already see. This setting decides mention alerts in both places, instead of Discussions or Prayer. Push never names anyone; email names who mentioned you only for church-wide Community posts, and prayer email never includes the request or a name.",
+  },
+  group_mentions: {
+    label: "My group is mentioned",
+    hint: "When someone allowed to notify one of your groups @mentions it in Community or Prayer (each group decides who can). You're told once per post or comment, even if you're in several of the groups or also mentioned by name. Muting a group also silences its mentions. Push and prayer email are generic.",
+  },
   groups: { label: "Groups", hint: "Invitations, join requests, and decisions." },
   messages: { label: "Direct messages", hint: "Email and push only say “You have a new message”, never the text or sender." },
   moderation: { label: "Moderator actions", hint: "Always shown in the app when a moderator acts on your posts or account." },
@@ -63,7 +70,7 @@ export function PrefsForm({ prefs, pushAvailable }: { prefs: MySettings["prefs"]
               <SelectField label="Email" name={`${c}.email`} defaultValue={prefs[c]!.email}>
                 <option value="off">Off</option>
                 <option value="immediate">Right away</option>
-                {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" || c === "mentions" ? null : (
+                {c === "messages" || c === "care" || c === "reading" || c === "memory" || c === "youth" || c === "mentions" || c === "group_mentions" ? null : (
                   <>
                     <option value="daily">Daily summary</option>
                     <option value="weekly">Weekly summary</option>

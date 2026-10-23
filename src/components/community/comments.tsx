@@ -17,7 +17,7 @@ import { ActionMenu, type MenuItem } from "./action-menu";
 import { AttachmentGallery } from "./attachment-gallery";
 import { AttachmentPicker } from "./attachment-picker";
 import { InitialsAvatar, reveal, useDraftGuard } from "./feed-bits";
-import { MentionTextarea } from "./mention-textarea";
+import { MentionTextarea } from "@/components/mentions/mention-textarea";
 import { reasonField } from "./moderation-controls";
 import { ReactionPicker, ReactionSummary, useReactions } from "./reaction-picker";
 import { useCommunityRealtime } from "./realtime-provider";
@@ -283,7 +283,7 @@ function CommentComposer({
           placeholder="Write a comment…"
           value={body}
           onValueChange={setBody}
-          place={{ threadId }}
+          place={{ module: "community", threadId }}
           aria-describedby={`${id}-format`}
           aria-invalid={state.fieldErrors?.body ? true : undefined}
           className="rounded-[1.25rem] bg-surface-muted/60"
@@ -294,7 +294,7 @@ function CommentComposer({
         </SubmitButton>
       </div>
       <p id={`${id}-format`} className="sr-only">
-        You can use **bold**, _italic_, lists, quotes, and links. Type @ and a name to mention someone.
+        You can use **bold**, _italic_, lists, quotes, and links. Type @ and a name to mention someone or a group.
       </p>
       <AttachmentPicker key={pickerKey} compact onBusyChange={setUploading} onCountChange={setFiles} />
     </form>
@@ -386,7 +386,7 @@ function CommentItem({
                   maxLength={LIMITS.reply}
                   value={draft}
                   onValueChange={setDraft}
-                  place={{ threadId }}
+                  place={{ module: "community", threadId }}
                   autoFocus
                   minRows={2}
                 />

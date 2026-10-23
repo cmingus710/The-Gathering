@@ -48,7 +48,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 
 - [docs/setup.md](docs/setup.md): environment variables, Supabase, Resend, Vercel, first admin
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
-- [docs/community-mentions.md](docs/community-mentions.md): @mentions in Community posts and comments: privacy rules, notifications, verification, release steps
+- [docs/community-mentions.md](docs/community-mentions.md): @mentions of people and groups in Community and Prayer: group controls for leaders, member notification settings, privacy rules, verification, release steps
 - [docs/navigation-performance.md](docs/navigation-performance.md): page-navigation latency on phones: measurements, fixes, remaining bottlenecks
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases
 - [docs/build-status.md](docs/build-status.md): what is done and verified, and what still needs external setup

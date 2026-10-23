@@ -1,12 +1,16 @@
 "use client";
 
-import { EyeOff, Globe, Lock, Send, ShieldCheck, UserRound, Users } from "lucide-react";
-import { useActionState, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { AtSign, CircleAlert, EyeOff, Globe, Lock, Send, ShieldCheck, UserRound, Users } from "lucide-react";
+import { useActionState, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { prayerMentionCheckAction, type MentionCheck } from "@/app/(app)/(member)/mention-actions";
 import { CommunityText } from "@/components/community/community-text";
+import { MentionTextarea } from "@/components/mentions/mention-textarea";
 import { Button } from "@/components/ui/button";
-import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
+import { cn } from "@/components/ui/cn";
+import { CheckboxField, SelectField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { parseMentions, removeMention, serializeMentions, type Mention } from "@/lib/community/mentions";
 import { initialFormState, type FormState } from "@/lib/forms";
 import { ANONYMOUS_NOTICE, AUDIENCE_LABEL, audienceDescription, isNarrowing, PRAYER_LIMITS } from "@/lib/prayer/format";
 import type { Audience, GroupOption } from "@/lib/prayer/types";
@@ -20,7 +24,14 @@ const AUDIENCE_ICON: Record<Audience, ReactNode> = {
   private: <Lock className="size-4" aria-hidden="true" />,
 };
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, and links. Attachments aren't available yet.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, and links. Type @ and a name to mention someone or a group who can see it. Attachments aren't available yet.";
+
+/** Why a chosen mention can't stay with the chosen audience. */
+function problemText(m: Mention, audienceLabel: string): string {
+  return m.kind === "group"
+    ? `@${m.name} can't be mentioned in a request shared with ${audienceLabel}. Only groups in the group directory, or the group it's shared with, can be.`
+    : `@${m.name} can't see a request shared with ${audienceLabel}, so they can't be mentioned. Mentioning someone never shares the request with them.`;
+}
 
 export type ComposerInitial = {
   id: string;
@@ -37,6 +48,12 @@ export type ComposerInitial = {
  * browser storage), so text survives a failed save. The preview shows
  * exactly what readers will see. Sharing or widening the audience opens a
  * confirmation naming the new audience; the server refuses without it.
+ *
+ * @mentions: the audience stays in view next to the text, and mentioning
+ * never changes it. When the audience changes, the chosen people and groups
+ * are checked against it (prayer_mention_check) and anything that wouldn't
+ * fit is explained, with a way to remove it, before saving; the server
+ * checks again and never widens the audience to make a mention fit.
  */
 export function RequestComposer({ action, groups, initial }: { action: Action; groups: GroupOption[]; initial?: ComposerInitial }) {
   const [state, formAction] = useActionState(action, initialFormState);
@@ -57,8 +74,47 @@ export function RequestComposer({ action, groups, initial }: { action: Action; g
   const target = { audience, groupId: audience === "group" ? groupId : null };
   const needsConfirm = audience !== "private" && (!initial || !isNarrowing({ audience: initial.audience, groupId: initial.groupId }, target));
   const wasPublic = initial && initial.audience !== "private";
+  const audienceLabel = audience === "group" ? (groupName ?? "your group") : AUDIENCE_LABEL[audience].toLowerCase();
+
+  // Check the chosen mentions against the chosen audience.
+  const { text: plainBody, mentions } = useMemo(() => parseMentions(body), [body]);
+  const people = [...new Set(mentions.filter((m) => m.kind !== "group").map((m) => m.id))];
+  const mentionedGroups = [...new Set(mentions.filter((m) => m.kind === "group").map((m) => m.id))];
+  const checkKey = mentions.length ? JSON.stringify([audience, target.groupId, anonymous, people, mentionedGroups]) : "";
+  const [check, setCheck] = useState<{ key: string; result: MentionCheck } | null>(null);
+  useEffect(() => {
+    if (!checkKey) return;
+    let current = true;
+    const timer = setTimeout(async () => {
+      const result = await prayerMentionCheckAction({ audience, groupId: target.groupId || null, anonymous, people: people.slice(0, 10), groups: mentionedGroups.slice(0, 10) }).catch(() => null);
+      if (current && result) setCheck({ key: checkKey, result });
+    }, 250);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+    // The inputs are all in checkKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkKey]);
+  const result = checkKey && check?.key === checkKey ? check.result : null;
+  const blocked = !result
+    ? []
+    : result.unavailable === "team"
+      ? mentions
+      : mentions.filter((m) => (m.kind === "group" ? result.groups : result.people).includes(m.id));
+  const quiet = result && !result.unavailable ? mentions.filter((m) => m.kind === "group" && result.quiet.includes(m.id)) : [];
+  const problemRef = useRef<HTMLDivElement>(null);
+  const removeOne = (m: Mention) => {
+    const next = removeMention(plainBody, mentions, m);
+    setBody(serializeMentions(next.text, next.mentions));
+  };
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
+    if (blocked.length) {
+      e.preventDefault();
+      problemRef.current?.focus();
+      return;
+    }
     if (needsConfirm && confirmed !== audience) {
       e.preventDefault();
       dialogRef.current?.showModal();
@@ -81,7 +137,77 @@ export function RequestComposer({ action, groups, initial }: { action: Action; g
         <input type="hidden" name="confirm" value={confirmed === audience ? audience : ""} />
 
         <TextField label="Title" name="title" required minLength={3} maxLength={PRAYER_LIMITS.title} value={title} onChange={(e) => setTitle(e.target.value)} error={fe.title} hint="A few words. Avoid names or details you haven't been given permission to share." />
-        <TextAreaField label="Your request" name="body" required maxLength={PRAYER_LIMITS.body} rows={7} value={body} onChange={(e) => setBody(e.target.value)} error={fe.body} hint={FORMAT_HINT} />
+        <div className="space-y-1.5">
+          <label htmlFor="field-body" className="block font-semibold text-text">
+            Your request
+          </label>
+          <p id="field-body-hint" className="text-meta text-text-secondary">
+            {FORMAT_HINT}
+          </p>
+          <MentionTextarea
+            id="field-body"
+            name="body"
+            required
+            maxLength={PRAYER_LIMITS.body}
+            minRows={7}
+            value={body}
+            onValueChange={setBody}
+            place={{ module: "prayer", audience, groupId: audience === "group" ? groupId || null : null, anonymous }}
+            aria-invalid={fe.body ? true : undefined}
+            aria-describedby={fe.body ? "field-body-hint field-body-audience field-body-error" : "field-body-hint field-body-audience"}
+            className={cn("min-h-32 leading-relaxed", fe.body && "border-danger")}
+          />
+          <p id="field-body-audience" className="flex items-start gap-1.5 text-meta text-text-secondary">
+            <span className="mt-0.5 shrink-0 text-primary">{AUDIENCE_ICON[audience]}</span>
+            <span>
+              <strong className="text-text">Seen by {audienceLabel}.</strong>{" "}
+              {audience === "team"
+                ? "Mentions aren't available on confidential requests."
+                : audience === "private"
+                  ? "Mentions are checked and sent only when you share it."
+                  : "Mentioning someone lets them know about this request. It doesn't share it with anyone else, or say the request is about them."}
+            </span>
+          </p>
+          {fe.body ? (
+            <p id="field-body-error" className="flex items-start gap-1.5 text-meta font-medium text-danger">
+              <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>
+                <span className="sr-only">Error: </span>
+                {fe.body[0]}
+              </span>
+            </p>
+          ) : null}
+          {blocked.length ? (
+            <div ref={problemRef} tabIndex={-1} role="alert" className="space-y-2 rounded-tile border border-danger bg-surface px-4 py-3 text-meta outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <p className="font-semibold text-danger">
+                {result?.unavailable === "team" ? "Confidential requests can't mention anyone. Remove these mentions or choose another audience:" : "Fix these mentions before saving:"}
+              </p>
+              <ul className="space-y-1.5">
+                {blocked.map((m) => (
+                  <li key={`${m.kind ?? "member"}-${m.id}-${m.start}`} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{result?.unavailable === "team" ? `@${m.name}` : problemText(m, audienceLabel)}</span>
+                    <Button size="sm" variant="secondary" onClick={() => removeOne(m)}>
+                      Remove @{m.name}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-text-secondary">Nothing has been saved yet, and the audience is never widened to make a mention fit.</p>
+            </div>
+          ) : null}
+          {quiet.length ? (
+            <ul className="space-y-1 text-meta text-text-secondary">
+              {quiet.map((m) => (
+                <li key={`quiet-${m.id}-${m.start}`} className="flex items-start gap-1.5">
+                  <Users className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                  <span>
+                    @{m.name} will be mentioned without notifying anyone{anonymous ? ": groups aren't notified from anonymous requests." : "."}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
 
         <fieldset className="space-y-2">
           <legend className="mb-1 font-semibold">Who can see it?</legend>
@@ -144,7 +270,19 @@ export function RequestComposer({ action, groups, initial }: { action: Action; g
             {anonymous ? <EyeOff className="size-3.5" aria-hidden="true" /> : <UserRound className="size-3.5" aria-hidden="true" />}
             {anonymous ? "Anonymous" : "Your name"} · just now
           </p>
-          <div className="mt-3">{body.trim() ? <CommunityText source={body} /> : <p className="text-text-secondary">Your request will appear here.</p>}</div>
+          <div className="mt-3">
+            {body.trim() ? (
+              <CommunityText source={body} mentions={mentions.map((m) => ({ id: m.id, name: m.name, listed: false, kind: m.kind }))} />
+            ) : (
+              <p className="text-text-secondary">Your request will appear here.</p>
+            )}
+          </div>
+          {mentions.length ? (
+            <p className="mt-2 flex items-center gap-1.5 text-meta text-text-secondary">
+              <AtSign className="size-3.5" aria-hidden="true" />
+              Mentioned people and groups are told about it if they can already see it.
+            </p>
+          ) : null}
           <p className="mt-3 text-meta text-text-secondary">{commentsEnabled ? "Comments on" : "Comments off"}</p>
         </div>
       </aside>
