@@ -1,9 +1,10 @@
-/* eslint-disable @next/next/no-img-element -- short-lived signed URLs */
 import { Film, Headphones } from "lucide-react";
 import Link from "next/link";
 import { TileIcon } from "@/components/icons/icon";
 import { durationLabel, formatDay, itemDate, itemHref, speakers } from "@/lib/media/format";
+import { parseFraming } from "@/lib/media/framing";
 import type { ItemCard } from "@/lib/media/types";
+import { FramedImage } from "./framed-image";
 import { itemCover } from "./item-card";
 
 /** A larger card for "Latest lesson" and similar single highlights. */
@@ -14,7 +15,13 @@ export function FeaturedItem({ item, urls, eyebrow }: { item: ItemCard; urls: Ma
   return (
     <Link href={itemHref(item)} className="interactive block overflow-hidden rounded-card border border-border bg-surface shadow-(--elev-card) hover:bg-surface-muted/40">
       {cover ? (
-        <img src={cover} alt={item.cover?.alt ?? ""} className="aspect-[16/9] w-full object-cover" />
+        <FramedImage
+          src={cover}
+          alt={item.cover?.alt ?? ""}
+          framing={parseFraming(item.cover?.framing)}
+          fit={item.kind === "book" && !item.cover?.framing ? "contain" : "cover"}
+          className="aspect-[16/9] w-full bg-surface-muted"
+        />
       ) : (
         <div className="flex aspect-[16/7] items-center justify-center bg-surface-muted" aria-hidden="true">
           <TileIcon name="lessons" className="size-16" />

@@ -1,11 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
+import { useCroppedFileInput } from "@/components/media/use-cropped-file-input";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAMPAIGN_TRANSITIONS, type CampaignStatus } from "@/lib/giving/campaigns";
-import { initialFormState } from "@/lib/forms";
+import { initialFormState, type FormState } from "@/lib/forms";
 import { campaignStatusAction, saveCampaignAction } from "./actions";
 
 export type CampaignFormValues = {
@@ -24,7 +25,13 @@ export type CampaignFormValues = {
 };
 
 export function CampaignForm({ initial, funds }: { initial?: CampaignFormValues; funds: Array<{ id: string; name: string; active: boolean }> }) {
-  const [state, action] = useActionState(saveCampaignAction, initialFormState);
+  // Counts successful saves, so the image picker starts over from what was saved.
+  const [state, action] = useActionState<FormState & { saves?: number }, FormData>(async (prev, formData) => {
+    const result = await saveCampaignAction(prev, formData);
+    return { ...result, saves: (prev.saves ?? 0) + (result.status === "success" ? 1 : 0) };
+  }, initialFormState);
+  // Campaign cards show the image at 16:7.
+  const image = useCroppedFileInput({ aspect: 16 / 7, frameLabel: "16:7", savedKey: state.saves ?? 0 });
   const v = { ...(initial ?? {}), ...(state.status === "error" ? (state.values ?? {}) : {}) } as Partial<CampaignFormValues> & Record<string, string>;
   const err = state.fieldErrors ?? {};
   const readOnly = initial?.status === "archived";
@@ -79,9 +86,16 @@ export function CampaignForm({ initial, funds }: { initial?: CampaignFormValues;
             Image <span className="font-normal text-text-secondary">(optional)</span>
           </label>
           <p id="campaign-image-hint" className="text-meta text-text-secondary">
-            JPEG, PNG, or WebP, at least 320 pixels. It&apos;s resized and stored without location or camera details.
+            JPEG, PNG, or WebP, at least 320 pixels. You can crop it to the campaign card&apos;s 16:7 frame or keep it whole. It&apos;s resized and stored without
+            location or camera details.
           </p>
-          <input id="campaign-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="campaign-image-hint" className="block w-full text-sm" />
+          <input id="campaign-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="campaign-image-hint" className="block w-full text-sm" {...image.inputProps} />
+          {image.preview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- local object-URL preview
+            <img src={image.preview} alt="" className="aspect-[16/7] w-full max-w-md rounded-tile bg-surface-muted object-cover" />
+          ) : null}
+          {image.controls}
+          {image.dialog}
           {err.image ? <p className="text-meta font-medium text-danger">{err.image[0]}</p> : null}
         </div>
         <TextField label="Image description" name="imageAlt" optional maxLength={200} hint="For people using screen readers, e.g. “The church roof under repair”." defaultValue={v.imageAlt} />

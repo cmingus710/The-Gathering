@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- signed-URL and object-URL previews */
 import { LogOut, Send, UserMinus, UserPlus } from "lucide-react";
 import { useActionState, useEffect, useState, useTransition } from "react";
+import { useCroppedFileInput } from "@/components/media/use-cropped-file-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -333,13 +334,17 @@ export function GroupDetailsForm({
   imageUrl: string | null;
   isAdmin: boolean;
 }) {
-  const [state, action] = useActionState<FormState, FormData>(saveGroupAction, initialFormState);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [tooLarge, setTooLarge] = useState(false);
+  // Counts successful saves, so the image picker starts over from what was saved.
+  const [state, action] = useActionState<FormState & { saves?: number }, FormData>(async (prev, formData) => {
+    const result = await saveGroupAction(prev, formData);
+    return { ...result, saves: (prev.saves ?? 0) + (result.status === "success" ? 1 : 0) };
+  }, initialFormState);
+  // Group cards show the image as a square tile.
+  const image = useCroppedFileInput({ aspect: 1, frameLabel: "a square", maxBytes: MAX_COVER_BYTES, savedKey: state.saves ?? 0 });
+  const preview = image.preview;
   const [visibility, setVisibility] = useState(group.visibility);
   const v = state.values;
   const fe = state.fieldErrors ?? {};
-  useEffect(() => () => (preview ? URL.revokeObjectURL(preview) : undefined), [preview]);
   return (
     <form action={action} className="space-y-4" encType="multipart/form-data">
       <FormMessage state={state} />
@@ -384,17 +389,15 @@ export function GroupDetailsForm({
           name="image"
           accept="image/jpeg,image/png,image/webp"
           aria-describedby="group-image-hint"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            setTooLarge(!!f && f.size > MAX_COVER_BYTES);
-            setPreview(f ? URL.createObjectURL(f) : null);
-          }}
+          {...image.inputProps}
           className="block w-full text-sm"
         />
+        {image.controls}
+        {image.dialog}
         <p id="group-image-hint" className="text-meta text-text-secondary">
           JPEG, PNG, or WebP up to 4 MB. It&apos;s resized and its location data removed. Visible to anyone who can see the group.
         </p>
-        {tooLarge ? <p role="alert" className="text-sm text-danger">That file is over 4 MB. Choose a smaller image.</p> : null}
+        {image.tooLarge ? <p role="alert" className="text-sm text-danger">That file is over 4 MB. Choose a smaller image.</p> : null}
         {fe.image ? <p role="alert" className="text-sm text-danger">{fe.image[0]}</p> : null}
         <TextField label="Image description" name="imageAlt" maxLength={300} defaultValue={v?.imageAlt ?? group.image_alt ?? ""} error={fe.imageAlt} hint="Describe the image for people who can't see it." />
         {group.image_path ? <CheckboxField name="removeImage" label="Remove the current image" /> : null}

@@ -371,6 +371,9 @@ export function ContentForm({
             maxUploadMb={data.imageMaxMb}
             saveLabel={item ? "Save changes" : "Save draft"}
             onChange={setCover}
+            framingName="cover_framing"
+            defaultFraming={item?.cover_framing}
+            frame={kind === "book" ? "book" : "wide"}
           />
         </Section>
 

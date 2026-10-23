@@ -321,6 +321,25 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - `gallery_moderator` displayed as "Media gallery moderator";
   - no standalone video pages yet. After the migration, the owner added the 8 Emotionally Healthy Spirituality library videos to the published, members-only album "Emotionally Healthy Spirituality Video Series" and approved them (minors reviewed as none); each is now used once. No provider check recorded for them yet.
 
+## Media cover framing (2026-11-10)
+
+- **New (additive; no applied migration was edited):** `20261110000100_media_cover_framing` (first written as `20261109000100`, renumbered because that version and `20261109000200` belong to the video migrations merged in #47; the body is unchanged):
+  - nullable `cover_framing jsonb` on `media.items` and `media.series` (`{x, y, zoom}`; null = centred, the current look), with check constraints written as plain expressions;
+  - triggers `items_reset_cover_framing` / `series_reset_cover_framing` clear it when the cover image changes;
+  - private helpers `media.clean_framing`, `media.reset_cover_framing` (no API grants);
+  - new editor function `public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb)`, granted to `authenticated` only (content editors; publishers once an item is scheduled, published, or archived; audited);
+  - replaced with the same signatures: `media.cover_json`, `public.media_series`, `public.media_admin_taxonomy` (framing added to what they return). The video migration replaces none of these; its `media.item_card` builds covers through `media.cover_json`, so cards carry the framing.
+  - No existing rows change. Anon baseline unchanged. See [media-cropping.md](media-cropping.md).
+- **Hosted (2026-10-23):** the owner applied it while it was still numbered `20261109000100`. That version is recorded for `media_video_kind`, so cover framing has no history row of its own. Read-only check afterwards:
+  - `20261108000100`, `20261109000100` (`media_video_kind`) and `20261109000200` (`media_videos`) recorded, 71 versions in history, and none for cover framing;
+  - all 11 objects identical to a fresh local build of every migration (md5 of the six function bodies, both check constraints, both triggers, plus `media.item_card` from the video migration);
+  - `media_admin_cover_framing_save` executable by `authenticated` and not `anon`; `media.clean_framing` not callable by clients;
+  - no item or series has a framing yet (all covers centred);
+  - anon-executable public functions: 34 (unchanged from the video migration).
+- **Record script:** `supabase/manual/2026-11-10-record-media-cover-framing.sql`. It creates, replaces, and grants nothing: it checks every object above by md5 and the grants, requires `20261109000200`, then inserts version `20261110000100` (`created_by = media-cover-framing`). One transaction; any difference or a second run stops with "Nothing was changed".
+- **Rehearsal (local, PostgreSQL 16):** on a fresh build of every migration with a history row for `20261109000200`, the script recorded the version, and a second run stopped. With one function body altered, it stopped and named that function.
+- **Recorded (2026-10-23):** the owner ran the record script. Read-only check afterwards: `20261110000100` recorded as `media_cover_framing` (`created_by = media-cover-framing`), 72 versions in history, with `20261109000100` / `20261109000200` still `media_video_kind` / `media_videos`. Applied and recorded; nothing left to do on hosted.
+
 ## Licensed versions in memory collections (2026-11-11)
 
 - **New (additive; no applied migration was edited):** `20261111000100_memory_licensed_collections`:

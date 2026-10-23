@@ -1,11 +1,12 @@
-/* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
 import { Film, Headphones } from "lucide-react";
 import Link from "next/link";
 import { TileIcon } from "@/components/icons/icon";
 import { cn } from "@/components/ui/cn";
+import { parseFraming } from "@/lib/media/framing";
 import { durationLabel, formatDay, itemDate, itemHref, KIND_LABEL, speakers } from "@/lib/media/format";
 import type { ItemCard as Item, ItemKind } from "@/lib/media/types";
 import type { IconName } from "@/lib/icons";
+import { FramedImage } from "./framed-image";
 
 const GLYPH: Record<ItemKind, IconName> = {
   devotional: "devotionals",
@@ -38,7 +39,14 @@ export function ItemCard({ item, urls, showKind = false, className }: { item: It
   return (
     <Link href={itemHref(item)} className={cn("interactive flex gap-3.5 rounded-card border border-border bg-surface p-3 hover:bg-surface-muted/60", className)}>
       {cover ? (
-        <img src={cover} alt="" className="size-20 shrink-0 rounded-tile object-cover sm:size-24" />
+        <FramedImage
+          src={cover}
+          alt=""
+          framing={parseFraming(item.cover?.framing)}
+          // A book shows its whole cover unless it was set to fill the card.
+          fit={item.kind === "book" && !item.cover?.framing ? "contain" : "cover"}
+          className="size-20 shrink-0 rounded-tile bg-surface-muted sm:size-24"
+        />
       ) : (
         <span className="flex size-20 shrink-0 items-center justify-center rounded-tile bg-surface-muted sm:size-24" aria-hidden="true">
           <TileIcon name={GLYPH[item.kind]} className="size-12" />

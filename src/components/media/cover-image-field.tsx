@@ -1,22 +1,46 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
-import { ImagePlus, Images, LoaderCircle, RotateCcw, Search, Trash2, Upload, X } from "lucide-react";
+import { Crop, ImagePlus, Images, LoaderCircle, RotateCcw, Search, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { beginAssetUpload, cancelAssetUpload, finishAssetUpload, type BeginResult } from "@/app/admin/media/actions";
 import { describeLibraryImage, listLibraryImages, type ImageChoice } from "@/app/admin/media/picker-actions";
+import { ImageCropper, WHOLE_PHOTO, type CropShape } from "@/components/media/image-cropper";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { TextField } from "@/components/ui/field";
 import { ACCEPT, formatBytes } from "@/lib/media/files";
+import { cleanFraming, framingStyle, isCentred, parseFraming, type Framing } from "@/lib/media/framing";
+import { loadEditableImage } from "@/lib/media/image-edit";
 import { startUpload, type UploadHandle } from "@/lib/media/upload-client";
 
 type UploadState =
   | { state: "idle" }
   | { state: "uploading" | "processing"; file: File; sent: number; begun?: Extract<BeginResult, { ok: true }> }
   | { state: "failed"; file: File; message: string; begun?: Extract<BeginResult, { ok: true }> };
+
+/**
+ * Where the cover is shown decides how it can be framed. Lessons,
+ * devotionals, and episodes appear in 16:9 highlights and square cards; a
+ * series on its page (wider) and in cards; a book shows its whole portrait
+ * cover unless it's set to fill the square cards.
+ */
+export type CoverFrame = "wide" | "series" | "book";
+const FRAMES: Record<CoverFrame, { shapes: CropShape[]; previews: Array<{ label: string; aspect: number }> }> = {
+  wide: { shapes: [{ id: "wide", label: "16:9", aspect: 16 / 9 }], previews: [{ label: "Cards", aspect: 1 }] },
+  series: {
+    shapes: [{ id: "wide", label: "16:9", aspect: 16 / 9 }],
+    previews: [
+      { label: "Series page", aspect: 5 / 2 },
+      { label: "Cards", aspect: 1 },
+    ],
+  },
+  book: { shapes: [{ ...WHOLE_PHOTO, label: "Whole cover" }, { id: "card", label: "Fill square cards", aspect: 1 }], previews: [] },
+};
+
+type Cropping = { url: string; width: number; height: number; release?: () => void; file?: File };
 
 const titleFrom = (name: string) => name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 160) || "Untitled";
 
@@ -38,6 +62,9 @@ export function CoverImageField({
   saveLabel,
   label = "Cover image",
   onChange,
+  framingName,
+  defaultFraming,
+  frame = "wide",
 }: {
   /** Form field that carries the chosen asset id ("" for none). */
   name: string;
@@ -52,6 +79,10 @@ export function CoverImageField({
   saveLabel: string;
   label?: string;
   onChange?: (image: ImageChoice | null) => void;
+  /** Form field for how THIS item or series positions the image (JSON, "" = centred). Omit to offer no positioning. */
+  framingName?: string;
+  defaultFraming?: Framing | null;
+  frame?: CoverFrame;
 }) {
   const id = useId();
   const [savedId] = useState(defaultAssetId ?? "");
@@ -63,6 +94,13 @@ export function CoverImageField({
   const [altBefore] = useState(defaultAlt);
   const [upload, setUpload] = useState<UploadState>({ state: "idle" });
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [savedFraming] = useState(() => parseFraming(defaultFraming ?? null));
+  const [framing, setFraming] = useState<Framing | null>(savedFraming);
+  const [cropping, setCropping] = useState<Cropping | null>(null);
+  const [opening, setOpening] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  /** The position chosen before uploading, applied once the upload is ready. */
+  const pendingFraming = useRef<Framing | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const handle = useRef<UploadHandle | null>(null);
@@ -70,6 +108,12 @@ export function CoverImageField({
   const attempt = useRef(0);
   const refreshed = useRef(false);
   const limitMb = maxUploadMb ?? 25;
+  const croppingRef = useRef(cropping);
+  useEffect(() => {
+    croppingRef.current = cropping;
+  });
+  // Free a decoded local image if the form goes away mid-crop.
+  useEffect(() => () => croppingRef.current?.release?.(), []);
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -93,10 +137,12 @@ export function CoverImageField({
     };
   }, [savedId]);
 
-  const choose = useCallback((img: ImageChoice | null) => {
+  const choose = useCallback((img: ImageChoice | null, position: Framing | null = null) => {
     currentId.current = img?.id ?? "";
     setAssetId(img?.id ?? "");
     setImage(img);
+    // A position belongs to one image: a different one starts centred.
+    setFraming(position);
     refreshed.current = false;
     onChangeRef.current?.(img);
   }, []);
@@ -157,21 +203,76 @@ export function CoverImageField({
       }
       const img = await describeLibraryImage(done.id);
       if (n !== attempt.current) return;
-      choose(img ?? { id: done.id, title: titleFrom(file.name), alt_text: "", width: null, height: null, public_ok: false, status: "ready", url: null });
+      choose(img ?? { id: done.id, title: titleFrom(file.name), alt_text: "", width: null, height: null, public_ok: false, status: "ready", url: null }, pendingFraming.current);
+      pendingFraming.current = null;
       setUpload({ state: "idle" });
     } catch {
       if (n === attempt.current) setUpload({ state: "failed", file, message: "The connection to the server was lost. Try again." });
     }
   }
 
-  function pick(files: FileList | null | undefined) {
+  async function pick(files: FileList | null | undefined) {
     const file = files?.[0];
+    // No file: the picker was dismissed. Nothing changes.
     if (!file || upload.state === "uploading" || upload.state === "processing") return;
     if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp|hei[cf])$/i.test(file.name)) {
       setUpload({ state: "failed", file, message: "Choose a JPEG, PNG, WebP, or HEIC image." });
       return;
     }
-    void run(file);
+    setNote(null);
+    pendingFraming.current = null;
+    if (!framingName) return void run(file);
+    if (file.size > limitMb * 1024 * 1024) return void run(file); // run() explains the limit
+    // Position it first; nothing is uploaded until "Use image".
+    setOpening(true);
+    try {
+      const img = await loadEditableImage(file);
+      setCropping({ url: img.url, width: img.width, height: img.height, release: img.release, file });
+    } catch {
+      // This browser can't show it (e.g. HEIC outside Safari): upload it, then it can be positioned.
+      setNote("This image can't be previewed in this browser. It's being uploaded as is; you can reposition it once it's ready.");
+      void run(file);
+    } finally {
+      setOpening(false);
+    }
+  }
+
+  /** Opens the current cover for repositioning (the library copy; nothing is uploaded). */
+  async function reposition() {
+    if (!image?.url) return;
+    let { width, height } = image;
+    if (!width || !height) {
+      setOpening(true);
+      const probe = new Image();
+      probe.src = image.url;
+      try {
+        await probe.decode();
+        width = probe.naturalWidth;
+        height = probe.naturalHeight;
+      } catch {
+        setNote("The image couldn't be loaded for repositioning. Try again.");
+        return;
+      } finally {
+        setOpening(false);
+      }
+    }
+    setCropping({ url: image.url, width, height });
+  }
+
+  function closeCropper() {
+    cropping?.release?.();
+    setCropping(null);
+  }
+
+  function applyFraming(shape: CropShape, chosen: Framing) {
+    // Books keep their whole cover unless set to fill cards; elsewhere centred is the default.
+    const next = !shape.aspect ? null : frame !== "book" && isCentred(cleanFraming(chosen)) ? null : cleanFraming(chosen);
+    const file = cropping?.file;
+    closeCropper();
+    if (file) {
+      pendingFraming.current = next;
+      void run(file);
+    } else setFraming(next);
   }
 
   function cancel() {
@@ -183,12 +284,14 @@ export function CoverImageField({
   }
 
   const busy = upload.state === "uploading" || upload.state === "processing";
-  const changed = assetId !== savedId;
+  const framingChanged = JSON.stringify(framing) !== JSON.stringify(savedFraming);
+  const changed = assetId !== savedId || (!!assetId && framingChanged);
+  const frameSpec = FRAMES[frame];
   const pct = busy && upload.file.size ? Math.round((upload.sent / upload.file.size) * 100) : 0;
   const altChanged = alt.trim() !== altBefore.trim();
 
   const uploadButton = canUpload ? (
-    <Button variant="secondary" size="sm" icon={<Upload className="size-4" aria-hidden="true" />} onClick={() => fileInput.current?.click()} disabled={busy}>
+    <Button variant="secondary" size="sm" icon={<Upload className="size-4" aria-hidden="true" />} onClick={() => fileInput.current?.click()} disabled={busy || opening}>
       {assetId ? "Upload a new image" : "Upload image"}
     </Button>
   ) : null;
@@ -201,6 +304,7 @@ export function CoverImageField({
   return (
     <div className="space-y-4">
       <input type="hidden" name={name} value={assetId} />
+      {framingName ? <input type="hidden" name={framingName} value={assetId && framing ? JSON.stringify(framing) : ""} /> : null}
       <div
         role="group"
         aria-labelledby={`${id}-label`}
@@ -215,7 +319,7 @@ export function CoverImageField({
           if (!canUpload) return;
           e.preventDefault();
           setDragging(false);
-          pick(e.dataTransfer.files);
+          void pick(e.dataTransfer.files);
         }}
         className={cn("rounded-tile border border-border p-3 sm:p-4", dragging && "border-primary bg-primary-soft", !assetId && "border-dashed")}
       >
@@ -223,12 +327,18 @@ export function CoverImageField({
           {label}
         </p>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-control bg-surface-muted sm:w-64">
+          <div
+            className={cn(
+              "relative shrink-0 overflow-hidden rounded-control bg-surface-muted",
+              frame === "book" ? (framing ? "aspect-square w-40" : "aspect-[2/3] w-32") : "aspect-[16/9] w-full sm:w-64",
+            )}
+          >
             {assetId && image?.url ? (
               <img
                 src={image.url}
                 alt={alt.trim() || image.alt_text || ""}
-                className="size-full object-cover"
+                className="size-full"
+                style={frame === "book" && !framing ? { objectFit: "contain" } : framingStyle(framing)}
                 onError={() => {
                   // The signed link expired (5 minutes): fetch a fresh one once.
                   if (refreshed.current) return;
@@ -269,6 +379,11 @@ export function CoverImageField({
             <div className="flex flex-wrap gap-2">
               {uploadButton}
               {libraryButton}
+              {framingName && assetId && image?.url ? (
+                <Button variant="secondary" size="sm" icon={<Crop className="size-4" aria-hidden="true" />} onClick={() => void reposition()} disabled={busy || opening} aria-haspopup="dialog">
+                  {frame === "book" ? "Position cover" : "Reposition"}
+                </Button>
+              ) : null}
               {assetId ? (
                 <Button variant="ghost" size="sm" icon={<Trash2 className="size-4" aria-hidden="true" />} onClick={() => choose(null)} disabled={busy}>
                   Remove
@@ -284,16 +399,23 @@ export function CoverImageField({
                 tabIndex={-1}
                 aria-hidden="true"
                 onChange={(e) => {
-                  pick(e.target.files);
+                  void pick(e.target.files);
                   e.target.value = "";
                 }}
               />
             ) : null}
             <p id={`${id}-help`} className="text-meta text-text-secondary">
               {canUpload
-                ? `JPEG, PNG, WebP, or HEIC, up to ${limitMb} MB. Uploads are added to the media library; location and camera data are removed.`
+                ? `JPEG, PNG, WebP, or HEIC, up to ${limitMb} MB. Uploads are added to the media library whole; location and camera data are removed.`
                 : "Choose a ready image from the media library. Uploading needs the media manager role."}
+              {framingName ? " Positioning applies here only; the library image and other places using it don't change." : ""}
             </p>
+            {opening ? (
+              <p role="status" className="flex items-center gap-2 text-meta text-text-secondary">
+                <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Opening the image…
+              </p>
+            ) : null}
+            {note ? <p className="text-meta text-text-secondary">{note}</p> : null}
           </div>
         </div>
 
@@ -340,7 +462,7 @@ export function CoverImageField({
           {changed && !busy ? (
             <p className="mt-3 rounded-control bg-primary-soft px-3 py-2 text-meta">
               <span className="font-semibold">Not saved yet.</span> Select <span className="font-semibold">{saveLabel}</span> to{" "}
-              {assetId ? "use this cover" : "remove the cover"}.{assetId ? "" : " The image stays in the media library."} Choosing an image never publishes anything.
+              {assetId ? (assetId === savedId ? "use this position" : "use this cover") : "remove the cover"}.{assetId ? "" : " The image stays in the media library."} Choosing an image never publishes anything.
             </p>
           ) : null}
         </div>
@@ -366,6 +488,21 @@ export function CoverImageField({
         <p className="-mt-2 text-meta text-text-secondary">You picked a different image: check that the description still matches it.</p>
       ) : null}
 
+      {cropping ? (
+        <ImageCropper
+          image={cropping}
+          title={cropping.file ? (frame === "book" ? "Check the book cover" : "Position the cover") : frame === "book" ? "Position the cover" : "Reposition the cover"}
+          description={cropping.file ? "Nothing is uploaded until you choose Use image." : "Only here: the library image doesn't change."}
+          shapes={frameSpec.shapes}
+          initialShape={frame === "book" ? (framing ? "card" : WHOLE_PHOTO.id) : undefined}
+          initialFraming={cropping.file ? null : framing}
+          previews={frameSpec.previews}
+          applyLabel={cropping.file ? "Use image" : "Apply"}
+          onCancel={closeCropper}
+          onApply={({ shape, framing: f }) => applyFraming(shape, f)}
+        />
+      ) : null}
+
       {pickerOpen ? (
         <LibraryPicker
           current={assetId}
@@ -378,7 +515,8 @@ export function CoverImageField({
           onChoose={(img) => {
             setPickerOpen(false);
             setUpload({ state: "idle" });
-            choose(img);
+            // Choosing the same image again keeps its position here.
+            choose(img, img.id === assetId ? framing : null);
           }}
         />
       ) : null}
@@ -456,7 +594,8 @@ function LibraryPicker({
       onClose={onClose}
       className="m-0 h-dvh max-h-none w-full max-w-none bg-surface p-0 text-text backdrop:bg-black/50 backdrop:backdrop-blur-[2px] sm:m-auto sm:h-[min(44rem,calc(100dvh-2rem))] sm:w-[min(52rem,calc(100%-2rem))] sm:rounded-card sm:border sm:border-border sm:shadow-(--elev-lift)"
     >
-      <div className="flex h-full flex-col">
+      {/* Clear of the notch and rounded corners when it fills a phone screen (installed app included). */}
+      <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
         <div className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
           <h2 id={titleId} className="min-w-0 flex-1 font-display text-xl font-semibold">
             Choose a cover image
