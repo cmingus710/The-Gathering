@@ -9,7 +9,7 @@ const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
  * Licensed API versions in church and group memory collections
- * (20261109000100) against a real database: one eligibility rule for every
+ * (20261111000100) against a real database: one eligibility rule for every
  * selector (published stored text; published licensed versions only with
  * their memory permission; drafts never listed); collection creation,
  * passage assignment without stored text, publishing, member practice in

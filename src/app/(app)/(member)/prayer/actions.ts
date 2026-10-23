@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { deliverCommunityNow } from "@/lib/community/server";
 import { errorState, type FormState } from "@/lib/forms";
+import { withSafeLinks } from "@/lib/links/validate";
 import { PRAYER_LIMITS } from "@/lib/prayer/format";
 import type { PrayerPage } from "@/lib/prayer/types";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -38,7 +39,7 @@ function refresh(id?: string) {
 
 const requestSchema = z.object({
   title: z.string().trim().min(3, "Give your request a short title (at least 3 characters).").max(PRAYER_LIMITS.title, `Keep the title to ${PRAYER_LIMITS.title} characters.`),
-  body: z.string().trim().min(1, "Share what you'd like prayer for.").max(PRAYER_LIMITS.body, `Keep it to ${PRAYER_LIMITS.body.toLocaleString()} characters.`),
+  body: withSafeLinks(z.string().trim().min(1, "Share what you'd like prayer for.").max(PRAYER_LIMITS.body, `Keep it to ${PRAYER_LIMITS.body.toLocaleString()} characters.`)),
   audience: z.enum(AUDIENCES, { message: "Choose who can see your request." }),
 });
 
@@ -119,7 +120,7 @@ export async function setCommentsAction(_prev: FormState, formData: FormData): P
   return { status: "success", message: on ? "Comments are on." : "Comments are off." };
 }
 
-const textSchema = (max: number, label: string) => z.string().trim().min(1, `Write ${label} first.`).max(max, `Keep it to ${max.toLocaleString()} characters.`);
+const textSchema = (max: number, label: string) => withSafeLinks(z.string().trim().min(1, `Write ${label} first.`).max(max, `Keep it to ${max.toLocaleString()} characters.`));
 
 export async function addUpdateAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = uuid.safeParse(formData.get("requestId")).data;

@@ -11,7 +11,7 @@ import { signPaths } from "@/lib/media/storage";
 import type { Album } from "@/lib/media/types";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Photo galleries" };
+export const metadata: Metadata = { title: "Media gallery" };
 
 export default async function GalleryPage() {
   const supabase = await requireClient();
@@ -23,8 +23,8 @@ export default async function GalleryPage() {
   return (
     <>
       <PageHeader
-        title="Photo galleries"
-        description="Photos from church life, shared with members. Never public."
+        title="Media gallery"
+        description="Photos and videos from church life, shared with members. Never public."
         actions={
           <ButtonLink href="/gallery/mine" variant="secondary" size="sm">
             My photos
@@ -53,7 +53,12 @@ export default async function GalleryPage() {
                 <span className="block p-4">
                   <span className="block font-semibold">{a.title}</span>
                   <span className="block text-meta text-text-secondary">
-                    {[a.album_on ? formatDay(a.album_on, "short") : null, `${a.photo_count} ${a.photo_count === 1 ? "photo" : "photos"}`, a.audience === "group" ? a.group_name ?? "One group" : null]
+                    {[
+                      a.album_on ? formatDay(a.album_on, "short") : null,
+                      `${a.photo_count} ${a.photo_count === 1 ? "photo" : "photos"}`,
+                      a.video_count ? `${a.video_count} ${a.video_count === 1 ? "video" : "videos"}` : null,
+                      a.audience === "group" ? a.group_name ?? "One group" : null,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>

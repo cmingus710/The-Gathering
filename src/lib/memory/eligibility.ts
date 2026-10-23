@@ -7,7 +7,7 @@ import type { Activity } from "./types";
 /**
  * Which Bible versions can be used for memory verses: one rule for the
  * administrator's collection selector, members' own-version choices, and
- * every other memory selector (migration 20261109000100).
+ * every other memory selector (migration 20261111000100).
  *
  *   - published versions with their text stored here: always;
  *   - published licensed (API.Bible) versions: only when a Bible source

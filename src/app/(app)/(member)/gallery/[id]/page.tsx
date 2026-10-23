@@ -1,32 +1,44 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AlbumVideo } from "@/components/media/album-video";
 import { GalleryViewer, type ViewerPhoto } from "@/components/media/gallery-viewer";
 import { MyPhotos } from "@/components/media/my-photos";
 import { PhotoUploader } from "@/components/media/photo-uploader";
 import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { cn } from "@/components/ui/cn";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { formatDay, isUuid } from "@/lib/media/format";
 import { signPaths, UPLOAD_BUCKET } from "@/lib/media/storage";
 import type { Album, Photo } from "@/lib/media/types";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Photo album" };
+export const metadata: Metadata = { title: "Media gallery album" };
+
+const SHOW = [
+  { value: "", label: "All" },
+  { value: "photos", label: "Photos" },
+  { value: "videos", label: "Videos" },
+] as const;
 
 type AlbumPage = Album & { photos: Photo[]; my_pending: Photo[]; limits: { file_mb: number; batch_max: number; daily_max: number } };
 
-export default async function AlbumPage({ params }: PageProps<"/gallery/[id]">) {
-  const { id } = await params;
+export default async function AlbumPage({ params, searchParams }: PageProps<"/gallery/[id]">) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const show = sp.show === "photos" || sp.show === "videos" ? sp.show : "";
   if (!isUuid(id)) notFound();
   const supabase = await requireClient();
   const [, { data, error }] = await Promise.all([requireApprovedMember(`/gallery/${id}`), supabase.rpc("media_album", { p_id: id })]);
   if (error || !data) notFound();
   const a = data as AlbumPage;
+  const videos = a.photos.filter((p) => p.kind === "video" && p.video);
+  const stills = a.photos.filter((p) => p.kind !== "video");
   const [urls, reviewUrls] = await Promise.all([
-    signPaths(supabase, [...a.photos.flatMap((p) => [p.thumb_path, p.display_path]), ...a.my_pending.map((p) => p.thumb_path)]),
+    signPaths(supabase, [...stills.flatMap((p) => [p.thumb_path, p.display_path]), ...a.my_pending.map((p) => p.thumb_path)]),
     signPaths(supabase, a.my_pending.map((p) => p.review_thumb_path), UPLOAD_BUCKET),
   ]);
-  const photos: ViewerPhoto[] = a.photos.map((p) => ({
+  const photos: ViewerPhoto[] = stills.map((p) => ({
     id: p.id,
     thumb: urls.get(p.thumb_path ?? "") ?? null,
     display: urls.get(p.display_path ?? "") ?? null,
@@ -50,13 +62,53 @@ export default async function AlbumPage({ params }: PageProps<"/gallery/[id]">) 
         </p>
       ) : null}
 
-      {photos.length ? (
-        <GalleryViewer photos={photos} albumTitle={a.title} />
-      ) : (
-        <EmptyState glyph="gallery" title="No photos yet">
-          {a.can_upload ? "Be the first to add some." : "Photos will appear here after they're approved."}
+      {videos.length && photos.length ? (
+        <nav aria-label="Show" className="mb-5 flex gap-2">
+          {SHOW.map((o) => (
+            <Link
+              key={o.value || "all"}
+              href={{ pathname: `/gallery/${a.id}`, query: o.value ? { show: o.value } : {} }}
+              aria-current={show === o.value ? "page" : undefined}
+              scroll={false}
+              className={cn(
+                "inline-flex min-h-11 items-center rounded-full border px-4 text-meta font-semibold",
+                show === o.value ? "border-text bg-text text-background" : "border-border bg-surface hover:bg-surface-muted",
+              )}
+            >
+              {o.label}
+              {o.value === "photos" ? ` (${photos.length})` : o.value === "videos" ? ` (${videos.length})` : ""}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+
+      {videos.length && show !== "photos" ? (
+        <section aria-labelledby="al-videos" className="mb-8">
+          <SectionHeading id="al-videos" description="Press Play to watch here.">
+            Videos
+          </SectionHeading>
+          <ul className="grid gap-4 md:grid-cols-2">
+            {videos.map((v) => (
+              <li key={v.id}>
+                <AlbumVideo id={v.id} video={v.video!} caption={v.caption} albumTitle={a.title} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {photos.length && show !== "videos" ? (
+        <section aria-labelledby={videos.length ? "al-photos" : undefined} aria-label={videos.length ? undefined : "Photos"}>
+          {videos.length ? <SectionHeading id="al-photos">Photos</SectionHeading> : null}
+          <GalleryViewer photos={photos} albumTitle={a.title} />
+        </section>
+      ) : null}
+
+      {!photos.length && !videos.length ? (
+        <EmptyState glyph="gallery" title="Nothing here yet">
+          {a.can_upload ? "Be the first to add some photos." : "Photos and videos will appear here after they're approved."}
         </EmptyState>
-      )}
+      ) : null}
 
       {a.my_pending.length ? (
         <section aria-labelledby="al-mine" className="mt-8">
@@ -75,8 +127,8 @@ export default async function AlbumPage({ params }: PageProps<"/gallery/[id]">) 
       ) : null}
 
       <p className="mt-8 text-meta text-text-secondary">
-        To ask for a photo to be taken down (for example, if you&apos;re in it), open it and choose “Report or ask to remove.” Anyone who can see these photos
-        can still screenshot them.
+        To ask for a photo or video to be taken down (for example, if you&apos;re in it), open the photo or look under the video and choose “Report or ask to
+        remove.” Anyone who can see these can still screenshot or record them.
       </p>
     </>
   );

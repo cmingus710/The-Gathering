@@ -1,6 +1,6 @@
 # Memory verses in licensed API versions (NIV, NASB, AMP)
 
-Migrations `20261106000100_memory_provider_practice` (members' own verses) and `20261109000100_memory_licensed_collections` (church and group collections). Status: **built and gated**. Nothing is offered to members until a Bible source manager records, per version, that its own terms permit memory practice.
+Migrations `20261106000100_memory_provider_practice` (members' own verses) and `20261111000100_memory_licensed_collections` (church and group collections). Status: **built and gated**. Nothing is offered to members until a Bible source manager records, per version, that its own terms permit memory practice.
 
 ## What the official guidance establishes
 
@@ -76,11 +76,11 @@ What's preserved:
 - default and per-verse translation choice;
 - existing progress;
 - all public-domain practice;
-- assignments: a licensed version can be chosen for an assigned verse when the collection allows a choice; since `20261109000100` a church or group collection can also use one (below).
+- assignments: a licensed version can be chosen for an assigned verse when the collection allows a choice; since `20261111000100` a church or group collection can also use one (below).
 
 ## Church and group collections
 
-Migration `20261109000100_memory_licensed_collections`. It reuses everything above: the same passages without text, fingerprints, permission table, practice modes, server-side fetches, cache, and FUMS reporting. There's no second integration.
+Migration `20261111000100_memory_licensed_collections`. It reuses everything above: the same passages without text, fingerprints, permission table, practice modes, server-side fetches, cache, and FUMS reporting. There's no second integration.
 
 **One eligibility rule** for every memory selector (`memory.translation_eligibility` in the database, `src/lib/memory/eligibility.ts` in the app):
 

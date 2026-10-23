@@ -14,10 +14,10 @@ import { requireClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/time";
 import { resolveReportAction } from "../actions";
 
-export const metadata: Metadata = { title: "Photo reports" };
+export const metadata: Metadata = { title: "Media gallery reports" };
 
 const REASON: Record<string, string> = {
-  removal_request: "Removal request (for example, the person is in the photo)",
+  removal_request: "Removal request (for example, the person is in the photo or video)",
   privacy: "Privacy",
   minor: "Shows a child",
   inappropriate: "Inappropriate",
@@ -49,11 +49,11 @@ export default async function PhotoReportsPage({ searchParams }: PageProps<"/adm
       <PageHeader
         eyebrow={
           <Link href="/admin/gallery" className="hover:underline">
-            Gallery
+            Media gallery
           </Link>
         }
-        title="Photo reports and removal requests"
-        description="Act quickly on removal requests. To take a photo down, open its album and remove or hide it, then mark the report actioned."
+        title="Photo and video reports and removal requests"
+        description="Act quickly on removal requests. To take a photo or video down, open its album and remove or hide it, then mark the report actioned."
       />
       {sp.saved ? <Alert tone="success" title="Report updated." className="mb-6" /> : null}
       {error ? <Alert tone="error" title="Reports couldn't be loaded." className="mb-6" /> : null}
@@ -72,7 +72,9 @@ export default async function PhotoReportsPage({ searchParams }: PageProps<"/adm
                 {r.photo.thumb_path && urls.get(r.photo.thumb_path) ? (
                   <img src={urls.get(r.photo.thumb_path)} alt={r.photo.alt_text} className="size-32 rounded-tile object-cover" />
                 ) : (
-                  <div className="flex size-32 items-center justify-center rounded-tile bg-surface-muted text-meta text-text-secondary">{r.photo.status}</div>
+                  <div className="flex size-32 items-center justify-center rounded-tile bg-surface-muted p-2 text-center text-meta text-text-secondary">
+                    {r.photo.kind === "video" ? `Video (${r.photo.status})` : r.photo.status}
+                  </div>
                 )}
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="font-semibold">{REASON[r.reason] ?? r.reason}</p>

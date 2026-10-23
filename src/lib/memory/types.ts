@@ -73,7 +73,7 @@ export type Collection = {
   audience: "members" | "group" | "personal";
   group_id: string | null;
   group_name: string | null;
-  /** source_kind "api": a licensed version; memory_available: its memory practice is permitted now (20261109000100). */
+  /** source_kind "api": a licensed version; memory_available: its memory practice is permitted now (20261111000100). */
   translation: { id: string; code: string; name: string; source_kind?: "database" | "api"; memory_available?: boolean; memory_modes?: Activity[] };
   /** Members may practice in their own version (false: the collection's version is required). */
   translation_choice: boolean;

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useActionState, useId, useMemo, useState } from "react";
 import type { ImageChoice } from "@/app/admin/media/picker-actions";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
+import { LinkTextAreaField } from "@/components/links/link-tools";
 import { CoverImageField } from "@/components/media/cover-image-field";
+import { VideoPickerField, type PickedVideo } from "@/components/media/video-picker-field";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -14,7 +16,7 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 import { KIND_LABEL } from "@/lib/media/format";
-import type { ItemAdmin, ItemKind } from "@/lib/media/types";
+import type { Attachment, ItemAdmin, ItemKind } from "@/lib/media/types";
 import { saveContentAction } from "./actions";
 import type { AssetChoice, EditorData } from "./editor-data";
 
@@ -36,6 +38,30 @@ function Section({ title, description, children }: { title: string; description?
     </fieldset>
   );
 }
+
+/** Saved video attachments as picker entries (order kept). */
+const pickedFrom = (att: Attachment[]): PickedVideo[] =>
+  att
+    .filter((a) => a.role === "video" && (a.kind === "video" || a.kind === "external_video"))
+    .map((a) => ({
+      asset_id: a.asset_id,
+      kind: a.kind === "external_video" ? "external_video" : "video",
+      title: a.title,
+      provider: a.provider,
+      provider_ref: a.provider_ref,
+      provider_hash: a.provider_hash,
+      duration_seconds: a.duration_seconds,
+      width: a.width,
+      height: a.height,
+      has_thumb: a.has_thumb ?? (a.kind === "external_video" && a.provider === "youtube"),
+      unavailable: a.unavailable ?? false,
+      attribution: a.attribution,
+      captions: a.captions,
+      public_ok: a.public_ok,
+      provider_status: null,
+      caption: a.caption ?? "",
+      members_only: a.members_only,
+    }));
 
 const assetLabel = (a: AssetChoice) => `${a.title}${a.kind === "external_video" ? (a.provider === "vimeo" ? " (Vimeo)" : " (YouTube)") : ""}`;
 
@@ -65,8 +91,7 @@ export function ContentForm({
   const att = item?.attachments ?? [];
   const [audio, setAudio] = useState(att.find((a) => a.role === "audio")?.asset_id ?? "");
   const [audioMembersOnly, setAudioMembersOnly] = useState(att.find((a) => a.role === "audio")?.members_only ?? false);
-  const [video, setVideo] = useState(att.find((a) => a.role === "video")?.asset_id ?? "");
-  const [videoMembersOnly, setVideoMembersOnly] = useState(att.find((a) => a.role === "video")?.members_only ?? false);
+  const [videos, setVideos] = useState<PickedVideo[]>(() => pickedFrom(att));
   const [docs, setDocs] = useState<DocAttachment[]>(
     att.filter((a) => a.role !== "audio" && a.role !== "video").map((a) => ({ asset_id: a.asset_id, role: a.role as DocAttachment["role"], label: a.label, members_only: a.members_only })),
   );
@@ -77,19 +102,20 @@ export function ContentForm({
   const attachments = useMemo(
     () =>
       JSON.stringify([
-        ...(audio ? [{ asset_id: audio, role: "audio", members_only: audioMembersOnly }] : []),
-        ...(video ? [{ asset_id: video, role: "video", members_only: videoMembersOnly }] : []),
-        ...docs.filter((d) => d.asset_id),
+        ...(audio && kind !== "video" ? [{ asset_id: audio, role: "audio", members_only: audioMembersOnly }] : []),
+        // Order here is the order members see; the caption is stored as the attachment's label.
+        ...videos.map((v) => ({ asset_id: v.asset_id, role: "video", label: v.caption.trim(), members_only: v.kind === "video" && v.members_only })),
+        ...(kind !== "video" ? docs.filter((d) => d.asset_id) : []),
       ]),
-    [audio, audioMembersOnly, video, videoMembersOnly, docs],
+    [audio, audioMembersOnly, videos, docs, kind],
   );
   const allAssets = [...data.assets.audio, ...data.assets.video, ...data.assets.document];
-  const chosenVideo = data.assets.video.find((a) => a.id === video);
-  const externalChosen = chosenVideo?.kind === "external_video";
+  const externalChosen = videos.some((v) => v.kind === "external_video");
   const notPublicOk: Array<{ title: string }> =
     audience === "public"
       ? [
-          ...[audio, video, ...docs.map((d) => d.asset_id)].map((id) => allAssets.find((a) => a.id === id)).filter((a) => a && !a.public_ok && a.kind !== "external_video").map((a) => a!),
+          ...[audio, ...docs.map((d) => d.asset_id)].map((id) => allAssets.find((a) => a.id === id)).filter((a) => a && !a.public_ok && a.kind !== "external_video").map((a) => a!),
+          ...videos.filter((v) => v.kind === "video" && !v.public_ok),
           ...(cover && !cover.public_ok ? [{ title: `${cover.title} (cover image)` }] : []),
         ]
       : [];
@@ -200,12 +226,12 @@ export function ContentForm({
               hint="From Spotify: Share → Copy link to playlist. Who can find or play the playlist itself is set in Spotify, not here."
             />
           ) : null}
-          <TextAreaField label="Summary" name="summary" rows={2} maxLength={600} defaultValue={v?.summary ?? item?.summary ?? ""} optional hint="One or two sentences for cards and search." error={fe.summary} />
+          <TextAreaField label="Summary" name="summary" rows={2} maxLength={600} defaultValue={v?.summary ?? item?.summary ?? ""} optional hint={kind === "video" ? "A short description shown on the video's card and in search." : "One or two sentences for cards and search."} error={fe.summary} />
         </Section>
 
         <Section
-          title={kind === "devotional" ? "Devotional" : kind === "lesson" ? "Written summary" : kind === "book" || kind === "playlist" ? "Description" : kind === "assignment" ? "Details" : "Episode notes"}
-          description="Formatting: **bold**, *italic*, ## heading, - list, [link text](https://…). HTML isn't allowed."
+          title={kind === "devotional" ? "Devotional" : kind === "lesson" ? "Written summary" : kind === "book" || kind === "playlist" || kind === "video" ? "Description" : kind === "assignment" ? "Details" : "Episode notes"}
+          description="Add links with the Link button (or Ctrl+K), or paste an address over selected words. Formatting: **bold**, *italic*, ## heading, - list. HTML isn't allowed."
         >
           <div role="tablist" aria-label="Text" className="flex w-fit rounded-control border border-border-strong p-0.5">
             {(["write", "preview"] as const).map((t) => (
@@ -224,13 +250,13 @@ export function ContentForm({
             ))}
           </div>
           <div id={`${tabs}-write-panel`} role="tabpanel" aria-labelledby={`${tabs}-write`} hidden={tab !== "write"}>
-            <TextAreaField label={<span className="sr-only">Text</span>} name="body" rows={14} value={body} onChange={(e) => setBody(e.target.value)} error={fe.body} />
+            <LinkTextAreaField label={<span className="sr-only">Text</span>} name="body" rows={14} value={body} onChange={(e) => setBody(e.target.value)} error={fe.body} />
           </div>
-          <div id={`${tabs}-preview-panel`} role="tabpanel" aria-labelledby={`${tabs}-preview`} hidden={tab !== "preview"} tabIndex={0} className="rounded-control border border-border bg-background p-4">
+          <div id={`${tabs}-preview-panel`} role="tabpanel" aria-labelledby={`${tabs}-preview`} hidden={tab !== "preview"} tabIndex={0} data-links-new-tab className="rounded-control border border-border bg-background p-4">
             {body.trim() ? <MarkdownBody source={body} /> : <p className="text-text-secondary">Nothing written yet.</p>}
           </div>
           {kind === "lesson" ? (
-            <TextAreaField
+            <LinkTextAreaField
               label="Notes shown to members"
               name="notes"
               rows={8}
@@ -240,7 +266,7 @@ export function ContentForm({
               error={fe.notes}
             />
           ) : null}
-          {kind !== "playlist" && kind !== "book" ? (
+          {kind !== "playlist" && kind !== "book" && kind !== "video" ? (
             <TextAreaField
               label={kind === "devotional" ? "Reflection questions" : "Discussion questions"}
               name="questions"
@@ -254,7 +280,26 @@ export function ContentForm({
         </Section>
 
         {kind !== "playlist" ? (
-          <Section title="Media" description="Choose ready files from the media library. Files are shared, never copied, so one recording can serve a lesson and a podcast episode.">
+          <Section
+            title={kind === "video" ? "The video" : "Videos"}
+            description={
+              kind === "video"
+                ? "Choose one library video or paste a link. The same video can also be shown on lessons, devotionals, and reading without copying it."
+                : "Shown in the page itself, in this order, each with a Play button. Videos are shared from the media library, never copied."
+            }
+          >
+            <VideoPickerField value={videos} onChange={setVideos} max={kind === "video" ? 1 : 10} canAddLinks={data.options.can_manage_media && !readOnly} audience={audience} />
+            {externalChosen && audience !== "public" ? (
+              <Alert tone="warning" title="YouTube and Vimeo videos keep their own privacy.">
+                Limiting this page to members or a group doesn&apos;t make the video private. An unlisted YouTube video can be watched by anyone who has its
+                link; only the provider&apos;s own privacy settings control that.
+              </Alert>
+            ) : null}
+          </Section>
+        ) : null}
+
+        {kind !== "playlist" && kind !== "video" ? (
+          <Section title="Audio and files" description="Choose ready files from the media library. Files are shared, never copied, so one recording can serve a lesson and a podcast episode.">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <SelectField label="Audio" name="_audio" value={audio} onChange={(e) => setAudio(e.target.value)} optional>
@@ -267,28 +312,7 @@ export function ContentForm({
                 </SelectField>
                 {audio ? <CheckboxField name="_audio_mo" label="Members only (even when this is public)" checked={audioMembersOnly} onChange={(e) => setAudioMembersOnly(e.target.checked)} /> : null}
               </div>
-              {kind !== "book" && kind !== "assignment" ? (
-                <div className="space-y-2">
-                  <SelectField label="Video" name="_video" value={video} onChange={(e) => setVideo(e.target.value)} optional>
-                    <option value="">None</option>
-                    {data.assets.video.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {assetLabel(a)}
-                      </option>
-                    ))}
-                  </SelectField>
-                  {video && !externalChosen ? (
-                    <CheckboxField name="_video_mo" label="Members only (even when this is public)" checked={videoMembersOnly} onChange={(e) => setVideoMembersOnly(e.target.checked)} />
-                  ) : null}
-                </div>
-              ) : null}
             </div>
-            {externalChosen && audience !== "public" ? (
-              <Alert tone="warning" title="This video is hosted on YouTube or Vimeo.">
-                Limiting this page to members or a group doesn&apos;t make the video private. Anyone with the video&apos;s link can watch it unless it is private on
-                the provider.
-              </Alert>
-            ) : null}
             <div className="space-y-2">
               <p className="font-semibold">Handouts, slides, and resources</p>
               {docs.map((d, i) => (

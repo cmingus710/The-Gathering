@@ -299,15 +299,44 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Order:** the app can be deployed first. Community person suggestions fall back to `community_mention_search`; group and Prayer suggestions stay empty and the group setting is hidden until the migration exists.
 - **Hosted:** not applied. Needs the owner's approval.
 
-## Licensed versions in memory collections (2026-11-09)
+## Videos: publishing, discovery, attachments, and the Media gallery (2026-11-09)
 
-- **New (additive; no applied migration was edited):** `20261109000100_memory_licensed_collections`:
+- **New (additive; no applied migration was edited):** `20261109000100_media_video_kind` (adds `video` to `media.item_kind`; its own transaction, since a new enum value can't be used where it's added) and `20261109000200_media_videos`:
+  - dropped index `media.item_media_one_video_idx` (several ordered videos per item; `item_media.label` is the caption) and added `item_media_item_role_idx`;
+  - `video` added to the `member_prefs_muted_kinds_check` constraint (nothing removed);
+  - nullable columns `media.assets.provider_status`, `provider_checked_at`, `provider_thumb_url` (Vimeo image host only); `media.photos.kind` (`photo` | `video`, default `photo`, so every existing row stays a photo) and `asset_id` (references `media.assets`, on delete restrict), with check `photos_video`, `photos_approved_files` relaxed for video rows only, index `photos_asset_idx`, and unique `photos_video_once_idx`;
+  - triggers `item_media_video_item` (a standalone video has exactly one video) and `assets_album_videos_follow_replacement`;
+  - new functions: `media_admin_video_link_add`, `media_admin_video_check_save`, `media_admin_video_publish`, `media_admin_album_video_add` (authenticated only); `media_video_thumb` (anon and authenticated; rechecks access like `media_file`); `media_search(text, integer, text)` replaces `media_search(text, integer)` (optional `p_kind`; the two-argument call still works) with the same grants; private `media.video_json`, `media.video_publishing`, `media.external_video_upsert`, and the two trigger functions;
+  - replaced with the same signatures (current definitions plus the video cases): `media.asset_used_visibly`, `asset_usage`, `attachments_json`, `item_card`, `matches`, `photo_json`, `album_json`, `after_review`; `public.media_admin_item_status`, `media_admin_external_video_save` (reuses an existing record for the same video), `media_admin_assets`, `media_admin_asset`, `media_album`, `media_my_photos`, `media_admin_photo_review`, `media_admin_album_cover`;
+  - the `gallery_moderator` role's display name becomes "Media gallery moderator" (key, grants, and holders unchanged), and the `gallery.moderate` description mentions videos.
+  - No content, file, album, or photo is published, hidden, or widened. Anon baseline: 34 (adds `media_video_thumb`). See [videos-guide.md](videos-guide.md).
+- **Operator script:** `supabase/manual/2026-11-09-apply-media-videos.sql`, two transactions (one per migration). Preflights require `20261108000100` (then step 1) and refuse a second run. Post-checks grants, private helpers, both triggers, and that no existing row changed kind. History rows `created_by = media-videos`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261108000100`, the script applied and recorded both versions; a rerun stopped at the preflight. The full test suite (95 files, 1162 tests) passed on a fresh build.
+- **Order:** the app can be deployed first (search without a type filter, existing pages, and the library keep working; Videos stays empty and video publishing and album videos report an error until the migration exists). Apply before announcing videos to members.
+- **Hosted (2026-10-23):** the owner ran the operator script in the SQL editor. Read-only check afterwards:
+  - `20261109000100` and `20261109000200` recorded (`created_by = media-videos`), after `20261108000100`; 71 versions in history;
+  - the 14 new and replaced function bodies (`media.video_json`, `video_publishing`, `external_video_upsert`, `item_card`, `asset_used_visibly`, `attachments_json`, `photo_json`, `album_json`; `public.media_search(text, integer, text)`, `media_video_thumb`, `media_admin_photo_review`, `media_admin_item_status`, `media_admin_assets`, `media_admin_album_video_add`) identical (md5 of the source) to a fresh local build;
+  - enum value `video` present; `item_media_one_video_idx` gone and `item_media_item_role_idx` present; the new `media.assets` and `media.photos` columns, checks `photos_video`, `photos_approved_files`, and `member_prefs_muted_kinds_check` (with `video`), indexes `photos_asset_idx` and `photos_video_once_idx`, and both triggers present;
+  - `media_search(text, integer)` gone; the four administrator video functions executable by `authenticated` and not `anon`; `media_video_thumb` and `media_search` by both; no `media` function executable by clients; anon-executable public functions: 34 (adds `media_video_thumb`);
+  - `gallery_moderator` displayed as "Media gallery moderator";
+  - no standalone video pages yet. After the migration, the owner added the 8 Emotionally Healthy Spirituality library videos to the published, members-only album "Emotionally Healthy Spirituality Video Series" and approved them (minors reviewed as none); each is now used once. No provider check recorded for them yet.
+
+## Licensed versions in memory collections (2026-11-11)
+
+- **New (additive; no applied migration was edited):** `20261111000100_memory_licensed_collections`:
   - no table or column changes;
   - new private helpers `memory.translation_eligibility`, `memory.translation_problem`, `memory.licensed`;
   - new `public.memory_translation_options()` and the overload `public.memory_admin_item_update_text(uuid, text, jsonb)` (the 2-argument signature delegates to it), granted to `authenticated` only;
   - replaced with the same signatures and grants: `memory.collection_visible` (licensed collections hidden from youth accounts), `memory.translation_brief`, `memory.collection_json`, `memory.member_item_json`, `memory.card_json`, `memory.suitability`; `public.memory_admin_home`, `memory_admin_collection_save`, `memory_admin_collection_status`, `memory_admin_collection_duplicate`, `memory_admin_item_add`, `memory_admin_preview`, `memory_card_add`; `youth.child_items`, `public.youth_learning_options`, `youth_learning_assign`.
   - No row is rewritten. `memory.provider_permissions` is untouched, so nothing new is offered until a version's terms are recorded. Anon baseline unchanged. See [memory-provider-practice.md](memory-provider-practice.md#church-and-group-collections).
-- **Operator script:** `supabase/manual/2026-11-09-apply-memory-licensed-collections.sql`, one transaction. The preflight requires `20261106000100` and refuses a second run. It post-checks grants and that the helpers stay private. History row `created_by = memory-licensed-collections`.
+- **Operator script:** `supabase/manual/2026-11-11-apply-memory-licensed-collections.sql`, one transaction. The preflight requires `20261106000100` and refuses a second run. It post-checks grants and that the helpers stay private. History row `created_by = memory-licensed-collections`.
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with their history rows, the script applied and recorded the version. A rerun stopped at the preflight.
 - **Order:** apply the migration before deploying the app (the admin memory pages call `memory_translation_options` and pass the API fetch to `memory_admin_item_add`).
-- **Hosted:** not applied. Needs the owner's approval.
+- **Version:** written as `20261109000100`, renumbered to `20261111000100` because `main` and hosted use `20261109000100`/`200` (media videos) and hosted has `20261110000100` (media cover framing).
+- **Hosted (2026-10-23):** the owner ran the migration in the SQL editor. Read-only check afterwards:
+  - all 22 new and replaced functions are identical to the repository's (md5 of `pg_get_functiondef`);
+  - `memory_translation_options` is executable by `authenticated` and not by `anon`, and `memory.translation_eligibility` isn't executable by clients;
+  - `memory.collection_visible` carries the youth rule;
+  - no licensed collections exist yet. AMP, NIV, and NASB were already permitted for memory (3 permission rows, unchanged), so all three are eligible in the database. The app also requires the API key on the server.
+  - Anon-executable public functions: 34 (unchanged by this migration).
+  - **Not recorded in history yet.** `supabase/manual/2026-11-11-record-memory-licensed-collections.sql` adds only the history row.

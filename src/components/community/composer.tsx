@@ -33,7 +33,7 @@ export function AudienceNotice({ audience, place }: { audience: "church" | "grou
   );
 }
 
-const FORMAT_HINT = "You can use **bold**, _italic_, lists, > quotes, and links. Type @ and a name to mention someone or a group.";
+const FORMAT_HINT = "You can use **bold**, _italic_, lists, and > quotes. Add a link with the Link button, or paste an address over selected words. Type @ and a name to mention someone or a group.";
 
 /**
  * New or edited discussion. Fields are controlled, so the text survives a

@@ -5,7 +5,7 @@ import { ADMIN, MEMBER, noHorizontalScroll, signIn, sql } from "./helpers";
 
 /**
  * Licensed versions in memory collections (local stack only, migration
- * 20261109000100). Synthetic versions stand in for NIV, NASB, AMP: two with
+ * 20261111000100). Synthetic versions stand in for NIV, NASB, AMP: two with
  * their memory permission recorded, one without, one permitted but not
  * connected on this server (its key setting is unset), and a draft. The
  * server runs with API_BIBLE_KEY set to a synthetic value, so permitted

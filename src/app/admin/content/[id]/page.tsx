@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ReasonList } from "@/components/media/reason-list";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
 import { isUuid, KIND_LABEL } from "@/lib/media/format";
 import type { ItemAdmin } from "@/lib/media/types";
+import { itemReasons } from "@/lib/media/visibility";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDateTime, timeZoneLabel, utcToZonedLocal } from "@/lib/time";
@@ -28,6 +30,8 @@ const SAVED: Record<string, string> = {
   archive: "Archived. It's hidden everywhere.",
   restore: "Restored as a draft.",
   expiry: "Expiry saved.",
+  video_created: "Draft video page created from the library video (nothing was copied). Add a description, thumbnail, topics, and audience, preview it, then publish it.",
+  video_existing: "This library video already has a video page, so it opened instead of creating a second one.",
 };
 
 export default async function EditContentPage({ params, searchParams }: PageProps<"/admin/content/[id]">) {
@@ -95,6 +99,10 @@ export default async function EditContentPage({ params, searchParams }: PageProp
               </ButtonLink>
             </Card>
           ) : null}
+          <Card>
+            <SectionHeading>Who can see it now</SectionHeading>
+            <ReasonList reasons={itemReasons(item, (iso) => formatDateTime(iso, tz))} />
+          </Card>
           <Card>
             <SectionHeading>Publishing</SectionHeading>
             <PublishPanel

@@ -26,6 +26,7 @@ const PROTECTED_PREFIXES = [
   "/reading",
   "/music",
   "/gallery",
+  "/videos",
   "/saved",
   // Phase 8: Bible reading (progress, bookmarks, highlights) and journals.
   "/bible",

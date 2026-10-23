@@ -15,7 +15,7 @@ import { loadEditorData } from "../editor-data";
 
 export const metadata: Metadata = { title: "New content" };
 
-const KINDS: ItemKind[] = ["devotional", "lesson", "episode", "book", "assignment", "playlist"];
+const KINDS: ItemKind[] = ["devotional", "lesson", "video", "episode", "book", "assignment", "playlist"];
 
 export default async function NewContentPage({ searchParams }: PageProps<"/admin/content/new">) {
   await requireCapability(CAPABILITIES.contentEdit, "/admin/content/new");

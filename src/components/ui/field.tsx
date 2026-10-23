@@ -108,12 +108,20 @@ export function TextAreaField({
   error,
   optional,
   className,
+  before,
+  after,
   ...input
-}: FieldChrome & Omit<ComponentProps<"textarea">, "name" | "id">) {
+}: FieldChrome & {
+  /** Shown between the label (and hint) and the text box, e.g. a formatting toolbar. */
+  before?: ReactNode;
+  /** Shown right under the text box, e.g. the link bar. */
+  after?: ReactNode;
+} & Omit<ComponentProps<"textarea">, "name" | "id">) {
   const fieldId = id ?? `field-${name}`;
   const message = firstError(error);
   return (
     <Chrome id={fieldId} label={label} hint={hint} error={error} optional={optional} className={className}>
+      {before}
       <textarea
         id={fieldId}
         name={name}
@@ -122,6 +130,7 @@ export function TextAreaField({
         className={cn(control, "min-h-32 leading-relaxed", message ? "border-danger" : "border-border-strong")}
         {...input}
       />
+      {after}
     </Chrome>
   );
 }

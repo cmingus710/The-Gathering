@@ -15,7 +15,7 @@ import { requireClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Teaching content" };
 
-const KINDS: ItemKind[] = ["devotional", "lesson", "episode", "book", "assignment", "playlist"];
+const KINDS: ItemKind[] = ["devotional", "lesson", "video", "episode", "book", "assignment", "playlist"];
 const STATES: Array<[ItemState | "", string]> = [
   ["", "Active"],
   ["draft", "Drafts"],

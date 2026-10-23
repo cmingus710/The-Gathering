@@ -189,7 +189,7 @@ export function FeedComposer({
             Formatting help
           </summary>
           <p id={`${id}-format`} className="pb-1 text-meta text-text-secondary">
-            You can use **bold**, _italic_, lists, &gt; quotes, and links. Type @ and a name to mention someone who can see this post, or a group.
+            You can use **bold**, _italic_, lists, and &gt; quotes. Add a link with the Link button, or paste an address over selected words. Type @ and a name to mention someone who can see this post, or a group.
           </p>
         </details>
       </div>

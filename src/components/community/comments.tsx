@@ -294,7 +294,7 @@ function CommentComposer({
         </SubmitButton>
       </div>
       <p id={`${id}-format`} className="sr-only">
-        You can use **bold**, _italic_, lists, quotes, and links. Type @ and a name to mention someone or a group.
+        You can use **bold**, _italic_, lists, and quotes. Add a link with the Link button, or paste an address over selected words. Type @ and a name to mention someone or a group.
       </p>
       <AttachmentPicker key={pickerKey} compact onBusyChange={setUploading} onCountChange={setFiles} />
     </form>

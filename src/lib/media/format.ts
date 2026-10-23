@@ -27,6 +27,8 @@ export function itemHref(item: Pick<ItemCard, "id" | "kind"> & { book?: Pick<Non
       return item.book ? readingHref(item.book.id, item.id) : `/reading/assignments/${item.id}`;
     case "playlist":
       return `/music/${item.id}`;
+    case "video":
+      return `/videos/${item.id}`;
   }
 }
 
@@ -37,6 +39,7 @@ export const KIND_LABEL: Record<ItemKind, string> = {
   book: "Church book",
   assignment: "Reading assignment",
   playlist: "Playlist",
+  video: "Video",
 };
 
 export const KIND_PLURAL: Record<ItemKind, string> = {
@@ -46,6 +49,7 @@ export const KIND_PLURAL: Record<ItemKind, string> = {
   book: "Church books",
   assignment: "Reading assignments",
   playlist: "Playlists",
+  video: "Videos",
 };
 
 export const STATE_LABEL: Record<ItemState, string> = {

@@ -1,5 +1,5 @@
 -- Licensed versions in memory collections · Apply migration
--- 20261109000100_memory_licensed_collections to the hosted project.
+-- 20261111000100_memory_licensed_collections to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
 -- approves applying it (docs/memory-provider-practice.md, "Church and group
@@ -22,7 +22,7 @@
 --   * licensed collections are not shown to youth accounts and can't be
 --     assigned to youth groups (stored-text collections are unchanged).
 --
--- It copies supabase/migrations/20261109000100_memory_licensed_collections.sql
+-- It copies supabase/migrations/20261111000100_memory_licensed_collections.sql
 -- verbatim and records it under its repository version (created_by =
 -- memory-licensed-collections). All or nothing: one transaction; out of
 -- order or a second run stops at the preflight with "Nothing was changed".
@@ -37,15 +37,15 @@ begin
   if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261106000100') then
     raise exception 'Nothing was changed: the licensed memory practice step (20261106000100) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261109000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261111000100')
      or to_regprocedure('public.memory_translation_options()') is not null then
-    raise exception 'Nothing was changed: 20261109000100 is already applied.';
+    raise exception 'Nothing was changed: 20261111000100 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261109000100_memory_licensed_collections.sql
+-- 20261111000100_memory_licensed_collections.sql
 -- =========================================================================
 -- Licensed API.Bible versions in church and group memory collections
 -- (additive). Extends 20261106000100_memory_provider_practice, which built
@@ -1015,6 +1015,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261109000100', 'memory_licensed_collections', 'memory-licensed-collections');
+values ('20261111000100', 'memory_licensed_collections', 'memory-licensed-collections');
 
 commit;
