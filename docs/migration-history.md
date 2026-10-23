@@ -440,7 +440,8 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
     - `2026-11-16-record-media-book-collections.sql` would have checked that the objects and grants exist;
     - `2026-11-16-apply-media-book-collections.sql` would have created them.
     - Either one, completed, records `20261116000100` (`created_by = media-book-collections`) in the same transaction, and each refuses to finish otherwise.
-    - Not verified from here (the Supabase connector was unavailable). Read-only check to confirm:
+    - **Checked (2026-10-23, owner's SQL editor screenshots):** `20261116000100` is recorded as `media_book_collections` (`created_by = media-book-collections`); `public.media_books(uuid, text)` exists (`books_fn = true`) and anon can't call it (`anon_can_call = false`). Applied and recorded; nothing left to do on hosted.
+    - The read-only check used:
 
       ```sql
       select version, name, created_by from supabase_migrations.schema_migrations where version = '20261116000100';
