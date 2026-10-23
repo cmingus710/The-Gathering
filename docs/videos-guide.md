@@ -87,3 +87,10 @@ Everywhere (search, Videos, lessons, devotionals, church reading, workbooks, pod
 1. Apply the migrations: run `supabase/manual/2026-11-09-apply-media-videos.sql` in the SQL editor (two transactions; needs `20261108000100` recorded first). The app deployed before the migration keeps working (search without a type filter, the old pages), but the Videos page, video publishing, and album videos need the migration.
 2. Deploy the app.
 3. For each existing library video, make a publishing decision (the library's notice lists them).
+
+## Verification record (2026-10-23)
+
+- Lint, typecheck, production build, and the full test suite (unit + database: 95 files, 1,162 tests, including `tests/db/videos.test.ts` and `src/lib/media/videos.test.ts`) pass.
+- Browser walkthrough on a local stack (PostgreSQL 16 with every migration, PostgREST, Supabase Auth, synthetic `example.test` data), Chromium desktop 1280×900 and Pixel 7 emulation, light, dark, and System themes: 28 checks passed (search Videos filter, one-press in-place playback with `autoplay=1`, keyboard Enter, no duplicate results, Videos browsing, missing thumbnail placeholder, embed-error fallback, group-only and library-only videos refused, ordered captions on a lesson, devotional and church-reading videos, mixed album with All/Photos/Videos, no horizontal scroll and bottom-navigation clearance on the phone, admin notices and reasons). Screenshots: [docs/videos/](videos/).
+- **Stand-ins:** YouTube can't be reached from the build sandbox, so the provider's thumbnail and player in the screenshots are clearly labelled stand-ins served by request interception (the app's own thumbnail access check still ran first). Photos are generated placeholder images. Storage was a local stand-in that checks `storage.objects` under the caller's role and RLS.
+- **Not yet verified:** real YouTube/Vimeo playback, and one-press playback on physical iPhone, iPad, and Android devices (emulation can't show autoplay policy). Check these on the preview deployment with a test video before announcing.

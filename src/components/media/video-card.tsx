@@ -16,12 +16,11 @@ export function VideoUsedIn({ uses, compact = false }: { uses: VideoUse[]; compa
   return (
     <div className={compact ? "text-meta" : "rounded-card border border-border bg-surface p-4"}>
       <p className={compact ? "font-semibold text-text-secondary" : "mb-1 font-semibold"}>Also in</p>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1">
+      <ul className="flex flex-col">
         {uses.map((u) => (
           <li key={u.id}>
-            <Link href={hrefFor(u)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-2 hover:underline">
-              {u.title}
-              <span className="ml-1 font-normal text-text-secondary">({KIND_LABEL[u.kind]})</span>
+            <Link href={hrefFor(u)} className="inline-block py-2.5 font-semibold text-primary underline-offset-2 hover:underline">
+              {u.title} <span className="font-normal text-text-secondary">({KIND_LABEL[u.kind]})</span>
             </Link>
           </li>
         ))}

@@ -88,6 +88,7 @@ function ExternalVideo({ video, title, compact, poster }: { video: VideoInfo; ti
   const [thumbOk, setThumbOk] = useState(!!poster || video.has_thumb);
   const [origin, setOrigin] = useState<string | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
+  const thumb = useRef<HTMLImageElement>(null);
   const id = `video:${useId()}`;
   const origins = EMBED_ORIGINS[ref.provider] as readonly string[];
   const embed = videoEmbed(ref, { origin, autoplay: true });
@@ -101,6 +102,12 @@ function ExternalVideo({ video, title, compact, poster }: { video: VideoInfo; ti
     },
     [origins],
   );
+
+  // A thumbnail that failed before hydration never reports onError: check it once mounted.
+  useEffect(() => {
+    const img = thumb.current;
+    if (img && img.complete && img.naturalWidth === 0) setThumbOk(false);
+  }, []);
 
   useEffect(
     () =>
@@ -169,6 +176,7 @@ function ExternalVideo({ video, title, compact, poster }: { video: VideoInfo; ti
           <>
             {thumbOk ? (
               <img
+                ref={thumb}
                 src={poster ?? `/api/media/${video.asset_id}/thumb`}
                 alt=""
                 loading="lazy"
@@ -227,10 +235,10 @@ function ExternalVideo({ video, title, compact, poster }: { video: VideoInfo; ti
           </>
         )}
       </div>
-      <div className={cn("flex flex-wrap items-center justify-between gap-x-3", compact ? "gap-y-0" : "gap-y-1")}>
-        <p className="text-[0.8125rem] text-text-secondary">
-          {state === "playing" ? `Playing from ${name}.` : `Plays from ${name} when you press Play.`}
-        </p>
+      <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", compact ? "-mb-2 justify-end" : "justify-between")}>
+        {compact ? null : (
+          <p className="text-[0.8125rem] text-text-secondary">{state === "playing" ? `Playing from ${name}.` : `Plays from ${name} when you press Play.`}</p>
+        )}
         <a
           href={embed.openUrl}
           target="_blank"

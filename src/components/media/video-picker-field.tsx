@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- access-checked thumbnails from this app, never through the image optimizer */
 import { ArrowDown, ArrowUp, Film, Link2, Plus, Search, Trash2 } from "lucide-react";
-import { useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { addVideoLink, listLibraryVideos, type VideoChoice } from "@/app/admin/media/video-picker-actions";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,12 @@ const providerLabel = (v: VideoChoice) => (v.kind === "external_video" && v.prov
 
 function Thumb({ v }: { v: VideoChoice }) {
   const [ok, setOk] = useState(v.kind === "external_video" && v.has_thumb);
+  const img = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    if (img.current?.complete && img.current.naturalWidth === 0) setOk(false);
+  }, []);
   return ok ? (
-    <img src={`/api/media/${v.asset_id}/thumb`} alt="" loading="lazy" onError={() => setOk(false)} className="aspect-video w-28 shrink-0 rounded-tile bg-black object-cover" />
+    <img ref={img} src={`/api/media/${v.asset_id}/thumb`} alt="" loading="lazy" onError={() => setOk(false)} className="aspect-video w-28 shrink-0 rounded-tile bg-surface-muted object-cover" />
   ) : (
     <span className="flex aspect-video w-28 shrink-0 items-center justify-center rounded-tile bg-surface-muted" aria-hidden="true">
       <Film className="size-6 text-text-secondary" />
@@ -56,6 +60,7 @@ export function VideoPickerField({
   const [url, setUrl] = useState("");
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [adding, startAdding] = useTransition();
   const full = value.length >= max;
   const chosen = new Set(value.map((v) => v.asset_id));
 
@@ -226,10 +231,10 @@ export function VideoPickerField({
             <Button
               size="sm"
               variant="secondary"
-              disabled={pending || !url.trim()}
+              disabled={adding || !url.trim()}
               icon={<Link2 className="size-4" aria-hidden="true" />}
               onClick={() =>
-                start(async () => {
+                startAdding(async () => {
                   setMessage(null);
                   const r = await addVideoLink({ url });
                   if (!r.ok) {
@@ -246,7 +251,7 @@ export function VideoPickerField({
                 })
               }
             >
-              {pending ? "Adding…" : "Add link"}
+              {adding ? "Adding…" : "Add link"}
             </Button>
           </div>
           <p className="text-meta text-text-secondary">Paste the video&apos;s address, not embed code. The same video is never stored twice.</p>
