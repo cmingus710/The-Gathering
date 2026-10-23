@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { isPushServiceEndpoint, testPushPayload } from "@/lib/community/push";
 import { getPushSender } from "@/lib/community/server";
+import type { MySettings } from "@/lib/community/types";
 import { errorState, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -62,14 +63,29 @@ const CATEGORIES = ["forum", "groups", "messages", "moderation", "events", "pray
 export async function savePrefsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireApprovedMember("/notifications/settings");
   const shown = new Set(String(formData.get("categories") ?? "").split(","));
+  // "All" overrides: null when the control wasn't on the page (push unavailable).
+  const pushAll = formData.get("push_all_shown") ? formData.get("push_all") === "on" : null;
+  const emailAll = formData.get("email_all_shown") ? formData.get("email_all") === "on" : null;
+  // While an override is on, that channel's switches are disabled and not
+  // submitted, so the stored per-category choices are kept as they are.
+  let stored: MySettings["prefs"] | null = null;
+  if (pushAll || emailAll) {
+    const { data, error } = await rpc("community_my_settings", {});
+    if (error || !data) return errorState(error ? dbErrorMessage(error) : UNAVAILABLE);
+    stored = (data as MySettings).prefs;
+  }
   for (const c of CATEGORIES.filter((x) => shown.has(x))) {
-    const email = String(formData.get(`${c}.email`) ?? "off");
+    const email = emailAll ? (stored?.[c]?.email ?? "off") : String(formData.get(`${c}.email`) ?? "off");
     const { error } = await rpc("community_set_pref", {
       p_category: c,
       p_in_app: c === "moderation" || formData.get(`${c}.in_app`) === "on",
       p_email: c === "events" ? "off" : email,
-      p_push: formData.get(`${c}.push`) === "on",
+      p_push: pushAll ? (stored?.[c]?.push ?? false) : formData.get(`${c}.push`) === "on",
     });
+    if (error) return errorState(dbErrorMessage(error));
+  }
+  if (pushAll !== null || emailAll !== null) {
+    const { error } = await rpc("community_set_channel_all", { p_push_all: pushAll, p_email_all: emailAll });
     if (error) return errorState(dbErrorMessage(error));
   }
   revalidatePath("/notifications", "layout");

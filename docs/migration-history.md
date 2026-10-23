@@ -376,3 +376,13 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - anon-executable public functions: 34 (unchanged);
   - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
   - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-12-record-notification-channel-overrides.sql`. `20261112000100` is recorded (`created_by = notification-channel-overrides`), 74 versions in history.
+
+## Member notification "All" overrides (2026-11-13)
+
+- **New (additive; no applied migration was edited):** `20261113000100_member_notification_all`:
+  - two columns on `community.member_settings`: `push_all`, `email_all` (boolean, default false), so every existing member starts with both off;
+  - replaced with the same signature and grants: `community.delivery_pref` (from `20261112000100`) now also applies the member's overrides; delivery already reads it when queuing and claiming;
+  - new `public.community_my_channel_all()` and `public.community_set_channel_all(boolean, boolean)` (approved members, own settings only), granted to `authenticated` only.
+  - No per-category preference row is rewritten. Anon baseline unchanged.
+- **Order:** apply the migration before deploying the app. Without it, Notification settings shows both overrides off, and saving preferences reports an error from the missing function.
+- **Hosted:** not applied.
