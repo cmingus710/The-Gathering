@@ -19,11 +19,16 @@ describe("renderCommunityText", () => {
   });
 
   it("drops dangerous links but keeps their text", () => {
-    for (const href of ["javascript:alert(1)", "java\tscript:alert(1)", "data:text/html,<b>x</b>", "vbscript:x", "tel:+15555550100", "//evil.example/x", "/\t/evil.example/x", "https://user:pass@evil.example"]) {
+    for (const href of ["javascript:alert(1)", "java\tscript:alert(1)", "data:text/html,<b>x</b>", "vbscript:x", "tel:call-me", "mailto:not-an-address", "//evil.example/x", "/\t/evil.example/x", "https://user:pass@evil.example"]) {
       const html = renderCommunityText(`[click](${href})`);
       expect(html, href).not.toContain("<a ");
       expect(html).toContain("click");
     }
+  });
+
+  it("allows checked phone and email links", () => {
+    expect(renderCommunityText("[call](tel:+1-555-555-0100)")).toContain('<a href="tel:+15555550100"');
+    expect(renderCommunityText("[write](mailto:office@example.org)")).toContain('<a href="mailto:office@example.org"');
   });
 
   it("marks external links nofollow ugc and keeps same-site links plain", () => {

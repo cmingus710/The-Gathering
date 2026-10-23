@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
+import { LinkTextAreaField } from "@/components/links/link-tools";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { ANSWERABLE, BLOCK_KINDS, BLOCK_LABEL, checkScriptureRef, type AdminBlock, type BlockKind, type BuilderPayload } from "@/lib/media/workbook";
 import type { AssetChoice } from "../../editor-data";
@@ -343,7 +344,7 @@ export function LessonBuilder({ payload, assets }: { payload: BuilderPayload; as
                 ) : null}
 
                 {HAS_BODY.has(row.kind) ? (
-                  <TextAreaField
+                  <LinkTextAreaField
                     label={answerable ? "Text before the question" : "Text"}
                     name={`body-${pid}`}
                     id={`body-${pid}`}
@@ -352,7 +353,7 @@ export function LessonBuilder({ payload, assets }: { payload: BuilderPayload; as
                     value={f.body}
                     onChange={(e) => setField(row.key, { body: e.target.value })}
                     optional={row.kind !== "teaching"}
-                    hint="Formatting: **bold**, *italic*, ## heading, - list, [link text](https://…). HTML isn't allowed."
+                    hint="Add links with the Link button (or Ctrl+K), or paste an address over selected words. Formatting: **bold**, *italic*, ## heading, - list. HTML isn't allowed."
                   />
                 ) : null}
 

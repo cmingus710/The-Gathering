@@ -1,12 +1,13 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- object-URL and signed-URL previews */
-import { Bold, Heading2, Italic, Link2, List, ListOrdered } from "lucide-react";
+import { Bold, Heading2, Italic, List, ListOrdered } from "lucide-react";
 import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
+import { LinkTextAreaField, replaceRange } from "@/components/links/link-tools";
 import { AnnouncementStatusBadge, PinnedBadge, VisibilityBadge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
-import { CheckboxField, TextAreaField, TextField } from "@/components/ui/field";
+import { CheckboxField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { EffectiveStatus } from "@/lib/announcements/status";
@@ -42,7 +43,6 @@ const TOOLS: Tool[] = [
     icon: <ListOrdered className="size-4" aria-hidden="true" />,
     apply: (s) => ({ text: `\n${(s || "List item").split("\n").map((l, i) => `${i + 1}. ${l}`).join("\n")}\n` }),
   },
-  { label: "Link", icon: <Link2 className="size-4" aria-hidden="true" />, apply: (s) => ({ text: `[${s || "link text"}](https://)` }) },
 ];
 
 export function AnnouncementForm({ initial, timeZoneLabel }: { initial: AnnouncementFormValues; timeZoneLabel: string }) {
@@ -70,13 +70,8 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
     const el = bodyRef.current;
     if (!el) return;
     const { selectionStart: start, selectionEnd: end } = el;
-    const { text } = tool.apply(body.slice(start, end));
-    const next = body.slice(0, start) + text + body.slice(end);
-    setBody(next);
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(start + text.length, start + text.length);
-    });
+    // Through the browser's editing, so undo and redo include it.
+    replaceRange(el, start, end, tool.apply(el.value.slice(start, end)).text);
   }
 
   return (
@@ -114,32 +109,31 @@ export function AnnouncementForm({ initial, timeZoneLabel }: { initial: Announce
           </div>
 
           <div id={`${tabsId}-write-panel`} role="tabpanel" aria-labelledby={`${tabsId}-write-tab`} hidden={tab !== "write"}>
-            <div role="toolbar" aria-label="Formatting" aria-controls="field-body" className="mb-2 flex flex-wrap gap-1">
-              {TOOLS.map((tool) => (
-                <button
-                  key={tool.label}
-                  type="button"
-                  onClick={() => applyTool(tool)}
-                  className="flex size-11 items-center justify-center rounded-control border border-border-strong bg-surface hover:bg-primary-soft"
-                >
-                  {tool.icon}
-                  <span className="sr-only">{tool.label}</span>
-                </button>
-              ))}
-            </div>
-            <TextAreaField
+            <LinkTextAreaField
               label={<span className="sr-only">Message text</span>}
               name="body"
               rows={12}
               ref={bodyRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              hint="Formatting: **bold**, *italic*, ## heading, - list, [link text](https://…). HTML isn't allowed."
+              hint="Use the buttons for bold, italic, headings, lists, and links (Ctrl+K). HTML isn't allowed."
               error={fe.body}
+              tools={TOOLS.map((tool) => (
+                <button
+                  key={tool.label}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyTool(tool)}
+                  className="flex size-11 items-center justify-center rounded-control border border-border-strong bg-surface hover:bg-primary-soft focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                >
+                  {tool.icon}
+                  <span className="sr-only">{tool.label}</span>
+                </button>
+              ))}
             />
           </div>
           <div id={`${tabsId}-preview-panel`} role="tabpanel" aria-labelledby={`${tabsId}-preview-tab`} hidden={tab !== "preview"} tabIndex={0}>
-            <div className="rounded-control border border-border bg-background p-4 sm:p-6">
+            <div data-links-new-tab className="rounded-control border border-border bg-background p-4 sm:p-6">
               <p className="mb-3 text-meta font-semibold text-text-secondary">Preview as members will see it</p>
               <article className="overflow-hidden rounded-card border border-border bg-surface">
                 {imageUrl ? <img src={imageUrl} alt={imageAlt} className="aspect-[16/9] w-full object-cover" /> : null}

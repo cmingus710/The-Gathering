@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ProseLinkNavigation } from "@/components/links/prose-link-navigation";
 import { PlayerProvider } from "@/components/media/player-provider";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { getThemePreference } from "@/lib/theme/server";
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* One audio player for the whole app, so listening continues across navigation. */}
         <PlayerProvider>{children}</PlayerProvider>
         <ServiceWorkerRegistration />
+        <ProseLinkNavigation />
       </body>
     </html>
   );

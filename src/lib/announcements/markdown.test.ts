@@ -8,7 +8,7 @@ describe("announcement markdown", () => {
     expect(html).toContain("<strong>Bold</strong>");
     expect(html).toContain("<em>italic</em>");
     expect(html).toContain("<li>one</li>");
-    expect(html).toContain('<a href="https://example.org" rel="noopener noreferrer nofollow">Site</a>');
+    expect(html).toContain('<a href="https://example.org" target="_blank" rel="noopener noreferrer nofollow" class="link-external">Site<span class="sr-only"> (opens in a new tab)</span></a>');
   });
 
   it("escapes raw HTML, including script and event handlers", () => {
