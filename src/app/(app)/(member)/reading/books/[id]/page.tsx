@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BookReadingView, type BookExtras, type BookPlanData } from "@/components/media/reading/book-reading-view";
 import { requireApprovedMember } from "@/lib/auth/viewer";
+import { returnCollection } from "@/lib/media/book-collections";
 import { isUuid } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
 import { requireClient } from "@/lib/supabase/server";
@@ -14,7 +15,8 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : n
  * The church reading page for one book: the book, Audible/Kindle links, the
  * member's own place in the book, the reading plan's current assignment and
  * full schedule (each with its own "Mark as done"), and private notes.
- * /reading/assignments/<id> redirects here with ?assignment=<id>.
+ * /reading/assignments/<id> redirects here with ?assignment=<id>. Opened from
+ * a collection (?from=<topic id> or ?from=all), "Back to …" returns there.
  *
  * Book-level progress (media.book_progress) and assignment completion
  * (media.completions) are separate records; neither changes the other.
@@ -53,6 +55,7 @@ export default async function BookReadingPage({ params, searchParams }: PageProp
       planDetails={planDetails}
       requestedAssignment={one(sp.assignment)}
       requestedPlan={one(sp.plan)}
+      from={returnCollection(one(sp.from), page.item.topics ?? [])}
     />
   );
 }

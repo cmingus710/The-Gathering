@@ -8,6 +8,7 @@ import { requireAnyCapability, requireCapability } from "@/lib/auth/viewer";
 import { errorState, formValues, type FormState } from "@/lib/forms";
 import { linkProblem } from "@/lib/links/validate";
 import { normalizeAudibleUrl, normalizeKindleUrl, parseSpotify } from "@/lib/media/embeds";
+import { normalizeTopicNames } from "@/lib/media/book-collections";
 import { isUuid, isYmd } from "@/lib/media/format";
 import { parseFraming } from "@/lib/media/framing";
 import { parseReferenceList } from "@/lib/media/scripture";
@@ -181,7 +182,8 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   }
   if (role) p.people = people;
   const topicIds: string[] = [];
-  for (const name of names(formData.get("topics"))) {
+  // Trimmed, single-spaced, and without case or spacing duplicates (the database reuses a topic's saved spelling).
+  for (const name of normalizeTopicNames(String(formData.get("topics") ?? ""))) {
     if (name.length > 60) continue;
     const { data } = await supabase.rpc("media_admin_topic_save", { p_name: name });
     if (data) topicIds.push(data as string);
@@ -202,7 +204,8 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   revalidatePath("/admin/content");
   if (kind === "book") {
     revalidatePath(`/reading/books/${savedId}`);
-    revalidatePath("/reading");
+    // The Books page and its collections (a book's topics are its collections).
+    revalidatePath("/reading", "layout");
   }
   redirect(`/admin/content/${savedId}?saved=${id ? "saved" : "created"}`);
 }

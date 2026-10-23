@@ -64,6 +64,10 @@ Access is rechecked on every read: if an item's audience narrows, or a member le
 
 Cleanup is **manual and reviewed**: `/admin/media/cleanup` lists candidates (failed uploads, uploads abandoned longer than the setting, removed or replaced files no longer in use), and a media manager deletes them with their own session after review. Nothing is deleted automatically, and no destructive cleanup has been run on existing data. Before automating any retention, the church should adopt a written retention policy.
 
+## Book collections
+
+A book's **Topics** (Organize section) also group it into collections on the member Books page; a book with several topics appears in each. Topic names ignore capitalization and extra spaces, and Tags stay search-only. Details: [book-collections.md](book-collections.md).
+
 ## Lesson builder and member workbooks (Phase 13)
 
 A Sunday lesson can also be built as ordered **blocks** that members open as a private **workbook**. Details, the teacher and member guides, and the version rules are in [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).

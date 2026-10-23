@@ -196,3 +196,6 @@ export function CheckboxField({
     </div>
   );
 }
+
+/** The label, hint, and error around a custom control (the topics field's suggestions), styled like TextField. */
+export { Chrome as FieldFrame, control as fieldControlClass, describedBy as fieldDescribedBy };

@@ -54,6 +54,7 @@ export function BookReadingView({
   planDetails,
   requestedAssignment,
   requestedPlan,
+  from = null,
 }: {
   item: ItemDetail;
   urls: Map<string, string>;
@@ -63,6 +64,8 @@ export function BookReadingView({
   planDetails: boolean;
   requestedAssignment: string | null;
   requestedPlan: string | null;
+  /** The collection this book was opened from (checked against the book's own topics), for the back link. */
+  from?: { collection: string; label: string } | null;
 }) {
   const id = item.id;
   const { today } = plan;
@@ -85,11 +88,11 @@ export function BookReadingView({
   const files = item.attachments.filter((a) => a.role !== "audio" && a.role !== "video");
   // The selected assignment is shown in full above when it's the featured one.
   const targetId = selectedId ? (selectedId === featured?.id ? "featured-assignment" : `assignment-${selectedId}`) : null;
-  const planHref = (key: string) => `/reading/books/${id}?plan=${encodeURIComponent(key)}`;
+  const planHref = (key: string) => `/reading/books/${id}?${new URLSearchParams(from ? { plan: key, from: from.collection } : { plan: key })}`;
 
   return (
     <>
-      <BackLink route="/reading/books/[id]" />
+      <BackLink route="/reading/books/[id]" params={{ collection: from?.collection }} label={from?.label} />
       {targetId ? <ScrollToSelected targetId={targetId} /> : null}
       <article className="space-y-6 sm:space-y-8">
         {/* 1 · Compact book header: the full cover at its own proportions beside the details. */}
