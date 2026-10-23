@@ -49,6 +49,8 @@ export default async function EditContentPage({ params, searchParams }: PageProp
   const now = new Date();
   const inAnHour = new Date(now.getTime() + 3600_000);
   const canPublish = viewer.capabilities.has(CAPABILITIES.contentPublish);
+  // Editors can't change a live book's form, but have always been able to change its Kindle link: it moves to Reading details then.
+  const bookFormLocked = item.status !== "draft" && !canPublish;
   const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
   const error = typeof sp.error === "string" ? (sp.error === "unavailable" ? "The content service is unavailable." : sp.error.slice(0, 300)) : undefined;
   const publishedLabel =
@@ -72,15 +74,23 @@ export default async function EditContentPage({ params, searchParams }: PageProp
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <div className="min-w-0">
           {data ? (
-            <ContentForm kind={item.kind} item={item} data={data} timeZoneLabel={timeZoneLabel(tz)} />
+            <ContentForm
+              kind={item.kind}
+              item={item}
+              data={data}
+              timeZoneLabel={timeZoneLabel(tz)}
+              kindleUrl={bookDetails && !bookFormLocked ? bookDetails.kindle_url : undefined}
+            />
           ) : (
             <Alert tone="error" title="The editor couldn't be loaded." />
           )}
           {item.kind === "book" ? (
             <Card className="mt-6">
-              <SectionHeading description="Kindle link, reading dates, and a related lesson.">Reading details</SectionHeading>
+              <SectionHeading description={bookFormLocked ? "Kindle link, reading dates, and a related lesson." : "Reading dates and a related lesson. The Kindle link is with the Audible link above."}>
+                Reading details
+              </SectionHeading>
               {bookDetails ? (
-                <BookDetailsForm id={item.id} details={bookDetails} />
+                <BookDetailsForm id={item.id} details={bookDetails} withKindle={bookFormLocked} />
               ) : (
                 <Alert tone="error" title="Reading details couldn't be loaded. Apply the Phase 13 migration if this is a new database." />
               )}

@@ -15,8 +15,12 @@ export type BookDetailsAdmin = {
   lessons: Array<{ id: string; title: string; delivered_on: string | null }>;
 };
 
-/** Kindle link, the book's reading dates, and an optional related lesson (Phase 13). */
-export function BookDetailsForm({ id, details }: { id: string; details: BookDetailsAdmin }) {
+/**
+ * The book's reading dates and an optional related lesson (Phase 13). The
+ * Kindle link is in the book form beside the Audible link, except when that
+ * form is read-only for this editor (`withKindle`): it's then here, as before.
+ */
+export function BookDetailsForm({ id, details, withKindle = false }: { id: string; details: BookDetailsAdmin; withKindle?: boolean }) {
   const [state, action] = useActionState(saveBookDetailsAction, initialFormState);
   const v = state.values;
   const fe = state.fieldErrors ?? {};
@@ -24,16 +28,18 @@ export function BookDetailsForm({ id, details }: { id: string; details: BookDeta
     <form action={action} className="space-y-3" noValidate>
       <FormMessage state={state} />
       <input type="hidden" name="id" value={id} />
-      <TextField
-        label="Kindle link"
-        name="kindle_url"
-        type="url"
-        inputMode="url"
-        optional
-        defaultValue={v?.kindle_url ?? details.kindle_url ?? ""}
-        error={fe.kindle_url}
-        hint="The book's Amazon page (…/dp/…) or a read.amazon.com link. Members open it with their own Amazon account; nothing is embedded or synced."
-      />
+      {withKindle ? (
+        <TextField
+          label="Kindle book URL"
+          name="kindle_url"
+          type="url"
+          inputMode="url"
+          optional
+          defaultValue={v?.kindle_url ?? details.kindle_url ?? ""}
+          error={fe.kindle_url}
+          hint="Paste the Amazon link for the Kindle edition."
+        />
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <TextField label="Reading starts" name="reading_starts_on" type="date" optional defaultValue={v?.reading_starts_on ?? details.reading_starts_on ?? ""} />
         <TextField

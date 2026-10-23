@@ -120,6 +120,9 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
       p[f] = v ? Number(v) : null;
     }
   }
+  // The Kindle link lives in media.book_details, saved after the book itself;
+  // undefined when the form didn't carry the field (it's then left as is).
+  let kindle: string | null | undefined;
   if (kind === "book") {
     p.book_author = String(formData.get("book_author") ?? "").trim().slice(0, 160);
     const audible = String(formData.get("audible_url") ?? "").trim();
@@ -128,6 +131,11 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
       if (!normalized) err("audible_url", "Use an https link to the book on audible.com (or another Audible country site).");
       p.audible_url = normalized;
     } else p.audible_url = null;
+    if (formData.has("kindle_url")) {
+      const raw = String(formData.get("kindle_url") ?? "").trim();
+      kindle = raw ? normalizeKindleUrl(raw) : null;
+      if (raw && !kindle) err("kindle_url", KINDLE_ERROR);
+    }
   }
   if (kind === "assignment") {
     const book = String(formData.get("book_id") ?? "");
@@ -185,8 +193,49 @@ export async function saveContentAction(_prev: FormState, formData: FormData): P
   const savedId = (data as { id: string }).id;
   const framed = await saveCoverFraming(supabase, formData, { p_item: savedId, p_series: null });
   if (!framed) return errorState("Your changes were saved, but not the cover's position. Select Reposition and save again.", { values });
+  if (kindle !== undefined) {
+    const problem = await saveBookDetails(supabase, savedId, { kindle_url: kindle });
+    if (problem) {
+      return errorState(`Your other changes were saved, but not the Kindle link: ${problem}`, { values, fieldErrors: { kindle_url: [problem] } });
+    }
+  }
   revalidatePath("/admin/content");
+  if (kind === "book") {
+    revalidatePath(`/reading/books/${savedId}`);
+    revalidatePath("/reading");
+  }
   redirect(`/admin/content/${savedId}?saved=${id ? "saved" : "created"}`);
+}
+
+const KINDLE_ERROR = "Use an https:// link to the book on Amazon (…/dp/…), an a.co short link, or Kindle Cloud Reader (read.amazon.com).";
+
+type BookDetailsPatch = Partial<{ kindle_url: string | null; reading_starts_on: string | null; reading_ends_on: string | null; related_lesson_id: string | null }>;
+
+/**
+ * Changes only the given fields of a book's reading details (Kindle link,
+ * dates, related lesson), so the book form and the "Reading details" form
+ * never overwrite each other. Returns a message on failure, else null.
+ */
+async function saveBookDetails(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  item: string,
+  patch: BookDetailsPatch,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("media_admin_book_details_patch", { p_item: item, p: patch });
+  if (!error) return null;
+  if (error.code !== "PGRST202" && error.code !== "42883") return dbErrorMessage(error);
+  // Before migration 20261114000100: merge with the stored details and use the Phase 13 save.
+  const current = await supabase.rpc("media_admin_book_details", { p_item: item });
+  if (current.error || !current.data) return dbErrorMessage(current.error);
+  const d = { ...(current.data as Required<BookDetailsPatch>), ...patch };
+  const saved = await supabase.rpc("media_admin_book_details_save", {
+    p_item: item,
+    p_kindle_url: d.kindle_url,
+    p_starts: d.reading_starts_on,
+    p_ends: d.reading_ends_on,
+    p_related_lesson: d.related_lesson_id,
+  });
+  return saved.error ? dbErrorMessage(saved.error) : null;
 }
 
 /**
@@ -308,19 +357,21 @@ export async function deleteTopicAction(formData: FormData): Promise<void> {
   redirect("/admin/content/library?saved=topic");
 }
 
-/** Phase 13: a book's Kindle link, reading dates, and related lesson. */
+/**
+ * Phase 13: a book's reading dates and related lesson. The Kindle link is
+ * usually saved with the book; this form carries it only when the book form
+ * is read-only for the editor (a live book), and only then changes it.
+ */
 export async function saveBookDetailsAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireCapability(CAPABILITIES.contentEdit, "/admin/content");
   const values = formValues(formData);
   const id = formData.get("id");
   if (!isUuid(id)) return errorState("That book wasn't found.", { values });
-  const rawKindle = String(formData.get("kindle_url") ?? "").trim();
-  const kindle = rawKindle ? normalizeKindleUrl(rawKindle) : null;
-  if (rawKindle && !kindle) {
-    return errorState("Check the Kindle link.", {
-      values,
-      fieldErrors: { kindle_url: ["Use an https:// link to the book on Amazon (…/dp/…) or Kindle Cloud Reader (read.amazon.com)."] },
-    });
+  const patch: BookDetailsPatch = {};
+  if (formData.has("kindle_url")) {
+    const raw = String(formData.get("kindle_url") ?? "").trim();
+    patch.kindle_url = raw ? normalizeKindleUrl(raw) : null;
+    if (raw && !patch.kindle_url) return errorState("Check the Kindle link.", { values, fieldErrors: { kindle_url: [KINDLE_ERROR] } });
   }
   const starts = String(formData.get("reading_starts_on") ?? "");
   const ends = String(formData.get("reading_ends_on") ?? "");
@@ -331,14 +382,13 @@ export async function saveBookDetailsAction(_prev: FormState, formData: FormData
   const lesson = formData.get("related_lesson_id");
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
-  const { error } = await supabase.rpc("media_admin_book_details_save", {
-    p_item: id,
-    p_kindle_url: kindle,
-    p_starts: starts || null,
-    p_ends: ends || null,
-    p_related_lesson: isUuid(lesson) ? lesson : null,
+  const problem = await saveBookDetails(supabase, id, {
+    ...patch,
+    reading_starts_on: starts || null,
+    reading_ends_on: ends || null,
+    related_lesson_id: isUuid(lesson) ? lesson : null,
   });
-  if (error) return errorState(dbErrorMessage(error), { values });
+  if (problem) return errorState(problem, { values });
   revalidatePath(`/admin/content/${id}`);
   revalidatePath(`/reading/books/${id}`);
   revalidatePath("/reading");

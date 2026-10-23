@@ -71,6 +71,7 @@ export function ContentForm({
   data,
   timeZoneLabel,
   defaultDate,
+  kindleUrl,
 }: {
   kind: ItemKind;
   item: ItemAdmin | null;
@@ -78,6 +79,8 @@ export function ContentForm({
   timeZoneLabel: string;
   /** Pre-filled date for new content (from the devotional calendar). */
   defaultDate?: string;
+  /** A book's saved Kindle link; undefined hides the field (its details couldn't be loaded), so saving leaves it as is. */
+  kindleUrl?: string | null;
 }) {
   const [state, action] = useActionState(saveContentAction, initialFormState);
   const v = state.values;
@@ -177,16 +180,30 @@ export function ContentForm({
           {kind === "book" ? (
             <>
               <TextField label="Book author" name="book_author" maxLength={160} defaultValue={v?.book_author ?? item?.book_author ?? ""} optional />
-              <TextField
-                label="Audible link"
-                name="audible_url"
-                type="url"
-                inputMode="url"
-                defaultValue={v?.audible_url ?? item?.audible_url ?? ""}
-                optional
-                error={fe.audible_url}
-                hint="Members open it in Audible with their own account. The church's purchase doesn't give members access, and nothing syncs back to this app."
-              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Audible link"
+                  name="audible_url"
+                  type="url"
+                  inputMode="url"
+                  defaultValue={v?.audible_url ?? item?.audible_url ?? ""}
+                  optional
+                  error={fe.audible_url}
+                  hint="Members open it in Audible with their own account. The church's purchase doesn't give members access, and nothing syncs back to this app."
+                />
+                {kindleUrl !== undefined ? (
+                  <TextField
+                    label="Kindle book URL"
+                    name="kindle_url"
+                    type="url"
+                    inputMode="url"
+                    defaultValue={v?.kindle_url ?? kindleUrl ?? ""}
+                    optional
+                    error={fe.kindle_url}
+                    hint="Paste the Amazon link for the Kindle edition."
+                  />
+                ) : null}
+              </div>
             </>
           ) : null}
           {kind === "assignment" ? (
