@@ -5,7 +5,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * The Prayer Library (20261113000100) against a real database: member
+ * The Prayer Library (20261115000100) against a real database: member
  * contributions (draft, publish, edit, archive), discovery and reading by
  * other members, search and combined filters with keyset paging, draft and
  * hidden-content privacy (lists and direct reads), private bookmarks,

@@ -43,7 +43,7 @@ export const MEMBER_NAV: NavItem[] = [
   { key: "devotionals", label: "Devotionals", icon: "devotionals", section: "learn", status: "available", href: "/devotionals" },
   { key: "lessons", label: "Sunday lessons", icon: "lessons", section: "learn", status: "available", href: "/lessons" },
   { key: "podcasts", label: "Podcasts", icon: "podcasts", section: "learn", status: "available", href: "/podcasts" },
-  { key: "reading", label: "Church reading", icon: "reading", section: "learn", status: "available", href: "/reading" },
+  { key: "reading", label: "Books", icon: "reading", section: "learn", status: "available", href: "/reading" },
   { key: "music", label: "Music", icon: "music", section: "learn", status: "available", href: "/music" },
   { key: "videos", label: "Videos", icon: "media", section: "learn", status: "available", href: "/videos" },
   { key: "gallery", label: "Media gallery", icon: "gallery", section: "learn", status: "available", href: "/gallery" },

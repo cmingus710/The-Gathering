@@ -123,4 +123,48 @@ describe("Kindle links", () => {
       expect(normalizeKindleUrl(bad)).toBeNull();
     }
   });
+  it("accepts Amazon's country stores and product-page forms", () => {
+    expect(normalizeKindleUrl("https://www.amazon.de/-/en/dp/B0123ABCDE?th=1")).toBe("https://www.amazon.de/-/en/dp/B0123ABCDE");
+    expect(normalizeKindleUrl("https://www.amazon.se/dp/B0123ABCDE/")).toBe("https://www.amazon.se/dp/B0123ABCDE");
+    expect(normalizeKindleUrl("https://www.amazon.com.be/gp/product/B0123ABCDE/ref=x")).toBe("https://www.amazon.com.be/gp/product/B0123ABCDE");
+    expect(normalizeKindleUrl("https://WWW.AMAZON.SG/gp/aw/d/B0123ABCDE")).toBe("https://www.amazon.sg/gp/aw/d/B0123ABCDE");
+    for (const t of ["ca", "com.mx", "com.br", "ie", "fr", "it", "es", "nl", "pl", "com.tr", "ae", "sa", "eg", "in", "co.jp", "com.au"]) {
+      expect(normalizeKindleUrl(`https://www.amazon.${t}/dp/B0123ABCDE`)).toBe(`https://www.amazon.${t}/dp/B0123ABCDE`);
+    }
+  });
+  it("accepts a.co short links, without tracking", () => {
+    expect(normalizeKindleUrl("https://a.co/d/0aBcDeF?ref=share")).toBe("https://a.co/d/0aBcDeF");
+    expect(normalizeKindleUrl("https://a.co/7JcW4Yj")).toBe("https://a.co/7JcW4Yj");
+    expect(normalizeKindleUrl("https://a.co/d/0aBcDeF/")).toBe("https://a.co/d/0aBcDeF");
+  });
+  it("refuses non-book Amazon pages, lookalike domains, and unsafe schemes", () => {
+    for (const bad of [
+      "https://www.amazon.com/gp/cart/view.html",
+      "https://www.amazon.com/s?k=book",
+      "https://www.amazon.com/ap/signin",
+      "https://www.amazon.com/dp/short",
+      "https://a.co/",
+      "https://a.co/d/",
+      "https://a.co/d/abc/../../x",
+      "http://a.co/d/0aBcDeF",
+      "https://a.co.evil.example/d/0aBcDeF",
+      "https://www.a.co/d/0aBcDeF",
+      "https://evila.co/d/0aBcDeF",
+      "https://a.co@evil.example/d/0aBcDeF",
+      "https://amazon.com@evil.example/dp/B0123ABCDE",
+      "https://amazon-books.com/dp/B0123ABCDE",
+      "https://www.amaz0n.com/dp/B0123ABCDE",
+      "https://www.xn--amazon-9ya.com/dp/B0123ABCDE",
+      "https://www.amazon.cn/dp/B0123ABCDE",
+      "https://www.amazon.com:8443/dp/B0123ABCDE",
+      "data:text/html,<script>alert(1)</script>",
+      "JAVASCRIPT:alert(1)",
+      "ftp://www.amazon.com/dp/B0123ABCDE",
+      "//www.amazon.com/dp/B0123ABCDE",
+      "www.amazon.com/dp/B0123ABCDE",
+      "kindle://book?asin=B0123ABCDE",
+    ]) {
+      expect(normalizeKindleUrl(bad), bad).toBeNull();
+    }
+  });
 });

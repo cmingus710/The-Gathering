@@ -377,12 +377,39 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
   - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-12-record-notification-channel-overrides.sql`. `20261112000100` is recorded (`created_by = notification-channel-overrides`), 74 versions in history.
 
-## Prayer Library (2026-11-13)
+## Member notification "All" overrides (2026-11-13)
 
-- **New (additive; no applied migration was edited):** `20261113000100_prayer_library`:
+- **New (additive; no applied migration was edited):** `20261113000100_member_notification_all`:
+  - two columns on `community.member_settings`: `push_all`, `email_all` (boolean, default false), so every existing member starts with both off;
+  - replaced with the same signature and grants: `community.delivery_pref` (from `20261112000100`) now also applies the member's overrides; delivery already reads it when queuing and claiming;
+  - new `public.community_my_channel_all()` and `public.community_set_channel_all(boolean, boolean)` (approved members, own settings only), granted to `authenticated` only.
+  - No per-category preference row is rewritten. Anon baseline unchanged.
+- **Order:** apply the migration before deploying the app. Without it, Notification settings shows both overrides off, and saving preferences reports an error from the missing function.
+- **Hosted (2026-10-23):** the owner ran the migration in the SQL editor. Read-only check afterwards:
+  - `push_all` and `email_all` on `community.member_settings` are boolean, not null, default false; no member has either on;
+  - `community.delivery_pref` applies them under `community.channel_allows`;
+  - `community_set_channel_all` and `community_my_channel_all` are executable by `authenticated`, not `anon`; `community.delivery_pref` isn't executable by clients;
+  - anon-executable public functions: 34 (unchanged); none granted to PUBLIC;
+  - md5 of `pg_get_functiondef`: `delivery_pref` `ded4f6c48665cb51d7d66156ec2df239`, `community_my_channel_all` `91f2118aa1c0bd84c4c1a39a6dce54da`, `community_set_channel_all` `46208a488bc2ec1cc66d8ba52ad20b5f` (not yet compared with the repository's);
+  - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-13-record-member-notification-all.sql`. `20261113000100` is recorded (`created_by = member-notification-all`), 75 versions in history.
+
+## Kindle book URL beside Audible (2026-11-14)
+
+- **New (additive; no applied migration was edited):** `20261114000100_media_book_kindle_link` (written as `20261113000100`, renumbered because that version is `member_notification_all` on `main` and hosted):
+  - the `media.book_details.kindle_url` check is replaced with a wider one: Amazon's other country stores (`.ie`, `.se`, `.pl`, `.com.be`, `.com.tr`, `.ae`, `.sa`, `.eg`, `.sg` added) and `https://a.co/…` short links. Every value the old check allowed is still allowed; no row is rewritten (adding the check re-validates existing rows);
+  - new `public.media_admin_book_details_patch(uuid, jsonb)` (`content.edit`, audited as `media.book_details_saved` with what changed, never the URL; an unchanged save writes nothing), granted to `authenticated` only.
+  - No other function, table, or grant changes. Anon baseline unchanged.
+- **Operator script:** `supabase/manual/2026-11-14-apply-media-book-kindle-link.sql`, one transaction. The preflight requires `20261031000400` and refuses a second run (version recorded, or the new function already exists). It post-checks grants. History row `created_by = media-book-kindle-link`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261031000400` and an existing `smile.amazon.co.uk` Kindle link, the script applied and recorded the version, kept the row, and then accepted an `a.co` link. A rerun stopped at the preflight.
+- **Order:** either order works. Before the migration the app falls back to the Phase 13 save, so saving still works, but `a.co` links and the newly added country stores are refused until it's applied.
+- **Hosted (2026-10-23):** a first attempt was made before the renumbering, when the script still targeted `20261113000100`. That version was already recorded as `member_notification_all`, so the preflight stopped it and nothing changed. A read-only check afterwards found no `public.media_admin_book_details_patch(uuid, jsonb)` (`to_regprocedure` returned null).
+  - **Applied (2026-10-23):** the owner ran `supabase/manual/2026-11-14-apply-media-book-kindle-link.sql` in the SQL editor and reported it completed. That script is one transaction that ends by recording `20261114000100` (`created_by = media-book-kindle-link`), so a completed run means the function, the wider `kindle_url` check, and the history row are in place. Read-only check afterwards (owner's SQL editor screenshot): `20261114000100` recorded as `media_book_kindle_link` (`created_by = media-book-kindle-link`). Only that query's result was shown; the function's presence follows from the row, since the script records it in the same transaction after creating the function and checking its grants. Applied and recorded; nothing left to do on hosted.
+## Prayer Library (2026-11-15)
+
+- **New (additive; no applied migration was edited):** `20261115000100_prayer_library` (written as `20261113000100`, renumbered because that version is `member_notification_all` on `main` and hosted, and `20261114000100` is the Kindle link; the body is unchanged):
   - new private tables `prayer.library_categories`, `library_prayers`, `library_prayer_categories`, `library_saves`, `library_reports` (RLS on, no client grants), seeded categories only;
   - new nullable column `prayer.moderation_log.library_report_id`;
   - new trigger `profiles_prayer_library_names` (after update of `full_name`, `preferred_name` on `public.profiles`) to keep contributor names searchable;
   - new `public.prayer_library_*` functions granted to `authenticated` only; anon baseline unchanged.
 - **Order:** apply before deploying the app. See [prayer-library.md](prayer-library.md#release-steps).
-- **Hosted:** not applied.
+- **Hosted (2026-10-23):** the owner applied the migration's SQL in the SQL editor before the renumbering. `20261113000100` was already recorded as `member_notification_all`, so the library has no history row yet. `supabase/manual/2026-11-15-record-prayer-library.sql` checks the library's objects and records `20261115000100` (`created_by = prayer-library`); it changes nothing else.

@@ -41,7 +41,7 @@ Tick each item, or note what went wrong.
 ## 5. Reading and learning
 
 - [ ] **Bible reading**: open a plan and a day's reading.
-- [ ] **Devotionals**, **Sunday lessons**, **Church reading**: open one of each; open a handout or attachment if there is one.
+- [ ] **Devotionals**, **Sunday lessons**, **Books**: open one of each; open a handout or attachment if there is one.
 - [ ] **Memory verses**: open a verse and try a practice.
 
 ## 6. Music, podcasts, and photos

@@ -36,7 +36,7 @@ Initial categories (no prayers are seeded):
 
 ## Rules and where they're enforced
 
-Migration `20261113000100_prayer_library.sql`. Everything is in the private `prayer` schema (RLS on, no client grants); members reach it only through `public.prayer_library_*` functions granted to `authenticated` (never `anon`), which recheck on every call:
+Migration `20261115000100_prayer_library.sql`. Everything is in the private `prayer` schema (RLS on, no client grants); members reach it only through `public.prayer_library_*` functions granted to `authenticated` (never `anon`), which recheck on every call:
 
 | Rule | Enforced by |
 | --- | --- |
@@ -60,6 +60,6 @@ Library activity sends no emails, push messages, or in-app notifications.
 
 ## Release steps
 
-1. Apply `supabase/migrations/20261113000100_prayer_library.sql` to the hosted project **before** deploying the app (without it, the library shows "couldn't be loaded"; prayer requests and care are unaffected). It's additive: new tables, one new nullable column (`prayer.moderation_log.library_report_id`), new functions, seed categories, and one trigger on `public.profiles` name changes. It edits no applied migration and leaves the anon function baseline unchanged.
-2. Record the version in the hosted migration history as for earlier migrations.
+1. Apply `supabase/migrations/20261115000100_prayer_library.sql` to the hosted project **before** deploying the app (without it, the library shows "couldn't be loaded"; prayer requests and care are unaffected). It's additive: new tables, one new nullable column (`prayer.moderation_log.library_report_id`), new functions, seed categories, and one trigger on `public.profiles` name changes. It edits no applied migration and leaves the anon function baseline unchanged.
+2. Record the version: `supabase/manual/2026-11-15-record-prayer-library.sql` checks the objects and adds the history row (done this way because the SQL was first applied before the migration was renumbered).
 3. Optionally assign the **Prayer moderator** (or **Prayer and care lead**) role to whoever should review library reports; super administrators need one of these roles to moderate.

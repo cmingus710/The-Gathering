@@ -1,6 +1,6 @@
 # Teaching, media, and publishing: administration guide (Phase 7)
 
-This guide covers the media library and the teaching sections: Devotionals, Sunday lessons, Videos, church podcast episodes, Church reading, and Music & playlists. Podcast shows and feeds are covered in [podcast-guide.md](podcast-guide.md), the Media gallery in [gallery-guide.md](gallery-guide.md), publishing and attaching videos in [videos-guide.md](videos-guide.md), and what members see and what outside services can and can't do in [media-limitations.md](media-limitations.md).
+This guide covers the media library and the teaching sections: Devotionals, Sunday lessons, Videos, church podcast episodes, Books, and Music & playlists. Podcast shows and feeds are covered in [podcast-guide.md](podcast-guide.md), the Media gallery in [gallery-guide.md](gallery-guide.md), publishing and attaching videos in [videos-guide.md](videos-guide.md), and what members see and what outside services can and can't do in [media-limitations.md](media-limitations.md).
 
 ## Where things are
 

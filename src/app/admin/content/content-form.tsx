@@ -71,6 +71,7 @@ export function ContentForm({
   data,
   timeZoneLabel,
   defaultDate,
+  kindleUrl,
 }: {
   kind: ItemKind;
   item: ItemAdmin | null;
@@ -78,6 +79,8 @@ export function ContentForm({
   timeZoneLabel: string;
   /** Pre-filled date for new content (from the devotional calendar). */
   defaultDate?: string;
+  /** A book's saved Kindle link; undefined hides the field (its details couldn't be loaded), so saving leaves it as is. */
+  kindleUrl?: string | null;
 }) {
   const [state, action] = useActionState(saveContentAction, initialFormState);
   const v = state.values;
@@ -177,16 +180,30 @@ export function ContentForm({
           {kind === "book" ? (
             <>
               <TextField label="Book author" name="book_author" maxLength={160} defaultValue={v?.book_author ?? item?.book_author ?? ""} optional />
-              <TextField
-                label="Audible link"
-                name="audible_url"
-                type="url"
-                inputMode="url"
-                defaultValue={v?.audible_url ?? item?.audible_url ?? ""}
-                optional
-                error={fe.audible_url}
-                hint="Members open it in Audible with their own account. The church's purchase doesn't give members access, and nothing syncs back to this app."
-              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Audible link"
+                  name="audible_url"
+                  type="url"
+                  inputMode="url"
+                  defaultValue={v?.audible_url ?? item?.audible_url ?? ""}
+                  optional
+                  error={fe.audible_url}
+                  hint="Members open it in Audible with their own account. The church's purchase doesn't give members access, and nothing syncs back to this app."
+                />
+                {kindleUrl !== undefined ? (
+                  <TextField
+                    label="Kindle book URL"
+                    name="kindle_url"
+                    type="url"
+                    inputMode="url"
+                    defaultValue={v?.kindle_url ?? kindleUrl ?? ""}
+                    optional
+                    error={fe.kindle_url}
+                    hint="Paste the Amazon link for the Kindle edition."
+                  />
+                ) : null}
+              </div>
             </>
           ) : null}
           {kind === "assignment" ? (
@@ -545,7 +562,7 @@ export function ContentForm({
             <CheckboxField name="featured" label="Feature it" hint="Shown first where featured content appears." defaultChecked={v ? v.featured === "on" : (item?.featured ?? false)} />
           ) : null}
           {canPublish && kind === "book" ? (
-            <CheckboxField name="book_current" label="This is the current church book" defaultChecked={v ? v.book_current === "on" : (item?.book_current ?? false)} />
+            <CheckboxField name="book_current" label="This is the current book" defaultChecked={v ? v.book_current === "on" : (item?.book_current ?? false)} />
           ) : null}
           <TextField label="Attribution" name="attribution" maxLength={300} defaultValue={v?.attribution ?? item?.attribution ?? ""} optional hint="Shown to members, for example for licensed material." />
           <TextField label="Display order" name="sort_order" type="number" inputMode="numeric" min={0} max={100000} defaultValue={v?.sort_order ?? String(item?.sort_order ?? 100)} hint="Lower numbers appear first among items on the same date." />
