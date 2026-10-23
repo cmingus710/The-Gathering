@@ -376,3 +376,14 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - anon-executable public functions: 34 (unchanged);
   - md5 of `pg_get_functiondef` for the 11 new and replaced functions was recorded but not yet compared with the repository's;
   - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-12-record-notification-channel-overrides.sql`. `20261112000100` is recorded (`created_by = notification-channel-overrides`), 74 versions in history.
+
+## Kindle book URL beside Audible (2026-11-13)
+
+- **New (additive; no applied migration was edited):** `20261113000100_media_book_kindle_link`:
+  - the `media.book_details.kindle_url` check is replaced with a wider one: Amazon's other country stores (`.ie`, `.se`, `.pl`, `.com.be`, `.com.tr`, `.ae`, `.sa`, `.eg`, `.sg` added) and `https://a.co/…` short links. Every value the old check allowed is still allowed; no row is rewritten (adding the check re-validates existing rows);
+  - new `public.media_admin_book_details_patch(uuid, jsonb)` (`content.edit`, audited as `media.book_details_saved` with what changed, never the URL; an unchanged save writes nothing), granted to `authenticated` only.
+  - No other function, table, or grant changes. Anon baseline unchanged.
+- **Operator script:** `supabase/manual/2026-11-13-apply-media-book-kindle-link.sql`, one transaction. The preflight requires `20261031000400` and refuses a second run. It post-checks grants. History row `created_by = media-book-kindle-link`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261031000400` and an existing `smile.amazon.co.uk` Kindle link, the script applied and recorded the version, kept the row, and then accepted an `a.co` link. A rerun stopped at the preflight.
+- **Order:** either order works. Before the migration the app falls back to the Phase 13 save, so saving still works, but `a.co` links and the newly added country stores are refused until it's applied.
+- **Hosted:** not applied. Needs the owner's approval, then the operator script in the SQL editor.

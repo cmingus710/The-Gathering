@@ -42,6 +42,7 @@ export default async function NewContentPage({ searchParams }: PageProps<"/admin
           data={data}
           timeZoneLabel={timeZoneLabel(settings.timezone)}
           defaultDate={isYmd(sp.date) ? sp.date : todayIn(settings.timezone)}
+          kindleUrl={null}
         />
       ) : (
         <Alert tone="error" title="The editor couldn't be loaded. If Phase 7 hasn't been applied to the database yet, apply it first." />

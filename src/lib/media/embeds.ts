@@ -239,14 +239,25 @@ export function normalizeAudibleUrl(input: string): string | null {
   return `https://${host(url)}${url.pathname}`;
 }
 
-const AMAZON_TLDS = ["com", "co.uk", "ca", "com.au", "de", "fr", "it", "es", "in", "co.jp", "com.mx", "com.br", "nl"];
+// Amazon's own country stores (exact hosts; the database check lists the same
+// ones, migration 20261113000100). Lookalikes such as amazon.com.evil.example
+// or amazon-books.com never match.
+const AMAZON_TLDS = [
+  "com", "ca", "com.mx", "com.br", "co.uk", "ie", "de", "fr", "it", "es", "nl", "se", "pl", "com.be", "com.tr",
+  "ae", "sa", "eg", "in", "co.jp", "sg", "com.au",
+];
 const AMAZON_HOSTS = new Set(AMAZON_TLDS.flatMap((t) => [`amazon.${t}`, `www.amazon.${t}`, `smile.amazon.${t}`]));
 const KINDLE_READER_HOSTS = new Set(["com", "co.uk", "ca", "com.au", "de", "fr", "it", "es", "in", "co.jp"].map((t) => `read.amazon.${t}`));
+// A book's product page: "/dp/<ASIN>", "/<title>/dp/<ASIN>" (or "/-/en/dp/…"), "/gp/product/<ASIN>", or the mobile "/gp/aw/d/<ASIN>".
+const AMAZON_PRODUCT_PATH = /^\/(?:[A-Za-z0-9_.\-%]+\/){0,3}(?:dp|gp\/product|gp\/aw\/d)\/[A-Z0-9]{10}(?:\/[A-Za-z0-9_.\-%]*)*$/i;
+// Amazon's short links: "https://a.co/d/<code>" (and the older "https://a.co/<code>").
+const AMAZON_SHORT_PATH = /^\/(?:d\/)?[A-Za-z0-9]{4,20}$/;
 
 /**
- * Normalized https Kindle link, or null: an Amazon product page (tracking
- * query removed) or the Kindle Cloud Reader (only its ?asin= kept). These
- * are plain links out; nothing is embedded or signed in to inside the app.
+ * Normalized https Kindle link, or null: an Amazon book page on one of
+ * Amazon's country stores (tracking query removed), an a.co short link, or
+ * the Kindle Cloud Reader (only its ?asin= kept). These are plain links out;
+ * nothing is embedded or signed in to inside the app.
  */
 export function normalizeKindleUrl(input: string): string | null {
   const url = parseUrl(input);
@@ -258,10 +269,14 @@ export function normalizeKindleUrl(input: string): string | null {
     if (asin !== null && !/^[A-Z0-9]{10}$/i.test(asin)) return null;
     return `https://${h}${url.pathname}${asin ? `?asin=${asin.toUpperCase()}` : ""}`;
   }
+  if (h === "a.co") {
+    const path = url.pathname.replace(/\/$/, "");
+    return AMAZON_SHORT_PATH.test(path) ? `https://a.co${path}` : null;
+  }
   if (!AMAZON_HOSTS.has(h)) return null;
   // Amazon's "/ref=…" path segment is tracking, like the query string.
-  const path = url.pathname.replace(/\/ref=[^/]*\/?$/, "");
-  if (!/^\/[A-Za-z0-9/_.\-%]*$/.test(path) || path === "/" || path === "") return null;
+  const path = url.pathname.replace(/\/ref=[^/]*\/?$/, "").replace(/\/$/, "");
+  if (!AMAZON_PRODUCT_PATH.test(path)) return null;
   return `https://${h}${path}`;
 }
 
