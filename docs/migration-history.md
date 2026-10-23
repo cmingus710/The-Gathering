@@ -391,4 +391,4 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - `community_set_channel_all` and `community_my_channel_all` are executable by `authenticated`, not `anon`; `community.delivery_pref` isn't executable by clients;
   - anon-executable public functions: 34 (unchanged); none granted to PUBLIC;
   - md5 of `pg_get_functiondef`: `delivery_pref` `ded4f6c48665cb51d7d66156ec2df239`, `community_my_channel_all` `91f2118aa1c0bd84c4c1a39a6dce54da`, `community_set_channel_all` `46208a488bc2ec1cc66d8ba52ad20b5f` (not yet compared with the repository's);
-  - **Not yet recorded:** run `supabase/manual/2026-11-13-record-member-notification-all.sql` to add the history row (`created_by = member-notification-all`).
+  - **Recorded (2026-10-23):** the owner ran `supabase/manual/2026-11-13-record-member-notification-all.sql`. `20261113000100` is recorded (`created_by = member-notification-all`), 75 versions in history.
