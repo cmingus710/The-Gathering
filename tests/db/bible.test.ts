@@ -474,6 +474,19 @@ describeDb("Bible reading plans, scripture, and journals", () => {
       expect((await notifs(m1)).map((n) => n.kind)).not.toContain("reading_plan_changed");
     });
 
+    it("keeps multi-paragraph questions whole and journal answers on their question when questions are reordered", async () => {
+      const long = "Read verses 1–3 again.\n\nWhat does the passage say about rest, and where do you need it this week?";
+      const plan = await newPlan("calendar", "Synthetic Question Order Plan");
+      const d = await day(plan, { date: await shift(3) }, [P("PSA", 23)], { questions: ["What do you notice?", long, "  ", "Who could you share this with?"] });
+      await publish(plan);
+      await rpc(as(m1), "bible_plan_join", [plan, null, null, true]);
+      expect((await rpc<Json>(as(m1), "bible_day", [d])).questions).toEqual(["What do you notice?", long, "Who could you share this with?"]);
+      const answer = (await rpc<Json>(as(m1), "journal_entry_create", [randomUUID(), "Rest", "synthetic answer", j({ kind: "assignment", day_id: d, question: long })])).id as string;
+      await rpc(as(publisher), "bible_admin_day_revise", [d, j({ questions: [long, "Who could you share this with?", "What do you notice?"] }), "Lead with the rest question", "revise"]);
+      expect((await rpc<Json>(as(m1), "bible_day", [d])).questions).toEqual([long, "Who could you share this with?", "What do you notice?"]);
+      expect(((await rpc<Json>(as(m1), "journal_entry", [answer])).link as Json).question).toBe(long);
+    });
+
     it("needs an explicit correction to change a past day, and never deletes published days", async () => {
       await rpc(as(m1), "bible_day_complete", [past, true]);
       await fails(as(publisher), "bible_admin_day_revise", [past, j({ passages: [P("GEN", 2)] }), "Typo in the reference", "revise"], /already passed/);

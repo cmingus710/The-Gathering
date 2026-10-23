@@ -90,7 +90,9 @@ export default async function PlanPreviewPage({ params, searchParams }: PageProp
                 <SectionHeading as="h3">Reflect</SectionHeading>
                 <ul className="list-disc space-y-1 pl-5">
                   {chosen.questions.map((q, i) => (
-                    <li key={i}>{q}</li>
+                    <li key={i} className="whitespace-pre-line [overflow-wrap:anywhere]">
+                      {q}
+                    </li>
                   ))}
                 </ul>
               </section>

@@ -45,7 +45,9 @@ export function AssignmentBody({ a, canNote, headingLevel = "h3" }: { a: PlanAss
           <H className="mb-1.5 font-semibold">Discussion questions</H>
           <ol className="list-decimal space-y-1.5 pl-6">
             {a.questions.map((q, i) => (
-              <li key={i}>{q}</li>
+              <li key={i} className="whitespace-pre-line [overflow-wrap:anywhere]">
+                {q}
+              </li>
             ))}
           </ol>
         </div>

@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { QuestionListField } from "@/components/ui/question-list-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 import { KIND_LABEL } from "@/lib/media/format";
 import type { Attachment, ItemAdmin, ItemKind } from "@/lib/media/types";
+import { QUESTION_LIMITS } from "@/lib/questions";
 import { saveContentAction } from "./actions";
 import { TopicsField } from "./topics-field";
 import type { AssetChoice, EditorData } from "./editor-data";
@@ -286,13 +288,14 @@ export function ContentForm({
             />
           ) : null}
           {kind !== "playlist" && kind !== "book" && kind !== "video" ? (
-            <TextAreaField
+            <QuestionListField
               label={kind === "devotional" ? "Reflection questions" : "Discussion questions"}
               name="questions"
-              rows={4}
-              defaultValue={v?.questions ?? item?.questions.join("\n") ?? ""}
+              initial={item?.questions ?? []}
+              max={QUESTION_LIMITS.content.max}
+              maxLength={QUESTION_LIMITS.content.maxLength}
               optional
-              hint="One per line."
+              hint="Each question can be several paragraphs; members see them in this order."
               error={fe.questions}
             />
           ) : null}

@@ -51,7 +51,7 @@ export function LinkContext({ link }: { link: EntryLink | null }) {
             <p>About a reading plan day that&apos;s no longer available. Your note is kept.</p>
           )}
           {link.changed_since ? <p className="text-text-secondary">The plan has changed since you wrote this; the passages above are the ones you read.</p> : null}
-          {link.question ? <p className="mt-1 font-semibold">{link.question}</p> : null}
+          {link.question ? <p className="mt-1 font-semibold whitespace-pre-line [overflow-wrap:anywhere]">{link.question}</p> : null}
         </div>
       </div>
     );

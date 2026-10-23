@@ -8,6 +8,7 @@ import { isBookCode } from "@/lib/bible/books";
 import { formatPassage } from "@/lib/bible/reference";
 import type { Translation } from "@/lib/bible/types";
 import { isUuid } from "@/lib/media/format";
+import { questionId } from "@/lib/questions";
 import { requireClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "New journal entry" };
@@ -17,7 +18,7 @@ const int = (v: string | undefined) => (v && /^\d{1,3}$/.test(v) ? Number(v) : n
 
 /**
  * A new entry, optionally about a passage (?t&b&c&sv&ev), a plan day and one
- * of its reflection questions (?day&q), or a devotional, lesson, church book, or
+ * of its reflection questions (?day&qid), or a devotional, lesson, church book, or
  * church reading assignment (?item).
  * The link is checked when the first save creates the entry.
  */
@@ -38,8 +39,10 @@ export default async function NewEntryPage({ searchParams }: PageProps<"/journal
     if (error || !data) problem = "That reading isn't available, so this entry won't be linked to it.";
     else {
       const d = data as { id: string; label: string; questions: string[]; plan: { title: string }; passages: Array<{ label: string }>; revision: number };
+      // Questions are picked by their stable id (?qid); ?q (a position) is from older links.
+      const qid = one(sp.qid);
       const qi = int(one(sp.q));
-      const question = qi !== null ? (d.questions[qi] ?? null) : null;
+      const question = qid ? (d.questions.find((q) => questionId(q) === qid) ?? null) : qi !== null ? (d.questions[qi] ?? null) : null;
       link = { kind: "assignment", day_id: d.id, question };
       context = { kind: "assignment", available: true, day_id: d.id, label: d.label, plan_title: d.plan.title, question, revision: d.revision, changed_since: false, passages: d.passages };
     }
