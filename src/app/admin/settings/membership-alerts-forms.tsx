@@ -17,7 +17,7 @@ export function EnabledForm({ enabled, recipientCount, emailAll }: { enabled: bo
       {emailAll ? (
         // "All email notifications" (Notifications, above) covers this type; the switch keeps its own value underneath.
         <p id="membership-alerts-all" role="status" className="text-meta text-text-secondary">
-          {ALL_ON_TEXT}
+          {ALL_ON_TEXT} It&apos;s the &ldquo;All email notifications&rdquo; switch under Notifications, above.
         </p>
       ) : null}
       <fieldset disabled={emailAll} className="space-y-4 disabled:opacity-60" aria-describedby={emailAll ? "membership-alerts-all" : undefined}>
