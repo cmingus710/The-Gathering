@@ -1,7 +1,8 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- object-URL and signed-URL previews */
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
+import { useCroppedFileInput } from "@/components/media/use-cropped-file-input";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -87,12 +88,11 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
   const [audience, setAudience] = useState<EventFormValues["audience"]>((str("audience") || "members") as EventFormValues["audience"]);
   const [monthlyMode, setMonthlyMode] = useState(str("monthlyMode") || "day");
   const [endMode, setEndMode] = useState(str("endMode") || "until");
-  const [preview, setPreview] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
-  const [tooLarge, setTooLarge] = useState(false);
+  // Event pages show the cover at 16:9.
+  const cover = useCroppedFileInput({ aspect: 16 / 9, frameLabel: "16:9", maxBytes: MAX_COVER_BYTES, savedKey: initial.coverUrl });
   const fe = state.fieldErrors ?? {};
-  useEffect(() => () => (preview ? URL.revokeObjectURL(preview) : undefined), [preview]);
-  const coverUrl = preview ?? (removeCover ? null : initial.coverUrl);
+  const coverUrl = cover.preview ?? (removeCover ? null : initial.coverUrl);
 
   return (
     <form action={action} noValidate className="space-y-6" encType="multipart/form-data">
@@ -324,17 +324,13 @@ function EventFormFields({ initial, categories, groups, timezones, published, st
           type="file"
           optional
           accept="image/png,image/jpeg,image/webp"
-          error={tooLarge ? "That image is larger than 4 MB. Choose a smaller one." : fe.cover}
-          hint="PNG, JPEG, or WebP up to 4 MB. It's resized and its metadata (such as location) removed."
-          onChange={(e) => {
-            const f = e.currentTarget.files?.[0];
-            // Larger uploads are refused by the host before the app sees them.
-            const big = Boolean(f && f.size > MAX_COVER_BYTES);
-            setTooLarge(big);
-            if (big) e.currentTarget.value = "";
-            setPreview(f && !big ? URL.createObjectURL(f) : null);
-          }}
+          // Larger uploads are refused by the host before the app sees them.
+          error={cover.tooLarge ? "That image is larger than 4 MB. Choose a smaller one." : fe.cover}
+          hint="PNG, JPEG, or WebP up to 4 MB. You can crop it to the event page's 16:9 frame or keep it whole. It's resized and its metadata (such as location) removed."
+          {...cover.inputProps}
         />
+        {cover.controls}
+        {cover.dialog}
         {initial.coverUrl ? <CheckboxField name="removeCover" label="Remove the image" checked={removeCover} onChange={(e) => setRemoveCover(e.currentTarget.checked)} /> : null}
         <TextField label="Image description" name="coverAlt" optional maxLength={300} defaultValue={str("coverAlt")} error={fe.coverAlt} hint="Describe the image for people using screen readers. Required with an image." />
       </fieldset>

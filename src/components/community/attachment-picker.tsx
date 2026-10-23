@@ -1,18 +1,26 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- previews are local object URLs of the chosen files. */
-import { CircleCheck, CircleX, ImagePlus, LoaderCircle, RotateCcw, Trash2, Video, X } from "lucide-react";
+import { CircleCheck, CircleX, Crop, ImagePlus, LoaderCircle, RotateCcw, Trash2, Video, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { beginAttachment, discardAttachment, processAttachment, type AttachmentBegin } from "@/app/(app)/(member)/community/attachment-actions";
+import { OPTIONAL_SHAPES, OptionalCropDialog, type OptionalCrop } from "@/components/media/image-cropper";
 import { Button } from "@/components/ui/button";
 import { ATTACHMENT_ACCEPT, ATTACHMENT_LIMITS, checkForumVideo, classifyAttachment } from "@/lib/community/attachments";
 import { formatBytes } from "@/lib/media/files";
+import type { Framing } from "@/lib/media/framing";
 import { probeMedia, startUpload, type UploadHandle } from "@/lib/media/upload-client";
 
 type Begun = Extract<AttachmentBegin, { ok: true }>;
 type Item = {
   key: string;
+  /** What is uploaded: the original, or a cropped copy of it. */
   file: File;
+  /** The photo as chosen; cropping always starts again from it. */
+  original: File;
+  shapeId?: string;
+  framing?: Framing;
+  note?: string | null;
   kind: "image" | "video";
   preview: string | null;
   previewFailed?: boolean;
@@ -57,6 +65,7 @@ export function AttachmentPicker({
 }) {
   const [items, setItems] = useState<Item[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [cropping, setCropping] = useState<string | null>(null);
   const [batchKey] = useState(() => crypto.randomUUID());
   const registered = useRef(new Map<string, string>());
   const handles = useRef(new Map<string, UploadHandle>());
@@ -141,7 +150,7 @@ export function AttachmentPicker({
       }
       const key = crypto.randomUUID();
       const kind = classifyAttachment(file.name, file.type, file.size);
-      const base = { key, file, sent: 0, alt: "", retryable: false, preview: null } as const;
+      const base = { key, file, original: file, sent: 0, alt: "", retryable: false, preview: null } as const;
       if (!kind.ok) {
         next.push({ ...base, kind: file.type.startsWith("video/") ? "video" : "image", state: "failed", message: kind.message });
         continue;
@@ -171,18 +180,54 @@ export function AttachmentPicker({
     }
   }
 
-  function remove(item: Item) {
+  /** Stops an item's upload and deletes whatever it already stored. */
+  function release(item: Item) {
     removed.current.add(item.key);
     handles.current.get(item.key)?.cancel();
     if (item.preview) {
       URL.revokeObjectURL(item.preview);
       previews.current.delete(item.preview);
     }
-    setItems((list) => list.filter((i) => i.key !== item.key));
     // Deletes the draft and anything already stored (also when cancelling
     // mid-upload). Not registered yet: run() discards it when it is.
     const registeredId = registered.current.get(item.key);
     if (registeredId) void discardAttachment(registeredId);
+  }
+
+  function remove(item: Item) {
+    release(item);
+    setItems((list) => list.filter((i) => i.key !== item.key));
+  }
+
+  /**
+   * Uses a cropped copy (or the whole original again) in the same place:
+   * the new file uploads as a new attachment with the same description, and
+   * the previous upload is deleted.
+   */
+  function recrop(item: Item, crop: OptionalCrop) {
+    setCropping(null);
+    if (crop.file === item.file) return update(item.key, { shapeId: crop.shapeId, framing: crop.framing });
+    const kind = classifyAttachment(crop.file.name, crop.file.type, crop.file.size);
+    if (!kind.ok || kind.kind !== "image") return update(item.key, { note: kind.ok ? "That crop couldn't be used." : kind.message });
+    const preview = URL.createObjectURL(crop.file);
+    previews.current.add(preview);
+    const next: Item = {
+      key: crypto.randomUUID(),
+      file: crop.file,
+      original: item.original,
+      shapeId: crop.shapeId,
+      framing: crop.framing,
+      kind: "image",
+      preview,
+      state: "checking",
+      sent: 0,
+      message: null,
+      retryable: false,
+      alt: item.alt,
+    };
+    release(item);
+    setItems((list) => list.map((i) => (i.key === item.key ? next : i)));
+    enqueue(next);
   }
 
   function retry(item: Item) {
@@ -191,6 +236,7 @@ export function AttachmentPicker({
   }
 
   const ready = items.filter((i) => i.state === "ready" && i.begun);
+  const cropItem = items.find((i) => i.key === cropping && i.kind === "image") ?? null;
 
   return (
     <div className="space-y-3">
@@ -249,7 +295,7 @@ export function AttachmentPicker({
         <ul className="grid gap-3 sm:grid-cols-2" aria-label="Photos and videos for this post">
           {items.map((item) => {
             const pct = item.file.size ? Math.round((item.sent / item.file.size) * 100) : 0;
-            const name = item.file.name;
+            const name = item.original.name;
             return (
               <li key={item.key} className="rounded-tile border border-border bg-surface p-3">
                 <div className="flex items-start gap-3">
@@ -277,7 +323,12 @@ export function AttachmentPicker({
                       </span>
                       <span className="truncate font-semibold">{name}</span>
                     </p>
-                    <p className="text-[0.8125rem] text-text-secondary">{formatBytes(item.file.size)}</p>
+                    <p className="text-[0.8125rem] text-text-secondary">
+                      {formatBytes(item.file.size)}
+                      {item.kind === "image" && item.shapeId && item.shapeId !== "whole"
+                        ? ` · Cropped to ${OPTIONAL_SHAPES.find((s) => s.id === item.shapeId)?.label.toLowerCase() ?? "a shape"}`
+                        : ""}
+                    </p>
                     {item.state === "uploading" || item.state === "processing" || item.state === "checking" ? (
                       <div className="mt-1" aria-live="polite">
                         <progress className="h-2 w-full accent-[var(--color-accent)]" max={100} value={item.state === "processing" ? 100 : pct} aria-label={`Upload progress for ${name}`} />
@@ -311,7 +362,14 @@ export function AttachmentPicker({
                     />
                   </label>
                 ) : null}
+                {item.note ? <p className="mt-1 text-meta text-text-secondary">{item.note}</p> : null}
                 <div className="mt-2 flex flex-wrap gap-1">
+                  {item.kind === "image" && (item.state !== "failed" || item.retryable) ? (
+                    <Button size="sm" variant="secondary" icon={<Crop className="size-4" aria-hidden="true" />} onClick={() => setCropping(item.key)} aria-haspopup="dialog" disabled={disabled}>
+                      {item.shapeId && item.shapeId !== "whole" ? "Edit crop" : "Crop"}
+                      <span className="sr-only"> {name}</span>
+                    </Button>
+                  ) : null}
                   {item.state === "failed" && item.retryable ? (
                     <Button size="sm" variant="secondary" icon={<RotateCcw className="size-4" aria-hidden="true" />} onClick={() => retry(item)}>
                       Retry<span className="sr-only"> {name}</span>
@@ -341,6 +399,20 @@ export function AttachmentPicker({
         <p role="status" className="text-meta text-text-secondary">
           You can post once your photos and videos finish uploading.
         </p>
+      ) : null}
+      {cropItem ? (
+        <OptionalCropDialog
+          key={cropItem.key}
+          original={cropItem.original}
+          shapeId={cropItem.shapeId}
+          framing={cropItem.framing}
+          onCancel={() => setCropping(null)}
+          onUnsupported={(note) => {
+            update(cropItem.key, { note });
+            setCropping(null);
+          }}
+          onDone={(crop) => recrop(cropItem, crop)}
+        />
       ) : null}
       {ready.map((item) => (
         <span key={item.key} hidden>

@@ -1,16 +1,27 @@
 "use client";
 
-import { CircleCheck, CircleX, ImagePlus, LoaderCircle, RotateCcw, Trash2, X } from "lucide-react";
+/* eslint-disable @next/next/no-img-element -- previews are local object URLs of the chosen files */
+import { CircleCheck, CircleX, Crop, ImagePlus, LoaderCircle, RotateCcw, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { beginPhotoUpload, cancelPhotoUpload, processPhoto, type PhotoBegin } from "@/app/(app)/(member)/gallery/actions";
+import { OPTIONAL_SHAPES, OptionalCropDialog } from "@/components/media/image-cropper";
 import { Button } from "@/components/ui/button";
+import type { Framing } from "@/lib/media/framing";
 import { ACCEPT, formatBytes } from "@/lib/media/files";
 import { startUpload, type UploadHandle } from "@/lib/media/upload-client";
 
 type Row = {
   key: string;
+  /** What will be uploaded: the original, or a cropped copy of it. */
   file: File;
+  /** The photo as chosen; cropping always starts again from it. */
+  original: File;
+  shapeId?: string;
+  framing?: Framing;
+  preview: string | null;
+  previewFailed?: boolean;
+  note?: string | null;
   caption: string;
   alt: string;
   state: "ready" | "uploading" | "processing" | "done" | "failed" | "cancelled";
@@ -33,12 +44,30 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
   const [permission, setPermission] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [cropping, setCropping] = useState<string | null>(null);
   const handles = useRef(new Map<string, UploadHandle>());
   const batch = useRef<string>("");
   const id = useId();
   const router = useRouter();
 
   const update = (key: string, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+
+  // Previews are local object URLs: free them when they're replaced or the page goes away.
+  const previews = useRef(new Set<string>());
+  useEffect(() => {
+    const urls = previews.current;
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, []);
+  const previewOf = (file: File) => {
+    const url = URL.createObjectURL(file);
+    previews.current.add(url);
+    return url;
+  };
+  const dropPreview = (url: string | null) => {
+    if (!url) return;
+    URL.revokeObjectURL(url);
+    previews.current.delete(url);
+  };
 
   async function run(row: Row): Promise<boolean> {
     if (row.file.size > fileMb * 1024 * 1024) {
@@ -112,6 +141,7 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
   }
 
   const ready = rows.filter((r) => r.state === "ready");
+  const cropRow = rows.find((r) => r.key === cropping && r.state === "ready") ?? null;
 
   return (
     <div className="space-y-4">
@@ -130,12 +160,15 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
             const files = Array.from(e.target.files ?? []).slice(0, batchMax);
             e.target.value = "";
             if (!files.length) return;
-            setRows((rs) => [...rs, ...files.map((file) => ({ key: crypto.randomUUID(), file, caption: "", alt: "", state: "ready" as const, sent: 0, message: null }))]);
+            setRows((rs) => [
+              ...rs,
+              ...files.map((file) => ({ key: crypto.randomUUID(), file, original: file, preview: previewOf(file), caption: "", alt: "", state: "ready" as const, sent: 0, message: null })),
+            ]);
           }}
         />
         <p id={`${id}-help`} className="mt-1.5 text-meta text-text-secondary">
-          JPEG, PNG, WebP, or iPhone (HEIC) photos up to {fileMb} MB, {batchMax} at a time. Location and camera details are removed. A moderator reviews every
-          photo before others can see it.
+          JPEG, PNG, WebP, or iPhone (HEIC) photos up to {fileMb} MB, {batchMax} at a time. Each photo is shared whole unless you crop it. Location and camera
+          details are removed. A moderator reviews every photo before others can see it.
         </p>
       </div>
 
@@ -146,6 +179,9 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
             return (
               <li key={r.key} className="rounded-tile border border-border bg-surface p-3">
                 <div className="flex flex-wrap items-center gap-2">
+                  {r.preview && !r.previewFailed ? (
+                    <img src={r.preview} alt="" className="size-14 shrink-0 rounded-control bg-surface-muted object-contain" onError={() => update(r.key, { previewFailed: true })} />
+                  ) : null}
                   <span className="shrink-0" aria-hidden="true">
                     {r.state === "done" ? (
                       <CircleCheck className="size-5 text-success" />
@@ -157,11 +193,30 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
                       <LoaderCircle className="size-5 animate-spin text-primary motion-reduce:animate-none" />
                     )}
                   </span>
-                  <span className="min-w-0 flex-1 truncate font-semibold">{r.file.name}</span>
-                  <span className="text-meta text-text-secondary">{formatBytes(r.file.size)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">{r.original.name}</span>
+                    <span className="block text-meta text-text-secondary">
+                      {formatBytes(r.file.size)}
+                      {r.shapeId && r.shapeId !== "whole" ? ` · Cropped to ${OPTIONAL_SHAPES.find((s) => s.id === r.shapeId)?.label.toLowerCase() ?? "a shape"}` : " · Whole photo"}
+                    </span>
+                  </span>
                   {r.state === "ready" ? (
-                    <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" aria-hidden="true" />} onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}>
-                      Remove<span className="sr-only"> {r.file.name}</span>
+                    <Button size="sm" variant="secondary" icon={<Crop className="size-4" aria-hidden="true" />} onClick={() => setCropping(r.key)} aria-haspopup="dialog" disabled={busy}>
+                      {r.shapeId && r.shapeId !== "whole" ? "Edit crop" : "Crop"}
+                      <span className="sr-only"> {r.original.name}</span>
+                    </Button>
+                  ) : null}
+                  {r.state === "ready" ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon={<Trash2 className="size-4" aria-hidden="true" />}
+                      onClick={() => {
+                        dropPreview(r.preview);
+                        setRows((rs) => rs.filter((x) => x.key !== r.key));
+                      }}
+                    >
+                      Remove<span className="sr-only"> {r.original.name}</span>
                     </Button>
                   ) : null}
                   {r.state === "uploading" ? (
@@ -175,12 +230,12 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
                         if (r.begun) void cancelPhotoUpload(r.begun.id, r.begun.path);
                       }}
                     >
-                      Cancel<span className="sr-only"> {r.file.name}</span>
+                      Cancel<span className="sr-only"> {r.original.name}</span>
                     </Button>
                   ) : null}
                   {(r.state === "failed" || r.state === "cancelled") && !busy ? (
                     <Button size="sm" variant="secondary" icon={<RotateCcw className="size-4" aria-hidden="true" />} onClick={() => retry(r)} disabled={!permission}>
-                      Retry<span className="sr-only"> {r.file.name}</span>
+                      Retry<span className="sr-only"> {r.original.name}</span>
                     </Button>
                   ) : null}
                 </div>
@@ -198,11 +253,12 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
                 ) : null}
                 {r.state === "uploading" || r.state === "processing" ? (
                   <div className="mt-2">
-                    <progress className="h-2 w-full accent-[var(--color-accent)]" max={100} value={r.state === "processing" ? 100 : pct} aria-label={`Upload progress for ${r.file.name}`} />
+                    <progress className="h-2 w-full accent-[var(--color-accent)]" max={100} value={r.state === "processing" ? 100 : pct} aria-label={`Upload progress for ${r.original.name}`} />
                     <p className="text-[0.8125rem] text-text-secondary">{r.state === "processing" ? "Removing location data and preparing the photo…" : `${pct}% uploaded`}</p>
                   </div>
                 ) : null}
                 {r.state === "done" ? <p className="mt-1 text-meta text-text-secondary">Waiting for a moderator.</p> : null}
+                {r.note ? <p className="mt-1 text-meta text-text-secondary">{r.note}</p> : null}
                 {r.message ? <p className={r.state === "failed" ? "mt-1 text-meta text-danger" : "mt-1 text-meta text-text-secondary"}>{r.message}</p> : null}
               </li>
             );
@@ -228,6 +284,24 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
         <p role="status" className="font-semibold text-success">
           {notice}
         </p>
+      ) : null}
+      {cropRow ? (
+        <OptionalCropDialog
+          key={cropRow.key}
+          original={cropRow.original}
+          shapeId={cropRow.shapeId}
+          framing={cropRow.framing}
+          onCancel={() => setCropping(null)}
+          onUnsupported={(note) => {
+            update(cropRow.key, { note });
+            setCropping(null);
+          }}
+          onDone={({ file, shapeId, framing }) => {
+            dropPreview(cropRow.preview);
+            update(cropRow.key, { file, shapeId, framing, preview: previewOf(file), previewFailed: false, note: null });
+            setCropping(null);
+          }}
+        />
       ) : null}
     </div>
   );

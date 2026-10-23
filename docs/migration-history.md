@@ -298,3 +298,17 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261107000100`, the script applied and recorded the version; a rerun stopped at the preflight. `supabase start` (CLI 2.121) also applied the full migration set and seed.
 - **Order:** the app can be deployed first. Community person suggestions fall back to `community_mention_search`; group and Prayer suggestions stay empty and the group setting is hidden until the migration exists.
 - **Hosted:** not applied. Needs the owner's approval.
+
+## Media cover framing (2026-11-09)
+
+- **New (additive; no applied migration was edited):** `20261109000100_media_cover_framing`:
+  - nullable `cover_framing jsonb` on `media.items` and `media.series` (`{x, y, zoom}`; null = centred, the current look), with check constraints written as plain expressions;
+  - triggers `items_reset_cover_framing` / `series_reset_cover_framing` clear it when the cover image changes;
+  - private helpers `media.clean_framing`, `media.reset_cover_framing` (no API grants);
+  - new editor function `public.media_admin_cover_framing_save(uuid, uuid, uuid, jsonb)`, granted to `authenticated` only (content editors; publishers once an item is scheduled, published, or archived; audited);
+  - replaced with the same signatures: `media.cover_json`, `public.media_series`, `public.media_admin_taxonomy` (framing added to what they return).
+  - No existing rows change. Anon baseline unchanged. See [media-cropping.md](media-cropping.md).
+- **Operator script:** `supabase/manual/2026-11-09-apply-media-cover-framing.sql`, one transaction. The preflight requires `20261108000100` and refuses a second run. It post-checks the grants, that the private helper isn't callable, the two triggers, and that existing covers stayed centred. History row `created_by = media-cover-framing`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for `20261108000100`, the script applied; a rerun stopped at the preflight.
+- **Order:** the app can be deployed first (covers stay centred; saving without choosing a position works).
+- **Hosted:** not applied. Needs the owner's approval.
