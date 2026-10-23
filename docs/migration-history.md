@@ -436,3 +436,16 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - second runs of both stopped at the preflight.
 - **Hosted (2026-10-23):** the owner reported running the migration while it was still numbered `20261115000100`. That version was already recorded as `prayer_library`. So the run either was skipped (CLI) or left the objects without a history row (SQL editor). Not verified from here; step 1 of [book-collections.md](book-collections.md#release-steps) settles which.
 
+  - **Run (2026-10-23):** after the renumbering, the owner reported running the book collections step on hosted. It wasn't said which script was used:
+    - `2026-11-16-record-media-book-collections.sql` would have checked that the objects and grants exist;
+    - `2026-11-16-apply-media-book-collections.sql` would have created them.
+    - Either one, completed, records `20261116000100` (`created_by = media-book-collections`) in the same transaction, and each refuses to finish otherwise.
+    - Not verified from here (the Supabase connector was unavailable). Read-only check to confirm:
+
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261116000100';
+      select to_regprocedure('public.media_books(uuid, text)') is not null as books_fn,
+             has_function_privilege('anon', 'public.media_books(uuid, text)', 'execute') as anon_can_call;
+      ```
+
+      Expected: one row (`media_book_collections`, `media-book-collections`); `books_fn = true`, `anon_can_call = false`.
