@@ -10,7 +10,7 @@ import { signPaths } from "@/lib/media/storage";
 import type { ItemCard as Card } from "@/lib/media/types";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Church reading" };
+export const metadata: Metadata = { title: "Books" };
 
 type Reading = { today: string; current_books: Card[]; current_assignments: Card[]; recent_assignments: Card[]; past_books: Card[] };
 
@@ -57,10 +57,10 @@ export default async function ReadingPage() {
 
   return (
     <>
-      <PageHeader title="Church reading" description="What we're reading together, this week's assignment, and your own progress." />
-      {error ? <Alert tone="error" title="Church reading couldn't be loaded right now." className="mb-6" /> : null}
+      <PageHeader title="Books" description="What we're reading together, this week's assignment, and your own progress." />
+      {error ? <Alert tone="error" title="Books couldn't be loaded right now." className="mb-6" /> : null}
       {empty ? (
-        <EmptyState glyph="reading" title="Nothing assigned yet">
+        <EmptyState glyph="reading" title="No books yet">
           The current book and weekly readings will appear here.
         </EmptyState>
       ) : null}

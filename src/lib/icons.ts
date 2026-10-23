@@ -16,7 +16,7 @@ export const GLYPHS = {
   devotionals: { label: "Devotionals", concept: "Sunrise above an open page" },
   podcasts: { label: "Podcasts", concept: "Microphone with sound arcs" },
   lessons: { label: "Sunday Lessons", concept: "Open Bible on a lectern" },
-  reading: { label: "Church Reading", concept: "A closed book with a gold ribbon marker" },
+  reading: { label: "Books", concept: "A closed book with a gold ribbon marker" },
   music: { label: "Music", concept: "Two joined notes; the beam in gold" },
   gallery: { label: "Media gallery", concept: "Stacked photos with a gold sun over hills" },
   media: { label: "Teaching & media", concept: "A play mark in gold inside a rounded screen" },

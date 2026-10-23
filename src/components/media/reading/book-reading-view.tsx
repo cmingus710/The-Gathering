@@ -108,7 +108,7 @@ export function BookReadingView({
             </span>
           )}
           <div className="min-w-0 flex-1 space-y-2">
-            <p className="text-meta font-semibold text-text-secondary">{item.book_current ? "Current church book" : "Church book"}</p>
+            <p className="text-meta font-semibold text-text-secondary">{item.book_current ? "Current book" : "Book"}</p>
             <h1 className="font-display text-xl font-semibold leading-tight text-text [overflow-wrap:anywhere] min-[400px]:text-2xl sm:text-[2.125rem]">{item.title}</h1>
             {item.book_author ? <p className="text-text-secondary">by {item.book_author}</p> : null}
             {dates || extras?.related_lesson ? (
@@ -117,7 +117,7 @@ export function BookReadingView({
                   <li className="flex items-center gap-1.5">
                     <CalendarDays className="size-4 text-primary" aria-hidden="true" />
                     <span>
-                      <span className="sr-only">Church reading dates: </span>
+                      <span className="sr-only">Reading dates: </span>
                       {dates}
                     </span>
                   </li>

@@ -38,7 +38,7 @@ Not causes: database time is small next to the round trips (the slowest home RPC
 | Change | Where |
 | --- | --- |
 | Verify the session with `getClaims()` (local signature check against the cached JWKS) instead of `getUser()`; profile, status, and capabilities are still read from the database on every request | `src/lib/auth/viewer.ts` |
-| Start page queries alongside the member check (all are read-only `STABLE` functions behind RLS; nothing renders until the check passes) | Home, Community, post, Bible, Events, event, Podcasts, Music, Church Reading, Saved, Gallery pages |
+| Start page queries alongside the member check (all are read-only `STABLE` functions behind RLS; nothing renders until the check passes) | Home, Community, post, Bible, Events, event, Podcasts, Music, Books, Saved, Gallery pages |
 | One shared shell: `(member)`, `(events)`, `(teaching)`, `(giving)` now sit under `src/app/(app)`, whose layout renders the member shell once for approved adults (badge counts fetched in parallel with the account). Section layouts keep their own checks and their visitor/youth chrome | `src/app/(app)/layout.tsx` and the four group layouts |
 | Skeleton `loading.tsx` for each member section (prefetched with the links to it), the Community feed, and event detail; a spinner on a tapped post title and a lit dock tab while Home loads (`useLinkStatus`) | `src/components/layout/section-loading.tsx`, `src/components/ui/page-skeleton.tsx`, `link-pending.tsx`, `member-nav.tsx` |
 | Events Upcoming shows the next 30 occurrences with "Show more events"; categories and occurrences load in parallel | `src/app/(app)/(events)/events/page.tsx` |
@@ -98,7 +98,7 @@ In production, where a call is ~100–190 ms rather than a flat 110, expect each
 
 - Nothing is cached publicly or persisted: no new storage, service-worker, or HTTP caching. Member pages stay `private, no-store`, rendered per request, and the client router's in-memory cache settings are unchanged (dynamic pages are not reused between taps).
 - Membership status, suspension, youth/adult, and capabilities are still read from the database on every request; `getClaims()` replaces only the Auth round trip that proved the token. PostgREST already trusts the same signed token for every query until it expires, so this adds no new window. With a shared-secret key, `getClaims()` falls back to asking Auth.
-- Pages whose member check lived only in a section layout (Music, Church Reading, Saved, Gallery) now check in the page as well, because a prefetch can render a section layout ahead of the tap.
+- Pages whose member check lived only in a section layout (Music, Books, Saved, Gallery) now check in the page as well, because a prefetch can render a section layout ahead of the tap.
 - Skeletons contain no member data, and prefetches load only layouts and skeletons, per signed-in session.
 - Sign-out is still a full page load with `Clear-Site-Data: "cache"`, which discards all in-memory state. Signing in as someone else in the same tab without signing out (after a session expired) now forces a reload (`src/components/layout/account-boundary.tsx`), so the previous account's Back history and saved feed can't be shown.
 - Giving and youth pages keep their behaviour; giving gets the shared shell but no new caching.

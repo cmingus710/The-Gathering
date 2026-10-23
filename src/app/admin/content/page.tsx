@@ -60,7 +60,7 @@ export default async function ContentListPage({ searchParams }: PageProps<"/admi
         title="Teaching content"
         description={
           canPublish
-            ? "Devotionals, Sunday lessons, church podcast episodes, church reading, and playlists. New content is a draft for approved members until you publish it."
+            ? "Devotionals, Sunday lessons, church podcast episodes, books and reading assignments, and playlists. New content is a draft for approved members until you publish it."
             : "Write and preview drafts. A content publisher reviews and publishes them."
         }
         actions={

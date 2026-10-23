@@ -50,7 +50,7 @@ export const LAUNCHER_ITEMS: LauncherItem[] = [
   { id: "devotionals", label: "Devotionals", art: "devotionals", glyph: "devotionals", order: 56, status: "available", href: "/devotionals" },
   { id: "lessons", label: "Sunday Lessons", art: "lessons", glyph: "lessons", order: 57, status: "available", href: "/lessons" },
   { id: "podcasts", label: "Podcasts", art: "podcasts", glyph: "podcasts", order: 58, status: "available", href: "/podcasts" },
-  { id: "reading", label: "Church Reading", art: "church-reading", glyph: "reading", order: 59, status: "available", href: "/reading" },
+  { id: "reading", label: "Books", art: "church-reading", glyph: "reading", order: 59, status: "available", href: "/reading" },
   { id: "music", label: "Music", art: "music", glyph: "music", order: 62, status: "available", href: "/music" },
   { id: "gallery", label: "Media Gallery", art: "gallery", glyph: "gallery", order: 64, status: "available", href: "/gallery" },
   // Bible reading plans and the reader (Phase 8), with the supplied Bible art.

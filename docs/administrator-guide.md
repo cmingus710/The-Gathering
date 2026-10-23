@@ -67,7 +67,7 @@ Teachers with the content roles can publish lessons with attached handouts and m
 
 Editors change drafts; changing a live lesson needs the publisher role. Rewording a question keeps members' answers and shows them the wording they answered. Removing a block keeps answers for their authors. Members' answers are private: no teacher or administrator view exists. Full guide: [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
 
-**Church reading (Phase 13):** create a **Book** (title, author, description, cover image with confirmed rights, optional Audible link). Then, on its edit page, set **Reading details** (Kindle link, reading dates, related lesson). Add **Reading assignments** for the chapter schedule. Members open Kindle or Audible with their own accounts; nothing is embedded. Full guide: [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
+**Books (Phase 13):** create a **Book** (title, author, description, cover image with confirmed rights, optional Audible link). Then, on its edit page, set **Reading details** (Kindle link, reading dates, related lesson). Add **Reading assignments** for the chapter schedule. Members open Kindle or Audible with their own accounts; nothing is embedded. Full guide: [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
 
 **Not built:** a printable workbook or handout export, live presenter "Follow Along", and member-created handouts. Don't announce these.
 

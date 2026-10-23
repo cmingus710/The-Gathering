@@ -6,7 +6,7 @@ import { isUuid } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Church reading" };
+export const metadata: Metadata = { title: "Books" };
 
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : null);
 

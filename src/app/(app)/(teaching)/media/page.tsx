@@ -25,7 +25,7 @@ const SECTIONS: Array<{ href: string; label: string; glyph: IconName; members?: 
   { href: "/lessons", label: "Sunday lessons", glyph: "lessons" },
   { href: "/videos", label: "Videos", glyph: "media", members: true },
   { href: "/podcasts", label: "Podcasts", glyph: "podcasts" },
-  { href: "/reading", label: "Church reading", glyph: "reading", members: true },
+  { href: "/reading", label: "Books", glyph: "reading", members: true },
   { href: "/music", label: "Music & playlists", glyph: "music", members: true },
   { href: "/gallery", label: "Media gallery", glyph: "gallery", members: true },
 ];
@@ -37,7 +37,7 @@ const TYPES: Array<{ value: string; label: string; members?: boolean }> = [
   { value: "devotional", label: "Devotionals" },
   { value: "lesson", label: "Sunday lessons" },
   { value: "podcast", label: "Podcasts" },
-  { value: "reading", label: "Church reading", members: true },
+  { value: "reading", label: "Books", members: true },
   { value: "music", label: "Music", members: true },
   { value: "gallery", label: "Media gallery", members: true },
 ];
