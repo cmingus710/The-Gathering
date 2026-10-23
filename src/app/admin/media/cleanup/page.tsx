@@ -82,7 +82,7 @@ export default async function CleanupPage({ searchParams }: PageProps<"/admin/me
               </div>
             ))}
             <div className="rounded-tile border border-border px-4 py-3">
-              <dt className="text-meta text-text-secondary">Gallery photos</dt>
+              <dt className="text-meta text-text-secondary">Media gallery photos</dt>
               <dd className="font-semibold">
                 {formatBytes(Number(usage.gallery.bytes))} · {usage.gallery.photos}
               </dd>
@@ -113,7 +113,7 @@ export default async function CleanupPage({ searchParams }: PageProps<"/admin/me
           )}
         </Card>
         <Card>
-          <SectionHeading description="Rejected or removed photos, and photo uploads that never finished.">Gallery files</SectionHeading>
+          <SectionHeading description="Rejected or removed photos, and photo uploads that never finished.">Media gallery files</SectionHeading>
           {c.photos.length ? (
             <ul className="divide-y divide-border">
               {c.photos.map((p) => row(`photo:${p.id}`, `Photo (${p.status})`, `${p.uploads.length + p.media.length} stored file(s) · ${formatDateTime(p.updated_at, tz)}`))}

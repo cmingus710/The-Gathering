@@ -4,12 +4,13 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { TileIcon } from "@/components/icons/icon";
 import { durationLabel, formatInstant, itemHref } from "@/lib/media/format";
-import { parseProviderRefString, providerEmbed, safeHttpsUrl, videoEmbed } from "@/lib/media/embeds";
+import { parseProviderRefString, providerEmbed, safeHttpsUrl } from "@/lib/media/embeds";
 import type { PodcastEpisode, Show } from "@/lib/media/types";
 import { EmbedPlayer } from "./embed-player";
+import { VideoPlayer } from "./video-player";
+import { attachmentVideo } from "@/lib/media/videos";
 import { EpisodePlayer } from "./episode-player";
 import { itemCover } from "./item-card";
-import { NativeVideo } from "./native-video";
 import { ShowArt } from "./podcast";
 import { ShowMoreText } from "./show-more-text";
 import { BookmarkButton } from "./toggles";
@@ -43,14 +44,14 @@ export function PodcastEpisodeCard({
   shows,
   timeZone,
   member,
-  origin,
 }: {
   entry: PodcastEpisode;
   urls: Map<string, string>;
   shows: Map<string, Show>;
   timeZone: string;
   member: boolean;
-  origin: string;
+  /** Unused since the shared video player builds embeds in the browser. */
+  origin?: string;
 }) {
   const headingId = `ep-${entry.type}-${entry.id}`;
 
@@ -93,23 +94,14 @@ export function PodcastEpisodeCard({
               saveProgress: member,
             }}
           />
-        ) : play.kind === "external_video" && play.provider && play.provider_ref ? (
-          <EmbedPlayer
-            title={entry.title}
-            embed={videoEmbed(
-              play.provider === "youtube" ? { provider: "youtube", id: play.provider_ref } : { provider: "vimeo", id: play.provider_ref, hash: play.provider_hash },
-              { origin, autoplay: true },
-            )}
-          />
         ) : (
-          <NativeVideo
-            assetId={play.asset_id}
-            itemId={entry.id}
+          <VideoPlayer
+            video={attachmentVideo(play)}
             title={entry.title}
+            itemId={entry.id}
             poster={art}
-            captions={play.captions}
             resumeAt={entry.progress?.position}
-            saveProgressFor={member}
+            saveProgress={member}
           />
         )}
 
