@@ -12,11 +12,12 @@ import { loadWorkbookPage } from "@/lib/media/workbook-page";
 import { getSiteUrl } from "@/lib/site-url";
 import { requireClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Lesson workbook" };
+export const metadata: Metadata = { title: "Sunday lesson" };
 
 /**
- * A member's private workbook for a lesson: the lesson's blocks in order
- * (never teacher-only content) with their own answers and notes.
+ * Following a lesson: the lesson's blocks in order (never teacher-only
+ * content) with the member's own answers and notes, which are My Journal
+ * entries. The address is the one workbooks always had, so saved links work.
  */
 export default async function WorkbookPage({ params, searchParams }: PageProps<"/lessons/[id]/workbook">) {
   const { id } = await params;
@@ -32,11 +33,11 @@ export default async function WorkbookPage({ params, searchParams }: PageProps<"
   return (
     <>
       <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-4 sm:mb-4">
-        {/* A lesson that's no longer available can't be opened; its workbook then belongs to My workbooks. */}
+        {/* A lesson that's no longer available can't be opened; its answers then belong to My Journal. */}
         <BackLink route="/lessons/[id]/workbook" params={{ id: workbook.available ? id : null }} inRow />
         {workbook.available ? (
-          <Link href="/lessons/workbooks" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
-            My workbooks
+          <Link href="/journal" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
+            My Journal
           </Link>
         ) : null}
       </div>
@@ -45,9 +46,9 @@ export default async function WorkbookPage({ params, searchParams }: PageProps<"
         <WorkbookView page={page} userId={viewer.id} origin={getSiteUrl()} />
       ) : (
         <div className="space-y-6">
-          <h1 className="font-display text-display font-semibold">Your workbook</h1>
+          <h1 className="font-display text-display font-semibold">Your lesson answers</h1>
           <Alert tone="info" title="This lesson isn't available any more.">
-            Your answers and notes are still here, only for you. {PRIVACY_COPY}
+            Your answers and notes are still here and in My Journal, only for you. {PRIVACY_COPY}
           </Alert>
           <RemovedAnswers answers={workbook.answers} itemId={id} />
           {workbook.note?.body.trim() ? (

@@ -104,8 +104,8 @@ export default async function PrivacyPage() {
             messages, prayer and care requests, event registrations, and photos or videos you upload.
           </li>
           <li>
-            <strong>Your personal tools:</strong> journal entries, Bible reading progress, bookmarks and highlights,
-            scripture-memory practice, and lesson workbook answers.
+            <strong>Your personal tools:</strong> My Journal entries (including your Sunday lesson answers and notes), Bible reading progress, bookmarks and highlights,
+            and scripture-memory practice.
           </li>
           <li>
             <strong>Giving:</strong> the amount, fund, frequency, date, and your name and email for each gift. Card and bank
@@ -168,7 +168,7 @@ export default async function PrivacyPage() {
             Your sign-in email is never shown there.
           </li>
           <li>
-            <strong>Journals, reading progress, memory practice, and workbook answers</strong> are visible only to you. Church
+            <strong>My Journal (including lesson answers), reading progress, and memory practice</strong> are visible only to you. Church
             staff and administrators can&apos;t see them in the app.
           </li>
           <li>
@@ -218,7 +218,7 @@ export default async function PrivacyPage() {
         <List>
           <li><strong>Sign-in cookies</strong> keep you signed in and protect sign-in with Google or Apple. Signing out removes them and clears the app&apos;s cached pages from your browser.</li>
           <li><strong>A theme cookie</strong> remembers whether you prefer light or dark mode.</li>
-          <li><strong>Small settings on your device</strong> remember your audio playback speed and keep an unsaved workbook answer until it&apos;s saved.</li>
+          <li><strong>Small settings on your device</strong> remember your audio playback speed and keep an unsaved lesson answer until it&apos;s saved.</li>
           <li>The installed app stores only the app&apos;s design files for faster loading. It never stores member pages for offline use.</li>
         </List>
         <p>We don&apos;t use advertising or analytics cookies.</p>

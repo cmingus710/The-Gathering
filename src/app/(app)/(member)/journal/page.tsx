@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { PageHeader, SectionHeading } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { segmentClass, SegmentedTrack } from "@/components/ui/segmented";
 import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
@@ -24,9 +25,9 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
 
   return (
     <>
-      <PageHeader
-        title="My Journal"
-        description="Private notes and reflections. Only you can read them: not church staff, group leaders, or anyone in your household."
+      <SectionHeader
+        section="journal"
+        description="Private notes, reflections, and lesson answers. Only you can read them: not church staff, group leaders, or anyone in your household."
         actions={
           <ButtonLink href="/journal/new" size="sm" icon={<Plus className="size-4" aria-hidden="true" />}>
             New entry
@@ -34,6 +35,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
         }
       />
       {params.notice === "deleted" ? <Alert tone="success" title="The entry was deleted." className="mb-4" /> : null}
+      {params.notice === "lesson-deleted" ? <Alert tone="success" title="Your answers and notes for that lesson were deleted." className="mb-4" /> : null}
       {error ? <Alert tone="error" title="Your journal couldn't be loaded right now." className="mb-4" /> : null}
       <SegmentedTrack label="Entries" className="mb-4">
         <Link href="/journal" className={segmentClass(status === "active")} aria-current={status === "active" ? "page" : undefined}>

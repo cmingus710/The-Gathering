@@ -27,7 +27,7 @@ export type JournalListItem = {
   excerpt: string;
   status: "active" | "archived";
   updated_at: string;
-  link: { kind: string; label?: string | null; plan_title?: string | null; title?: string | null; available?: boolean } | null;
+  link: { kind: string; label?: string | null; plan_title?: string | null; title?: string | null; question?: string | null; available?: boolean } | null;
 };
 
 export async function searchJournalAction(input: { query: string; status: "active" | "archived"; offset: number }): Promise<

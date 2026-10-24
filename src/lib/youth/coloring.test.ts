@@ -47,7 +47,7 @@ describe("coloring model", () => {
     expect(PALETTE).toHaveLength(12);
     expect(new Set(PALETTE.map((c) => c.label)).size).toBe(12);
     expect(BRUSHES.map((b) => b.label)).toEqual(["Small", "Medium", "Large"]);
-    const sql = readFileSync(path.join(__dirname, "../../../supabase/migrations/20261122000100_youth_coloring.sql"), "utf8");
+    const sql = readFileSync(path.join(__dirname, "../../../supabase/migrations/20261123000100_youth_coloring.sql"), "utf8");
     const keys = /select array\[([^\]]+)\];/.exec(sql)![1].match(/'([a-z]+)'/g)!.map((k) => k.slice(1, -1));
     expect(keys).toEqual(PALETTE.map((c) => c.key));
   });

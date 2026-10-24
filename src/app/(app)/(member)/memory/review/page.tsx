@@ -5,7 +5,8 @@ import { MemoryNav } from "@/components/memory/nav";
 import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay, reviewDate } from "@/lib/memory/format";
 import type { ReviewQueue } from "@/lib/memory/types";
@@ -20,7 +21,7 @@ export default async function ReviewPage() {
   const q = data as ReviewQueue | null;
   return (
     <>
-      <PageHeader title="Review queue" description="Verses come back for review at growing intervals. Missing a day never loses progress; they simply wait for you." />
+      <SectionHeader section="memory" size="compact" title="Review queue" description="Verses come back for review at growing intervals. Missing a day never loses progress; they simply wait for you." />
       <MemoryNav current="review" />
       {error || !q ? (
         <Alert tone="error" title="Your review queue couldn't be loaded right now." />

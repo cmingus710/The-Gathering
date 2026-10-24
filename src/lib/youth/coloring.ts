@@ -3,7 +3,7 @@
  * edits made to it. Shared by the studio (browser), the editor, and the save
  * endpoint. The database checks the same rules again
  * (youth.coloring_template_problem, youth.coloring_doc_problem in
- * 20261122000100); nothing here grants access.
+ * 20261123000100); nothing here grants access.
  *
  * A picture (an activity version's config.coloring) is data only:
  *   - mode "regions": fillable parts (normalized path data: absolute M/L/C/Z

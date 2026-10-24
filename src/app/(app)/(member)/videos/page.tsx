@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { VideoCard } from "@/components/media/video-card";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { coverPaths, isUuid } from "@/lib/media/format";
 import { listItems } from "@/lib/media/pages";
@@ -40,7 +41,7 @@ export default async function VideosPage({ searchParams }: PageProps<"/videos">)
 
   return (
     <>
-      <PageHeader title="Videos" description="Teaching and church videos. Press Play to watch right here." />
+      <SectionHeader section="videos" description="Teaching and church videos. Press Play to watch right here." />
       <form role="search" aria-label="Filter videos" className="mb-6 grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] sm:items-end">
         <div className="space-y-1">
           <label htmlFor="vq" className="block text-meta font-semibold">

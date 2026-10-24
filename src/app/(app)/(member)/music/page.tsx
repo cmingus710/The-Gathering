@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PlaylistSection } from "@/components/media/playlist-section";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { listItems } from "@/lib/media/pages";
 import { requireClient } from "@/lib/supabase/server";
@@ -34,7 +35,7 @@ export default async function MusicPage({ searchParams }: PageProps<"/music">) {
 
   return (
     <>
-      <PageHeader title="Music & playlists" description="Worship sets and playlists from our church." />
+      <SectionHeader section="music" description="Worship sets and playlists from our church." />
       {!list.ok ? <Alert tone="error" title="Playlists couldn't be loaded right now." className="mb-6" /> : null}
       {list.ok && !visible.length ? (
         <EmptyState glyph="music" title="No playlists yet">

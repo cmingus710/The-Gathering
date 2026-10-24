@@ -8,7 +8,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Bible Coloring Studio (20261122000100) against a real database: coloring
+ * Bible Coloring Studio (20261123000100) against a real database: coloring
  * pictures only as checked data on Drawing & coloring versions (refusing
  * markup and anything malformed), the ordinary editor save keeping the
  * picture, each child's artwork private to that child's youth account and

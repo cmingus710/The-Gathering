@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { EventListItem } from "@/components/events/event-list-item";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { Card, EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { getMyPrefs, getMyRegistrations, publicFeedEnabled } from "@/lib/events/queries";
 import { getSiteUrl } from "@/lib/site-url";
@@ -24,7 +25,7 @@ export default async function CalendarSettingsPage() {
   return (
     <>
       <BackLink route="/events/calendar" />
-      <PageHeader title="Calendar & reminders" description="Your registrations, your private calendar subscription, and reminder emails." />
+      <SectionHeader section="events" size="compact" title="Calendar & reminders" description="Your registrations, your private calendar subscription, and reminder emails." />
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <section aria-labelledby="mine">
           <SectionHeading id="mine">Your upcoming registrations</SectionHeading>

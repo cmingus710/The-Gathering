@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { ActivityCard, ActivityFilterBar, ActivityGrid, NoActivities } from "@/components/youth/learn-play";
 import { requireYouthArea } from "@/lib/auth/viewer";
 import { applyFilters, parseFilters, sortForHome } from "@/lib/youth/activities";
@@ -19,7 +20,7 @@ export default async function LearnPlayPage({ searchParams }: PageProps<"/youth/
   return (
     <>
       <BackLink route="/youth/play" />
-      <PageHeader
+      <SectionHeader section="youth" size="compact"
         title="Learn & Play"
         description={
           mature

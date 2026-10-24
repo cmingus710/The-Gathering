@@ -6,7 +6,8 @@ import { TileIcon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SelectField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -51,8 +52,8 @@ export default async function BiblePage() {
 
   return (
     <>
-      <PageHeader
-        title="Bible reading"
+      <SectionHeader
+        section="bible"
         description="Read along with the church, or at your own pace. Your progress, highlights, and notes are private to you."
         actions={
           <>
@@ -170,9 +171,6 @@ export default async function BiblePage() {
         <ul className={rowListClass}>
           <li>
             <ListRow plain href="/bible/bookmarks" icon={<Bookmark className="size-5" aria-hidden="true" />} label="Bookmarks and highlights" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
-          </li>
-          <li>
-            <ListRow plain href="/journal" icon={<NotebookPen className="size-5" aria-hidden="true" />} label="My Journal" description="Private notes and reflections" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
           </li>
         </ul>
       </section>

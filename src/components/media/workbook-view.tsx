@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
-import { BookOpen, Download, ExternalLink, FileText, Lock } from "lucide-react";
+import { BookOpen, Download, ExternalLink, FileText, Lock, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { MarkdownBody } from "@/components/announcements/markdown-body";
 import { FumsTracker } from "@/components/bible/fums";
@@ -18,6 +18,19 @@ import { VideoPlayer } from "./video-player";
 import { WorkbookText } from "./workbook-text";
 
 export const PRIVACY_COPY = "Your answers are private. Teachers and administrators can't see them.";
+/** Where lesson answers and notes are kept (20261122000100). */
+export const JOURNAL_COPY = "Your answers and notes save to My Journal.";
+
+/** Opens the saved answer or notes in My Journal (only once something is written). */
+function InMyJournal({ entryId, body }: { entryId: string | undefined; body: string | undefined }) {
+  if (!entryId || !body?.trim()) return null;
+  return (
+    <Link href={`/journal/${entryId}`} className="inline-flex min-h-11 items-center gap-1.5 text-meta font-semibold text-primary hover:underline">
+      <NotebookPen className="size-4" aria-hidden="true" />
+      Open in My Journal
+    </Link>
+  );
+}
 
 function MediaBlock({ asset, itemId, title }: { asset: BlockAsset; itemId: string; title: string }) {
   if (asset.kind === "external_video" || asset.kind === "video") {
@@ -146,7 +159,7 @@ function Block({ block, page, userId, index }: { block: WorkbookBlock; page: Wor
       ) : null}
 
       {block.answerable && block.prompt ? (
-        <div className="space-y-2 rounded-card border border-border bg-surface p-4">
+        <div id={`q-${block.id}`} className="scroll-mt-24 space-y-2 rounded-card border border-border bg-surface p-4">
           <p className="font-semibold" id={`${headingId}-prompt`}>
             {block.prompt}
           </p>
@@ -170,6 +183,7 @@ function Block({ block, page, userId, index }: { block: WorkbookBlock; page: Wor
               labelHidden
             />
           )}
+          {!workbook.preview && userId ? <InMyJournal entryId={answer?.entry_id} body={answer?.body} /> : null}
         </div>
       ) : null}
     </section>
@@ -216,8 +230,10 @@ function ScriptureBlock({ block, page }: { block: WorkbookBlock; page: WorkbookP
 }
 
 /**
- * The workbook page body, shared by the member page and the editor's
- * preview (which passes the same member projection, no answers).
+ * The lesson page members follow along in (the teacher's handout with
+ * answer boxes), shared by the member page and the editor's preview (which
+ * passes the same member projection, no answers). Answers and notes are My
+ * Journal entries; this page edits them in place.
  */
 export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: string | null; /** Unused since the shared video player. */ origin?: string }) {
   const { workbook } = page;
@@ -232,20 +248,20 @@ export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: str
     <article className="space-y-8">
       <header className="space-y-2">
         <p className="text-meta font-semibold text-text-secondary">
-          Sunday lesson workbook · <time dateTime={lesson.delivered_on}>{formatDay(lesson.delivered_on, "long")}</time>
+          Sunday lesson · <time dateTime={lesson.delivered_on}>{formatDay(lesson.delivered_on, "long")}</time>
         </p>
         <h1 className="font-display text-display font-semibold leading-tight">{lesson.title}</h1>
         {speakers.length ? <p className="text-text-secondary">{speakers.join(", ")}</p> : null}
         <p className="flex items-center gap-1.5 text-meta font-semibold">
           <Lock className="size-4 text-primary" aria-hidden="true" />
-          {PRIVACY_COPY}
+          {JOURNAL_COPY} {PRIVACY_COPY}
         </p>
       </header>
 
       {workbook.blocks.length ? (
         workbook.blocks.map((b, i) => <Block key={b.id} block={b} page={page} userId={userId} index={i} />)
       ) : (
-        <Alert tone="info" title="This lesson has no workbook yet.">
+        <Alert tone="info" title="This lesson has no questions yet.">
           You can still keep private notes below.
         </Alert>
       )}
@@ -254,8 +270,8 @@ export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: str
         <Attribution key={t.id} translation={t} />
       ))}
 
-      <section aria-labelledby="wb-notes" className="space-y-2">
-        <SectionHeading id="wb-notes" description="Anything else you want to remember from this lesson. Only you can see it.">
+      <section aria-labelledby="wb-notes" className="scroll-mt-24 space-y-2">
+        <SectionHeading id="wb-notes" description="Anything else you want to remember from this lesson. Saved to My Journal; only you can see it.">
           My notes
         </SectionHeading>
         {workbook.preview || !userId ? (
@@ -273,6 +289,7 @@ export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: str
             rows={6}
           />
         )}
+        {!workbook.preview && userId ? <InMyJournal entryId={workbook.note?.entry_id} body={workbook.note?.body} /> : null}
       </section>
 
       {removed.length ? <RemovedAnswers answers={removed} itemId={itemId} /> : null}
@@ -282,9 +299,9 @@ export function WorkbookView({ page, userId }: { page: WorkbookPage; userId: str
           <h2 id="wb-delete" className="font-semibold">
             Delete my answers
           </h2>
-          <p className="text-meta text-text-secondary">Removes every answer and note you wrote for this lesson. This can&apos;t be undone.</p>
+          <p className="text-meta text-text-secondary">Removes every answer and note you wrote for this lesson, here and in My Journal. This can&apos;t be undone.</p>
           <ConfirmDialog trigger="Delete my answers" title="Delete your answers and notes for this lesson?" confirmLabel="Delete" formAction={deleteWorkbookAction} hidden={{ item: itemId }}>
-            Your answers and notes for this lesson are removed. The lesson itself isn&apos;t affected.
+            Your answers and notes for this lesson are removed from My Journal. The lesson itself isn&apos;t affected.
           </ConfirmDialog>
         </section>
       ) : null}
@@ -305,6 +322,7 @@ export function RemovedAnswers({ answers, itemId }: { answers: WorkbookAnswer[];
           <li key={a.block_id} className="rounded-card border border-border bg-surface p-4">
             <p className="font-semibold">{a.prompt_snapshot || "A question"}</p>
             <p className="mt-2 whitespace-pre-wrap">{a.body || <span className="text-text-secondary">(no answer written)</span>}</p>
+            <InMyJournal entryId={a.entry_id} body={a.body} />
             <form action={deleteAnswerAction} className="mt-2">
               <input type="hidden" name="item" value={itemId} />
               <input type="hidden" name="block" value={a.block_id} />

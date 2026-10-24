@@ -1,4 +1,4 @@
--- Bible Coloring Studio · Apply migration 20261122000100_youth_coloring to
+-- Bible Coloring Studio · Apply migration 20261123000100_youth_coloring to
 -- the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
@@ -10,11 +10,11 @@
 -- 256 KB), and five Learn & Play functions replaced with the same
 -- signatures and grants (see the migration's header).
 --
--- It copies supabase/migrations/20261122000100_youth_coloring.sql verbatim
+-- It copies supabase/migrations/20261123000100_youth_coloring.sql verbatim
 -- and records it under its repository version (created_by = youth-coloring).
 -- All or nothing: one transaction; out of order or a second run stops at the
 -- preflight with "Nothing was changed". It needs Learn & Play
--- (20261118000200) and the home lesson card step (20261121000100).
+-- (20261118000200) and the My Journal lesson answers step (20261122000100).
 begin;
 
 do $preflight$
@@ -22,18 +22,18 @@ begin
   if to_regclass('youth.activity_versions') is null or to_regprocedure('public.youth_admin_activity_save(uuid, jsonb)') is null then
     raise exception 'Nothing was changed: Learn & Play (20261118000200) is not in this database.';
   end if;
-  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261121000100') then
-    raise exception 'Nothing was changed: the home lesson card step (20261121000100) is not recorded. Run the steps in order.';
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261122000100') then
+    raise exception 'Nothing was changed: the My Journal lesson answers step (20261122000100) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261122000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261123000100')
      or to_regclass('youth.coloring_artwork') is not null then
-    raise exception 'Nothing was changed: 20261122000100 is already applied.';
+    raise exception 'Nothing was changed: 20261123000100 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261122000100_youth_coloring.sql
+-- 20261123000100_youth_coloring.sql
 -- =========================================================================
 -- Youth & Families · Learn & Play: Bible Coloring Studio (additive).
 --
@@ -820,6 +820,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261122000100', 'youth_coloring', 'youth-coloring');
+values ('20261123000100', 'youth_coloring', 'youth-coloring');
 
 commit;

@@ -6,7 +6,8 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { GiftStatusBadge as StatusBadge } from "@/components/giving/gift-status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { Card, EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireSignedIn } from "@/lib/auth/viewer";
 import { FREQUENCY_LABEL, formatCents } from "@/lib/giving/money";
 import { getChurchSettings } from "@/lib/settings/queries";
@@ -35,7 +36,7 @@ export default async function GivingPage() {
 
   return (
     <>
-      <PageHeader
+      <SectionHeader section="give" size="compact"
         title="Your giving"
         description="Only you can see this page. Finance administrators can see contribution records; other members never can."
         actions={<ButtonLink href="/give" icon={<HandCoins className="size-4" aria-hidden="true" />}>Give</ButtonLink>}

@@ -5,7 +5,8 @@ import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import type { Card } from "@/lib/memory/types";
@@ -20,7 +21,7 @@ export default async function MyVersesPage() {
   const cards = (data ?? { active: [], removed: [] }) as { active: Card[]; removed: Card[] };
   return (
     <>
-      <PageHeader
+      <SectionHeader section="memory" size="compact"
         title="My Verses"
         description="Every verse you're memorizing, from collections or added yourself."
         actions={

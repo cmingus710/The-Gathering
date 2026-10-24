@@ -5,7 +5,8 @@ import { TileIcon } from "@/components/icons/icon";
 import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import type { Collection } from "@/lib/memory/types";
 import { signMemoryPaths } from "@/lib/memory/storage";
@@ -21,7 +22,7 @@ export default async function CollectionsPage() {
   const covers = await signMemoryPaths(supabase, cols.church.map((c) => c.cover_path));
   return (
     <>
-      <PageHeader title="Verse collections" description="Sets of verses chosen by the church, your groups, or you." />
+      <SectionHeader section="memory" size="compact" title="Verse collections" description="Sets of verses chosen by the church, your groups, or you." />
       <MemoryNav current="collections" />
       {error ? <Alert tone="error" title="Collections couldn't be loaded right now." className="mb-6" /> : null}
       <section aria-labelledby="church" className="mb-8">

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AlbumCoverImage } from "@/components/media/album-cover-image";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { albumCoverPath, albumVideoStill } from "@/lib/media/album-cover";
 import { formatDay } from "@/lib/media/format";
@@ -22,8 +23,8 @@ export default async function GalleryPage() {
   const urls = await signPaths(supabase, albums.map((a) => albumCoverPath(a.cover, "card")));
   return (
     <>
-      <PageHeader
-        title="Media gallery"
+      <SectionHeader
+        section="gallery"
         description="Photos and videos from church life, shared with members. Never public."
         actions={
           <ButtonLink href="/gallery/mine" variant="secondary" size="sm">

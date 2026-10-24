@@ -3,7 +3,8 @@ import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { formatWhen } from "@/lib/youth/format";
 import { youthRead } from "@/lib/youth/queries";
@@ -22,7 +23,7 @@ export default async function LeadPage() {
   return (
     <>
       <BackLink route="/youth/lead" />
-      <PageHeader
+      <SectionHeader section="youth" size="compact"
         title="Leading"
         description="Only the groups you're assigned to. You never see contact details, dates of birth, or anyone's private learning."
         actions={data && data.open_reports > 0 ? <ButtonLink href="/youth/lead/reports">Reports ({data.open_reports})</ButtonLink> : <ButtonLink href="/youth/lead/reports" variant="secondary">Reports</ButtonLink>}

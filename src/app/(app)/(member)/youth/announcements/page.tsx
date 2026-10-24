@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { PageHeader } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { AnnouncementList } from "@/components/youth/sections";
 import { requireYouthArea } from "@/lib/auth/viewer";
 import { youthRead } from "@/lib/youth/queries";
@@ -15,7 +15,7 @@ export default async function AnnouncementsPage() {
   return (
     <>
       <BackLink route="/youth/announcements" />
-      <PageHeader title="Youth announcements" description="Announcements for the youth groups you or your children belong to." />
+      <SectionHeader section="youth" size="compact" title="Youth announcements" description="Announcements for the youth groups you or your children belong to." />
       {failed || !data ? <Alert tone="error" title="Announcements couldn't be loaded right now." /> : <AnnouncementList items={data} empty="No youth announcements right now." />}
     </>
   );
