@@ -1252,3 +1252,85 @@ html[data-player] {
   --apple-border: #000000;
   --apple-text: #ffffff;
 }
+
+/*
+ * Learn & Play (Youth & Families). Illustration washes are decorative only:
+ * text never sits on them (titles and labels are on the card surface below),
+ * so every text pair still uses the tested tokens above. Older-youth cards
+ * (.play-card-mature) trade the colour washes for a calm charcoal band, the
+ * serif, and no playful lift.
+ */
+:root,
+[data-theme="light"] {
+  --play-ink: #363430;
+  --play-story: #f4e4c2;
+  --play-quiz: #d9e6ec;
+  --play-matching: #f1d9cf;
+  --play-puzzle: #dbe6d4;
+  --play-drawing: #eadcec;
+  --play-word_game: #e9e2d0;
+  --play-mature: linear-gradient(135deg, #2b2926 0%, #3a332a 60%, #4a3c27 100%);
+  --play-mature-ink: #e7d6b3;
+}
+[data-theme="dark"] {
+  --play-ink: #f7f4ed;
+  --play-story: #4a3d25;
+  --play-quiz: #23363d;
+  --play-matching: #45291f;
+  --play-puzzle: #2a3a26;
+  --play-drawing: #3b2a3d;
+  --play-word_game: #3b3527;
+  --play-mature: linear-gradient(135deg, #171614 0%, #24201b 60%, #3a2f1f 100%);
+  --play-mature-ink: #dabf8c;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --play-ink: #f7f4ed;
+    --play-story: #4a3d25;
+    --play-quiz: #23363d;
+    --play-matching: #45291f;
+    --play-puzzle: #2a3a26;
+    --play-drawing: #3b2a3d;
+    --play-word_game: #3b3527;
+    --play-mature: linear-gradient(135deg, #171614 0%, #24201b 60%, #3a2f1f 100%);
+    --play-mature-ink: #dabf8c;
+  }
+}
+.play-art {
+  color: var(--play-ink);
+  background: var(--play-wash, var(--color-surface-muted));
+}
+.play-art[data-kind="story"] { --play-wash: var(--play-story); }
+.play-art[data-kind="quiz"] { --play-wash: var(--play-quiz); }
+.play-art[data-kind="matching"] { --play-wash: var(--play-matching); }
+.play-art[data-kind="puzzle"] { --play-wash: var(--play-puzzle); }
+.play-art[data-kind="drawing"] { --play-wash: var(--play-drawing); }
+.play-art[data-kind="word_game"] { --play-wash: var(--play-word_game); }
+.play-card-mature .play-art,
+.play-art.play-art-mature {
+  color: var(--play-mature-ink);
+  background: var(--play-mature);
+}
+.play-card {
+  transition:
+    transform 160ms var(--ease-gentle),
+    box-shadow 160ms var(--ease-gentle),
+    border-color 160ms var(--ease-gentle);
+}
+.play-card:not(.play-card-mature):hover,
+.play-card:not(.play-card-mature):focus-within {
+  transform: translateY(-2px) rotate(-0.4deg);
+  box-shadow: var(--elev-lift);
+}
+.play-card-mature:hover,
+.play-card-mature:focus-within {
+  border-color: var(--color-border-strong);
+}
+@media (prefers-reduced-motion: reduce) {
+  .play-card,
+  .play-card:not(.play-card-mature):hover,
+  .play-card:not(.play-card-mature):focus-within {
+    transition: none;
+    transform: none;
+  }
+}

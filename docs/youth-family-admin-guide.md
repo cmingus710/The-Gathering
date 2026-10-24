@@ -15,6 +15,7 @@ Phase 10. For staff who run youth ministry and family administration. Members' a
 | Permission forms and versions | `/admin/youth/forms` | Permission form administrator (`youth.forms`) |
 | Make an event youth-only; forms; event details to collect; personnel; attendee and consent lists | `/admin/youth/events`, `/admin/youth/events/<id>` | `youth.forms` or `youth.manage` (dates, capacity, deadlines stay in **Administration → Events**) |
 | Photo consent reviews, photo associations, known copies | `/admin/youth/media` | Photo consent reviewer (`youth.media_consent`) + Gallery moderator to see images |
+| Learn & Play activities: create, artwork, preview, publish, archive ([learn-and-play.md](learn-and-play.md)) | `/admin/youth/activities` | Youth activity editor (`youth.activities`); opens no child records or progress |
 | Reports about youth discussions (including about leaders) | `/admin/youth/reports` | Youth safeguarding reviewer (`youth.safeguarding`) |
 | Leaders' own work: roster, enrollment, announcements, learning, discussions, reports, event lists | **Youth → Leading** `/youth/lead` | Youth leader (`youth.lead`) **and** an assignment to that group |
 | Event logistics (emergency contacts, pickup notes) | `/youth/lead/events/<id>/logistics` | Designated personnel of that event (a leader of its group, or `youth.logistics`) |

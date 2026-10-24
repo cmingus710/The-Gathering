@@ -6,7 +6,7 @@ export type EntryLink =
   | { kind: "passage"; label: string | null; translation_code: string | null; book: string; chapter: number; available: boolean }
   | { kind: "assignment"; available: boolean; day_id: string | null; label: string | null; plan_title: string | null; question: string | null; revision: number | null; changed_since: boolean; passages: Array<{ label: string }> | null }
   | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null }
-  // Lesson answers and notes (20261120000100), written while following a lesson.
+  // Lesson answers and notes (20261122000100), written while following a lesson.
   | {
       kind: "lesson_answer";
       available: boolean;

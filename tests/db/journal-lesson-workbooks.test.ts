@@ -4,10 +4,10 @@ import { TEST_DATABASE_URL, TestDb, anon, as, service, type Actor } from "./harn
 
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
-const MIGRATION = "20261120000100";
+const MIGRATION = "20261122000100";
 
 /**
- * Lesson answers and notes in My Journal (20261120000100): workbook rows
+ * Lesson answers and notes in My Journal (20261122000100): workbook rows
  * written before the step are copied into journal.entries with owner, text,
  * version, timestamps, lesson, question, and wording intact; running the
  * import again copies nothing twice and never restores an entry the member

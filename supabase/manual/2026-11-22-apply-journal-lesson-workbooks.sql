@@ -1,3 +1,54 @@
+-- My Journal · lesson answers and notes · Apply migration
+-- 20261122000100_journal_lesson_workbooks to the hosted project.
+--
+-- Run once in the SQL editor of The Gathering project, ONLY after the owner
+-- approves applying it (docs/migration-history.md, "My Journal: lesson
+-- answers and notes"):
+--   https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
+--
+-- Moves members' lesson answers and notes into My Journal: two journal link
+-- kinds, the lesson workbook functions re-pointed at journal.entries (same
+-- names and results), and a one-time copy of every existing answer and note
+-- with owner, text, version, timestamps, lesson, question, and wording.
+-- media.workbook_answers and media.workbook_notes are left unchanged as the
+-- pre-migration copy. The copy is checked inside the transaction
+-- (journal.verify_workbook_import): if any row isn't copied exactly, nothing
+-- is changed.
+--
+-- It copies supabase/migrations/20261122000100_journal_lesson_workbooks.sql
+-- verbatim and records it under its repository version (created_by =
+-- journal-lesson-workbooks). All or nothing: one transaction; out of order
+-- or a second run stops at the preflight with "Nothing was changed".
+-- It needs the lesson workbooks (20261031000300), devotional collections
+-- (20261118000100), and home lesson card (20261121000100) steps. (It was
+-- first numbered 20261120000100, which is lesson_featured_order on hosted.)
+--
+-- Before running, note the counts (read-only) to compare with the result:
+--   select (select count(*) from media.workbook_answers) answers, (select count(*) from media.workbook_notes) notes;
+begin;
+
+do $preflight$
+begin
+  if to_regclass('journal.entries') is null or to_regclass('media.workbook_answers') is null or to_regclass('media.workbook_notes') is null
+     or to_regprocedure('public.media_workbook_answer_save(uuid, uuid, text, integer, boolean)') is null
+     or not exists (select 1 from information_schema.columns where table_schema = 'journal' and table_name = 'entries' and column_name = 'collection_reading_id') then
+    raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
+  end if;
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261031000300')
+     or not exists (select 1 from supabase_migrations.schema_migrations where version = '20261118000100')
+     or not exists (select 1 from supabase_migrations.schema_migrations where version = '20261121000100') then
+    raise exception 'Nothing was changed: the lesson workbooks (20261031000300), devotional collections (20261118000100), or home lesson card (20261121000100) step is not recorded. Run the steps in order.';
+  end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261122000100')
+     or exists (select 1 from information_schema.columns where table_schema = 'journal' and table_name = 'entries' and column_name = 'lesson_block_id') then
+    raise exception 'Nothing was changed: 20261122000100 is already applied.';
+  end if;
+end
+$preflight$;
+
+-- =========================================================================
+-- 20261122000100_journal_lesson_workbooks.sql
+-- =========================================================================
 -- My Journal · lesson answers and notes move into the journal.
 --
 -- Until now a member's personal writing lived in two places: My Journal
@@ -82,8 +133,8 @@ create table journal.workbook_imports (
 alter table journal.workbook_imports enable row level security;
 revoke all on table journal.workbook_imports from public, anon, authenticated, service_role;
 
-comment on table media.workbook_answers is 'Superseded by journal.entries (link_kind lesson_answer, 20261120000100). Kept unchanged as the pre-migration copy; nothing writes here.';
-comment on table media.workbook_notes is 'Superseded by journal.entries (link_kind lesson_notes, 20261120000100). Kept unchanged as the pre-migration copy; nothing writes here.';
+comment on table media.workbook_answers is 'Superseded by journal.entries (link_kind lesson_answer, 20261122000100). Kept unchanged as the pre-migration copy; nothing writes here.';
+comment on table media.workbook_notes is 'Superseded by journal.entries (link_kind lesson_notes, 20261122000100). Kept unchanged as the pre-migration copy; nothing writes here.';
 
 -- ---------------------------------------------------------------------------
 -- Helpers (internal)
@@ -696,3 +747,29 @@ begin
   end if;
 end
 $verify$;
+
+-- Expected afterwards: every workbook row copied, no API role can run the
+-- import or verification, and the lesson functions still granted as before.
+do $check$
+declare
+  v jsonb := journal.verify_workbook_import();
+begin
+  if (v ->> 'not_imported')::integer <> 0 or (v ->> 'association_mismatch')::integer <> 0
+     or (v ->> 'unchanged')::integer <> (v ->> 'source_answers')::integer + (v ->> 'source_notes')::integer then
+    raise exception 'Nothing was changed: the workbook copy check failed (%). Send this message to the developer.', v;
+  end if;
+  if has_function_privilege('authenticated', 'journal.import_workbooks()', 'execute')
+     or has_function_privilege('authenticated', 'journal.verify_workbook_import()', 'execute')
+     or has_function_privilege('anon', 'public.media_workbook_answer_save(uuid, uuid, text, integer, boolean)', 'execute')
+     or not has_function_privilege('authenticated', 'public.media_workbook_answer_save(uuid, uuid, text, integer, boolean)', 'execute')
+     or not has_function_privilege('authenticated', 'public.media_lesson_workbook(uuid, boolean)', 'execute') then
+    raise exception 'Nothing was changed: function grants are not as expected. Send this message to the developer.';
+  end if;
+  raise notice 'Workbook copy: %', v;
+end
+$check$;
+
+insert into supabase_migrations.schema_migrations (version, name, created_by)
+values ('20261122000100', 'journal_lesson_workbooks', 'journal-lesson-workbooks');
+
+commit;

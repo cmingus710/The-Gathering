@@ -2,7 +2,7 @@
  * Lesson workbooks (20261031000300): the shapes the database returns, block
  * kinds, and the small pure pieces of the member's autosave (status wording
  * and the on-device copy kept while a save hasn't gone through). Since
- * 20261120000100 a member's answers and notes are My Journal entries
+ * 20261122000100 a member's answers and notes are My Journal entries
  * (entry_id); the lesson page is one of two places to edit them.
  *
  * Member payloads never contain teacher fields: the database's member

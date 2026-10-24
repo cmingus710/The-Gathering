@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Autosave endpoints for lesson answers and notes (My Journal entries since
- * 20261120000100). Same contract as the
+ * 20261122000100). Same contract as the
  * journal's: 200 when stored, 409 with the current saved text when another
  * tab or device saved newer text, 401 when the session ended. Responses are
  * private and never cached; request and response bodies are never logged.

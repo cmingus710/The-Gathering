@@ -116,6 +116,8 @@ export const BACK_ROUTES = {
   // Youth & families
   // My account is one of the youth shell's own tabs: no back link.
   "/youth/announcements": { parent: "/youth", label: "Youth & Families" },
+  "/youth/play": { parent: "/youth", label: "Youth & Families" },
+  "/youth/play/[id]": { parent: "/youth/play", label: "Learn & Play" },
   "/youth/groups/[id]": { parent: "/youth", label: "Youth & Families" },
   "/youth/discussions/[id]": { parent: "/youth/groups/[group]", label: "the group" },
   "/youth/family": { parent: "/youth", label: "Youth & Families" },
@@ -194,7 +196,15 @@ export const RETURN_VIEWS: Array<{ path: RegExp; params: Record<string, Check> }
     path: /^\/prayer\/library$/,
     params: { view: oneOf("library", "mine", "saved"), topic: re(UUID), purpose: re(UUID), use: re(UUID) },
   },
+  {
+    path: /^\/youth\/play$/,
+    params: { type: oneOf("story", "quiz", "matching", "puzzle", "drawing", "word_game"), level: oneOf("beginner", "growing", "challenge") },
+  },
   { path: /^\/directory$/, params: { q: (v) => v.length <= 80, page: re(SMALL_INT) } },
+  {
+    path: /^\/youth\/play$/,
+    params: { type: oneOf("story", "quiz", "matching", "puzzle", "drawing", "word_game"), level: oneOf("beginner", "growing", "challenge") },
+  },
   { path: /^\/community$/, params: { group: re(UUID), category: re(UUID) } },
   { path: /^\/podcasts$/, params: { show: re(SMALL_INT) } },
   { path: /^\/podcasts\/shows\/[0-9a-f-]{36}$/, params: { q: (v) => v.length <= 80, page: re(SMALL_INT) } },

@@ -469,6 +469,26 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 
       Expected: one row (`question_length`, `question-length`).
 
+## Learn & Play activities (2026-11-18)
+
+- **New (additive; no applied migration was edited):** `20261118000200_youth_activities`:
+  - capability `youth.activities` and role `youth_activity_editor` (assigned to nobody; never implied by super administrator);
+  - tables `youth.activities`, `youth.activity_versions` (immutable once published, by trigger), `youth.activity_assets`, `youth.activity_groups`, `youth.activity_progress` (per child and version), all in the closed `youth` schema;
+  - new `public.youth_activit*` and `public.youth_admin_activit*` functions (executable by `authenticated` only; the anon baseline is unchanged);
+  - replaced with the same signatures: `public.youth_can_read_object(text)` and `public.youth_can_write_object(text)` (activity artwork in the `youth` bucket added; avatar rules unchanged) and `public.youth_me()` (also reports `youth.activities`). No storage policy, bucket, table, or existing row changes.
+  - Details: [learn-and-play.md](learn-and-play.md).
+- **Operator script:** `supabase/manual/2026-11-18-apply-youth-activities.sql`, one transaction. The preflight requires the youth steps through `20261028001000` and refuses a second run. It post-checks the tables, that they and the member functions aren't reachable directly or by anon, and the role's single capability. History row `created_by = youth-activities`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261118000200`. A rerun stopped at the preflight.
+- **Order: apply before deploying the app change.** Without it, Learn & Play on `/youth` shows a load error (the rest of the page works) and the activity admin pages fail to load.
+- **Renumbered:** first numbered `20261118000100`, which `main` also used for `devotional_collections` (recorded on hosted under that number) and `gallery_album_covers`. Now `20261118000200`; the SQL is unchanged.
+- **Hosted:** **Applied and recorded (2026-10-24).** The owner ran the migration SQL in the SQL editor. A read-only check afterwards found every object in place (the five tables, the immutability trigger, the 16 public functions, the extended storage checks and `youth_me`, the role with only `youth.activities`; anon can't call the member functions and `authenticated` can't read the tables), but no history row, because `20261118000100` was already taken by `devotional_collections`. The owner then ran `supabase/manual/2026-11-18-record-youth-activities.sql` (checks the objects, adds only the history row). **Checked (2026-10-24, read-only):** `20261118000200` is recorded as `youth_activities` (`created_by = youth-activities`). Nothing left to do on hosted. The read-only check used:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261118000200';
+  ```
+
+  Expected: one row (`youth_activities`, `youth-activities`).
+
 ## Media gallery album covers (2026-11-19)
 
 - **New (additive; no applied migration was edited):** `20261119000100_gallery_album_covers` (first merged as `20261118000100` in cmingus710/The-Gathering#68, renumbered because that version is `devotional_collections` (#70) on `main` and hosted; the body is unchanged, and the two touch no common object, so their order doesn't matter):
@@ -488,9 +508,45 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 
       Expected: two rows (`devotional_collections`, `devotional-collections`) and (`gallery_album_covers`, `gallery-album-covers`).
 
-## My Journal: lesson answers and notes (2026-11-20)
+## Sunday lessons: featured lesson by lesson date (2026-11-20)
 
-- **New (no applied migration was edited):** `20261120000100_journal_lesson_workbooks`. Members' Sunday lesson answers and notes move from `media.workbook_answers` / `media.workbook_notes` into `journal.entries`, so My Journal is the one place for personal notes, reflections, and lesson answers.
+- **New (additive; no applied migration was edited):** `20261120000100_lesson_featured_order` (first numbered `20261119000100`; renumbered because that version is `gallery_album_covers` (cmingus710/The-Gathering#71) on `main` and hosted; the body is unchanged, and the two touch no common object):
+  - `public.media_lessons(jsonb, integer, integer)` (anon and authenticated, like `media_items`) backs the Sunday lessons page. It features the nearest visible lesson whose lesson date (`delivered_on`) is the church's today or later (`featured_state` `today` or `upcoming`), else the most recent past one (`latest`); undated lessons are never featured; ties go by `sort_order`, then `id`. The other visible lessons matching the filters are listed oldest date first (undated last, same tie-break) without the featured one, so pages never repeat or skip a lesson. With search or filters nothing is featured and every match is listed.
+  - "Today" is `media.church_today()` (church_settings.timezone), evaluated on every call, so the featured lesson moves on at the church's local midnight with no edit or republish. Visibility is `media.item_visible` as before (status, publish time, expiry, audience, group).
+  - `media.church_date_at(timestamptz)` and `media.lessons_page(uuid, date, jsonb, integer, integer)` are internal (no API role can call them); `media.church_today()` is redefined through `church_date_at` with the same result. `media_items` and every table, policy, and existing signature are unchanged.
+- **Operator script:** `supabase/manual/2026-11-20-apply-lesson-featured-order.sql` (for a database that has none of it), one transaction. The preflight requires `20261029000100` and refuses a second run. It post-checks that `church_today` keeps its meaning, the grants (anon/authenticated on `media_lessons` only; nobody on `lessons_page`), and that `media_lessons` returns a page. History row `created_by = lesson-featured-order`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded the version. A rerun stopped at the preflight.
+- **Order: apply before deploying the app change.** The lessons page now calls `media_lessons`; until the migration is applied it would show "Lessons couldn't be loaded right now." Nothing else depends on it.
+- **Hosted:** **Applied and recorded (2026-10-24).** The owner first ran the migration's SQL in the SQL editor while it was still numbered `20261119000100`, which hosted already records as `gallery_album_covers`; a read-only check showed `public.media_lessons(jsonb, integer, integer)` existed with no history row of its own. The owner then ran `supabase/manual/2026-11-20-record-lesson-featured-order.sql`, which checks the objects and grants (anon/authenticated on `media_lessons`; nobody on `lessons_page` or `church_date_at`; `church_today` goes through `church_date_at`) and that `20261119000100` is `gallery_album_covers` before adding only the history row, so the row means the change is in place. Read-only check afterwards: `20261120000100` recorded as `lesson_featured_order` (`created_by = lesson-featured-order`). (Rehearsed locally first: on a database built from every earlier migration plus this migration's SQL, it recorded `20261120000100`; a rerun stopped at the preflight.) Nothing left to do on hosted.
+    - The read-only check used:
+
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261120000100';
+      ```
+
+      Expected: one row (`lesson_featured_order`, `lesson-featured-order`).
+
+## Home page lesson card (2026-11-21)
+
+- **New (additive; no applied migration was edited):** `20261121000100_home_lesson_featured`:
+  - new internal `media.featured_lesson(uuid, date)` (no API role can call it) holds the featured-lesson rule from `20261120000100`: the nearest visible lesson dated the church's today or later (`today`/`upcoming`), else the most recent past one (`latest`); undated lessons never; ties by `sort_order`, then `id`;
+  - `media.lessons_page` is replaced with the same signature and output, now calling `media.featured_lesson`;
+  - `public.media_home()` is replaced with the same signature and grants (authenticated only). `lesson` is now that featured lesson rather than the newest-dated one, and the new `lesson_state` key names which of the three it is. Every other key is unchanged (bodies copied from `20261025000300`).
+  - No table, policy, or grant changes.
+- **Operator script:** `supabase/manual/2026-11-21-apply-home-lesson-featured.sql`, one transaction. The preflight requires `20261120000100` and refuses a second run. It post-checks the grants (`media_home` for authenticated, not anon; nobody on `featured_lesson`) and that `media_home` returns `lesson_state`. History row `created_by = home-lesson-featured`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261121000100`. A rerun stopped at the preflight.
+- **Order: either.** The home card reads `lesson_state` when present and says "Latest lesson" otherwise, so the app can be deployed first (the card then shows the newest-dated lesson, as before, until the migration is applied).
+- **Hosted:** **Not applied.** Waiting for the owner's approval. The read-only check afterwards:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261121000100';
+  ```
+
+  Expected: one row (`home_lesson_featured`, `home-lesson-featured`).
+
+## My Journal: lesson answers and notes (2026-11-22)
+
+- **New (no applied migration was edited):** `20261122000100_journal_lesson_workbooks` (first written as `20261120000100`, renumbered because that version is `lesson_featured_order` (cmingus710/The-Gathering#74) on `main` and hosted; a first run of the apply script on hosted stopped at its preflight and changed nothing). Members' Sunday lesson answers and notes move from `media.workbook_answers` / `media.workbook_notes` into `journal.entries`, so My Journal is the one place for personal notes, reflections, and lesson answers.
   - `journal.entries` gains `lesson_block_id` (FK to `media.lesson_blocks`, `on delete set null`) and `block_revision`, and two link kinds: `lesson_answer` (one per member per question; unique index) and `lesson_notes` (one per member per lesson; unique index). The question as answered goes in the existing `question` column (it was `prompt_snapshot`).
   - Same-signature replacements on journal storage: `media_lesson_workbook`, `media_workbook_answer_save`, `media_workbook_answer_accept`, `media_workbook_note_save`, `media_workbooks`, `media_workbook_delete` (same results; answers and the note also return `entry_id`), and `journal.link_json`, `journal_entries` (leaves out lesson boxes never written in), `journal_entry_save` (10,000-character limit for lesson kinds), `journal_entry_unlink` (clears the new columns). Grants on replaced functions are unchanged.
   - New, executable by no API role: `media.workbook_answer_state`, `media.workbook_entry_answer_json`, `journal.import_workbooks()` (the copy), `journal.verify_workbook_import()` (counts only), and the table `journal.workbook_imports` (ids only; RLS on, no grants).
@@ -498,15 +554,15 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - **Repeatable:** `journal.import_workbooks()` skips any row recorded in `journal.workbook_imports`, so a second run copies nothing and never brings back an entry the member deleted. If it ever meets an old row whose member already has a journal answer to that question with different text, it keeps the old text as a separate entry linked to the lesson ("Earlier lesson answer") rather than overwriting either.
   - **Behavior change to note:** deleting a lesson used to delete its answers (cascade). Answers now stay in the member's My Journal with the lesson shown as no longer available, like every other journal link.
   - **Privacy:** unchanged. Owner-only; no teacher, administrator, super administrator, group leader, or guardian path, not even counts; lesson writing still needs an approved adult member (`media.require_member`), and `journal_entry_create` refuses the new kinds.
-- **Operator script:** `supabase/manual/2026-11-20-apply-journal-lesson-workbooks.sql`, one transaction. The preflight requires `20261031000300` and `20261118000100` and refuses a second run. It copies the migration verbatim, re-checks the copy and the grants, and records the version (`created_by = journal-lesson-workbooks`).
+- **Operator script:** `supabase/manual/2026-11-22-apply-journal-lesson-workbooks.sql`, one transaction. The preflight requires `20261031000300`, `20261118000100`, and `20261121000100` and refuses a second run. It copies the migration verbatim, re-checks the copy and the grants, and records the version (`created_by = journal-lesson-workbooks`).
 - **Tests:** `tests/db/journal-lesson-workbooks.test.ts` builds a database from every earlier migration, writes answers (including a reworded question, a blank box, and a lesson later unpublished) and notes through the old functions, applies the step, and checks each row field by field, the old tables untouched, verification counts, re-runs, a deleted entry not coming back, the journal ↔ lesson round trip (edit in either place, conflicts, no duplicates), unlinking, export, and that other members, publishers, and super administrators get nothing. `tests/db/lesson-workbooks.test.ts` (the original workbook contract) passes unchanged on the new storage.
-- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for each and workbook answers and notes written through the app's functions, the script applied, recorded `20261120000100`, and copied every row; a rerun stopped at the preflight.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for each and workbook answers and notes written through the app's functions, the script applied, recorded `20261122000100`, and copied every row; a rerun stopped at the preflight.
 - **Order: apply before deploying the app change.** The app reads `entry_id` and the new link kinds. If the app goes out first, lesson pages keep working (the old functions still return answers, just without "Open in My Journal" links), and lesson writing doesn't appear in My Journal until the step is applied. If the step is applied first, the currently deployed app keeps working: its lesson pages call the same functions, which now read and write the journal.
-- **Hosted:** **not applied.** Waiting for the owner's approval.
+- **Hosted:** **not applied.** Waiting for the owner's approval. Read-only check (2026-10-24): hosted has 0 rows in `media.workbook_answers` and 0 in `media.workbook_notes`, so the copy step has nothing to move there today; it runs and verifies anyway.
   - The read-only check afterwards:
 
     ```sql
-    select version, name, created_by from supabase_migrations.schema_migrations where version = '20261120000100';
+    select version, name, created_by from supabase_migrations.schema_migrations where version = '20261122000100';
     select journal.verify_workbook_import();
     ```
 

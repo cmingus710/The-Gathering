@@ -1,6 +1,6 @@
 /**
  * How an entry is named in lists and downloads when the member hasn't given
- * it a title. Lesson answers (20261120000100) are named by the question they
+ * it a title. Lesson answers (20261122000100) are named by the question they
  * answer, as the member saw it; lesson notes by what they are.
  */
 export function entryDisplayTitle(title: string, link: { kind: string; question?: string | null } | null): string {

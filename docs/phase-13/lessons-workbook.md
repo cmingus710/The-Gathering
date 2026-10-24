@@ -1,6 +1,6 @@
 # Lesson builder and member workbooks (Phase 13)
 
-> **Since `20261120000100` (My Journal consolidation):** members' answers and notes are My Journal entries (`journal.entries`, link kinds `lesson_answer` and `lesson_notes`), not rows in `media.workbook_answers` / `media.workbook_notes`. The lesson page still edits them in place, with the same autosave, conflict, and privacy rules, and the function names below are unchanged. "My workbooks" (`/lessons/workbooks`) redirects to My Journal. See [migration-history.md](../migration-history.md#my-journal-lesson-answers-and-notes-2026-11-20). The teacher's builder and preview are unchanged.
+> **Since `20261122000100` (My Journal consolidation):** members' answers and notes are My Journal entries (`journal.entries`, link kinds `lesson_answer` and `lesson_notes`), not rows in `media.workbook_answers` / `media.workbook_notes`. The lesson page still edits them in place, with the same autosave, conflict, and privacy rules, and the function names below are unchanged. "My workbooks" (`/lessons/workbooks`) redirects to My Journal. See [migration-history.md](../migration-history.md#my-journal-lesson-answers-and-notes-2026-11-22). The teacher's builder and preview are unchanged.
 
 Sunday lessons can be built from ordered blocks that approved members open as a private workbook: they read the scripture, teaching, and media in order and write answers to the lesson's questions, plus free notes. This extends the existing lessons module (`media.items`, kind `lesson`); nothing about existing lessons changes unless a teacher adds blocks.
 
@@ -99,9 +99,9 @@ Private `media` schema; RLS on with no policies; no table grants. All access is 
 | Table | Purpose |
 | --- | --- |
 | `media.lesson_blocks` | `id`, `item_id` (lesson), `kind`, `position`, `heading`, `body`, `prompt`, `scripture_ref`, `asset_id`, `caption`, `alt_text`, **`teacher_only`**, **`teacher_note`**, `revision`, `prompt_revision`, `client_key`, `created_by`/`updated_by`, timestamps, `removed_at` |
-| `journal.entries` (`link_kind = 'lesson_answer'`) | Since `20261120000100`: one per member per question. `media_item_id` (lesson), `lesson_block_id`, `block_revision`, `question` (the wording the member saw, formerly `prompt_snapshot`), `body` (≤ 10,000), `version`, timestamps. Owner only. |
-| `journal.entries` (`link_kind = 'lesson_notes'`) | Since `20261120000100`: one per member per lesson. `media_item_id`, `body` (≤ 10,000), `version`, timestamps. Owner only. |
-| `media.workbook_answers`, `media.workbook_notes` | The original tables. Kept unchanged as the pre-migration copy; nothing reads or writes them since `20261120000100`. |
+| `journal.entries` (`link_kind = 'lesson_answer'`) | Since `20261122000100`: one per member per question. `media_item_id` (lesson), `lesson_block_id`, `block_revision`, `question` (the wording the member saw, formerly `prompt_snapshot`), `body` (≤ 10,000), `version`, timestamps. Owner only. |
+| `journal.entries` (`link_kind = 'lesson_notes'`) | Since `20261122000100`: one per member per lesson. `media_item_id`, `body` (≤ 10,000), `version`, timestamps. Owner only. |
+| `media.workbook_answers`, `media.workbook_notes` | The original tables. Kept unchanged as the pre-migration copy; nothing reads or writes them since `20261122000100`. |
 
 | Function | Who | Notes |
 | --- | --- | --- |
@@ -133,7 +133,7 @@ Decision:
 
 ## Not included
 
-- **Printable export of a workbook as a handout.** Since `20261120000100` answers and notes are included in the My Journal downloads (Markdown and JSON), each with its lesson and question.
+- **Printable export of a workbook as a handout.** Since `20261122000100` answers and notes are included in the My Journal downloads (Markdown and JSON), each with its lesson and question.
 - **Linking a lesson to an event occurrence.** The lesson's Sunday date (`delivered_on`) is the service date.
 - **Bible text in the builder.** The builder validates and normalizes references only; members see text from their own translation, within its license limits (`max_verses_per_view`, attribution, API.Bible FUMS tracking).
 - **Answer counts or completion statistics for teachers.** Deliberately absent (privacy).

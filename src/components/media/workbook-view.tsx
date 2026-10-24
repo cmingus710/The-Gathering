@@ -18,7 +18,7 @@ import { VideoPlayer } from "./video-player";
 import { WorkbookText } from "./workbook-text";
 
 export const PRIVACY_COPY = "Your answers are private. Teachers and administrators can't see them.";
-/** Where lesson answers and notes are kept (20261120000100). */
+/** Where lesson answers and notes are kept (20261122000100). */
 export const JOURNAL_COPY = "Your answers and notes save to My Journal.";
 
 /** Opens the saved answer or notes in My Journal (only once something is written). */

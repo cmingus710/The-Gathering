@@ -24,8 +24,11 @@ export function itemCover(item: Pick<Item, "cover">, urls: Map<string, string>, 
   return urls.get(path) ?? null;
 }
 
-/** Card for lists, search, related content, and the home page. */
-export function ItemCard({ item, urls, showKind = false, className }: { item: Item; urls: Map<string, string>; showKind?: boolean; className?: string }) {
+/**
+ * Card for lists, search, related content, and the home page. `showDate`
+ * gives the date its own line (weekday and year) for date-ordered lists.
+ */
+export function ItemCard({ item, urls, showKind = false, showDate = false, className }: { item: Item; urls: Map<string, string>; showKind?: boolean; showDate?: boolean; className?: string }) {
   const cover = itemCover(item, urls);
   const day = itemDate(item);
   const who = speakers(item);
@@ -33,7 +36,7 @@ export function ItemCard({ item, urls, showKind = false, className }: { item: It
     showKind ? KIND_LABEL[item.kind] : null,
     item.kind === "assignment" && item.book ? item.book.title : null,
     item.kind === "book" ? item.book_author : null,
-    day && item.kind !== "book" && item.kind !== "playlist" ? formatDay(day, "short") : null,
+    day && !showDate && item.kind !== "book" && item.kind !== "playlist" ? formatDay(day, "short") : null,
     who || null,
   ].filter(Boolean);
   return (
@@ -53,6 +56,11 @@ export function ItemCard({ item, urls, showKind = false, className }: { item: It
         </span>
       )}
       <span className="min-w-0 flex-1 py-0.5">
+        {showDate && day ? (
+          <time dateTime={day} className="block text-[0.8125rem] font-semibold text-primary">
+            {formatDay(day, "full")}
+          </time>
+        ) : null}
         {meta.length ? <span className="block truncate text-[0.8125rem] font-semibold text-text-secondary">{meta.join(" · ")}</span> : null}
         <span className="mt-0.5 block font-semibold leading-snug text-text line-clamp-2">{item.title}</span>
         {item.summary ? <span className="mt-0.5 block text-meta text-text-secondary line-clamp-2">{item.summary}</span> : null}

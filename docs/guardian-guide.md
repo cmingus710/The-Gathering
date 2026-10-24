@@ -22,7 +22,8 @@ If the office pauses access (for example while something is reviewed), you'll se
   - Event details are seen only by the people staffing that event. Pickup notes are information, not authorization: pickup follows the church's own procedures.
 - **Photo consent:** allow or don't allow photos of your child in member and group galleries inside the app. Public use (websites, social media, banners) is separate and offered only if the church's policy allows it. Withdrawing hides published photos staff have linked to your child and sends them for review; it can't recall screenshots or copies people already saved. If guardians disagree, photos aren't published until it's resolved. See [media-consent-workflow.md](media-consent-workflow.md).
 - **Practice verses together:** for a child without their own account, practice the memory verses assigned to their group. It's recorded as your child's practice, never yours. Your own memory verses aren't affected.
-- **Learning progress:** a summary (verses practiced, ready for review, days practiced). Never answers, journal entries, or reflections.
+- **Learn & Play:** with *Practice with the child*, open an activity under **Youth & Families → Learn & Play** and choose **who's playing** each time. Progress is saved to that child only (never to you or a sibling), and switching children on a shared device switches the progress shown. A child with their own youth account plays from that account. Ages shown are suggestions, not rules. See [learn-and-play.md](learn-and-play.md).
+- **Learning progress:** a summary (verses practiced, ready for review, days practiced, activities finished). Never answers, journal entries, or reflections.
 
 ## Your child's own account (if the church allows it)
 

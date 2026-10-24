@@ -49,6 +49,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/setup.md](docs/setup.md): environment variables, Supabase, Resend, Vercel, first admin
 - [docs/architecture.md](docs/architecture.md): structure, authorization model, data, security decisions
 - [docs/links.md](docs/links.md): adding, editing, and showing hyperlinks in announcements, devotionals, lessons, Community, and Prayer; the link policy and server checks
+- [docs/learn-and-play.md](docs/learn-and-play.md): Learn & Play in Youth & Families: activity versions, the editor, artwork rights, who may play for which child, private progress, schema changes, release steps
 - [docs/prayer-library.md](docs/prayer-library.md): the member-contributed Prayer Library: contributing, search and filters, saved prayers, reports and moderation, categories, verification, release steps
 - [docs/community-mentions.md](docs/community-mentions.md): @mentions of people and groups in Community and Prayer: group controls for leaders, member notification settings, privacy rules, verification, release steps
 - [docs/book-collections.md](docs/book-collections.md): book topics as collections on the Books page: admin steps, member view, visibility rules, verification, release steps
