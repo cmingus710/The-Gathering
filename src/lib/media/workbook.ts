@@ -1,7 +1,9 @@
 /**
  * Lesson workbooks (20261031000300): the shapes the database returns, block
  * kinds, and the small pure pieces of the member's autosave (status wording
- * and the on-device copy kept while a save hasn't gone through).
+ * and the on-device copy kept while a save hasn't gone through). Since
+ * 20261122000100 a member's answers and notes are My Journal entries
+ * (entry_id); the lesson page is one of two places to edit them.
  *
  * Member payloads never contain teacher fields: the database's member
  * projection doesn't select them. The admin shapes below are only returned
@@ -81,6 +83,8 @@ export type WorkbookBlock = {
 export type AnswerState = "current" | "changed" | "removed";
 
 export type WorkbookAnswer = {
+  /** The My Journal entry holding this answer. */
+  entry_id: string;
   block_id: string;
   body: string;
   version: number;
@@ -106,7 +110,7 @@ export type Workbook = {
   } | null;
   blocks: WorkbookBlock[];
   answers: WorkbookAnswer[];
-  note: { body: string; version: number; updated_at: string } | null;
+  note: { entry_id: string; body: string; version: number; updated_at: string } | null;
 };
 
 export type WorkbookSummary = {

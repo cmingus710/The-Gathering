@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContentDetail } from "@/components/media/content-detail";
-import { PRIVACY_COPY } from "@/components/media/workbook-view";
+import { JOURNAL_COPY, PRIVACY_COPY } from "@/components/media/workbook-view";
 import { BackLink } from "@/components/ui/back-link";
 import { isUuid } from "@/lib/media/format";
 import { loadItemPage } from "@/lib/media/pages";
@@ -32,8 +32,8 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
       <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-4 sm:mb-4">
         <BackLink route="/lessons/[id]" inRow />
         {workbook ? (
-          <Link href="/lessons/workbooks" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
-            My workbooks
+          <Link href="/journal" className="inline-flex min-h-11 items-center text-meta font-semibold text-primary hover:underline">
+            My Journal
           </Link>
         ) : null}
       </div>
@@ -41,10 +41,10 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[id]">)
         <Link href={`/lessons/${id}/workbook`} className="interactive mb-6 flex items-center gap-3 rounded-card border border-primary bg-primary-soft p-4 hover:bg-surface-muted/60">
           <NotebookPen className="size-6 shrink-0 text-primary" aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            <span className="block font-semibold">Open workbook</span>
+            <span className="block font-semibold">{questions ? "Follow along and answer the questions" : "Follow along and take notes"}</span>
             <span className="block text-meta text-text-secondary">
               {questions ? `${answered} of ${questions} question${questions === 1 ? "" : "s"} answered. ` : ""}
-              {PRIVACY_COPY}
+              {JOURNAL_COPY} {PRIVACY_COPY}
             </span>
           </span>
         </Link>

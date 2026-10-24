@@ -6,9 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "./format";
 
 /**
- * The member's own workbook data. Every call acts on the caller's rows only
- * (the database functions use auth.uid()); nothing here can reach another
- * member's answers.
+ * The member's own lesson answers and notes (My Journal entries). Every call
+ * acts on the caller's rows only (the database functions use auth.uid());
+ * nothing here can reach another member's answers.
  */
 
 /** Keeps an answer for the reworded question (it then refers to the current wording). */
@@ -40,6 +40,6 @@ export async function deleteWorkbookAction(formData: FormData): Promise<void> {
   const supabase = await createClient();
   if (!supabase) return;
   const { error } = await supabase.rpc("media_workbook_delete", { p_item: String(item), p_block: null });
-  revalidatePath("/lessons/workbooks");
-  redirect(error ? `/lessons/${item}/workbook?error=delete` : "/lessons/workbooks?deleted=1");
+  revalidatePath("/journal");
+  redirect(error ? `/lessons/${item}/workbook?error=delete` : "/journal?notice=lesson-deleted");
 }

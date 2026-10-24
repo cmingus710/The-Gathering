@@ -33,4 +33,17 @@ describe("journalMarkdown", () => {
     expect(md).toContain("> Morning & Evening: January 1 · Morning (Joshua 5:12), read 2026-01-01");
     expect(md).toContain("> A devotional reading that is no longer available, read 2027-01-01");
   });
+
+  it("names lesson answers by their question and lesson, and lesson notes by their lesson", () => {
+    const entry = (title: string, link: Record<string, unknown>) => ({ title, body: "B", status: "active" as const, created_at: "2026-11-01T10:00:00Z", updated_at: "2026-11-01T10:00:00Z", link: link as never });
+    const md = journalMarkdown(
+      [
+        entry("", { kind: "lesson_answer", available: true, title: "Synthetic lesson", question: "What does grace mean?" }),
+        entry("", { kind: "lesson_notes", available: false, title: null }),
+      ],
+      "2026-11-02T12:00:00Z",
+    );
+    expect(md).toContain("## What does grace mean?\n\n*Written 2026-11-01*\n\n> Answer in Sunday lesson: Synthetic lesson\n\n> Question: What does grace mean?");
+    expect(md).toContain("## Lesson notes\n\n*Written 2026-11-01*\n\n> Notes on a Sunday lesson that is no longer available");
+  });
 });

@@ -1,3 +1,5 @@
+import { entryDisplayTitle } from "./labels";
+
 /**
  * The member's own download: their journal as Markdown (readable anywhere)
  * or everything as JSON (journal plus reading plans, completions,
@@ -37,6 +39,9 @@ function linkLine(link: ExportedEntry["link"]): string | null {
       return link.available && link.title ? `Book: ${link.title}` : "A book that is no longer available";
     case "book_assignment":
       return link.available && link.title ? `Reading assignment: ${link.title}` : "A reading assignment that is no longer available";
+    case "lesson_answer":
+    case "lesson_notes":
+      return `${link.kind === "lesson_answer" ? "Answer in" : "Notes on"} ${link.available && link.title ? `Sunday lesson: ${link.title}` : "a Sunday lesson that is no longer available"}`;
     case "collection_reading":
       return link.available && link.title
         ? `${link.title}: ${link.label}${link.scripture_ref ? ` (${link.scripture_ref})` : ""}, read ${link.reading_date}`
@@ -49,7 +54,7 @@ function linkLine(link: ExportedEntry["link"]): string | null {
 export function journalMarkdown(entries: ExportedEntry[], exportedAt: string): string {
   const out = [`# My Journal`, ``, `Exported ${exportedAt.slice(0, 10)}. ${entries.length} ${entries.length === 1 ? "entry" : "entries"}.`, ``];
   for (const e of entries) {
-    out.push(`---`, ``, `## ${e.title.trim() || "Untitled"}`, ``);
+    out.push(`---`, ``, `## ${entryDisplayTitle(e.title, e.link)}`, ``);
     const meta = [`Written ${e.created_at.slice(0, 10)}`, e.updated_at.slice(0, 10) !== e.created_at.slice(0, 10) ? `edited ${e.updated_at.slice(0, 10)}` : null, e.status === "archived" ? "archived" : null]
       .filter(Boolean)
       .join(", ");

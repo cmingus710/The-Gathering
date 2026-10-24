@@ -31,7 +31,7 @@ function NoteBox({ value, ...rest }: React.ComponentProps<"textarea"> & { value:
 
 /**
  * A content item's questions, each in its own section. Signed-in members get
- * a notes box under each question and "Send to my journal", which saves the
+ * a notes box under each question and "Send to My Journal", which saves the
  * questions with their notes as one private journal entry. Notes live in
  * memory only (never in browser storage), like the journal editor.
  */
@@ -152,11 +152,11 @@ export function QuestionNotes({
               loadingText="Sending…"
               icon={sent && !unsent ? <CheckCircle2 className="size-5" aria-hidden="true" /> : <NotebookPen className="size-5" aria-hidden="true" />}
             >
-              {sent && !unsent ? "Sent to your journal" : sent ? "Send again as a new entry" : "Send to my journal"}
+              {sent && !unsent ? "Sent to My Journal" : sent ? "Send again as a new entry" : "Send to My Journal"}
             </Button>
             {sent ? (
               <Link href={`/journal/${sent.id}`} className="font-semibold text-primary hover:underline">
-                Open in your journal
+                Open in My Journal
               </Link>
             ) : null}
           </div>
@@ -165,7 +165,7 @@ export function QuestionNotes({
               ? "Saved as a private journal entry with these questions and your notes."
               : written
                 ? "Only you can see your journal. Notes aren't kept on this page until you send them."
-                : "Write a note under any question, then send them all to your private journal."}
+                : "Write a note under any question, then send them all to My Journal (private to you)."}
           </p>
         </div>
       ) : null}
