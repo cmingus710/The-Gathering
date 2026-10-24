@@ -278,6 +278,24 @@ export type ExternalEpisode = {
 
 export type EpisodeEntry = (ItemCard & { type: "church" }) | (ExternalEpisode & { type: "external" });
 
+/**
+ * What an album card and header show (20261118000100): an uploaded cover or
+ * a chosen photo (both with the editor's framing), else the first published
+ * photo, else a video's still. A cover is album metadata, never a photo.
+ */
+export type AlbumCover = {
+  source: "upload" | "photo" | "first_photo" | "video";
+  photo_id: string | null;
+  thumb_path: string | null;
+  display_path: string | null;
+  alt: string;
+  width?: number | null;
+  height?: number | null;
+  framing: Framing | null;
+  /** source "video": the library video whose still is shown. */
+  video_asset_id?: string;
+};
+
 export type Album = {
   id: string;
   title: string;
@@ -288,7 +306,7 @@ export type Album = {
   uploads_open: boolean;
   status: string;
   event: { series_id: string; title: string } | null;
-  cover: { photo_id: string; thumb_path: string; alt: string } | null;
+  cover: AlbumCover | null;
   photo_count: number;
   video_count?: number;
   can_upload: boolean;

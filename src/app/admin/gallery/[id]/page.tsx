@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireAnyCapability } from "@/lib/auth/viewer";
+import { albumCoverPath } from "@/lib/media/album-cover";
 import { isUuid } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { Album, AssetRow, Photo } from "@/lib/media/types";
@@ -18,12 +19,14 @@ import { getChurchSettings } from "@/lib/settings/queries";
 import { requireClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/time";
 import { addAlbumVideoAction, albumStatusAction, movePhotoAction, reviewPhotoAction, setCoverAction } from "../actions";
+import { AlbumCoverEditor } from "../album-cover-editor";
 import { AlbumForm } from "../album-form";
 
 export const metadata: Metadata = { title: "Album" };
 
 const SAVED: Record<string, string> = {
   created: "Album created as a draft.",
+  created_cover: "Album created as a draft, with its cover image.",
   saved: "Album saved.",
   publish: "Album published.",
   unpublish: "Album unpublished.",
@@ -50,6 +53,7 @@ type AlbumAdmin = Album & {
   raw_uploads_open: boolean;
   counts: Record<string, number> | null;
   photos: Photo[];
+  cover_editor?: { can_edit: boolean; file_mb: number; set_at: string | null; set_by: string | null };
 };
 
 export default async function AlbumAdminPage({ params, searchParams }: PageProps<"/admin/gallery/[id]">) {
@@ -75,9 +79,12 @@ export default async function AlbumAdminPage({ params, searchParams }: PageProps
   const pending = a.photos.filter((p) => p.status === "pending");
   const published = a.photos.filter((p) => p.status === "approved");
   const hidden = a.photos.filter((p) => p.status === "hidden");
+  const coverPath = albumCoverPath(a.cover, "header");
+  const coverPhotos = published.filter((p) => p.kind !== "video");
   const [reviewUrls, servedUrls] = await Promise.all([
     signPaths(supabase, pending.map((p) => p.review_display_path), "media-uploads"),
-    signPaths(supabase, [...published, ...hidden].map((p) => p.thumb_path)),
+    // Cover choices are cropped from the large copies.
+    signPaths(supabase, [...published, ...hidden].map((p) => p.thumb_path).concat(coverPhotos.map((p) => p.display_path), [coverPath])),
   ]);
   const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
   const error = typeof sp.error === "string" ? (sp.error === "unavailable" ? "The gallery service is unavailable." : sp.error.slice(0, 300)) : undefined;
@@ -367,6 +374,40 @@ export default async function AlbumAdminPage({ params, searchParams }: PageProps
           </Card>
         </section>
       ) : null}
+
+      <section aria-labelledby="cover-heading" id="cover" className="mb-8 scroll-mt-24">
+        <Card>
+          <SectionHeading
+            id="cover-heading"
+            description={
+              a.cover_editor?.set_at
+                ? `Last changed ${formatDateTime(a.cover_editor.set_at, settings.timezone)}${a.cover_editor.set_by ? ` by ${a.cover_editor.set_by}` : ""}.`
+                : "Shown on the album's card in Media gallery and at the top of the album page. Members who can see the album see its cover; nobody else does."
+            }
+          >
+            Collection cover image
+          </SectionHeading>
+          <AlbumCoverEditor
+            albumId={a.id}
+            albumTitle={a.title}
+            cover={a.cover}
+            coverUrl={coverPath ? (servedUrls.get(coverPath) ?? null) : null}
+            canEdit={a.cover_editor?.can_edit ?? false}
+            canChoosePhoto={a.can_moderate}
+            photos={coverPhotos.map((p) => ({
+              id: p.id,
+              thumbUrl: servedUrls.get(p.thumb_path ?? "") ?? null,
+              displayUrl: servedUrls.get(p.display_path ?? "") ?? null,
+              alt: p.alt_text,
+              width: p.width,
+              height: p.height,
+            }))}
+            fileMb={a.cover_editor?.file_mb ?? 20}
+            photoCount={a.photo_count}
+            videoCount={a.video_count ?? 0}
+          />
+        </Card>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card>
