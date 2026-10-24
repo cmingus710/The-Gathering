@@ -469,21 +469,38 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 
       Expected: one row (`question_length`, `question-length`).
 
-## Sunday lessons: featured lesson by lesson date (2026-11-19)
+## Media gallery album covers (2026-11-19)
 
-- **New (additive; no applied migration was edited):** `20261119000100_lesson_featured_order`:
+- **New (additive; no applied migration was edited):** `20261119000100_gallery_album_covers` (first merged as `20261118000100` in cmingus710/The-Gathering#68, renumbered because that version is `devotional_collections` (#70) on `main` and hosted; the body is unchanged, and the two touch no common object, so their order doesn't matter):
+  - cover columns on `media.albums` (`cover_path`, `cover_thumb_path`, `cover_width`, `cover_height`, `cover_alt`, `cover_framing`, `cover_set_by`, `cover_set_at`) with checks, and a new `media.album_cover_uploads` table (RLS on, no API grants);
+  - seven new `public.media_admin_album_cover_*` functions (begin, processing, ready, fail, choose, framing, remove) and three storage-check functions, granted to `authenticated` only;
+  - three storage policies for `album-covers/` in `media` and `media-uploads` ("Album covers follow their album", "…upload only to registered paths", "…removed by their album's editors");
+  - same-signature replacements: `media.album_json`, `public.media_admin_album`, `public.media_admin_album_options`, `public.media_can_read_object` (media managers no longer read `album-covers/`), and `public.media_admin_cleanup_candidates` (covers in use and in-progress uploads are no longer listed as orphans). No existing row is rewritten.
+- **Order:** the app change (#68) merged before the migration was applied. Until it was applied, the admin cover controls returned errors; albums, photos, and member pages kept working.
+- **Hosted (2026-10-24):** the owner applied the migration's SQL in the SQL editor before the renumbering. A read-only check afterwards (owner's screenshot) found the objects: `cover_columns = 4`, `upload_table = true`, `cover_rpcs = 7` (the older `media_admin_album_cover` doesn't match `media_admin_album_cover_%`), `storage_policies = 3`. An insert of `20261118000100` failed as a duplicate: that version was already recorded as `devotional_collections` (`created_by = devotional-collections`), so the album covers had no history row. `supabase/manual/2026-11-19-record-gallery-album-covers.sql` checks the album covers' objects and grants, that `20261118000100` is `devotional_collections`, and records `20261119000100` (`created_by = gallery-album-covers`); it changes nothing else.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every migration, with `20261118000100` recorded as `devotional_collections`, the record script added `20261119000100`. A rerun stopped at the preflight.
+- **Hosted record (2026-10-24):** after #71 merged, the owner ran `supabase/manual/2026-11-19-record-gallery-album-covers.sql` in the SQL editor. That script is one transaction that inserts the history row only after its preflight passes (every album covers object present, no anon access, `20261118000100` recorded as `devotional_collections`), so a completed run means `20261119000100` is recorded as `gallery_album_covers` (`created_by = gallery-album-covers`). **Checked (owner's SQL editor screenshot):** two rows, `20261118000100` `devotional_collections` (`devotional-collections`) and `20261119000100` `gallery_album_covers` (`gallery-album-covers`). Applied and recorded; nothing left to do on hosted.
+    - The read-only check:
+
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version in ('20261118000100', '20261119000100') order by version;
+      ```
+
+      Expected: two rows (`devotional_collections`, `devotional-collections`) and (`gallery_album_covers`, `gallery-album-covers`).
+
+## Sunday lessons: featured lesson by lesson date (2026-11-20)
+
+- **New (additive; no applied migration was edited):** `20261120000100_lesson_featured_order` (first numbered `20261119000100`; renumbered because that version is `gallery_album_covers` (cmingus710/The-Gathering#71) on `main` and hosted; the body is unchanged, and the two touch no common object):
   - `public.media_lessons(jsonb, integer, integer)` (anon and authenticated, like `media_items`) backs the Sunday lessons page. It features the nearest visible lesson whose lesson date (`delivered_on`) is the church's today or later (`featured_state` `today` or `upcoming`), else the most recent past one (`latest`); undated lessons are never featured; ties go by `sort_order`, then `id`. The other visible lessons matching the filters are listed oldest date first (undated last, same tie-break) without the featured one, so pages never repeat or skip a lesson. With search or filters nothing is featured and every match is listed.
   - "Today" is `media.church_today()` (church_settings.timezone), evaluated on every call, so the featured lesson moves on at the church's local midnight with no edit or republish. Visibility is `media.item_visible` as before (status, publish time, expiry, audience, group).
   - `media.church_date_at(timestamptz)` and `media.lessons_page(uuid, date, jsonb, integer, integer)` are internal (no API role can call them); `media.church_today()` is redefined through `church_date_at` with the same result. `media_items` and every table, policy, and existing signature are unchanged.
-- **Operator script:** `supabase/manual/2026-11-19-apply-lesson-featured-order.sql`, one transaction. The preflight requires `20261029000100` and refuses a second run. It post-checks that `church_today` keeps its meaning, the grants (anon/authenticated on `media_lessons` only; nobody on `lessons_page`), and that `media_lessons` returns a page. History row `created_by = lesson-featured-order`.
-- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261119000100`. A rerun stopped at the preflight.
+- **Operator script:** `supabase/manual/2026-11-20-apply-lesson-featured-order.sql` (for a database that has none of it), one transaction. The preflight requires `20261029000100` and refuses a second run. It post-checks that `church_today` keeps its meaning, the grants (anon/authenticated on `media_lessons` only; nobody on `lessons_page`), and that `media_lessons` returns a page. History row `created_by = lesson-featured-order`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded the version. A rerun stopped at the preflight.
 - **Order: apply before deploying the app change.** The lessons page now calls `media_lessons`; until the migration is applied it would show "Lessons couldn't be loaded right now." Nothing else depends on it.
-- **Hosted:** **Not applied.** Waiting for the owner's approval. The read-only check afterwards:
+- **Hosted:** **SQL applied, not yet recorded (2026-10-24).** The owner ran the migration's SQL in the SQL editor while it was still numbered `20261119000100`, which hosted already records as `gallery_album_covers`; a read-only check showed `public.media_lessons(jsonb, integer, integer)` exists and `20261119000100` is `gallery_album_covers`. To finish, run `supabase/manual/2026-11-20-record-lesson-featured-order.sql`: it checks the objects and grants (anon/authenticated on `media_lessons`; nobody on `lessons_page` or `church_date_at`; `church_today` goes through `church_date_at`) and that `20261119000100` is `gallery_album_covers`, then only adds the history row (`created_by = lesson-featured-order`). Rehearsed locally: on a database built from every earlier migration plus this migration's SQL, it recorded `20261120000100`; a rerun stopped at the preflight. The read-only check afterwards:
 
   ```sql
-  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261119000100';
-  select to_regprocedure('public.media_lessons(jsonb, integer, integer)') is not null as lessons_fn,
-         has_function_privilege('anon', 'public.media_lessons(jsonb, integer, integer)', 'execute') as anon_can_call;
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261120000100';
   ```
 
-  Expected: one row (`lesson_featured_order`, `lesson-featured-order`); `lessons_fn = true`, `anon_can_call = true`.
+  Expected: one row (`lesson_featured_order`, `lesson-featured-order`).

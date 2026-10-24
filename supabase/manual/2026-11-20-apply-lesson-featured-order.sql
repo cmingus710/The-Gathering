@@ -1,5 +1,5 @@
 -- Sunday lessons featured lesson and date order · Apply migration
--- 20261119000100_lesson_featured_order to the hosted project.
+-- 20261120000100_lesson_featured_order to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
 -- approves applying it (docs/migration-history.md, "Sunday lessons: featured
@@ -12,7 +12,7 @@
 -- church_date_at with the same result. No table, policy, or existing
 -- signature changes; media_items is untouched.
 --
--- It copies supabase/migrations/20261119000100_lesson_featured_order.sql
+-- It copies supabase/migrations/20261120000100_lesson_featured_order.sql
 -- verbatim and records it under its repository version (created_by =
 -- lesson-featured-order). All or nothing: one transaction; out of order or
 -- a second run stops at the preflight with "Nothing was changed".
@@ -29,15 +29,15 @@ begin
   if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261029000100') then
     raise exception 'Nothing was changed: the grant baseline step (20261029000100) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261119000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261120000100')
      or to_regprocedure('public.media_lessons(jsonb, integer, integer)') is not null then
-    raise exception 'Nothing was changed: 20261119000100 is already applied.';
+    raise exception 'Nothing was changed: 20261120000100 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261119000100_lesson_featured_order.sql
+-- 20261120000100_lesson_featured_order.sql
 -- =========================================================================
 -- Sunday lessons · featured lesson by lesson date, list in date order (additive).
 --
@@ -168,6 +168,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261119000100', 'lesson_featured_order', 'lesson-featured-order');
+values ('20261120000100', 'lesson_featured_order', 'lesson-featured-order');
 
 commit;

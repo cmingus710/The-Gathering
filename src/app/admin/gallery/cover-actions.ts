@@ -14,7 +14,7 @@ import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Album cover images (20261118000100). Uploads use the gallery's pipeline:
+ * Album cover images (20261119000100). Uploads use the gallery's pipeline:
  * the original goes from the browser straight to the restricted
  * `media-uploads` bucket with a one-time token, then this server decodes it
  * (HEIC included), applies orientation, converts to sRGB, strips all

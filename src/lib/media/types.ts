@@ -279,7 +279,7 @@ export type ExternalEpisode = {
 export type EpisodeEntry = (ItemCard & { type: "church" }) | (ExternalEpisode & { type: "external" });
 
 /**
- * What an album card and header show (20261118000100): an uploaded cover or
+ * What an album card and header show (20261119000100): an uploaded cover or
  * a chosen photo (both with the editor's framing), else the first published
  * photo, else a video's still. A cover is album metadata, never a photo.
  */

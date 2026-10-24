@@ -4,7 +4,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * The Sunday lessons page (20261119000100): the featured lesson is the
+ * The Sunday lessons page (20261120000100): the featured lesson is the
  * nearest visible lesson dated the church's today or later, else the most
  * recent past one; the rest are listed oldest first without the featured
  * one, across filters and pages; "today" is the church's local date. Drafts,

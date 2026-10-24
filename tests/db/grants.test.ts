@@ -21,7 +21,7 @@ const ANON = [
   "media_search", "media_series", "media_show", "media_shows", "media_transcript",
   // Video thumbnails (20261109000200): rechecks the caller's access to the video, like media_file.
   "media_video_thumb",
-  // Sunday lessons page (20261119000100): applies the caller's audience rules itself, like media_items.
+  // Sunday lessons page (20261120000100): applies the caller's audience rules itself, like media_items.
   "media_lessons",
 ];
 const APP_SCHEMAS = ["public", "community", "events", "giving", "media", "prayer", "bible", "journal", "memory", "youth", "membership"];

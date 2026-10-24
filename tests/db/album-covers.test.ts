@@ -6,7 +6,7 @@ const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 type Json = Record<string, unknown>;
 
 /**
- * Media gallery album covers (20261118000100): an uploaded cover is album
+ * Media gallery album covers (20261119000100): an uploaded cover is album
  * metadata (never a photo, so counts don't move), follows the album's
  * audience in storage, can be replaced, repositioned, and removed without
  * touching any photo, and only the album's editors may change it. Choosing
