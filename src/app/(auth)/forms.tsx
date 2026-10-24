@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { ProviderButton } from "@/components/auth/provider-button";
+import { CaptchaField, useCaptcha } from "@/components/auth/turnstile";
 import { cn } from "@/components/ui/cn";
 import { TextField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -51,6 +52,7 @@ export function SocialSignIn({ providers, next }: { providers: OAuthProvider[]; 
 
 export function SignInForm({ next }: { next: string }) {
   const [state, action] = useActionState(signInAction, initialFormState);
+  const captcha = useCaptcha("sign_in", state);
   const v = state.values ?? {};
   return (
     <div className="space-y-5">
@@ -83,7 +85,8 @@ export function SignInForm({ next }: { next: string }) {
             </Link>
           </div>
         </div>
-        <SubmitButton pendingText="Signing in…" size="lg" className="w-full font-serif tracking-[0.02em]">
+        <CaptchaField captcha={captcha} />
+        <SubmitButton pendingText="Signing in…" size="lg" disabled={captcha.blocking} className="w-full font-serif tracking-[0.02em]">
           Sign In
         </SubmitButton>
       </form>
@@ -94,12 +97,14 @@ export function SignInForm({ next }: { next: string }) {
 
 export function ResendVerification({ email }: { email: string }) {
   const [state, action] = useActionState(resendVerificationAction, initialFormState);
+  const captcha = useCaptcha("resend_verification", state);
   return (
     <form action={action} className="space-y-3 rounded-control bg-surface-muted p-4">
       <input type="hidden" name="email" value={email} />
       <p className="text-[0.98rem]">Didn&apos;t get the verification email?</p>
       <FormMessage state={state} />
-      <SubmitButton variant="secondary" size="sm" pendingText="Sending…">
+      <CaptchaField captcha={captcha} />
+      <SubmitButton variant="secondary" size="sm" pendingText="Sending…" disabled={captcha.blocking}>
         Send a new verification link
       </SubmitButton>
     </form>
@@ -108,6 +113,7 @@ export function ResendVerification({ email }: { email: string }) {
 
 export function SignUpForm() {
   const [state, action] = useActionState(signUpAction, initialFormState);
+  const captcha = useCaptcha("sign_up", state);
   const v = state.values ?? {};
   return (
     <form action={action} noValidate className="space-y-5">
@@ -148,7 +154,8 @@ export function SignUpForm() {
         required
         error={state.fieldErrors?.confirmPassword}
       />
-      <SubmitButton pendingText="Creating account…" className="w-full">
+      <CaptchaField captcha={captcha} />
+      <SubmitButton pendingText="Creating account…" disabled={captcha.blocking} className="w-full">
         Create account
       </SubmitButton>
     </form>
@@ -157,6 +164,7 @@ export function SignUpForm() {
 
 export function ForgotPasswordForm() {
   const [state, action] = useActionState(forgotPasswordAction, initialFormState);
+  const captcha = useCaptcha("forgot_password", state);
   return (
     <form action={action} noValidate className="space-y-5">
       <FormMessage state={state} />
@@ -170,7 +178,8 @@ export function ForgotPasswordForm() {
         defaultValue={state.values?.email}
         error={state.fieldErrors?.email}
       />
-      <SubmitButton pendingText="Sending link…" className="w-full">
+      <CaptchaField captcha={captcha} />
+      <SubmitButton pendingText="Sending link…" disabled={captcha.blocking} className="w-full">
         Send reset link
       </SubmitButton>
     </form>

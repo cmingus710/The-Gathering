@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { CAPTCHA_FIELD, captchaErrorMessage, captchaTokenFrom, isCaptchaError } from "@/lib/auth/captcha";
 import { authErrorMessage } from "@/lib/auth/errors";
 import { isOAuthProvider, oauthCallbackUrl, oauthErrorCopy, resolveAuthOrigin } from "@/lib/auth/oauth";
 import { getOfferedProviders } from "@/lib/auth/oauth-config";
@@ -16,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 const UNAVAILABLE = "Sign-in is temporarily unavailable because the membership service isn't configured. Please contact the church office.";
 
 export async function signUpAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const values = formValues(formData, ["password", "confirmPassword"]);
+  const values = formValues(formData, ["password", "confirmPassword", CAPTCHA_FIELD]);
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationErrorState(parsed.error, values);
 
@@ -28,6 +29,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     password: parsed.data.password,
     options: {
       emailRedirectTo: authConfirmUrl("/account-status"),
+      captchaToken: captchaTokenFrom(formData),
       // Only the display name is copied to the profile; the database ignores
       // anything else. registration_environment keeps a preview sign-up's
       // approval alert away from production recipients (it can only suppress
@@ -44,14 +46,17 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
 }
 
 export async function signInAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const values = formValues(formData, ["password"]);
+  const values = formValues(formData, ["password", CAPTCHA_FIELD]);
   const parsed = signInSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationErrorState(parsed.error, values);
 
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
 
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { error } = await supabase.auth.signInWithPassword({
+    ...parsed.data,
+    options: { captchaToken: captchaTokenFrom(formData) },
+  });
   if (error) {
     return errorState(authErrorMessage(error), {
       values: { ...values, unverified: error.code === "email_not_confirmed" ? "1" : "" },
@@ -98,8 +103,9 @@ export async function resendVerificationAction(_prev: FormState, formData: FormD
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
-    options: { emailRedirectTo: authConfirmUrl("/account-status") },
+    options: { emailRedirectTo: authConfirmUrl("/account-status"), captchaToken: captchaTokenFrom(formData) },
   });
+  if (isCaptchaError(error)) return errorState(captchaErrorMessage(error));
   if (error && (error.status === 429 || (error.status ?? 0) >= 500 || error.status === 0)) {
     return errorState(authErrorMessage(error));
   }
@@ -107,13 +113,18 @@ export async function resendVerificationAction(_prev: FormState, formData: FormD
 }
 
 export async function forgotPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const values = formValues(formData);
+  const values = formValues(formData, [CAPTCHA_FIELD]);
   const parsed = forgotPasswordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationErrorState(parsed.error, values);
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
 
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo: authConfirmUrl("/reset-password") });
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: authConfirmUrl("/reset-password"),
+    captchaToken: captchaTokenFrom(formData),
+  });
+  // A rejected security check says nothing about the account, so it's safe to show.
+  if (isCaptchaError(error)) return errorState(captchaErrorMessage(error), { values });
   // Don't reveal whether an account exists; only surface service problems.
   if (error && (error.status === 429 || (error.status ?? 0) >= 500 || error.status === 0)) {
     return errorState(authErrorMessage(error), { values });
