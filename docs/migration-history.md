@@ -468,3 +468,35 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`question_length`, `question-length`).
+
+## Media gallery album covers (2026-11-18)
+
+- **New (additive; no applied migration was edited):** `20261118000100_gallery_album_covers`:
+  - cover columns on `media.albums` (`cover_path`, `cover_thumb_path`, `cover_width`, `cover_height`, `cover_alt`, `cover_framing`, `cover_set_by`, `cover_set_at`) with checks, and a new `media.album_cover_uploads` table (RLS on, no API grants);
+  - seven new `public.media_admin_album_cover_*` functions (begin, processing, ready, fail, choose, framing, remove), granted to `authenticated` only;
+  - three storage policies for `album-covers/` in `media` and `media-uploads` ("Album covers follow their album", "…upload only to registered paths", "…removed by their album's editors");
+  - same-signature replacements: `media.album_json`, `public.media_admin_album`, `public.media_admin_album_options`, `public.media_can_read_object` (media managers no longer read `album-covers/`), and `public.media_admin_cleanup_candidates` (covers in use and in-progress uploads are no longer listed as orphans). No existing row is rewritten.
+- **Order:** the app change (cmingus710/The-Gathering#68) merged before the migration was applied. Until it was applied, the admin cover controls returned errors; albums, photos, and member pages kept working.
+- **Hosted:** **Applied (2026-10-24):** the owner ran the migration file in the SQL editor. Read-only check afterwards (owner's screenshot): `cover_columns = 4`, `upload_table = true`, `cover_rpcs = 7`, `storage_policies = 3`. The SQL editor doesn't record history, so `history_row` was `0`; the history row is added with the insert below.
+    - The read-only check used:
+
+      ```sql
+      select
+        (select count(*) from information_schema.columns
+          where table_schema = 'media' and table_name = 'albums'
+            and column_name in ('cover_path','cover_thumb_path','cover_framing','cover_alt')) as cover_columns,
+        to_regclass('media.album_cover_uploads') is not null as upload_table,
+        (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+          where n.nspname = 'public' and p.proname like 'media_admin_album_cover_%') as cover_rpcs,
+        (select count(*) from pg_policies
+          where schemaname = 'storage' and tablename = 'objects' and policyname like 'Album covers%') as storage_policies,
+        (select count(*) from supabase_migrations.schema_migrations where version = '20261118000100') as history_row;
+      ```
+
+      Expected: `4`, `true`, `7` (the older `media_admin_album_cover` doesn't match the pattern), `3`, and `1` once recorded.
+    - Recording the history row:
+
+      ```sql
+      insert into supabase_migrations.schema_migrations (version, name, statements, created_by)
+      values ('20261118000100', 'gallery_album_covers', '{}', 'gallery-album-covers');
+      ```
