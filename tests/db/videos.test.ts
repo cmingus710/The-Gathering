@@ -270,7 +270,7 @@ describeDb("videos: publishing, discovery, attachments, and the Media gallery", 
     expect((shown[0].video as Json).provider_ref).toBe("FFFFFFFFFF1");
     expect(page.photo_count).toBe(0);
     expect(page.video_count).toBe(1);
-    // A video-only album's card falls back to the video's still (20261118000100).
+    // A video-only album's card falls back to the video's still (20261119000100).
     expect(page.cover).toMatchObject({ source: "video", video_asset_id: asset, thumb_path: null });
     expect(page.my_pending).toEqual([]);
     expect(await thumbOk(as(m1), asset)).toBe(true);
