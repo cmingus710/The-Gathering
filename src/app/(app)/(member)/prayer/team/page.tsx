@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveRefresh } from "@/components/community/live-refresh";
-import { PrayerRow } from "@/components/prayer/prayer-row";
+import { PrayerRow, prayerListClass } from "@/components/prayer/prayer-row";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
@@ -95,7 +95,7 @@ export default async function TeamWorkspacePage({ searchParams }: PageProps<"/pr
             {!confidential ? (
               <Alert tone="error" title="Confidential requests couldn't be loaded right now." />
             ) : confidential.items.length ? (
-              <ul className={rowListClass}>
+              <ul className={prayerListClass}>
                 {confidential.items.map((c) => (
                   <li key={c.id}>
                     <PrayerRow card={c} />

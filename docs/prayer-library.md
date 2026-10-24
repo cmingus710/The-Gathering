@@ -1,6 +1,6 @@
 # Prayer Library
 
-A searchable collection of reusable prayers contributed by approved members, on the Prayer page next to the request views (**Prayer → Prayer Library**, `/prayer/library`). It's separate from prayer requests and practical care: its own tables, its own reports, and no request is ever copied into it.
+A searchable collection of reusable prayers contributed by approved members, on the Prayer page as the second section beside **Requests** (**Prayer → Prayer Library**, `/prayer/library`). It's separate from prayer requests and practical care: its own tables, its own reports, and no request is ever copied into it.
 
 ## For members
 
@@ -56,7 +56,7 @@ Library activity sends no emails, push messages, or in-app notifications.
 
 - `tests/db/prayer-library.test.ts` (real PostgreSQL, every migration): contributor lifecycle; drafts, hidden, and archived prayers invisible to others in lists and by id; search across every field, prefix matching, query syntax ignored; combined filters; keyset paging; private bookmarks; reports; hide/restore/archive with log and audit records; categories; youth, pending, suspended, and anon refused; prayer requests untouched.
 - `src/lib/prayer/library.test.ts`: cursor, filter parsing, copy text and attribution.
-- `tests/e2e-local/11-prayer-library.spec.ts` (local stack, production build, desktop and Pixel 7): the whole journey in a browser, tabs scrolling on a phone, no horizontal scroll, keyboard search, axe in light and dark themes, prayer requests still loading. Set `LIBRARY_SHOTS=<folder>` for screenshots.
+- `tests/e2e-local/11-prayer-library.spec.ts` (local stack, production build, desktop and Pixel 7): the whole journey in a browser, the Requests/Prayer Library sections, View menu, and Filters panel on a phone, no horizontal scroll, keyboard search, axe in light and dark themes, prayer requests still loading. Set `LIBRARY_SHOTS=<folder>` for screenshots.
 
 ## Release steps
 
