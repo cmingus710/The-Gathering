@@ -7,8 +7,8 @@ import { ADMIN, MEMBER, noHorizontalScroll, signIn, sql } from "./helpers";
  * edits, and archives a prayer; another member finds it by search and by
  * combined filters, reads it, saves it privately, copies it with its
  * attribution, and reports it; a prayer moderator hides and restores it
- * (direct links stop working while hidden). Also: the Prayer tabs scroll on
- * a phone, keyboard search, both themes, and prayer requests still load.
+ * (direct links stop working while hidden). Also: the Prayer sections and
+ * request views on a phone, keyboard search, both themes, and prayer requests still load.
  * Everything here is synthetic and tagged [TEST]. Set LIBRARY_SHOTS to a
  * folder to save screenshots.
  */
@@ -50,7 +50,7 @@ test.afterAll(async () => {
 test("a member drafts, previews, and publishes a prayer from the Prayer page", async ({ browser }) => {
   const page = await as(browser, MEMBER);
   await page.goto("/prayer");
-  const tabs = page.getByRole("navigation", { name: "Prayer views" });
+  const tabs = page.getByRole("navigation", { name: "Prayer sections" });
   await expect(tabs.getByRole("link", { name: "Requests", exact: true })).toHaveAttribute("aria-current", "page");
   await tabs.getByRole("link", { name: "Prayer Library" }).click();
   await expect(page).toHaveURL(/\/prayer\/library$/);
@@ -196,19 +196,40 @@ test("the contributor archives it and it leaves the library", async ({ browser }
   await expect(reader.getByRole("heading", { level: 1, name: TITLE })).toHaveCount(0);
 });
 
-test("prayer requests still load, the tabs scroll on a phone, and both themes pass axe", async ({ browser }) => {
+test("prayer requests still load, every view is reachable on a phone, and both themes pass axe", async ({ browser }) => {
   for (const scheme of ["light", "dark"] as const) {
     const page = await as(browser, MEMBER, { colorScheme: scheme });
     await page.goto("/prayer");
     await expect(page.getByRole("link", { name: "Share a request" }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Practical care" })).toBeVisible();
     await noHorizontalScroll(page);
+    // Practical care sits beside the feed on a wide screen and below it on a
+    // phone, where "Care & help" by the heading jumps straight to it.
+    if (test.info().project.name === "mobile") await page.getByRole("link", { name: "Care & help" }).click();
+    await expect(page.getByRole("heading", { name: "Practical care" })).toBeInViewport();
+    await expect(page.getByRole("link", { name: "Request help" })).toHaveCount(1);
+    // The request views live in the View menu; each is its own address.
+    await page.getByText("View:").click();
+    for (const name of ["All requests", "My requests", "Following", "Answered"]) await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Following", exact: true }).click();
+    await expect(page).toHaveURL(/view=following/);
+    // Status and Audience are in a Filters panel, closed by default; applied filters stay in the address.
+    await page.goto("/prayer");
+    await expect(page.getByLabel("Status")).toBeHidden();
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page.getByLabel("Status").selectOption("open");
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page).toHaveURL(/status=open/);
+    await expect(page.getByRole("button", { name: /Filters 1 applied/ })).toBeVisible();
+    await expect(page.getByText("Status: Open", { exact: true })).toBeVisible();
+    const feedAxe = await new AxeBuilder({ page }).include("main").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(feedAxe.violations, JSON.stringify(feedAxe.violations.map((v) => [v.id, v.nodes.map((n) => n.target)]))).toEqual([]);
+    await shot(page, `requests-${scheme}`);
     await page.goto("/prayer/library");
     await noHorizontalScroll(page);
-    const tabs = page.getByRole("navigation", { name: "Prayer views" });
-    // Every view is visible without sideways scrolling, on a phone too.
+    const tabs = page.getByRole("navigation", { name: "Prayer sections" });
+    // Both sections are visible side by side without sideways scrolling, on a phone too.
     expect(await tabs.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-    for (const name of ["Requests", "My Requests", "Following", "Answered", "Prayer Library"]) {
+    for (const name of ["Requests", "Prayer Library"]) {
       await expect(tabs.getByRole("link", { name, exact: true })).toBeInViewport();
     }
     const axe = await new AxeBuilder({ page }).include("main").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
