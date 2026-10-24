@@ -96,6 +96,7 @@ Two independent axes:
 | Photo consent reviewer | `youth.media_consent` | yes, explicit only (Phase 10) |
 | Youth safeguarding reviewer | `youth.safeguarding` | yes, explicit only (Phase 10) |
 | Youth policy administrator | `youth.policy` | yes, explicit only (Phase 10) |
+| Youth activity editor | `youth.activities` | yes, explicit only (Learn & Play) |
 
 `settings.manage`, `roles.manage`, and `audit.view` belong to super administrators only. Super administrators don't receive `finance.*`, `prayer.*`, `care.*`, `youth.*`, or `family.*` implicitly: those are granted only through explicit roles (which a super administrator can assign, audited).
 
@@ -517,6 +518,7 @@ A private `youth` schema (no Data API exposure, no privileges for `anon`/`authen
 | Events | `event_settings` (youth group, what to collect, youth self-registration), `event_personnel`, `forms`, `form_versions` (immutable once published; material flag), `event_forms`, `consents` (decision records; withdrawal recorded), `registrations` (per child; capacity and waitlist), `logistics`, `access_log`, `reminders_sent` |
 | Learning | `learning` (assignments to a group), `practice_cards`, `practice_sessions`, `practice_attempts` (a child profile's guardian-recorded practice) |
 | Photo consent | `media_consents`, `photo_subjects`, `photo_reviews`, `media_reuse` |
+| Learn & Play | `activities`, `activity_versions` (immutable once published), `activity_assets` (artwork with source and rights), `activity_groups`, `activity_progress` (per child and version); see [learn-and-play.md](learn-and-play.md) |
 
 ### Fail-closed youth accounts
 

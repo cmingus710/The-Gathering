@@ -59,6 +59,9 @@ export const CAPABILITIES = {
   youthSafeguarding: "youth.safeguarding",
   youthPolicy: "youth.policy",
   familyVerify: "family.verify",
+  // Learn & Play activities: create, preview, publish, archive, and artwork.
+  // Opens no child records, rosters, or progress.
+  youthActivities: "youth.activities",
 } as const;
 
 export type Capability = (typeof CAPABILITIES)[keyof typeof CAPABILITIES];
@@ -102,6 +105,7 @@ export const ADMIN_AREA_CAPABILITIES: readonly Capability[] = [
   CAPABILITIES.youthSafeguarding,
   CAPABILITIES.youthPolicy,
   CAPABILITIES.familyVerify,
+  CAPABILITIES.youthActivities,
 ];
 
 export function canAccessAdmin(capabilities: ReadonlySet<Capability>): boolean {

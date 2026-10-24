@@ -10,8 +10,8 @@ export const PERMISSIONS = [
   { key: "register", label: "Register for events", hint: "Sign the child up, cancel, and add event-specific details like an emergency contact." },
   { key: "sign_forms", label: "Permission forms", hint: "Give, decline, or withdraw permission for events." },
   { key: "media_consent", label: "Photo consent", hint: "Decide whether photos may appear in member galleries." },
-  { key: "view_progress", label: "See learning progress", hint: "Summaries only: never answers, journals, or reflections." },
-  { key: "practice", label: "Practice with the child", hint: "Run memory verse practice that's recorded for the child." },
+  { key: "view_progress", label: "See learning progress", hint: "Summaries only (verses practiced, activities finished): never answers, journals, or reflections." },
+  { key: "practice", label: "Practice with the child", hint: "Run memory verse practice and Learn & Play activities that are recorded for the child." },
   { key: "manage_account", label: "Youth account", hint: "Invite the child to their own account and authorize it, when the church's policy allows." },
   { key: "receive_updates", label: "Receive updates", hint: "Youth announcements, reminders, and registration updates." },
 ] as const;

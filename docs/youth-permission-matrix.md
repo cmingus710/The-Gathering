@@ -24,6 +24,9 @@ Phase 10. Every rule is enforced in the database (SECURITY DEFINER functions tha
 | Review reports | — | report | their groups, never about themselves | — | — | — | — | — | ✓ incl. about leaders outside their own groups | — | — | report if reader |
 | Practice for a child (recorded on child) | *practice* | own practice | — | — | — | — | — | — | — | — | — | — |
 | Progress summary | *view progress*; independent youth only if they share | own | — | — | — | — | — | — | — | — | — | — |
+| Learn & Play: edit, preview, publish activities | — | — | — | — | — | — | — | — | — | — | — (needs the Youth activity editor role) | — |
+| Learn & Play: play and save progress | for a child profile without its own account (*practice*), chosen explicitly | self | — | — | — | — | — | — | — | — | — | — |
+| Learn & Play: progress | that child (*practice*); counts only with *view progress* | own | never | never | never | never | never | never | never | never | never | never |
 | Journals, answers, reflections | never | own | never | never | never | never | never | never | never | never | never | never |
 | Youth account invite | *manage account* (authorizes) | — | — | ✓ | — | — | — | — | — | — | — | — |
 | Policy draft / approve | — | — | — | — | — | — | — | — | — | ✓ (second person approves) | — | — |
