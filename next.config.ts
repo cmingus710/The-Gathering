@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/giving/statement/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
     "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
+    // The Morning & Evening import reads its pinned source file from disk.
+    "/admin/content/collections/**": ["./data/devotionals/morning-and-evening/m_e.json"],
   },
   // libheif's WebAssembly HEIC decoder is loaded from node_modules at run
   // time rather than bundled (Phase 7 photo uploads).

@@ -1,12 +1,14 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CollectionCard } from "@/components/devotionals/collection-card";
 import { ContentDetail } from "@/components/media/content-detail";
 import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import type { CollectionCards } from "@/lib/devotionals/types";
 import { formatDay, isYmd } from "@/lib/media/format";
 import { listItems, prepareDetail } from "@/lib/media/pages";
 import { signPaths } from "@/lib/media/storage";
@@ -40,6 +42,11 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
   const recentOthers = recent.items.filter((i) => i.id !== day.item?.id).slice(0, 6);
   const detail = day.item ? await prepareDetail(supabase, day.item, [...day.others, ...recentOthers]) : null;
   const urls = detail?.urls ?? (await signPaths(supabase, coverPaths([...day.others, ...recentOthers])));
+  // Imported collections (Morning & Evening) are for members: just today's two readings each, beside the church's own devotionals.
+  const cards = viewer.member ? ((await supabase.rpc("media_collections")).data as CollectionCards | null) : null;
+  const collectionUrls = cards?.collections.length
+    ? await signPaths(supabase, cards.collections.map((c) => (c.cover ? (c.cover.variant_path ?? c.cover.path) : null)))
+    : new Map<string, string>();
 
   return (
     <>
@@ -91,6 +98,18 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
           {isToday ? "There isn't one for today. New devotionals appear here on their day." : "Choose another day or browse the archive."}
         </EmptyState>
       )}
+      {cards?.collections.length ? (
+        <section aria-labelledby="devotional-collections" className="mt-8">
+          <SectionHeading id="devotional-collections">Daily reading collections</SectionHeading>
+          <ul className="space-y-3">
+            {cards.collections.map((c) => (
+              <li key={c.id}>
+                <CollectionCard collection={c} today={cards.today} urls={collectionUrls} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {day.others.length ? (
         <section aria-labelledby="also-today" className="mt-8">
           <SectionHeading id="also-today">Also for this day</SectionHeading>
