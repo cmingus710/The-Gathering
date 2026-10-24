@@ -171,9 +171,6 @@ export default async function BiblePage() {
           <li>
             <ListRow plain href="/bible/bookmarks" icon={<Bookmark className="size-5" aria-hidden="true" />} label="Bookmarks and highlights" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
           </li>
-          <li>
-            <ListRow plain href="/journal" icon={<NotebookPen className="size-5" aria-hidden="true" />} label="My Journal" description="Private notes and reflections" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
-          </li>
         </ul>
       </section>
 

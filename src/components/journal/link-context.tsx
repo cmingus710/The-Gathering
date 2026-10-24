@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, GraduationCap, Sunrise } from "lucide-react";
+import { BookOpen, CalendarDays, GraduationCap, NotebookPen, Sunrise } from "lucide-react";
 import Link from "next/link";
 import { formatDay } from "@/lib/media/format";
 
@@ -6,6 +6,17 @@ export type EntryLink =
   | { kind: "passage"; label: string | null; translation_code: string | null; book: string; chapter: number; available: boolean }
   | { kind: "assignment"; available: boolean; day_id: string | null; label: string | null; plan_title: string | null; question: string | null; revision: number | null; changed_since: boolean; passages: Array<{ label: string }> | null }
   | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null }
+  // Lesson answers and notes (20261120000100), written while following a lesson.
+  | {
+      kind: "lesson_answer";
+      available: boolean;
+      item_id: string | null;
+      title: string | null;
+      question: string | null;
+      block_id: string | null;
+      state: "current" | "changed" | "removed";
+    }
+  | { kind: "lesson_notes"; available: boolean; item_id: string | null; title: string | null }
   | {
       kind: "collection_reading";
       available: boolean;
@@ -63,6 +74,32 @@ export function LinkContext({ link }: { link: EntryLink | null }) {
           )}
           {link.changed_since ? <p className="text-text-secondary">The plan has changed since you wrote this; the passages above are the ones you read.</p> : null}
           {link.question ? <p className="mt-1 font-semibold whitespace-pre-line [overflow-wrap:anywhere]">{link.question}</p> : null}
+        </div>
+      </div>
+    );
+  }
+  if (link.kind === "lesson_answer" || link.kind === "lesson_notes") {
+    // Back to the place in the lesson where this was written, while the member can open it.
+    const href = link.available && link.item_id ? `/lessons/${link.item_id}/workbook${link.kind === "lesson_notes" ? "#wb-notes" : link.block_id ? `#q-${link.block_id}` : ""}` : null;
+    return (
+      <div className={box}>
+        <NotebookPen className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <div className="min-w-0">
+          {href ? (
+            <p>
+              {link.kind === "lesson_notes" ? "Your notes on " : "Your answer in "}
+              <Link href={href} className="font-semibold text-primary hover:underline">
+                {link.title}
+              </Link>
+            </p>
+          ) : (
+            <p>About a Sunday lesson that&apos;s no longer available. Your {link.kind === "lesson_notes" ? "notes are" : "answer is"} kept.</p>
+          )}
+          {link.kind === "lesson_answer" && href && link.state === "changed" ? (
+            <p className="text-text-secondary">The question has been reworded since you answered; open the lesson to see the new wording.</p>
+          ) : null}
+          {link.kind === "lesson_answer" && href && link.state === "removed" ? <p className="text-text-secondary">This question is no longer part of the lesson.</p> : null}
+          {link.kind === "lesson_answer" && link.question ? <p className="mt-1 font-semibold whitespace-pre-line [overflow-wrap:anywhere]">{link.question}</p> : null}
         </div>
       </div>
     );

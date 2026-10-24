@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, rowListClass } from "@/components/ui/card";
+import { entryDisplayTitle } from "@/lib/journal/labels";
 import { searchJournalAction, type JournalListItem } from "./actions";
 
 function linkLabel(link: JournalListItem["link"]): string | null {
   if (!link) return null;
   if (link.kind === "passage") return link.label ?? "A passage";
   if (link.kind === "assignment") return link.available ? `${link.plan_title}: ${link.label}` : "A reading plan day";
+  if (link.kind === "lesson_answer" || link.kind === "lesson_notes") return link.available && link.title ? `Sunday lesson: ${link.title}` : "A Sunday lesson no longer available";
   return link.available ? (link.title ?? null) : "Teaching no longer available";
 }
 
@@ -42,14 +44,14 @@ export function JournalList({ initial, total: initialTotal, status }: { initial:
         }}
       >
         <label htmlFor="journal-search" className="sr-only">
-          Search my journal
+          Search My Journal
         </label>
         <input
           id="journal-search"
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search my journal"
+          placeholder="Search My Journal"
           className="min-h-12 flex-1 rounded-control border border-border-strong bg-surface px-4"
         />
         <Button type="submit" variant="secondary" loading={pending} icon={<Search className="size-4" aria-hidden="true" />}>
@@ -64,7 +66,7 @@ export function JournalList({ initial, total: initialTotal, status }: { initial:
           {items.map((e) => (
             <li key={e.id}>
               <Link href={`/journal/${e.id}`} className="block px-4 py-3 hover:bg-surface-muted/60">
-                <span className="block font-semibold">{e.title || "Untitled"}</span>
+                <span className="block font-semibold">{entryDisplayTitle(e.title, e.link)}</span>
                 <span className="block text-meta text-text-secondary">
                   {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(e.updated_at))}
                   {linkLabel(e.link) ? ` · ${linkLabel(e.link)}` : ""}
@@ -76,7 +78,7 @@ export function JournalList({ initial, total: initialTotal, status }: { initial:
         </ul>
       ) : (
         <EmptyState glyph="journal" title={searched ? "Nothing matches" : status === "archived" ? "No archived entries" : "No entries yet"}>
-          {searched ? "Try other words." : status === "archived" ? "Entries you archive appear here." : "Write your first entry, or write about a reading from a plan."}
+          {searched ? "Try other words." : status === "archived" ? "Entries you archive appear here." : "Write your first entry, write about a reading from a plan, or answer the questions in a Sunday lesson."}
         </EmptyState>
       )}
       {items.length < total ? (

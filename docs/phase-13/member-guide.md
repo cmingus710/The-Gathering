@@ -33,15 +33,15 @@ When you start a discussion or reply, choose **Add photos or video**.
 - Location and camera details are removed from photos. Videos are kept as you upload them, and some phones store the recording location inside the video file. If that matters, turn off location for your camera before recording.
 - Files are only visible to people who can see the discussion. In a group, that means group members only.
 
-## Sunday lesson workbook
+## Following a Sunday lesson
 
-Open a lesson and choose **Open workbook** to follow along during the service.
+Open a lesson and choose **Follow along and answer the questions** (or **Follow along and take notes**) to follow along during the service.
 
 - You can expand Scripture, answer the questions, and keep private notes.
 - Answers save as you type. **Saved** means it's stored. If the connection drops, your text stays on the page and the app keeps trying.
 - If you wrote in another tab or on another device, you'll be asked which version to keep. Nothing is overwritten without asking.
 - **Your answers are private.** Teachers, administrators, guardians, and other members can't see them.
-- Find past lessons under **Sunday lessons → My workbooks**. You can delete your answers there at any time.
+- Your answers and notes are saved in **My Journal**, alongside your other entries. Open one there to read, edit, search, archive, download, or delete it, and use the link at the top of the entry to go back to its place in the lesson. **Sunday lessons → My Journal** and the **My Journal** link on each lesson go there too. (The old **My workbooks** page now opens My Journal.)
 - If a teacher rewords a question after you answered, your answer stays, along with the wording you answered.
 
 ## Books

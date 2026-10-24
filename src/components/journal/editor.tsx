@@ -20,6 +20,8 @@ type Props = {
    * on that page after the first save, and a link opens the entry in My Journal.
    */
   inline?: boolean;
+  /** Longest text this entry can hold (lesson answers and notes: 10,000). */
+  maxBody?: number;
 };
 
 async function call(url: string, method: "POST" | "PUT", body: unknown): Promise<{ status: number; data: Record<string, unknown> }> {
@@ -44,7 +46,7 @@ function toResponse(status: number, data: Record<string, unknown>): SaveResponse
  * the account copy is the only saved copy, and the status line says
  * "Saved" only after the server confirms the text on screen.
  */
-export function JournalEditor({ entry, link, placeholder, inline = false }: Props) {
+export function JournalEditor({ entry, link, placeholder, inline = false, maxBody = 100_000 }: Props) {
   const fieldId = useId();
   const [id, setId] = useState(entry?.id ?? null);
   // Mutable per-editor session (the saved entry's id once created, and the
@@ -285,7 +287,7 @@ export function JournalEditor({ entry, link, placeholder, inline = false }: Prop
             id={`${fieldId}-body`}
             ref={area}
             value={body}
-            maxLength={100_000}
+            maxLength={maxBody}
             placeholder={placeholder ?? "Write freely. Only you can see this."}
             onChange={(e) => edit(title, e.target.value)}
             onBlur={() => void controller.flush()}

@@ -1,5 +1,7 @@
 # Lesson builder and member workbooks (Phase 13)
 
+> **Since `20261120000100` (My Journal consolidation):** members' answers and notes are My Journal entries (`journal.entries`, link kinds `lesson_answer` and `lesson_notes`), not rows in `media.workbook_answers` / `media.workbook_notes`. The lesson page still edits them in place, with the same autosave, conflict, and privacy rules, and the function names below are unchanged. "My workbooks" (`/lessons/workbooks`) redirects to My Journal. See [migration-history.md](../migration-history.md#my-journal-lesson-answers-and-notes-2026-11-20). The teacher's builder and preview are unchanged.
+
 Sunday lessons can be built from ordered blocks that approved members open as a private workbook: they read the scripture, teaching, and media in order and write answers to the lesson's questions, plus free notes. This extends the existing lessons module (`media.items`, kind `lesson`); nothing about existing lessons changes unless a teacher adds blocks.
 
 - Migration: `supabase/migrations/20261031000300_media_lesson_workbooks.sql` (additive).
@@ -52,7 +54,7 @@ Neither is ever part of what members receive. The **Preview the member workbook*
 
 ## Member guide
 
-**Opening a workbook.** On a Sunday lesson that has a workbook, choose **Open workbook** (`/lessons/<id>/workbook`). **My workbooks** (`/lessons/workbooks`, also linked from the Sunday lessons page) lists every lesson you've written in, most recent first. Workbooks are for approved adult members; visitors, pending accounts, and youth accounts don't have them (youth still see public lessons as before).
+**Following a lesson.** On a Sunday lesson that has blocks, choose **Follow along and answer the questions** (`/lessons/<id>/workbook`). Everything you write there is saved in **My Journal** (linked from the Sunday lessons page and each lesson), with your other entries; each answer is its own entry, named by its question, and links back to that question in the lesson. Workbooks are for approved adult members; visitors, pending accounts, and youth accounts don't have them (youth still see public lessons as before).
 
 **Privacy.** "Your answers are private. Teachers and administrators can't see them." Answers and notes are stored in your account, readable only by you. Nobody else, including teachers, publishers, administrators, group leaders, and guardians, can read them. They're never posted anywhere or included in notifications or the audit log. (This is access control, not encryption.)
 
@@ -66,9 +68,9 @@ Neither is ever part of what members receive. The **Preview the member workbook*
 
 **Removed questions.** If the teacher removes a question you answered, your answer is listed under **Removed questions** with the question as you saw it. You can delete it there.
 
-**A lesson that's no longer available** (unpublished or archived): your own answers and notes are still listed in **My workbooks** and readable by you, without the lesson's content.
+**A lesson that's no longer available** (unpublished, archived, or deleted): your own answers and notes stay in **My Journal**, readable by you, without the lesson's content.
 
-**Deleting.** **Delete my answers** at the bottom of a workbook removes every answer and note you wrote for that lesson. It can't be undone.
+**Deleting.** **Delete my answers** at the bottom of the lesson removes every answer and note you wrote for that lesson (from My Journal too). One entry can also be deleted from My Journal. It can't be undone.
 
 **Signing out on a shared device.** Unsaved text can remain in that browser until it saves. If you used someone else's device, wait for **Saved** before closing.
 
@@ -97,8 +99,9 @@ Private `media` schema; RLS on with no policies; no table grants. All access is 
 | Table | Purpose |
 | --- | --- |
 | `media.lesson_blocks` | `id`, `item_id` (lesson), `kind`, `position`, `heading`, `body`, `prompt`, `scripture_ref`, `asset_id`, `caption`, `alt_text`, **`teacher_only`**, **`teacher_note`**, `revision`, `prompt_revision`, `client_key`, `created_by`/`updated_by`, timestamps, `removed_at` |
-| `media.workbook_answers` | `profile_id`, `item_id`, `block_id` (composite FK to its lesson's block), `block_revision`, `prompt_snapshot`, `body` (≤ 10,000), `version`, timestamps. Owner only. |
-| `media.workbook_notes` | `profile_id`, `item_id`, `body` (≤ 10,000), `version`, timestamps. Owner only. |
+| `journal.entries` (`link_kind = 'lesson_answer'`) | Since `20261120000100`: one per member per question. `media_item_id` (lesson), `lesson_block_id`, `block_revision`, `question` (the wording the member saw, formerly `prompt_snapshot`), `body` (≤ 10,000), `version`, timestamps. Owner only. |
+| `journal.entries` (`link_kind = 'lesson_notes'`) | Since `20261120000100`: one per member per lesson. `media_item_id`, `body` (≤ 10,000), `version`, timestamps. Owner only. |
+| `media.workbook_answers`, `media.workbook_notes` | The original tables. Kept unchanged as the pre-migration copy; nothing reads or writes them since `20261120000100`. |
 
 | Function | Who | Notes |
 | --- | --- | --- |
@@ -130,7 +133,7 @@ Decision:
 
 ## Not included
 
-- **Printable or downloadable export of a workbook.** The journal export (`src/lib/journal/export.ts`) is built around journal entries and its own route; adding workbooks to it isn't a trivial fit, so it isn't included. Members can still read and delete everything they wrote.
+- **Printable export of a workbook as a handout.** Since `20261120000100` answers and notes are included in the My Journal downloads (Markdown and JSON), each with its lesson and question.
 - **Linking a lesson to an event occurrence.** The lesson's Sunday date (`delivered_on`) is the service date.
 - **Bible text in the builder.** The builder validates and normalizes references only; members see text from their own translation, within its license limits (`max_verses_per_view`, attribution, API.Bible FUMS tracking).
 - **Answer counts or completion statistics for teachers.** Deliberately absent (privacy).

@@ -52,7 +52,7 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
       <PageHeader
         title="Sunday lessons"
         description="Watch, listen, and read lessons from Sunday gatherings."
-        actions={viewer.member ? <ButtonLink href="/lessons/workbooks" variant="secondary" size="sm">My workbooks</ButtonLink> : null}
+        actions={viewer.member ? <ButtonLink href="/journal" variant="secondary" size="sm">My Journal</ButtonLink> : null}
       />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/lessons" /></div> : null}
       {!list.ok ? <Alert tone="error" title="Lessons couldn't be loaded right now." className="mb-6" /> : null}

@@ -4,7 +4,7 @@
 
 | Data | Table | Who can read it |
 | --- | --- | --- |
-| Journal entries (title, text, optional link, version) | `journal.entries` | The owner only |
+| Journal entries (title, text, optional link, version), including Sunday lesson answers and notes | `journal.entries` | The owner only |
 | Plan enrollments, completions (with the revision read), reminder settings | `bible.enrollments`, `bible.completions` | The owner only (staff see counts per plan) |
 | Bookmarks, highlights | `bible.bookmarks`, `bible.highlights` | The owner only |
 | Reader settings | `bible.reader_prefs` | The owner only |
@@ -27,7 +27,8 @@
 - **Analytics:** none in the app.
 - **Caching:** `/journal`, `/bible`, and `/api/journal/*` are `private, no-store`; the service worker caches no pages; page titles are generic ("Journal entry"), never an entry title.
 - **Browser storage:** journal text is held in memory only. No local storage, no on-device recovery (so nothing lingers on shared devices). Sign-out clears the site cache as before.
-- **Notes on discussion questions:** devotionals, lessons, and church reading assignments show a "Your notes" box under each question. Notes are held in memory only (the page warns before leaving with unsent notes) and are saved only when the member presses **Send to my journal**, which creates one private entry (through `/api/journal/entries`) linked to that item, with each question quoted and the member's note under it. Visitors and admin previews see the questions without note boxes.
+- **Notes on discussion questions:** devotionals, lessons, and church reading assignments show a "Your notes" box under each question. Notes are held in memory only (the page warns before leaving with unsent notes) and are saved only when the member presses **Send to My Journal**, which creates one private entry (through `/api/journal/entries`) linked to that item, with each question quoted and the member's note under it. Visitors and admin previews see the questions without note boxes.
+- **Sunday lesson answers and notes** (since `20261120000100`): written on the lesson page (`/lessons/<id>/workbook`) and saved as entries with link kind `lesson_answer` (one per question, with the question's block, revision, and wording as answered) or `lesson_notes` (one per lesson). Only approved adult members can write them (the lesson functions use `media.require_member`; youth, pending, and visitors are refused); `journal_entry_create` refuses these kinds, so they're only made from a lesson. In My Journal they can be read, edited (10,000 characters at most), archived, unlinked, searched, exported, and deleted like any entry; the link names the lesson only while the owner can open it. Teachers and administrators have no view of them, not even counts. **Browser storage:** unlike the journal editor, the lesson page keeps an unsaved answer on the device until the server confirms it (as it always did), then removes it. Lesson boxes never written in aren't listed. Before `20261120000100` these were `media.workbook_answers` / `media.workbook_notes`; see [migration-history.md](migration-history.md#my-journal-lesson-answers-and-notes-2026-11-20).
 - **Reflections on collection readings** (Morning & Evening): "Reflect in My Journal" links an entry to the reading and the calendar date read (`collection_reading_id`, `reading_date`). One reflection per reading and date (unique index; a second "Reflect" opens the first). Administrators see no counts or content of reflections; hiding or removing the collection keeps the entry text. See [morning-evening.md](morning-evening.md).
 
 ## Export

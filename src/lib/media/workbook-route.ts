@@ -5,7 +5,8 @@ import { json, readJson } from "@/lib/journal/route";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Autosave endpoints for workbook answers and notes. Same contract as the
+ * Autosave endpoints for lesson answers and notes (My Journal entries since
+ * 20261120000100). Same contract as the
  * journal's: 200 when stored, 409 with the current saved text when another
  * tab or device saved newer text, 401 when the session ended. Responses are
  * private and never cached; request and response bodies are never logged.
@@ -18,14 +19,14 @@ export const SaveBody = z.object({
 
 export async function workbookCaller(): Promise<{ supabase: SupabaseClient } | Response> {
   const supabase = await createClient();
-  if (!supabase) return json(503, { error: "Workbooks are unavailable right now." });
+  if (!supabase) return json(503, { error: "Lesson answers are unavailable right now." });
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return json(401, { error: "Your session has ended. Sign in again to save." });
   return { supabase };
 }
 
 export function workbookDbError(error: { code?: string; message?: string }): Response {
-  if (error.code === "42501") return json(403, { error: "Your account can't use workbooks right now." });
+  if (error.code === "42501") return json(403, { error: "Your account can't save lesson answers right now." });
   if (error.code === "P0002") return json(404, { error: error.message && error.message !== "Not found." ? error.message : "This lesson isn't available any more." });
   if (error.code === "22023") {
     const tooOften = /too often/i.test(error.message ?? "");

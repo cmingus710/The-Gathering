@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { requireLearner } from "@/lib/auth/viewer";
+import { entryBodyLimit } from "@/lib/journal/labels";
 import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { deleteEntryAction, entryStatusAction, unlinkEntryAction } from "../actions";
@@ -36,7 +37,7 @@ export default async function EntryPage({ params }: PageProps<"/journal/[id]">) 
       </div>
       <h1 className="sr-only">Journal entry</h1>
       <LinkContext link={e.link} />
-      <JournalEditor key={e.id} entry={{ id: e.id, title: e.title, body: e.body, version: e.version, updated_at: e.updated_at }} />
+      <JournalEditor key={e.id} entry={{ id: e.id, title: e.title, body: e.body, version: e.version, updated_at: e.updated_at }} maxBody={entryBodyLimit(e.link?.kind)} />
       <p className="mt-4 text-meta text-text-secondary">
         Written {new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date(e.created_at))}. Only you can see this entry.
       </p>

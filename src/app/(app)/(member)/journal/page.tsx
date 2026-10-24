@@ -26,7 +26,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
     <>
       <PageHeader
         title="My Journal"
-        description="Private notes and reflections. Only you can read them: not church staff, group leaders, or anyone in your household."
+        description="Private notes, reflections, and lesson answers. Only you can read them: not church staff, group leaders, or anyone in your household."
         actions={
           <ButtonLink href="/journal/new" size="sm" icon={<Plus className="size-4" aria-hidden="true" />}>
             New entry
@@ -34,6 +34,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
         }
       />
       {params.notice === "deleted" ? <Alert tone="success" title="The entry was deleted." className="mb-4" /> : null}
+      {params.notice === "lesson-deleted" ? <Alert tone="success" title="Your answers and notes for that lesson were deleted." className="mb-4" /> : null}
       {error ? <Alert tone="error" title="Your journal couldn't be loaded right now." className="mb-4" /> : null}
       <SegmentedTrack label="Entries" className="mb-4">
         <Link href="/journal" className={segmentClass(status === "active")} aria-current={status === "active" ? "page" : undefined}>

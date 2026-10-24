@@ -67,7 +67,7 @@ Teachers with the content roles can publish lessons with attached handouts and m
 3. Anything in a dashed **Teacher only** box (a teacher note, or a whole block marked "Hide this whole block from members") never reaches members, the preview, or the page source.
 4. Use **Preview the member workbook** to check, then publish the lesson as usual.
 
-Editors change drafts; changing a live lesson needs the publisher role. Rewording a question keeps members' answers and shows them the wording they answered. Removing a block keeps answers for their authors. Members' answers are private: no teacher or administrator view exists. Full guide: [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
+Editors change drafts; changing a live lesson needs the publisher role. Rewording a question keeps members' answers and shows them the wording they answered. Removing a block keeps answers for their authors. Members' answers are private: they are saved in each member's My Journal, and no teacher or administrator view exists. Full guide: [phase-13/lessons-workbook.md](phase-13/lessons-workbook.md).
 
 **Books (Phase 13):** create a **Book** (title, author, description, cover image with confirmed rights, optional Audible link and Kindle book URL, side by side). Then, on its edit page, set **Reading details** (reading dates, related lesson). Add **Reading assignments** for the chapter schedule. Members open Kindle or Audible with their own accounts; nothing is embedded. Full guide: [phase-13/reading-kindle-audible.md](phase-13/reading-kindle-audible.md).
 
