@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { TileIcon } from "@/components/icons/icon";
 import { formatDay, itemHref, speakers } from "@/lib/media/format";
+import { featuredLabel, type FeaturedState } from "@/lib/media/lessons";
 import type { ItemCard } from "@/lib/media/types";
 import type { IconName } from "@/lib/icons";
 import { HeadingLink, HomeSectionHeading } from "./sections";
@@ -9,6 +10,8 @@ import { HeadingLink, HomeSectionHeading } from "./sections";
 export type HomeTeaching = {
   devotional: ItemCard | null;
   lesson: ItemCard | null;
+  // Missing before 20261121000100 is applied; the label then reads "Latest lesson".
+  lesson_state?: FeaturedState | null;
   show: { id: string; title: string; kind: "church" | "external"; author: string | null } | null;
   assignment: ItemCard | null;
 };
@@ -27,7 +30,7 @@ export function TeachingSection({ data }: { data: HomeTeaching }) {
     rows.push({
       key: "l",
       glyph: "lessons",
-      eyebrow: "Latest lesson",
+      eyebrow: featuredLabel(data.lesson_state),
       title: data.lesson.title,
       detail: [data.lesson.delivered_on ? formatDay(data.lesson.delivered_on, "short") : null, speakers(data.lesson) || null].filter(Boolean).join(" · ") || null,
       href: itemHref(data.lesson),

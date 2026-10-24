@@ -60,7 +60,7 @@ export default async function HomePage({ searchParams }: PageProps<"/home">) {
       ({ data, error }) => (error ? null : (data as DefaultBanner)),
       () => null,
     ),
-    // Today's devotional, latest lesson, featured podcast, current reading; skipped on any error.
+    // Today's devotional, featured lesson, featured podcast, current reading; skipped on any error.
     Promise.resolve(supabase.rpc("media_home")).then(
       ({ data, error }) => (error || !data ? null : (data as HomeTeaching)),
       () => null,
