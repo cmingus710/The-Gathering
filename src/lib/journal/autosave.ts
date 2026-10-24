@@ -58,6 +58,7 @@ export class AutosaveController {
   private saved: Draft;
   private state: AutosaveState;
   private inFlight = false;
+  private disposed = false;
   private force = false;
   private debounce: Timer | null = null;
   private retry: Timer | null = null;
@@ -99,6 +100,8 @@ export class AutosaveController {
 
   /** The member typed. */
   edit(draft: Draft) {
+    // A new edit means the editor is in use again (React may remount it with the same controller).
+    this.disposed = false;
     this.draft = { ...draft };
     if (this.state.status === "conflict" || this.state.status === "signed_out") return; // paused until resolved
     if (same(this.draft, this.saved) && !this.inFlight) {
@@ -134,6 +137,8 @@ export class AutosaveController {
       res = { kind: "error", retryable: true, message: "The connection was interrupted." };
     }
     this.inFlight = false;
+    // Gone (the editor closed or switched): don't start timers or report anything.
+    if (this.disposed) return;
     switch (res.kind) {
       case "saved":
         this.force = false;
@@ -172,6 +177,7 @@ export class AutosaveController {
 
   /** Call when the browser comes back online or the member presses Retry. */
   resume() {
+    this.disposed = false;
     if (this.state.status === "conflict") return;
     if (this.state.status === "signed_out") this.set({ status: "unsaved", message: null });
     this.set({ attempt: 0 });
@@ -203,6 +209,7 @@ export class AutosaveController {
   }
 
   dispose() {
+    this.disposed = true;
     this.clearTimers();
   }
 }

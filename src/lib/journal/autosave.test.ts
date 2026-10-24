@@ -75,6 +75,26 @@ describe("AutosaveController", () => {
     await vi.waitFor(() => expect(status()).toBe("saved"));
   });
 
+  it("schedules nothing after dispose, even when a save that was in flight fails", async () => {
+    const { c, calls, states } = setup();
+    c.edit({ title: "T", body: "B1" });
+    vi.advanceTimersByTime(1000);
+    expect(calls).toHaveLength(1);
+    c.dispose();
+    const before = states.length;
+    calls[0].resolve({ kind: "error", retryable: true, message: "Network" });
+    await flushMicrotasks();
+    vi.advanceTimersByTime(60_000);
+    expect(calls).toHaveLength(1);
+    expect(states.length).toBe(before);
+    // Remounted with the same controller: the next edit works as usual.
+    c.edit({ title: "T", body: "B2" });
+    vi.advanceTimersByTime(1000);
+    expect(calls).toHaveLength(2);
+    calls[1].resolve({ kind: "saved", version: 2, updatedAt: "x" });
+    await vi.waitFor(() => expect(c.current.status).toBe("saved"));
+  });
+
   it("stops on a non-retryable error until the member acts", async () => {
     const { c, calls, status } = setup();
     c.edit({ title: "T", body: "x".repeat(10) });

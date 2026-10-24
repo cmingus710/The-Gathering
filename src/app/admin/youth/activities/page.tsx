@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
+import { Card, EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
+import { DemoDraftsButton } from "@/components/youth/coloring/editor";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { ACTIVITY_STATUS, difficultyLabel, kindLabel } from "@/lib/youth/activities";
@@ -96,6 +97,10 @@ export default async function ActivitiesAdminPage({ searchParams }: PageProps<"/
           })}
         </div>
       )}
+      <Card className="mt-8 max-w-2xl">
+        <h2 className="mb-2 font-semibold">Bible Coloring Studio</h2>
+        <DemoDraftsButton />
+      </Card>
     </>
   );
 }
