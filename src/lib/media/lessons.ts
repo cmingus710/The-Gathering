@@ -1,7 +1,7 @@
 import type { ItemCard } from "./types";
 
 /**
- * The Sunday lessons page (public.media_lessons): the database picks the
+ * The featured lesson (public.media_lessons, public.media_home): the database picks the
  * featured lesson by lesson date in the church's time zone and lists the
  * rest oldest first; this only names the result.
  */

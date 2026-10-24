@@ -525,3 +525,21 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`lesson_featured_order`, `lesson-featured-order`).
+
+## Home page lesson card (2026-11-21)
+
+- **New (additive; no applied migration was edited):** `20261121000100_home_lesson_featured`:
+  - new internal `media.featured_lesson(uuid, date)` (no API role can call it) holds the featured-lesson rule from `20261120000100`: the nearest visible lesson dated the church's today or later (`today`/`upcoming`), else the most recent past one (`latest`); undated lessons never; ties by `sort_order`, then `id`;
+  - `media.lessons_page` is replaced with the same signature and output, now calling `media.featured_lesson`;
+  - `public.media_home()` is replaced with the same signature and grants (authenticated only). `lesson` is now that featured lesson rather than the newest-dated one, and the new `lesson_state` key names which of the three it is. Every other key is unchanged (bodies copied from `20261025000300`).
+  - No table, policy, or grant changes.
+- **Operator script:** `supabase/manual/2026-11-21-apply-home-lesson-featured.sql`, one transaction. The preflight requires `20261120000100` and refuses a second run. It post-checks the grants (`media_home` for authenticated, not anon; nobody on `featured_lesson`) and that `media_home` returns `lesson_state`. History row `created_by = home-lesson-featured`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261121000100`. A rerun stopped at the preflight.
+- **Order: either.** The home card reads `lesson_state` when present and says "Latest lesson" otherwise, so the app can be deployed first (the card then shows the newest-dated lesson, as before, until the migration is applied).
+- **Hosted:** **Not applied.** Waiting for the owner's approval. The read-only check afterwards:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261121000100';
+  ```
+
+  Expected: one row (`home_lesson_featured`, `home-lesson-featured`).

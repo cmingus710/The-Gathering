@@ -270,4 +270,51 @@ describeDb("Sunday lessons: featured lesson and date order", () => {
       await expect(db.query(as(m2), "select media.lessons_page($1, '2026-10-24', '{}', 20, 0)", [m1])).rejects.toThrow(/permission denied/);
     });
   });
+
+  // 20261121000100: the home page card uses the same choice.
+  describe("home page lesson card", () => {
+    type Home = { lesson: Card | null; lesson_state: string | null };
+    const featured = async (viewer: string | null, today: string) =>
+      (await db.raw<{ o_id: string | null; o_state: string | null }>("select o_id, o_state from media.featured_lesson($1, $2)", [viewer, today]))[0];
+    const home = async (actor: Actor) => (await db.query<{ r: Home }>(actor, "select public.media_home() r"))[0].r;
+
+    it("picks the same lesson as the lessons page for every viewer and date", async () => {
+      for (const today of ["2026-10-24", "2026-10-25", "2026-10-26", "2026-11-02", "2026-12-01"]) {
+        for (const viewer of [m1, m2, pending, null]) {
+          const p = await page(viewer, today);
+          const f = await featured(viewer, today);
+          expect(f.o_id).toBe(p.featured?.id ?? null);
+          expect(f.o_state).toBe(p.featured_state);
+        }
+      }
+    });
+
+    it("features today's lesson on the home page, labelled today, using the church's date", async () => {
+      const [{ d: today }] = await db.raw<{ d: string }>("select media.church_today()::text d");
+      await lesson("Home today", today, { sort: 0 });
+      try {
+        const h = await home(as(m2));
+        expect(h.lesson?.title).toBe("Home today");
+        expect(h.lesson_state).toBe("today");
+      } finally {
+        await db.raw("delete from media.items where id = $1", [ids["Home today"]]);
+      }
+      // Without it, the home card matches the shared choice for the church's today.
+      const f = await featured(m2, today);
+      const h = await home(as(m2));
+      expect(h.lesson?.id ?? null).toBe(f.o_id);
+      expect(h.lesson_state).toBe(f.o_state);
+    });
+
+    it("never shows a lesson the viewer can't see, and keeps the rule internal", async () => {
+      // media_home needs a signed-in person (anon can't call it, as before);
+      // someone not yet approved sees only public lessons.
+      await expect(db.query(anon, "select public.media_home()")).rejects.toThrow(/permission denied/);
+      const v = await home(as(pending));
+      expect(v.lesson?.title).toBe("Oct 4 public");
+      expect(v.lesson_state).toBe("latest");
+      await expect(db.query(anon, "select * from media.featured_lesson(null, '2026-10-24')")).rejects.toThrow(/permission denied/);
+      await expect(db.query(as(m2), "select * from media.featured_lesson($1, '2026-10-24')", [m1])).rejects.toThrow(/permission denied/);
+    });
+  });
 });
