@@ -17,6 +17,7 @@ const SECTIONS: Array<{ href: string; label: string; description: string; caps: 
   { href: "/admin/youth/forms", label: "Permission forms", description: "Versioned forms and what changed.", caps: [CAPABILITIES.youthForms] },
   { href: "/admin/youth/events", label: "Youth events", description: "Make events youth-only, require forms, collect logistics, designate personnel, attendee lists.", caps: [CAPABILITIES.youthForms, CAPABILITIES.youthManage] },
   { href: "/admin/youth/media", label: "Photo consent", description: "Associate photos with children, consent reviews, known copies.", caps: [CAPABILITIES.youthMediaConsent] },
+  { href: "/admin/youth/activities", label: "Learn & Play activities", description: "Create, preview, publish, and archive activities and their artwork.", caps: [CAPABILITIES.youthActivities] },
   { href: "/admin/youth/reports", label: "Safeguarding reports", description: "Reports about youth discussions, including reports about leaders.", caps: [CAPABILITIES.youthSafeguarding] },
 ];
 

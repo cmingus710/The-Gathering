@@ -183,6 +183,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
       CAPABILITIES.youthSafeguarding,
       CAPABILITIES.youthPolicy,
       CAPABILITIES.familyVerify,
+      CAPABILITIES.youthActivities,
     ],
   },
   {

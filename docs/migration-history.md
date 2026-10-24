@@ -468,3 +468,16 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`question_length`, `question-length`).
+
+## Learn & Play activities (2026-11-18)
+
+- **New (additive; no applied migration was edited):** `20261118000100_youth_activities`:
+  - capability `youth.activities` and role `youth_activity_editor` (assigned to nobody; never implied by super administrator);
+  - tables `youth.activities`, `youth.activity_versions` (immutable once published, by trigger), `youth.activity_assets`, `youth.activity_groups`, `youth.activity_progress` (per child and version), all in the closed `youth` schema;
+  - new `public.youth_activit*` and `public.youth_admin_activit*` functions (executable by `authenticated` only; the anon baseline is unchanged);
+  - replaced with the same signatures: `public.youth_can_read_object(text)` and `public.youth_can_write_object(text)` (activity artwork in the `youth` bucket added; avatar rules unchanged) and `public.youth_me()` (also reports `youth.activities`). No storage policy, bucket, table, or existing row changes.
+  - Details: [learn-and-play.md](learn-and-play.md).
+- **Operator script:** `supabase/manual/2026-11-18-apply-youth-activities.sql`, one transaction. The preflight requires the youth steps through `20261028001000` and refuses a second run. It post-checks the tables, that they and the member functions aren't reachable directly or by anon, and the role's single capability. History row `created_by = youth-activities`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261118000100`. A rerun stopped at the preflight.
+- **Order: apply before deploying the app change.** Without it, Learn & Play on `/youth` shows a load error (the rest of the page works) and the activity admin pages fail to load.
+- **Hosted:** **Not applied.** Waiting for the owner's approval.

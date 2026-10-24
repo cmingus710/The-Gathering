@@ -11,4 +11,5 @@ export const YOUTH_ADMIN_CAPS: Capability[] = [
   CAPABILITIES.youthSafeguarding,
   CAPABILITIES.youthPolicy,
   CAPABILITIES.familyVerify,
+  CAPABILITIES.youthActivities,
 ];
