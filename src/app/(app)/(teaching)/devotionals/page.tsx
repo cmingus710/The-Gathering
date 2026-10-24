@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, NotebookPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CollectionCard } from "@/components/devotionals/collection-card";
@@ -7,7 +7,8 @@ import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import type { CollectionCards } from "@/lib/devotionals/types";
 import { formatDay, isYmd } from "@/lib/media/format";
 import { listItems, prepareDetail } from "@/lib/media/pages";
@@ -31,7 +32,7 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
   if (error || !data) {
     return (
       <>
-        <PageHeader title="Devotionals" />
+        <SectionHeader section="devotionals" />
         <Alert tone="error" title="Devotionals couldn't be loaded right now." />
       </>
     );
@@ -50,13 +51,24 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
 
   return (
     <>
-      <PageHeader
-        eyebrow={isToday ? "Today's devotional" : "Devotional"}
-        title={formatDay(day.date, "weekday")}
+      <SectionHeader
+        section="devotionals"
+        description={
+          <>
+            {isToday ? "Today's devotional" : "Devotional for"} · <time dateTime={day.date}>{formatDay(day.date, "weekday")}</time>
+          </>
+        }
         actions={
-          <ButtonLink href="/devotionals/archive" variant="secondary" size="sm">
-            Archive
-          </ButtonLink>
+          <>
+            <ButtonLink href="/devotionals/archive" variant="secondary" size="sm">
+              Archive
+            </ButtonLink>
+            {viewer.member ? (
+              <ButtonLink href="/journal" variant="secondary" size="sm" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
+                My Journal
+              </ButtonLink>
+            ) : null}
+          </>
         }
       />
       <nav aria-label="Other days" className="mb-6 flex items-center justify-between gap-2">
@@ -82,7 +94,7 @@ export default async function DevotionalsPage({ searchParams }: PageProps<"/devo
       </nav>
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/devotionals" /></div> : null}
       {detail ? (
-        <ContentDetail item={detail.item} urls={detail.urls} transcripts={detail.transcripts} member={viewer.member} origin={getSiteUrl()} />
+        <ContentDetail item={detail.item} urls={detail.urls} transcripts={detail.transcripts} member={viewer.member} origin={getSiteUrl()} headingLevel={2} />
       ) : (
         <EmptyState
           glyph="devotionals"

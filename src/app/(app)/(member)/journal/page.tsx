@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { PageHeader, SectionHeading } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { segmentClass, SegmentedTrack } from "@/components/ui/segmented";
 import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
@@ -24,8 +25,8 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
 
   return (
     <>
-      <PageHeader
-        title="My Journal"
+      <SectionHeader
+        section="journal"
         description="Private notes, reflections, and lesson answers. Only you can read them: not church staff, group leaders, or anyone in your household."
         actions={
           <ButtonLink href="/journal/new" size="sm" icon={<Plus className="size-4" aria-hidden="true" />}>

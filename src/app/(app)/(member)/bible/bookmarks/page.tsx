@@ -5,7 +5,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import { requireClient } from "@/lib/supabase/server";
 import { clearAnnotationsAction, removeBookmarkAction } from "../actions";
@@ -35,7 +36,7 @@ export default async function BookmarksPage() {
   return (
     <>
       <BackLink route="/bible/bookmarks" />
-      <PageHeader title="Bookmarks and highlights" description="Private to you. Highlights appear in the reader." />
+      <SectionHeader section="bible" size="compact" title="Bookmarks and highlights" description="Private to you. Highlights appear in the reader." />
       {error ? <Alert tone="error" title="Bookmarks couldn't be loaded right now." className="mb-6" /> : null}
       {items.length ? (
         <ul className={`${rowListClass} mb-8`}>

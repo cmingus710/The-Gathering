@@ -5,6 +5,7 @@ import { Feed, PinnedPosts } from "@/components/community/feed";
 import { FeedComposer, type ComposerPlace } from "@/components/community/feed-composer";
 import { Alert } from "@/components/ui/alert";
 import { cn } from "@/components/ui/cn";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { renderCommunityText } from "@/lib/community/format";
 import { communityRpc, tryCommunityRpc } from "@/lib/community/queries";
@@ -58,10 +59,9 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
 
   return (
     <div className="mx-auto max-w-[40rem]">
-      <h1 className="font-display text-[1.75rem] font-semibold leading-tight">Community</h1>
-      <p className="mt-1 text-meta text-text-secondary">For our church family only. Group posts stay inside their group.</p>
+      <SectionHeader section="community" description="For our church family only. Group posts stay inside their group." className="mb-3 sm:mb-3" />
 
-      <nav aria-label="Filter posts" className="-mx-4 mt-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      <nav aria-label="Filter posts" className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         <ul className="flex w-max gap-2">
           {filters.map((f) => (
             <li key={f.href}>

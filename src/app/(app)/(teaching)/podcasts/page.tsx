@@ -4,7 +4,8 @@ import { ShowCard, showArtPaths } from "@/components/media/podcast";
 import { PodcastEpisodeCard, ProviderShowCard } from "@/components/media/podcast-episode-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { parseProviderRefString } from "@/lib/media/embeds";
 import { coverPaths } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
@@ -60,7 +61,7 @@ export default async function PodcastsPage({ searchParams }: PageProps<"/podcast
 
   return (
     <>
-      <PageHeader title="Podcasts" description="Listen to episodes from our church and shows we recommend." />
+      <SectionHeader section="podcasts" description="Listen to episodes from our church and shows we recommend." />
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/podcasts" /></div> : null}
       {episodesRes.error ? <Alert tone="error" title="Episodes couldn't be loaded right now." className="mb-6" /> : null}
       {!episodesRes.error && !cards.length ? (

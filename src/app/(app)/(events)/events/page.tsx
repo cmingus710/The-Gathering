@@ -5,7 +5,8 @@ import { EventListItem } from "@/components/events/event-list-item";
 import { MonthGrid } from "@/components/events/month-grid";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink, buttonClasses } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SegmentedTrack, segmentClass } from "@/components/ui/segmented";
 import { getViewer } from "@/lib/auth/viewer";
 import { addDays, formatDayLong, localDate } from "@/lib/events/format";
@@ -77,16 +78,16 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 
   return (
     <>
-      <PageHeader
-        title="Events"
-        description={isMember ? "Gatherings, studies, and ways to serve. Register for events and add them to your calendar." : "Upcoming public events. Members can sign in to see members-only events and register."}
+      <SectionHeader
+        section="events"
+        description={isMember ? "Gatherings, studies, and ways to serve together." : "Upcoming public events. Sign in to see members-only events and register."}
         actions={
           isMember ? (
-            <ButtonLink href="/events/calendar" variant="secondary" icon={<Settings2 className="size-4" aria-hidden="true" />}>
+            <ButtonLink href="/events/calendar" variant="secondary" size="sm" icon={<Settings2 className="size-4" aria-hidden="true" />}>
               Calendar &amp; reminders
             </ButtonLink>
           ) : viewer.state !== "signed-in" ? (
-            <ButtonLink href="/sign-in?next=/events" variant="secondary">
+            <ButtonLink href="/sign-in?next=/events" variant="secondary" size="sm">
               Sign in
             </ButtonLink>
           ) : null

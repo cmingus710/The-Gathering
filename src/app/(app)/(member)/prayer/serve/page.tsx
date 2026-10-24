@@ -2,7 +2,8 @@ import { ChevronRight, HandHeart } from "lucide-react";
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
 import { SIGNUP_LABEL } from "@/lib/prayer/format";
@@ -19,7 +20,7 @@ export default async function ServePage() {
   return (
     <>
       <BackLink route="/prayer/serve" />
-      <PageHeader title="Ways to help" description="Practical care needs the care team has asked for help with. Details are shared only with the volunteers they confirm." />
+      <SectionHeader section="prayer" size="compact" title="Ways to help" description="Practical care needs the care team has asked for help with. Details are shared only with the volunteers they confirm." />
       {!rows ? (
         <Alert tone="error" title="Opportunities couldn't be loaded right now." />
       ) : rows.length ? (

@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { relativeTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
@@ -18,7 +19,7 @@ export default async function MyCarePage() {
   return (
     <>
       <BackLink route="/prayer/care" />
-      <PageHeader
+      <SectionHeader section="prayer" size="compact"
         title="My care requests"
         description="Practical help from the care team. Only you and the care team can see these."
         actions={

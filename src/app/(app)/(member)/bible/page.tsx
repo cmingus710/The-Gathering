@@ -6,7 +6,8 @@ import { TileIcon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SelectField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -51,8 +52,8 @@ export default async function BiblePage() {
 
   return (
     <>
-      <PageHeader
-        title="Bible reading"
+      <SectionHeader
+        section="bible"
         description="Read along with the church, or at your own pace. Your progress, highlights, and notes are private to you."
         actions={
           <>

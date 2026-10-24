@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/generate-menu-icons.mjs",
+    "prebuild": "node scripts/generate-menu-icons.mjs && node scripts/generate-section-headers.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -15,6 +15,7 @@
     "admin:bootstrap": "node scripts/bootstrap-super-admin.mjs",
     "test:e2e": "playwright test",
     "menu:icons": "node scripts/generate-menu-icons.mjs",
+    "section:backgrounds": "node scripts/generate-section-headers.mjs",
     "devotional:dry-run": "node --no-warnings scripts/morning-evening-dry-run.mjs"
   },
   "dependencies": {

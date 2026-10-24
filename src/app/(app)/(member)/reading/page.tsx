@@ -3,7 +3,8 @@ import { ItemCard } from "@/components/media/item-card";
 import { BookSearch, CollectionFolder, collectionGridClass } from "@/components/media/reading/collections";
 import { CurrentBook, PROGRESS_LABEL } from "@/components/media/reading/current-book";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { ALL_BOOKS, ALL_BOOKS_LABEL, collectionHref, type BookCollections } from "@/lib/media/book-collections";
 import { coverPaths } from "@/lib/media/format";
@@ -71,7 +72,7 @@ export default async function ReadingPage() {
 
   return (
     <>
-      <PageHeader title="Books" description="What we're reading together, this week's assignment, and your own progress." />
+      <SectionHeader section="reading" description="What we're reading together, this week's assignment, and your own progress." />
       {error ? <Alert tone="error" title="Books couldn't be loaded right now." className="mb-6" /> : null}
       {empty ? (
         <EmptyState glyph="reading" title="No books yet">

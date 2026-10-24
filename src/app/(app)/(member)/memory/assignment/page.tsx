@@ -5,7 +5,8 @@ import { StageBadge } from "@/components/memory/stage-badge";
 import { ItemTranslationNote } from "@/components/memory/translation-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
 import type { Item } from "@/lib/memory/types";
@@ -24,7 +25,7 @@ export default async function AssignmentPage() {
   const range = (i: Item) => (i.starts_on && i.ends_on ? `${formatDay(i.starts_on)} – ${formatDay(i.ends_on)}` : "");
   return (
     <>
-      <PageHeader title="Current memory verse" description="The verse the church (or your group) is memorizing together right now." />
+      <SectionHeader section="memory" size="compact" title="Current memory verse" description="The verse the church (or your group) is memorizing together right now." />
       <MemoryNav current="assignment" />
       {error ? <Alert tone="error" title="Assignments couldn't be loaded right now." className="mb-6" /> : null}
       {!error && !a.current.length ? (

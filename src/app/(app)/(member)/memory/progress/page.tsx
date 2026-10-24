@@ -2,7 +2,8 @@ import { Award, CircleDashed } from "lucide-react";
 import type { Metadata } from "next";
 import { MemoryNav } from "@/components/memory/nav";
 import { Alert } from "@/components/ui/alert";
-import { PageHeader, SectionHeading } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireLearner } from "@/lib/auth/viewer";
 import { ACTIVITIES, STAGES, formatDay } from "@/lib/memory/format";
 import type { Progress, Stage } from "@/lib/memory/types";
@@ -23,7 +24,7 @@ export default async function ProgressPage() {
   if (error || !p) {
     return (
       <>
-        <PageHeader title="Progress and badges" />
+        <SectionHeader section="memory" size="compact" title="Progress and badges" />
         <MemoryNav current="progress" />
         <Alert tone="error" title="Your progress couldn't be loaded right now." />
       </>
@@ -34,7 +35,7 @@ export default async function ProgressPage() {
   const stages = (Object.keys(STAGES) as Stage[]).map((s) => ({ s, n: p.stages?.[s] ?? 0 }));
   return (
     <>
-      <PageHeader title="Progress and badges" description="Private to you. Nobody else (not group leaders, administrators, or your household) can see it." />
+      <SectionHeader section="memory" size="compact" title="Progress and badges" description="Private to you. Nobody else (not group leaders, administrators, or your household) can see it." />
       <MemoryNav current="progress" />
       <div className="space-y-8">
         <section aria-labelledby="summary">

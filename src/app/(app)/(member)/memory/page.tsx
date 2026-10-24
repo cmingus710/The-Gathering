@@ -6,7 +6,8 @@ import { StageBadge } from "@/components/memory/stage-badge";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, ListRow, PageHeader, SectionHeading, rowListClass } from "@/components/ui/card";
+import { EmptyState, ListRow, SectionHeading, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireLearner } from "@/lib/auth/viewer";
 import { formatDay } from "@/lib/memory/format";
@@ -24,8 +25,8 @@ export default async function MemoryHomePage() {
 
   return (
     <>
-      <PageHeader
-        title="Memory verses"
+      <SectionHeader
+        section="memory"
         description="Hide God's word in your heart, a little at a time. Your practice and progress are private to you."
         actions={
           <ButtonLink href="/memory/verses/add" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden="true" />}>

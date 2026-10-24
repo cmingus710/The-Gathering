@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { CampaignCard } from "@/components/giving/campaign-card";
-import { PageHeader, SectionHeading } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { displayName, getViewer } from "@/lib/auth/viewer";
 import { signCampaignImages } from "@/lib/giving/campaign-images";
 import type { PublicCampaign } from "@/lib/giving/campaigns";
@@ -46,10 +47,9 @@ export default async function GivePage({ searchParams }: PageProps<"/give">) {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Give"
-        title="Thank you for giving"
-        description="Your generosity helps our church family worship, serve, and care for our neighbors. Choose an amount, how often, and where you'd like it to go."
+      <SectionHeader
+        section="give"
+        description="Thank you for giving. Your generosity helps our church family worship, serve, and care for our neighbors. Choose an amount, how often, and where you'd like it to go."
       />
 
       {params.canceled === "1" ? (
