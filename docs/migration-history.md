@@ -536,10 +536,11 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script:** `supabase/manual/2026-11-21-apply-home-lesson-featured.sql`, one transaction. The preflight requires `20261120000100` and refuses a second run. It post-checks the grants (`media_home` for authenticated, not anon; nobody on `featured_lesson`) and that `media_home` returns `lesson_state`. History row `created_by = home-lesson-featured`.
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261121000100`. A rerun stopped at the preflight.
 - **Order: either.** The home card reads `lesson_state` when present and says "Latest lesson" otherwise, so the app can be deployed first (the card then shows the newest-dated lesson, as before, until the migration is applied).
-- **Hosted:** **Not applied.** Waiting for the owner's approval. The read-only check afterwards:
+- **Hosted:** **Applied (2026-10-24).** The owner ran `supabase/manual/2026-11-21-apply-home-lesson-featured.sql` in the SQL editor. Read-only check afterwards: `20261121000100` recorded as `home_lesson_featured` (`created_by = home-lesson-featured`). That script is one transaction that records the version only after its post-checks pass (the grants, and `media_home` returning `lesson_state`), so the row means the change is in place. The app change merged before this (cmingus710/The-Gathering#76). Applied and recorded; nothing left to do on hosted.
+    - The read-only check used:
 
-  ```sql
-  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261121000100';
-  ```
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261121000100';
+      ```
 
-  Expected: one row (`home_lesson_featured`, `home-lesson-featured`).
+      Expected: one row (`home_lesson_featured`, `home-lesson-featured`).
