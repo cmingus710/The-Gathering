@@ -66,6 +66,9 @@ export const BACK_ROUTES = {
   // Teaching & media
   "/devotionals/[id]": { parent: "/devotionals", label: "Devotionals" },
   "/devotionals/archive": { parent: "/devotionals", label: "Devotionals" },
+  "/devotionals/collections/[key]": { parent: "/devotionals", label: "Devotionals" },
+  "/devotionals/collections/[key]/readings/[id]": { parent: "/devotionals/collections/[key]", label: "the collection" },
+  "/devotionals/collections/[key]/search": { parent: "/devotionals/collections/[key]", label: "the collection" },
   "/lessons/[id]": { parent: "/lessons", label: "Sunday lessons" },
   "/lessons/[id]/workbook": { parent: "/lessons/[id]", label: "the lesson", orphan: { parent: "/lessons/workbooks", label: "My workbooks" } },
   "/lessons/series/[id]": { parent: "/lessons", label: "Sunday lessons" },
@@ -210,6 +213,8 @@ export const RETURN_VIEWS: Array<{ path: RegExp; params: Record<string, Check> }
   { path: /^\/devotionals$/, params: { date: re(DATE) } },
   { path: /^\/reading\/collections\/(all|[0-9a-f-]{36})$/, params: { q: (v) => v.length <= 80 } },
   { path: /^\/devotionals\/archive$/, params: { month: re(MONTH) } },
+  { path: /^\/devotionals\/collections\/[a-z0-9-]{2,60}$/, params: { date: re(DATE), slot: oneOf("morning", "evening") } },
+  { path: /^\/devotionals\/collections\/[a-z0-9-]{2,60}\/search$/, params: { q: (v) => v.length <= 100, page: re(SMALL_INT) } },
 ];
 
 /** Whether the shell should remember this list view for a later back link. */

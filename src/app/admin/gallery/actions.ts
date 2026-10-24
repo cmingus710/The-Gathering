@@ -48,6 +48,8 @@ export async function saveAlbumAction(_prev: FormState, formData: FormData): Pro
   });
   if (error || !data) return errorState(dbErrorMessage(error), { values });
   revalidatePath("/admin/gallery");
+  // A new album with a cover chosen: the form uploads the cover next, then opens the album.
+  if (!albumId && formData.get("then") === "cover") return { status: "success", id: data as string };
   redirect(`/admin/gallery/${data as string}?saved=${albumId ? "saved" : "created"}`);
 }
 
@@ -58,8 +60,16 @@ export async function albumStatusAction(formData: FormData): Promise<void> {
   if (!isUuid(id) || !["publish", "unpublish", "archive", "restore", "delete"].includes(action)) redirect("/admin/gallery");
   const supabase = await createClient();
   if (!supabase) redirect(`/admin/gallery/${id}?error=unavailable`);
+  // A deleted album's uploaded cover (its own files only) goes with it.
+  let coverFiles: string[] = [];
+  if (action === "delete") {
+    const { data } = await supabase.rpc("media_admin_album", { p_id: id, p_status: "uploading" });
+    const c = (data as { cover?: { source: string; display_path: string | null; thumb_path: string | null } | null } | null)?.cover;
+    if (c?.source === "upload") coverFiles = [c.display_path, c.thumb_path].filter((p): p is string => !!p && p.startsWith("album-covers/"));
+  }
   const { error } = await supabase.rpc("media_admin_album_status", { p_id: id, p_action: action });
   if (error) redirect(`/admin/gallery/${id}?error=${encodeURIComponent(dbErrorMessage(error))}`);
+  if (coverFiles.length) await removePaths(supabase, "media", coverFiles);
   revalidatePath("/", "layout");
   redirect(action === "delete" ? "/admin/gallery?saved=deleted" : `/admin/gallery/${id}?saved=${action}`);
 }
@@ -148,9 +158,15 @@ export async function setCoverAction(formData: FormData): Promise<void> {
   const photoId = formData.get("photo");
   if (!isUuid(albumId) || !isUuid(photoId)) redirect("/admin/gallery");
   const supabase = await createClient();
-  if (supabase) await supabase.rpc("media_admin_album_cover", { p_album: albumId, p_photo: photoId });
+  if (!supabase) redirect(`/admin/gallery/${albumId}?error=unavailable`);
+  const { data, error } = await supabase.rpc("media_admin_album_cover_choose", { p_album: albumId, p_photo: photoId, p_framing: null });
+  if (error) redirect(`/admin/gallery/${albumId}?error=${encodeURIComponent(dbErrorMessage(error, "The cover couldn't be changed."))}`);
+  // An uploaded cover it replaces is deleted (its own files only; never a photo).
+  const old = ((data as { remove?: string[] } | null)?.remove ?? []).filter((p) => p.startsWith("album-covers/"));
+  await removePaths(supabase, "media", old);
   revalidatePath(`/admin/gallery/${albumId}`);
-  redirect(`/admin/gallery/${albumId}?saved=cover`);
+  revalidatePath("/gallery", "layout");
+  redirect(`/admin/gallery/${albumId}?saved=cover#cover`);
 }
 
 export async function resolveReportAction(formData: FormData): Promise<void> {

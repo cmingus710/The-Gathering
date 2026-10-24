@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AlbumCoverImage } from "@/components/media/album-cover-image";
 import { AlbumVideo } from "@/components/media/album-video";
 import { GalleryViewer, type ViewerPhoto } from "@/components/media/gallery-viewer";
 import { MyPhotos } from "@/components/media/my-photos";
@@ -9,6 +10,7 @@ import { BackLink } from "@/components/ui/back-link";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { requireApprovedMember } from "@/lib/auth/viewer";
+import { albumCoverPath, isChosenCover } from "@/lib/media/album-cover";
 import { formatDay, isUuid } from "@/lib/media/format";
 import { signPaths, UPLOAD_BUCKET } from "@/lib/media/storage";
 import type { Album, Photo } from "@/lib/media/types";
@@ -34,8 +36,10 @@ export default async function AlbumPage({ params, searchParams }: PageProps<"/ga
   const a = data as AlbumPage;
   const videos = a.photos.filter((p) => p.kind === "video" && p.video);
   const stills = a.photos.filter((p) => p.kind !== "video");
+  // The header shows a cover chosen for the album (not the automatic one, which is already the first photo below).
+  const headerCover = isChosenCover(a.cover) ? albumCoverPath(a.cover, "header") : null;
   const [urls, reviewUrls] = await Promise.all([
-    signPaths(supabase, [...stills.flatMap((p) => [p.thumb_path, p.display_path]), ...a.my_pending.map((p) => p.thumb_path)]),
+    signPaths(supabase, [...stills.flatMap((p) => [p.thumb_path, p.display_path]), ...a.my_pending.map((p) => p.thumb_path), headerCover]),
     signPaths(supabase, a.my_pending.map((p) => p.review_thumb_path), UPLOAD_BUCKET),
   ]);
   const photos: ViewerPhoto[] = stills.map((p) => ({
@@ -51,11 +55,28 @@ export default async function AlbumPage({ params, searchParams }: PageProps<"/ga
   return (
     <>
       <BackLink route="/gallery/[id]" />
-      <PageHeader
-        eyebrow={[a.album_on ? formatDay(a.album_on) : null, a.audience === "group" ? `Shared with ${a.group_name ?? "one group"}` : "Shared with members"].filter(Boolean).join(" · ")}
-        title={a.title}
-        description={a.description || undefined}
-      />
+      {(() => {
+        const header = (
+          <PageHeader
+            eyebrow={[a.album_on ? formatDay(a.album_on) : null, a.audience === "group" ? `Shared with ${a.group_name ?? "one group"}` : "Shared with members"].filter(Boolean).join(" · ")}
+            title={a.title}
+            description={a.description || undefined}
+          />
+        );
+        const src = headerCover ? urls.get(headerCover) : null;
+        if (!src) return header;
+        return (
+          <div className="grid gap-x-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:items-start">
+            {header}
+            <AlbumCoverImage
+              src={src}
+              alt={a.cover?.alt || `Cover image for ${a.title}`}
+              framing={a.cover?.framing ?? null}
+              className="order-first mb-5 w-full max-w-md rounded-card border border-border md:order-none md:mb-6"
+            />
+          </div>
+        );
+      })()}
       {a.event ? (
         <p className="-mt-3 mb-6 text-meta">
           From {a.event.title}

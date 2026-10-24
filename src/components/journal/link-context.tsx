@@ -1,10 +1,21 @@
-import { BookOpen, CalendarDays, GraduationCap } from "lucide-react";
+import { BookOpen, CalendarDays, GraduationCap, Sunrise } from "lucide-react";
 import Link from "next/link";
+import { formatDay } from "@/lib/media/format";
 
 export type EntryLink =
   | { kind: "passage"; label: string | null; translation_code: string | null; book: string; chapter: number; available: boolean }
   | { kind: "assignment"; available: boolean; day_id: string | null; label: string | null; plan_title: string | null; question: string | null; revision: number | null; changed_since: boolean; passages: Array<{ label: string }> | null }
-  | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null };
+  | { kind: "devotional" | "lesson" | "book" | "book_assignment"; available: boolean; item_id: string | null; title: string | null }
+  | {
+      kind: "collection_reading";
+      available: boolean;
+      reading_id: string | null;
+      reading_date: string;
+      collection_key: string | null;
+      title: string | null;
+      label: string | null;
+      scripture_ref: string | null;
+    };
 
 const ITEM_HREF = { devotional: "/devotionals/", lesson: "/lessons/", book: "/reading/books/", book_assignment: "/reading/assignments/" } as const;
 const ITEM_NAME = { devotional: "devotional", lesson: "Sunday lesson", book: "book", book_assignment: "reading assignment" } as const;
@@ -53,6 +64,29 @@ export function LinkContext({ link }: { link: EntryLink | null }) {
           {link.changed_since ? <p className="text-text-secondary">The plan has changed since you wrote this; the passages above are the ones you read.</p> : null}
           {link.question ? <p className="mt-1 font-semibold whitespace-pre-line [overflow-wrap:anywhere]">{link.question}</p> : null}
         </div>
+      </div>
+    );
+  }
+  if (link.kind === "collection_reading") {
+    // A reading from an imported collection (Morning & Evening), on the date reflected on.
+    const when = formatDay(link.reading_date, "long");
+    return (
+      <div className={box}>
+        <Sunrise className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        {link.available && link.reading_id && link.collection_key ? (
+          <p>
+            About{" "}
+            <Link
+              href={`/devotionals/collections/${encodeURIComponent(link.collection_key)}/readings/${link.reading_id}?on=${link.reading_date}`}
+              className="font-semibold text-primary hover:underline"
+            >
+              {link.title}: {link.label}
+            </Link>
+            {link.scripture_ref ? ` (${link.scripture_ref})` : ""}, read {when}
+          </p>
+        ) : (
+          <p>About a devotional reading for {when} that&apos;s no longer available. Your note is kept.</p>
+        )}
       </div>
     );
   }

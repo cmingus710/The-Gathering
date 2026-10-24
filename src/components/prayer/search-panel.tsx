@@ -1,25 +1,42 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useId, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { searchAction } from "@/app/(app)/(member)/prayer/actions";
 import { Button } from "@/components/ui/button";
-import { rowListClass } from "@/components/ui/card";
+import { cn } from "@/components/ui/cn";
+import { Spinner } from "@/components/ui/spinner";
 import type { PrayerCard } from "@/lib/prayer/types";
-import { PrayerRow } from "./prayer-row";
+import { PrayerRow, prayerListClass } from "./prayer-row";
 
 /**
- * Search within the current tab. Runs as a POST (Server Action) so search
- * words never appear in the address bar, history, or request logs. Results
- * come from the same access-checked function as the list. While a search is
+ * Search within the current view, in one toolbar with the View menu (`tools`)
+ * and the Filters toggle. Runs as a POST (Server Action) so search words
+ * never appear in the address bar, history, or request logs. Results come
+ * from the same access-checked function as the list. While a search is
  * active, it replaces the list rendered by the server (`children`).
+ *
+ * `filters.panel` (the server-rendered Status and Audience form) opens below
+ * the toolbar, closed by default; `filters.summary` shows what's applied.
  */
-export function SearchPanel({ view, children }: { view: string; children: ReactNode }) {
+export function SearchPanel({
+  view,
+  tools,
+  filters,
+  children,
+}: {
+  view: string;
+  tools?: ReactNode;
+  filters?: { count: number; panel: ReactNode; summary?: ReactNode };
+  children: ReactNode;
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{ q: string; items: PrayerCard[]; hasMore: boolean } | null>(null);
   const [error, setError] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [pending, start] = useTransition();
   const id = useId();
+  const panelId = `${id}-filters`;
 
   const run = (q: string, append = false) =>
     start(async () => {
@@ -40,46 +57,91 @@ export function SearchPanel({ view, children }: { view: string; children: ReactN
     else setResults(null);
   }
 
+  const clear = () => {
+    setResults(null);
+    setQuery("");
+  };
+
   return (
-    <div className="space-y-4">
-      <form role="search" onSubmit={onSubmit} className="flex gap-2">
-        <label htmlFor={id} className="sr-only">
-          Search prayer requests
-        </label>
-        <input
-          id={id}
-          type="search"
-          value={query}
-          maxLength={100}
-          autoComplete="off"
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search requests you can see"
-          className="block min-h-11 w-full rounded-full border border-border-strong bg-surface px-4 text-base text-text placeholder:text-text-secondary focus-visible:outline-3 focus-visible:outline-primary"
-        />
-        <Button type="submit" size="sm" variant="secondary" loading={pending} icon={<Search className="size-4" aria-hidden="true" />}>
-          Search
-        </Button>
-        {results ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setResults(null);
-              setQuery("");
-            }}
-            icon={<X className="size-4" aria-hidden="true" />}
-          >
-            Clear
-          </Button>
-        ) : null}
-      </form>
+    <div className="space-y-3">
+      <div className="@container">
+        <div className="flex flex-col gap-2 @min-[34rem]:flex-row">
+          <form role="search" onSubmit={onSubmit} className="relative min-w-0 flex-1">
+            <label htmlFor={id} className="sr-only">
+              Search prayer requests
+            </label>
+            <input
+              id={id}
+              type="search"
+              value={query}
+              maxLength={100}
+              autoComplete="off"
+              enterKeyHint="search"
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search prayer requests"
+              className="block min-h-11 w-full rounded-control border border-border-strong/60 bg-surface pr-11 pl-11 text-base text-text placeholder:text-text-secondary hover:border-border-strong focus-visible:outline-3 focus-visible:outline-primary [&::-webkit-search-cancel-button]:hidden"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              aria-busy={pending || undefined}
+              className="absolute inset-y-0 left-0 flex w-11 items-center justify-center rounded-l-control text-text-secondary hover:text-text focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
+            >
+              {pending ? <Spinner /> : <Search className="size-4" aria-hidden="true" />}
+            </button>
+            {results || query ? (
+              <button
+                type="button"
+                onClick={clear}
+                aria-label="Clear search"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-control text-text-secondary hover:text-text focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            ) : null}
+          </form>
+          {tools || filters ? (
+            <div className="flex gap-2">
+              {tools ? <div className="min-w-0 flex-1 @min-[34rem]:flex-none">{tools}</div> : null}
+              {filters ? (
+                <button
+                  type="button"
+                  aria-expanded={filtersOpen}
+                  aria-controls={panelId}
+                  onClick={() => setFiltersOpen((o) => !o)}
+                  className={cn(
+                    "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control border px-4 text-meta font-semibold text-text",
+                    "hover:border-border-strong hover:bg-surface-muted focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    filtersOpen || filters.count ? "border-primary bg-primary-soft" : "border-border-strong/60 bg-surface",
+                  )}
+                >
+                  <SlidersHorizontal className="size-4 text-primary" aria-hidden="true" />
+                  Filters
+                  {filters.count ? (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.8125rem] font-bold leading-5 text-on-primary">
+                      {filters.count}
+                      <span className="sr-only"> applied</span>
+                    </span>
+                  ) : null}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {filters ? (
+        <div id={panelId} hidden={!filtersOpen}>
+          {filters.panel}
+        </div>
+      ) : null}
+      {filters?.summary && !filtersOpen ? filters.summary : null}
       <p role="status" className={error ? "text-danger" : "sr-only"}>
         {error || (results ? `${results.items.length}${results.hasMore ? "+" : ""} results` : "")}
       </p>
       {results ? (
         results.items.length ? (
           <>
-            <ul className={rowListClass}>
+            <ul className={prayerListClass} aria-label="Search results">
               {results.items.map((c) => (
                 <li key={c.id}>
                   <PrayerRow card={c} />

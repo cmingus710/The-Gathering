@@ -14,7 +14,8 @@
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "admin:bootstrap": "node scripts/bootstrap-super-admin.mjs",
     "test:e2e": "playwright test",
-    "menu:icons": "node scripts/generate-menu-icons.mjs"
+    "menu:icons": "node scripts/generate-menu-icons.mjs",
+    "devotional:dry-run": "node --no-warnings scripts/morning-evening-dry-run.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-sans-3": "^5.3.1",

@@ -7,6 +7,8 @@ export type FormState = {
   fieldErrors?: Record<string, string[] | undefined>;
   /** Echo of submitted values so the form can re-populate after an error. */
   values?: Record<string, string>;
+  /** The saved record's id, for forms that continue on the client after saving. */
+  id?: string;
 };
 
 export const initialFormState: FormState = { status: "idle" };

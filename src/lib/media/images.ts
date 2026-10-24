@@ -37,6 +37,11 @@ export const GALLERY_VARIANTS: Variant[] = [
   { name: "display", size: 2048, quality: 82 },
   { name: "thumb", size: 480, quality: 74 },
 ];
+/** Album covers: a large copy for the album header and zoomed crops, and a card-sized one. */
+export const ALBUM_COVER_VARIANTS: Variant[] = [
+  { name: "display", size: 2048, quality: 82 },
+  { name: "thumb", size: 960, quality: 78 },
+];
 
 async function decodeHeic(bytes: Buffer): Promise<{ data: Buffer; width: number; height: number } | ImageError> {
   let all: Awaited<ReturnType<(typeof import("heic-decode"))["default"]["all"]>>;

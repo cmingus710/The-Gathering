@@ -53,6 +53,7 @@ Full setup (Supabase, Resend, Vercel, first super administrator): [docs/setup.md
 - [docs/prayer-library.md](docs/prayer-library.md): the member-contributed Prayer Library: contributing, search and filters, saved prayers, reports and moderation, categories, verification, release steps
 - [docs/community-mentions.md](docs/community-mentions.md): @mentions of people and groups in Community and Prayer: group controls for leaders, member notification settings, privacy rules, verification, release steps
 - [docs/book-collections.md](docs/book-collections.md): book topics as collections on the Books page: admin steps, member view, visibility rules, verification, release steps
+- [docs/morning-evening.md](docs/morning-evening.md): Charles Spurgeon's *Morning & Evening* as an imported devotional collection: source and provenance, the importer and dry run, member reading and journal, administration, rollback, verification, release steps
 - [docs/media-cropping.md](docs/media-cropping.md): photo-picker cancellation, the shared image cropper, per-use cover framing, phone image handling, verification, release steps
 - [docs/navigation-performance.md](docs/navigation-performance.md): page-navigation latency on phones: measurements, fixes, remaining bottlenecks
 - [docs/roadmap.md](docs/roadmap.md): the twelve phases

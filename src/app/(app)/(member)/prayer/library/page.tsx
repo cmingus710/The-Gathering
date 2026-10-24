@@ -3,15 +3,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryBrowser } from "@/components/prayer/library-browser";
 import { LibraryCard, libraryGridClass } from "@/components/prayer/library-card";
+import { PrayerHeader } from "@/components/prayer/prayer-header";
 import { PrayerTabs } from "@/components/prayer/prayer-tabs";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { segmentClass } from "@/components/ui/segmented";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
-import { menuArtSource } from "@/lib/home/launcher";
 import { pick } from "@/lib/prayer/format";
 import {
   decodeLibraryCursor,
@@ -62,7 +62,6 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
     : null;
   const tz = settings.timezone;
   const canAdd = !!meta;
-  const art = menuArtSource("prayer");
   const href = (extra: Record<string, string | null>) => {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries({ view: view === "library" ? null : view, ...filters, ...extra })) if (v) p.set(k, v);
@@ -73,18 +72,10 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
   const nextCursor = page?.has_more ? encodeLibraryCursor(page.items[page.items.length - 1]) : null;
 
   return (
-    <>
-      <PageHeader
-        eyebrow={
-          art ? (
-            // Decorative: the dimensional Prayer artwork supplied for the menu.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={art.src} srcSet={art.srcSet} sizes="64px" alt="" width={64} height={64} className="mb-2 size-16" />
-          ) : undefined
-        }
-        title="Prayer"
+    <div className="layout-wide">
+      <PrayerHeader
         description="Prayers members have written or gathered, for personal prayer, meals, small groups, and worship. Find one to pray, or share one of your own."
-        actions={
+        action={
           canAdd ? (
             <ButtonLink href="/prayer/library/new" icon={<PenSquare className="size-4" aria-hidden="true" />}>
               Add a prayer
@@ -92,9 +83,9 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
           ) : null
         }
       />
-      {sp.archived ? <Alert tone="success" title="Archived. Only you can see it now." className="mb-6" /> : null}
+      {sp.archived ? <Alert tone="success" title="Archived. Only you can see it now." className="mb-4" /> : null}
 
-      <div className="min-w-0 space-y-5">
+      <div className="min-w-0 space-y-4">
         <PrayerTabs active="library" />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -224,6 +215,6 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }

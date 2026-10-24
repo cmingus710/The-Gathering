@@ -1,11 +1,11 @@
-/* eslint-disable @next/next/no-img-element -- short-lived signed URLs, never through the image optimizer */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TileIcon } from "@/components/icons/icon";
+import { AlbumCoverImage } from "@/components/media/album-cover-image";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { requireApprovedMember } from "@/lib/auth/viewer";
+import { albumCoverPath, albumVideoStill } from "@/lib/media/album-cover";
 import { formatDay } from "@/lib/media/format";
 import { signPaths } from "@/lib/media/storage";
 import type { Album } from "@/lib/media/types";
@@ -19,7 +19,7 @@ export default async function GalleryPage() {
   // prefetch may have rendered earlier), alongside the read-only query.
   const [, { data, error }] = await Promise.all([requireApprovedMember("/gallery"), supabase.rpc("media_albums")]);
   const albums = (data ?? []) as Album[];
-  const urls = await signPaths(supabase, albums.map((a) => a.cover?.thumb_path));
+  const urls = await signPaths(supabase, albums.map((a) => albumCoverPath(a.cover, "card")));
   return (
     <>
       <PageHeader
@@ -39,19 +39,14 @@ export default async function GalleryPage() {
       ) : null}
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {albums.map((a) => {
-          const cover = a.cover ? urls.get(a.cover.thumb_path) : null;
+          const path = albumCoverPath(a.cover, "card");
+          const cover = (path ? urls.get(path) : null) ?? albumVideoStill(a.cover);
           return (
             <li key={a.id}>
               <Link href={`/gallery/${a.id}`} className="interactive block overflow-hidden rounded-card border border-border bg-surface hover:bg-surface-muted/40">
-                {cover ? (
-                  <img src={cover} alt="" className="aspect-[4/3] w-full object-cover" />
-                ) : (
-                  <span className="flex aspect-[4/3] items-center justify-center bg-surface-muted" aria-hidden="true">
-                    <TileIcon name="gallery" className="size-16" />
-                  </span>
-                )}
+                <AlbumCoverImage src={cover} alt="" framing={a.cover?.framing ?? null} />
                 <span className="block p-4">
-                  <span className="block font-semibold">{a.title}</span>
+                  <span className="block font-semibold break-words">{a.title}</span>
                   <span className="block text-meta text-text-secondary">
                     {[
                       a.album_on ? formatDay(a.album_on, "short") : null,

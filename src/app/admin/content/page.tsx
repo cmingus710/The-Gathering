@@ -1,4 +1,4 @@
-import { CalendarDays, Library, Plus } from "lucide-react";
+import { BookMarked, CalendarDays, Library, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AudienceBadge, StateBadge } from "@/components/media/badges";
@@ -70,6 +70,9 @@ export default async function ContentListPage({ searchParams }: PageProps<"/admi
             </ButtonLink>
             <ButtonLink href="/admin/content/library" variant="secondary" size="sm" icon={<Library className="size-4" aria-hidden="true" />}>
               Series, people, topics
+            </ButtonLink>
+            <ButtonLink href="/admin/content/collections" variant="secondary" size="sm" icon={<BookMarked className="size-4" aria-hidden="true" />}>
+              Devotional collections
             </ButtonLink>
           </>
         }
