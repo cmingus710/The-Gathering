@@ -31,7 +31,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
           <Card className="space-y-4">
             <p className="flex items-start gap-3">
               <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-              <span>
+              <span className="min-w-0">
                 <span className="font-semibold">{formatWhen(o)}</span>
                 {!o.all_day ? <span className="block text-meta text-text-secondary">Times are shown in the event&apos;s time zone ({o.timezone.replace(/_/g, " ")}).</span> : null}
               </span>
@@ -39,7 +39,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
             {o.location_name || o.location_address ? (
               <p className="flex items-start gap-3">
                 <MapPin className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-                <span>
+                <span className="min-w-0">
                   {o.location_name ? <span className="block font-semibold">{o.location_name}</span> : null}
                   {o.location_address ? <span className="block text-text-secondary">{o.location_address}</span> : null}
                   {mapQuery ? (
@@ -58,7 +58,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
             {o.online_url ? (
               <p className="flex items-start gap-3">
                 <Video className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-                <a href={o.online_url} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-primary underline underline-offset-2">
+                <a href={o.online_url} target="_blank" rel="noopener noreferrer nofollow" className="min-w-0 font-semibold text-primary underline underline-offset-2">
                   Join online<span className="sr-only"> (opens in a new tab)</span>
                 </a>
               </p>
@@ -66,7 +66,7 @@ export function EventDetail({ o, coverUrl, aside, moreHref = (id: string) => `/e
             {o.organizer_name ? (
               <p className="flex items-start gap-3">
                 <User className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-                <span>Organized by {o.organizer_name}</span>
+                <span className="min-w-0">Organized by {o.organizer_name}</span>
               </p>
             ) : null}
             <div className="flex flex-wrap gap-2">

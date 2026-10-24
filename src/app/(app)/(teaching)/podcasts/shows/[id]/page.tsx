@@ -72,11 +72,11 @@ export default async function ShowPage({ params, searchParams }: PageProps<"/pod
       <section aria-labelledby="show-episodes">
         <SectionHeading id="show-episodes">Episodes</SectionHeading>
         {show.total > PAGE || q ? (
-          <form role="search" aria-label={`Search ${show.title}`} className="mb-4 flex gap-2">
+          <form role="search" aria-label={`Search ${show.title}`} className="mb-4 flex flex-wrap gap-2">
             <label htmlFor="sq" className="sr-only">
               Search episodes
             </label>
-            <input id="sq" name="q" defaultValue={q} placeholder="Search episodes" className="min-h-11 min-w-0 flex-1 rounded-control border border-border-strong bg-surface px-3" />
+            <input id="sq" name="q" defaultValue={q} placeholder="Search episodes" className="min-h-11 min-w-[min(100%,8rem)] flex-1 rounded-control border border-border-strong bg-surface px-3" />
             <button type="submit" className="min-h-11 rounded-full bg-cta px-5 font-semibold text-on-cta hover:bg-cta-hover">
               Search
             </button>

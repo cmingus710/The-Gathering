@@ -51,9 +51,11 @@ export default async function CalendarSettingsPage() {
               Calendar apps check for updates on their own schedule (often every few hours; Google Calendar can take up to a day).
             </p>
             <Alert tone="warning" title="Keep this link private" live={false}>
-              <p className="flex gap-2 text-meta">
+              <p className="flex flex-wrap gap-2 text-meta">
                 <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                Anyone who has the link can read the details of the events in it. If you shared it by mistake, create a new link.
+                <span className="min-w-[min(100%,6rem)] flex-1">
+                  Anyone who has the link can read the details of the events in it. If you shared it by mistake, create a new link.
+                </span>
               </p>
             </Alert>
             {prefs.feed_created_at ? <p className="text-sm text-text-secondary">Your current link was created {formatDate(prefs.feed_created_at, settings.timezone)}.</p> : null}

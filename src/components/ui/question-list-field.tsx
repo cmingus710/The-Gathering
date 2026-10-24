@@ -115,7 +115,7 @@ export function QuestionListField({
     <fieldset className="space-y-3" aria-describedby={[hint ? ids.hint : null, message ? ids.error : null].filter(Boolean).join(" ") || undefined}>
       <legend className="font-semibold text-text">
         {label}
-        {optional ? <span className="ml-1.5 font-normal text-text-secondary">(optional)</span> : null}
+        {optional ? <><wbr /><span className="ml-1.5 font-normal text-text-secondary">(optional)</span></> : null}
       </legend>
       {hint ? (
         <p id={ids.hint} className="-mt-1.5 text-meta text-text-secondary">

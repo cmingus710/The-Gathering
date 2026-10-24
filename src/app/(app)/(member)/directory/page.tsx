@@ -48,11 +48,11 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
         }
       />
 
-      <form role="search" action="/directory" className="mb-6 flex gap-2">
+      <form role="search" action="/directory" className="mb-6 flex flex-wrap gap-2">
         <label htmlFor="directory-search" className="sr-only">
           Search the directory by name or city
         </label>
-        <span className="relative flex-1">
+        <span className="relative min-w-[min(100%,8rem)] flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
         <input
           id="directory-search"

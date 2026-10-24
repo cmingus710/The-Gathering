@@ -15,7 +15,7 @@ import { formatClockTime, formatDate } from "@/lib/time";
 /** Serif section heading with the short gold rule from the approved home design. */
 export function HomeSectionHeading({ id, children, action }: { id: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-3">
+    <div className="mb-3 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
       <h2 id={id} className="font-display text-[1.5rem] font-semibold leading-tight text-text sm:text-[1.625rem]">
         {children}
         <span aria-hidden="true" className="mt-1.5 block h-[3px] w-9 rounded-full bg-accent" />

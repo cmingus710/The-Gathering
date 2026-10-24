@@ -181,8 +181,8 @@ export default async function SettingsPage() {
               You can&apos;t add or remove roles yourself. If something here looks wrong, or you need access for a ministry you serve in, ask a church administrator.
             </p>
             {viewer.isAdmin ? (
-              <Link href="/admin" className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-primary hover:underline">
-                <Icon name="admin" className="size-5" /> Open administration
+              <Link href="/admin" className="mt-3 inline-flex min-h-11 max-w-full items-center gap-2 font-semibold text-primary hover:underline">
+                <Icon name="admin" className="size-5 shrink-0" /> <span className="min-w-0">Open administration</span>
               </Link>
             ) : null}
           </Card>

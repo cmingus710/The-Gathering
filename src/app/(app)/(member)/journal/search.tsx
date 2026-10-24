@@ -37,7 +37,7 @@ export function JournalList({ initial, total: initialTotal, status }: { initial:
     <div>
       <form
         role="search"
-        className="mb-4 flex gap-2"
+        className="mb-4 flex flex-wrap gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           run(0);
@@ -52,7 +52,7 @@ export function JournalList({ initial, total: initialTotal, status }: { initial:
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search My Journal"
-          className="min-h-12 flex-1 rounded-control border border-border-strong bg-surface px-4"
+          className="min-h-12 min-w-[min(100%,8rem)] flex-1 rounded-control border border-border-strong bg-surface px-4"
         />
         <Button type="submit" variant="secondary" loading={pending} icon={<Search className="size-4" aria-hidden="true" />}>
           Search

@@ -126,8 +126,8 @@ export function DmAllowForm({ current }: { current: "members" | "shared_groups" 
         <legend className="font-semibold">Who can send me direct messages</legend>
         {options.map((o) => (
           <label key={o.value} className="flex cursor-pointer items-start gap-3">
-            <input type="radio" name="allow" value={o.value} defaultChecked={current === o.value} className="mt-1 size-5 accent-primary" />
-            <span>
+            <input type="radio" name="allow" value={o.value} defaultChecked={current === o.value} className="mt-1 size-5 shrink-0 accent-primary" />
+            <span className="min-w-0">
               <span className="block font-semibold">{o.label}</span>
               <span className="block text-meta text-text-secondary">{o.hint}</span>
             </span>

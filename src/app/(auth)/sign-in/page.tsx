@@ -19,7 +19,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
       <AuthHeading
         title={
           <>
-            Welcome to <span className="whitespace-nowrap">The Gathering</span>
+            Welcome to <span className="sm:whitespace-nowrap">The Gathering</span>
           </>
         }
       >

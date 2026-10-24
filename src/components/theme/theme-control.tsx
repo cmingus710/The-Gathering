@@ -65,13 +65,14 @@ export function ThemeControl({ current, className, compact = false }: { current:
             <label
               key={v}
               className={cn(
-                "flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-meta font-semibold transition-colors",
+                // In a tight row the icon sits above the word rather than the word splitting.
+                "flex min-h-11 cursor-pointer flex-wrap content-center items-center justify-center gap-x-1.5 rounded-full px-2 text-meta font-semibold [overflow-wrap:normal] transition-colors",
                 "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-primary",
                 value === v ? "bg-surface-raised text-text shadow-(--elev-card) ring-1 ring-border" : "text-text-secondary hover:text-text",
               )}
             >
               <input type="radio" name="theme" value={v} checked={value === v} onChange={() => apply(v)} className="sr-only" />
-              <Icon className="size-4" aria-hidden="true" />
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
               {label}
             </label>
           ))}
