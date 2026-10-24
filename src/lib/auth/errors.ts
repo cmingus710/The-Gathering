@@ -1,3 +1,5 @@
+import { captchaErrorMessage, isCaptchaError } from "./captcha";
+
 /**
  * Maps Supabase Auth errors to calm, actionable messages. Unknown errors get a
  * generic message; raw provider messages are never shown to members.
@@ -8,6 +10,9 @@ export function authErrorMessage(error: AuthLikeError): string {
   if (!error) return "Something went wrong. Please try again.";
   const code = error.code ?? "";
   const message = (error.message ?? "").toLowerCase();
+
+  // Before the generic 5xx case: a failed Turnstile check can arrive as a 500.
+  if (isCaptchaError(error)) return captchaErrorMessage(error);
 
   if (code === "invalid_credentials" || message.includes("invalid login credentials")) {
     return "That email and password don't match our records.";

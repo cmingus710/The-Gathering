@@ -39,6 +39,7 @@ and, if needed, roll back to an earlier production deployment in Vercel.
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ set | ✅ set | `https://ymuiutwdnhxdqsetnwkt.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | ✅ set | ✅ set | Publishable key; safe in the browser, RLS enforces access |
 | `NEXT_PUBLIC_SITE_URL` | **do not set** | ✅ `https://www.gathering.church` | Production canonical URL. Previews must use their own `VERCEL_BRANCH_URL`, so email links never jump to production |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | not yet | not yet | Cloudflare Turnstile site key (public). Add for Preview, then Production, **before** turning on Supabase CAPTCHA enforcement: [turnstile-captcha.md](turnstile-captcha.md#rollout) |
 | `RESEND_API_KEY` | ✅ set | ✅ set | Sensitive; server-only (approval emails) |
 | `EMAIL_FROM` | ✅ set | ✅ set | e.g. `The Gathering <hello@verified-domain>` |
 | `EVENTS_JOB_SECRET`, `MEDIA_RATE_SECRET` | ✅ set | ✅ set | Sensitive; same value as `events.secrets('job')` for the job secret |

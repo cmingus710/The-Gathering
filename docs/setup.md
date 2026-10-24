@@ -9,6 +9,7 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel + local | Yes | Project URL, e.g. `https://<ref>.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel + local | Yes | Publishable key (`sb_publishable_…`). `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy) also works. |
 | `NEXT_PUBLIC_SITE_URL` | Vercel **Production** + local | Production | Canonical URL for auth email links. Leave unset on Preview, where `VERCEL_BRANCH_URL` is used automatically. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Vercel Preview + Production | Before CAPTCHA enforcement | Cloudflare Turnstile site key (public) for the sign-up, sign-in, resend, and forgot-password forms. Unset: no widget. The secret key goes only in Supabase. See [turnstile-captcha.md](turnstile-captcha.md). |
 | `RESEND_API_KEY` | Vercel (server) | Optional | App notifications (membership approved). Without it, approvals still work and admins are told no email was sent. |
 | `EMAIL_FROM` | Vercel (server) | With Resend | e.g. `The Gathering <hello@your-domain.org>`, on a domain verified in Resend |
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
@@ -128,6 +129,7 @@ For a new project, run `supabase link --project-ref <ref> && supabase db push`, 
 4. **Password policy (recommended):** minimum length 10. The app also enforces 10 characters with a letter and a digit.
 5. **Rate limits:** keep the defaults. The app shows a friendly "too many attempts" message.
 6. **Google and Apple sign-in (optional):** off until configured. Exact steps, callback URLs, and Apple secret renewal are in [social-login-setup.md](social-login-setup.md).
+7. **Attack Protection → CAPTCHA (Cloudflare Turnstile):** turn on only after the site key is deployed to every environment that uses this project. Order and checks: [turnstile-captcha.md](turnstile-captcha.md#rollout).
 
 ### Realtime (Phase 5)
 
