@@ -9,7 +9,7 @@ Never commit real keys. `.env*` files are ignored, except `.env.example`.
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel + local | Yes | Project URL, e.g. `https://<ref>.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel + local | Yes | Publishable key (`sb_publishable_…`). `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy) also works. |
 | `NEXT_PUBLIC_SITE_URL` | Vercel **Production** + local | Production | Canonical URL for auth email links. Leave unset on Preview, where `VERCEL_BRANCH_URL` is used automatically. |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Vercel Preview + Production | Before CAPTCHA enforcement | Cloudflare Turnstile site key (public) for the sign-up, sign-in, resend, and forgot-password forms. Unset: no widget. The secret key goes only in Supabase. See [turnstile-captcha.md](turnstile-captcha.md). |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Vercel Production (and Preview to test email auth there) | Yes, while Supabase CAPTCHA enforcement is on | Cloudflare Turnstile site key (public) for the sign-up, sign-in, resend, and forgot-password forms. Unset: no widget. The secret key goes only in Supabase. See [turnstile-captcha.md](turnstile-captcha.md). |
 | `RESEND_API_KEY` | Vercel (server) | Optional | App notifications (membership approved). Without it, approvals still work and admins are told no email was sent. |
 | `EMAIL_FROM` | Vercel (server) | With Resend | e.g. `The Gathering <hello@your-domain.org>`, on a domain verified in Resend |
 | `SUPABASE_SECRET_KEY` | Your terminal only | For bootstrap | Secret key (`sb_secret_…`) or legacy `SUPABASE_SERVICE_ROLE_KEY`. **Do not add it to Vercel**: the app never needs it. |
