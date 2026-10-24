@@ -544,3 +544,22 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`home_lesson_featured`, `home-lesson-featured`).
+
+## Bible Coloring Studio (2026-11-22)
+
+- **New (additive; no applied migration was edited):** `20261122000100_youth_coloring`:
+  - new table `youth.coloring_artwork` (closed schema: RLS on, no policies, no client privileges): one row per child profile and activity version, with a revision for stale-save detection;
+  - new internal `youth.coloring_palette`, `youth.coloring_num`, `youth.coloring_int`, `youth.coloring_template_problem`, `youth.coloring_doc_problem`, `youth.coloring_child` (no API role can call them);
+  - new `public.youth_coloring_artwork(uuid, uuid)`, `public.youth_coloring_save(uuid, uuid, uuid, integer, jsonb)`, `public.youth_admin_activity_coloring_set(uuid, jsonb)` (authenticated only);
+  - the `activity_versions_config_check` limit rises from 64 KB to 256 KB (stored size);
+  - replaced with the same signatures and grants: `youth.activity_content` (coloring picture rules), `public.youth_admin_activity_save` (keeps config when the form sends none), `youth.activity_object_readable` (members may read published freehand line art), `public.youth_admin_activity_asset_remove` and `public.youth_admin_activity` (line art is locked like a cover).
+- **Operator script:** `supabase/manual/2026-11-22-apply-youth-coloring.sql`, one transaction. The preflight requires Learn & Play and `20261121000100` and refuses a second run. It post-checks the grants (new entry points for authenticated only, no anon; internal helpers closed; replaced functions keep their grants; the table closed). History row `created_by = youth-coloring`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261122000100`. A rerun stopped at the preflight ("Nothing was changed: 20261122000100 is already applied.").
+- **Order: migration first, then the app.** Before the migration, `/youth/play/<id>` for a coloring activity can't load the artwork, and the editor's coloring section fails to save.
+- **Hosted: not applied.** Needs owner approval. Read-only check afterwards:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261122000100';
+  ```
+
+  Expected: one row (`youth_coloring`, `youth-coloring`).

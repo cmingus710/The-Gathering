@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SignedOutCleanup } from "@/components/layout/signed-out-cleanup";
 import { Alert } from "@/components/ui/alert";
 import { isOAuthErrorKind, oauthErrorCopy } from "@/lib/auth/oauth";
 import { getOfferedProviders } from "@/lib/auth/oauth-config";
@@ -26,7 +27,12 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         Sign in to connect with your church community.
       </AuthHeading>
       <div className="mt-8 space-y-5">
-        {params.signed_out ? <Alert tone="success" title="You've been signed out." /> : null}
+        {params.signed_out ? (
+          <>
+            <SignedOutCleanup />
+            <Alert tone="success" title="You've been signed out." />
+          </>
+        ) : null}
         {params.error === "link" ? (
           <Alert tone="error" title="That link didn't work">
             It may have expired or already been used. Sign in, or request a new password reset link.

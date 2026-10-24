@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { ActivityArtItem, ActivityArtUpload, ActivityEditorForm, ActivityStatusForm, type EditorDefaults } from "@/components/youth/activity-editor";
+import { ColoringEditor } from "@/components/youth/coloring/editor";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
@@ -14,6 +15,7 @@ import { requireClient } from "@/lib/supabase/server";
 import { timeZoneLabel, utcToZonedLocal } from "@/lib/time";
 import { ACTIVITY_STATUS } from "@/lib/youth/activities";
 import { ART_MAX_UPLOAD_BYTES, signActivityArt } from "@/lib/youth/activity-art";
+import { lineArtPath, templateFromConfig } from "@/lib/youth/coloring";
 import { formatDay } from "@/lib/youth/format";
 import { youthRead } from "@/lib/youth/queries";
 
@@ -26,6 +28,7 @@ type Version = Omit<EditorDefaults, "available_from" | "available_until"> & {
   published_at: string | null;
   published_by: string | null;
   updated_by: string | null;
+  config: Record<string, unknown>;
 };
 
 type Asset = {
@@ -69,6 +72,8 @@ export default async function EditActivityPage({ params, searchParams }: PagePro
   const st = ACTIVITY_STATUS[a.status] ?? ACTIVITY_STATUS.draft;
   const tz = settings.timezone;
   const archived = a.status === "archived";
+  const coloring = source ? templateFromConfig(source.config) : null;
+  const coloringArt = coloring ? lineArtPath(a.id, coloring) : null;
 
   return (
     <div className="layout-wide space-y-8">
@@ -154,6 +159,24 @@ export default async function EditActivityPage({ params, searchParams }: PagePro
               defaults={{ ...source, available_from: utcToZonedLocal(a.available_from, tz), available_until: utcToZonedLocal(a.available_until, tz) }}
             />
           ) : null}
+        </section>
+      )}
+
+      {archived || !source ? null : (
+        <section aria-labelledby="coloring" className="space-y-3">
+          <SectionHeading
+            id="coloring"
+            description={a.draft ? `Changes go into draft version ${a.draft.version}.` : a.published ? `Changes make version ${a.versions[0].version + 1}.` : undefined}
+          >
+            Coloring picture
+          </SectionHeading>
+          <ColoringEditor
+            activityId={a.id}
+            kind={source.kind}
+            current={coloring}
+            currentLineArtUrl={coloringArt ? (urls.get(coloringArt) ?? null) : null}
+            art={a.assets.map((x) => ({ id: x.id, url: urls.get(x.path) ?? null, alt: x.alt }))}
+          />
         </section>
       )}
 

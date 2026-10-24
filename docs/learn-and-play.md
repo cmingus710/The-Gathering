@@ -1,6 +1,6 @@
 # Learn & Play (Youth & Families)
 
-The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. The interactive games themselves are not built yet; each activity type gets its player later, on top of this.
+The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. Each activity type gets its player on top of this; the first is the **Bible Coloring Studio** for *Drawing & coloring* activities ([bible-coloring-studio.md](bible-coloring-studio.md)). The other types don't have players yet.
 
 Migration: `20261118000200_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, objects applied to hosted 2026-10-24; history row recorded 2026-10-24 by `supabase/manual/2026-11-18-record-youth-activities.sql`). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
 
@@ -19,7 +19,7 @@ Independent youth accounts see Learn & Play and This Week's Lesson first, then t
 - Ages are shown as guidance only ("Suggested for ages 4–7 (a suggestion, not a rule)"); nobody is refused because of age.
 - Older-youth activities (suggested from age 11) and everything a youth account sees use a calmer style: a charcoal band with gold line art, the serif title, square-ish corners, and no playful lift.
 - Without an uploaded cover, a card shows an original line illustration for its type (drawn in `src/components/youth/activity-art.tsx`, decorative, hidden from screen readers).
-- Until a type's player exists, the only control is **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown.
+- Until a type's player exists, the only control is **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown. *Drawing & coloring* activities with a coloring picture also show the Bible Coloring Studio.
 
 Empty states: "Activities will appear here when they're published"; adults with no child they may play for are told why (verification, or the *Practice with the child* permission, or the child has their own account).
 
@@ -109,6 +109,6 @@ No new environment variables, buckets, or scheduled jobs are needed.
 
 ## Limits
 
-- No activity players yet: every type offers only "Mark finished". Players will read `config` and save `data` through the same functions.
+- Only *Drawing & coloring* has a player (the Bible Coloring Studio, which keeps its picture in `config.coloring` and each child's artwork in its own table); every other type offers only "Mark finished".
 - Only the cover image is shown to members; additional artwork can be uploaded and kept for future players.
 - Progress on a retired version is kept but can't be continued.
