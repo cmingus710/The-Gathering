@@ -10,6 +10,17 @@ Albums and photo review are under **Admin → Media gallery** (`/admin/gallery`;
 - **Event link** (optional): shown only to people who can see that event.
 - **Cover:** any approved photo; otherwise the first approved photo.
 
+## Album cover images
+
+Each album's editor (Administration → Media gallery → an album, or the **New album** form) has a **Collection cover image** section:
+
+- **Upload image** / **Replace**: JPEG, PNG, WebP, or HEIC up to the gallery's per-photo limit (Media settings). The file goes straight to restricted storage, then the server re-encodes it (orientation applied, sRGB, all location and camera metadata removed) into the private `media` bucket under `album-covers/<album>/`. The editor confirms that no one under 18 can be identified; a photo of children goes through the album's normal review and photo consent instead, and a moderator can then choose it as the cover.
+- **Crop**: drag, pinch, scroll, the slider, or the keyboard, in the same 4:3 frame members see on album cards and the album page. **Adjust crop** repositions a saved cover. Cancelling the file picker or the cropper, **Discard**, or **Cancel upload** never changes the saved cover; nothing changes until **Save cover**.
+- **Choose from this album** (gallery moderators): a published photo, with its own crop. The photo stays in the album.
+- **Remove**: back to the automatic cover. Only an uploaded cover's own files are deleted; photos, videos, and library files are never touched.
+
+A cover is album metadata, not a gallery item: it never appears in the album and never changes photo or video counts. Members load it only while they can see the album (published, approved members or the album's group), so changing the audience changes who can see the cover at once. Without a chosen cover, cards show the first published photo, then (for video-only albums) the first YouTube/Vimeo video's still, then the gallery placeholder. Gallery moderators can change any album's cover; event coordinators can change covers of albums they created.
+
 ## Videos in albums
 
 Gallery moderators add videos under **Add a video** on the album's admin page: a ready library video (YouTube, Vimeo, or uploaded MP4) or a pasted YouTube/Vimeo link (the existing library record is reused). Each video waits under **Waiting for review** and is approved with the same people-under-18 review and youth photo-consent guard as photos. Members see videos with a Play button and **All / Photos / Videos** filters, and can **Report or ask to remove** under each one. Members can't add videos; their photo uploads are unchanged. See [videos-guide.md](videos-guide.md).
