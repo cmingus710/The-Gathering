@@ -20,4 +20,17 @@ describe("journalMarkdown", () => {
     expect(md).toContain("> Reading plan: Synthetic Plan, Day 3\n\n> Question: What stood out?");
     expect(exportFileName("journal", "md", "2026-10-20T12:00:00Z")).toBe("my-journal-2026-10-20.md");
   });
+
+  it("names a collection reading and the date it was read, or only the date once it's unavailable", () => {
+    const entry = (link: Record<string, unknown>) => ({ title: "R", body: "B", status: "active" as const, created_at: "2026-01-01T10:00:00Z", updated_at: "2026-01-01T10:00:00Z", link: { kind: "collection_reading", ...link } });
+    const md = journalMarkdown(
+      [
+        entry({ available: true, title: "Morning & Evening", label: "January 1 · Morning", scripture_ref: "Joshua 5:12", reading_date: "2026-01-01" }),
+        entry({ available: false, title: null, label: null, scripture_ref: null, reading_date: "2027-01-01" }),
+      ],
+      "2027-01-02T12:00:00Z",
+    );
+    expect(md).toContain("> Morning & Evening: January 1 · Morning (Joshua 5:12), read 2026-01-01");
+    expect(md).toContain("> A devotional reading that is no longer available, read 2027-01-01");
+  });
 });

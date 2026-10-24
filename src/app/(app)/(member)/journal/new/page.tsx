@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { JournalEditor } from "@/components/journal/editor";
 import { LinkContext, type EntryLink } from "@/components/journal/link-context";
 import { Alert } from "@/components/ui/alert";
@@ -7,6 +8,8 @@ import { requireLearner } from "@/lib/auth/viewer";
 import { isBookCode } from "@/lib/bible/books";
 import { formatPassage } from "@/lib/bible/reference";
 import type { Translation } from "@/lib/bible/types";
+import { dateFitsReading } from "@/lib/devotionals/calendar";
+import type { CollectionReadingPage } from "@/lib/devotionals/types";
 import { isUuid } from "@/lib/media/format";
 import { questionId } from "@/lib/questions";
 import { requireClient } from "@/lib/supabase/server";
@@ -19,7 +22,9 @@ const int = (v: string | undefined) => (v && /^\d{1,3}$/.test(v) ? Number(v) : n
 /**
  * A new entry, optionally about a passage (?t&b&c&sv&ev), a plan day and one
  * of its reflection questions (?day&qid), or a devotional, lesson, church book, or
- * church reading assignment (?item).
+ * church reading assignment (?item), or a collection reading on a calendar
+ * date (?reading&on). A reading already reflected on for that date opens the
+ * existing entry instead of starting a second one.
  * The link is checked when the first save creates the entry.
  */
 export default async function NewEntryPage({ searchParams }: PageProps<"/journal/new">) {
@@ -32,9 +37,31 @@ export default async function NewEntryPage({ searchParams }: PageProps<"/journal
 
   const day = one(sp.day);
   const item = one(sp.item);
+  const reading = one(sp.reading);
+  const on = one(sp.on);
   const t = one(sp.t);
   const b = one(sp.b);
-  if (day && isUuid(day)) {
+  if (reading && isUuid(reading)) {
+    const { data, error } = await supabase.rpc("media_collection_reading", { p_id: reading });
+    const page = data as CollectionReadingPage | null;
+    if (error || !page || !on || !dateFitsReading(on, page.reading.month, page.reading.day)) {
+      problem = "That reading isn't available, so this entry won't be linked to it.";
+    } else {
+      const existing = await supabase.rpc("journal_reading_reflection", { p_reading: page.reading.id, p_date: on });
+      if (typeof existing.data === "string") redirect(`/journal/${existing.data}`);
+      link = { kind: "collection_reading", reading_id: page.reading.id, reading_date: on };
+      context = {
+        kind: "collection_reading",
+        available: true,
+        reading_id: page.reading.id,
+        reading_date: on,
+        collection_key: page.collection.key,
+        title: page.collection.title,
+        label: page.reading.label,
+        scripture_ref: page.reading.scripture_ref,
+      };
+    }
+  } else if (day && isUuid(day)) {
     const { data, error } = await supabase.rpc("bible_day", { p_day: day });
     if (error || !data) problem = "That reading isn't available, so this entry won't be linked to it.";
     else {

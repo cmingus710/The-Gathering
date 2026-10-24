@@ -1,0 +1,41 @@
+Morning & Evening import · dry run (nothing is written)
+
+Source                     https://github.com/dwahrens/morning-and-evening @ e05b8e89d67e01808a3384794416aeeca016d65e
+File                       data/devotionals/morning-and-evening/m_e.json (1,609,601 bytes)
+SHA-256                    b4fb4f1561ad48617ba9ff9f6a9b02d55f2ede1a4ebaa23e93825a0741c0cf96 (matches the pinned hash)
+Records in file            732
+Readings ready             732 (morning 366, evening 366)
+Calendar days complete     366 of 366 (both readings)
+Expected readings          732
+February 29                morning present, evening present
+Missing                    none
+Duplicates                 none
+Malformed records          none
+
+Corrections (verified; applied):
+  - heading_removed: 732 readings, 732 changes (e.g. 01-01-evening, 01-01-morning, 01-02-evening, 01-02-morning)
+      Removed the first two lines of the body ("January 1st — Morning Reading" and the key verse). They repeat the page heading and the key verse, which are shown separately. Each removed heading was checked against the record's month, day, and time.
+  - windows_1252: 52 readings, 115 changes (e.g. 01-05-evening, 01-06-morning, 01-07-morning, 01-09-morning)
+      Replaced C1 control characters left by a Windows-1252 decoding error with the characters they stand for: U+0097 → em dash (—), U+0093/U+0094 → ", U+0091/U+0092 → ', U+0096 → hyphen between letters ("self-forgetting", "well-known"), else en dash.
+  - mojibake: 1 readings, 2 changes (e.g. 03-16-morning)
+      Repaired curly quotation marks that had been decoded twice ("â\u0080\u009c" / "â\u0080\u009d"); where one sat directly inside a straight quotation mark it was a duplicate and was removed.
+  - soft_wraps: 653 readings, 666 changes (e.g. 01-01-evening, 01-02-evening, 01-02-morning, 01-03-morning)
+      Joined lines the source wrapped in the middle of a paragraph (a line break followed by four spaces) with a single space.
+  - verse_lines: 124 readings, 396 changes (e.g. 01-03-morning, 01-06-morning, 01-09-evening, 01-16-morning)
+      Kept hymn and poem lines (a line break followed by five or more spaces) on their own lines, without the indentation.
+  - whitespace: 732 readings, 1556 changes (e.g. 01-01-evening, 01-01-morning, 01-02-evening, 01-02-morning)
+      Normalized line endings, removed the indentation at the start of lines and spaces at the end, and removed a no-break space used as indentation.
+  - key_verse_split: 732 readings, 732 changes (e.g. 01-01-evening, 01-01-morning, 01-02-evening, 01-02-morning)
+      Split the key verse into the quotation and its reference ("Joshua 5:12"), joining any line break inside it with a space.
+
+Warnings (left unchanged for review):
+  - space_before_punctuation: 2 readings (01-01-morning, 03-05-evening)
+      A space before ? ! ; or : (for example "now ?"). Possibly a conversion artifact, but not verified against a printed edition, so left as is.
+  - hyphen_as_dash: 102 readings (01-04-morning, 01-10-evening, 01-17-morning, 01-23-evening, 01-24-morning, 01-27-evening, …)
+      A hyphen used as a dash between words ("grace"-not). This is how the source renders some dashes; left as is.
+  - continues_after_verse: 4 readings (02-07-evening, 03-28-morning, 05-28-morning, 06-06-morning)
+      A paragraph starts with a lowercase letter because the sentence continues after a quoted hymn. This is correct; listed for information.
+  - heading_in_body: 1 readings (06-20-evening)
+      The words "Morning Reading" or "Evening Reading" appear again in the body.
+
+READY: the file can be imported.
