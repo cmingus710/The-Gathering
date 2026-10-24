@@ -480,4 +480,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Operator script:** `supabase/manual/2026-11-18-apply-youth-activities.sql`, one transaction. The preflight requires the youth steps through `20261028001000` and refuses a second run. It post-checks the tables, that they and the member functions aren't reachable directly or by anon, and the role's single capability. History row `created_by = youth-activities`.
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261118000100`. A rerun stopped at the preflight.
 - **Order: apply before deploying the app change.** Without it, Learn & Play on `/youth` shows a load error (the rest of the page works) and the activity admin pages fail to load.
-- **Hosted:** **Not applied.** Waiting for the owner's approval.
+- **Hosted:** **Applied (2026-10-24):** the owner reported running `supabase/manual/2026-11-18-apply-youth-activities.sql` in the SQL editor. That script is one transaction that records the version only after its post-checks pass, so the history row means the changes are in place. Read-only check to confirm:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261118000100';
+  ```
+
+  Expected: one row (`youth_activities`, `youth-activities`).
