@@ -2,7 +2,7 @@
 
 The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. The interactive games themselves are not built yet; each activity type gets its player later, on top of this.
 
-Migration: `20261118000100_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, applied to hosted 2026-10-24 by the owner). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
+Migration: `20261118000200_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, objects applied to hosted 2026-10-24; history row recorded by `supabase/manual/2026-11-18-record-youth-activities.sql`). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
 
 ## Member experience
 
@@ -73,7 +73,7 @@ Admin → Youth & families → **Learn & Play activities** (`/admin/youth/activi
 
 Artwork used by any published version can't be removed.
 
-## Schema changes (20261118000100)
+## Schema changes (20261118000200)
 
 | Object | Purpose |
 | --- | --- |

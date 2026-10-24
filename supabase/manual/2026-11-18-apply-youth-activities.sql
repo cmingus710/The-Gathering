@@ -1,4 +1,4 @@
--- Learn & Play activities · Apply migration 20261118000100_youth_activities
+-- Learn & Play activities · Apply migration 20261118000200_youth_activities
 -- to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
@@ -15,7 +15,7 @@
 -- the capability list it reports). No existing table, row, grant, or
 -- storage policy is changed.
 --
--- It copies supabase/migrations/20261118000100_youth_activities.sql verbatim
+-- It copies supabase/migrations/20261118000200_youth_activities.sql verbatim
 -- and records it under its repository version (created_by =
 -- youth-activities). All or nothing: one transaction; out of order or a
 -- second run stops at the preflight with "Nothing was changed".
@@ -32,15 +32,15 @@ begin
   if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261028001000') then
     raise exception 'Nothing was changed: the youth steps (through 20261028001000) are not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261118000100')
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261118000200')
      or to_regclass('youth.activities') is not null then
-    raise exception 'Nothing was changed: 20261118000100 is already applied.';
+    raise exception 'Nothing was changed: 20261118000200 is already applied.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261118000100_youth_activities.sql
+-- 20261118000200_youth_activities.sql
 -- =========================================================================
 -- Youth & Families · Learn & Play: the activity foundation.
 --
@@ -1393,6 +1393,6 @@ end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261118000100', 'youth_activities', 'youth-activities');
+values ('20261118000200', 'youth_activities', 'youth-activities');
 
 commit;

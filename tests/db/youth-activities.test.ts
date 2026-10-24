@@ -5,7 +5,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Learn & Play activities (20261118000100) against a real database: the
+ * Learn & Play activities (20261118000200) against a real database: the
  * explicit editor role (never implied by super administrator), the
  * draft → preview → published → archived lifecycle with immutable published
  * versions, text and data sanitization, artwork rights and storage rules,
