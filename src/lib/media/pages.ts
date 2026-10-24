@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coverPaths } from "./format";
+import { EMPTY_LESSONS, type LessonsPage } from "./lessons";
 import { signPaths } from "./storage";
 import type { ItemCard, ItemDetail, ItemKind } from "./types";
 
@@ -36,4 +37,10 @@ export async function listItems(supabase: SupabaseClient, kind: ItemKind, filter
   const { data, error } = await supabase.rpc("media_items", { p_kind: kind, p_filters: filters, p_limit: limit, p_offset: offset });
   const r = (data ?? { items: [], total: 0 }) as { items: ItemCard[]; total: number };
   return { ok: !error, items: r.items, total: r.total };
+}
+
+/** The Sunday lessons page: featured lesson (unfiltered only) and the rest in lesson-date order. */
+export async function listLessons(supabase: SupabaseClient, filters: Record<string, unknown>, limit = 20, offset = 0) {
+  const { data, error } = await supabase.rpc("media_lessons", { p_filters: filters, p_limit: limit, p_offset: offset });
+  return { ok: !error, ...((data as LessonsPage | null) ?? EMPTY_LESSONS) };
 }
