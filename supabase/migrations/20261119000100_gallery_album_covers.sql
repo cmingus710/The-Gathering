@@ -1,5 +1,9 @@
 -- Media gallery · album cover images (additive).
 --
+-- First merged as 20261118000100, renumbered because that version belongs to
+-- devotional_collections (merged in #70) on main and hosted. The body is
+-- unchanged. The two touch no common object, so their order doesn't matter.
+--
 -- An album's cover is album metadata, never a gallery item: it is not a
 -- media.photos row, so it never changes photo or video counts, never shows
 -- in the album itself, and replacing or removing it never touches a photo,
