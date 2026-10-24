@@ -5,13 +5,16 @@ import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/ui/card";
 import { ActivityConnection, ActivityDescription, ActivityHero } from "@/components/youth/activity-detail";
+import { GamePlayer } from "@/components/youth/games/game-player";
 import { ActivityCard, ActivityGrid } from "@/components/youth/learn-play";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { isOlderYouth, type ActivityDetail } from "@/lib/youth/activities";
-import { signActivityArt } from "@/lib/youth/activity-art";
+import { signActivityArt, signGameMedia } from "@/lib/youth/activity-art";
+import { GAME_NAMES, gameIssues, parseGameConfig } from "@/lib/youth/games/config";
+import { freshSeed } from "@/lib/youth/games/random";
 import { youthRead } from "@/lib/youth/queries";
 
 export const metadata: Metadata = { title: "Preview activity" };
@@ -32,6 +35,9 @@ export default async function PreviewActivityPage({ params, searchParams }: Page
   const supabase = await requireClient();
   const cover = a.cover_path ? (await signActivityArt(supabase, [a.cover_path])).get(a.cover_path) : null;
   const mature = isOlderYouth(a.age_min);
+  const game = parseGameConfig(a.kind, a.config);
+  const media = game ? await signGameMedia(supabase, a.media) : {};
+  const issues = game ? gameIssues(game, a.difficulty) : [];
   return (
     <div className="layout-wide space-y-8">
       <p className="-mt-1">
@@ -41,7 +47,7 @@ export default async function PreviewActivityPage({ params, searchParams }: Page
       </p>
       <Alert tone="info" title={`Preview of version ${a.version} (${a.state === "published" ? "published" : a.state === "retired" ? "replaced" : "not published"})`}>
         <span className="inline-flex items-center gap-1.5">
-          <Eye className="size-4" aria-hidden="true" /> This is how members see it. Progress isn&apos;t saved here.
+          <Eye className="size-4" aria-hidden="true" /> This is how members see it. You can play the game here; progress isn&apos;t saved.
         </span>
       </Alert>
 
@@ -57,6 +63,21 @@ export default async function PreviewActivityPage({ params, searchParams }: Page
       <section aria-labelledby="page" className="space-y-4">
         <SectionHeading id="page">Activity page</SectionHeading>
         <ActivityHero a={a} coverUrl={cover} mature={mature} as="h2" />
+        {game ? (
+          <section aria-labelledby="play" className="space-y-3">
+            <SectionHeading id="play">{GAME_NAMES[game.player]}</SectionHeading>
+            {issues.length ? (
+              <Alert tone="warning" title="Not ready to publish yet">
+                <ul className="list-disc space-y-0.5 pl-5">
+                  {issues.map((i) => (
+                    <li key={i}>{i}</li>
+                  ))}
+                </ul>
+              </Alert>
+            ) : null}
+            <GamePlayer kind={a.kind} difficulty={a.difficulty} config={a.config} media={media} initial={null} target={null} seed={freshSeed()} who="You" />
+          </section>
+        ) : null}
         <ActivityConnection a={a} />
         <ActivityDescription source={a.description} />
       </section>

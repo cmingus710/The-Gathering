@@ -26,6 +26,8 @@ type Version = Omit<EditorDefaults, "available_from" | "available_until"> & {
   published_at: string | null;
   published_by: string | null;
   updated_by: string | null;
+  /** What still keeps the game from being published (empty when ready, or no game). */
+  issues: string[];
 };
 
 type Asset = {
@@ -39,6 +41,7 @@ type Asset = {
   rights_confirmed_by: string | null;
   rights_confirmed_at: string;
   locked: boolean;
+  in_draft: boolean;
 };
 
 type Admin = {
@@ -119,11 +122,26 @@ export default async function EditActivityPage({ params, searchParams }: PagePro
               ) : null}
               {a.draft ? (
                 <ActivityStatusForm activityId={a.id} action="publish" submit={`Publish version ${a.draft.version}`} confirmWord="publish" variant="primary">
+                  {a.draft.issues?.length ? (
+                    <Alert tone="warning" title="Not ready to publish yet">
+                      <ul className="list-disc space-y-0.5 pl-5">
+                        {a.draft.issues.map((i) => (
+                          <li key={i}>{i}</li>
+                        ))}
+                      </ul>
+                    </Alert>
+                  ) : null}
                   <p className="text-meta text-text-secondary">
                     {a.published
                       ? `Replaces version ${a.published.version} for members. ${a.progress_on_published ? `${a.progress_on_published} ${a.progress_on_published === 1 ? "child has" : "children have"} progress on version ${a.published.version}: it's kept with that version, and they start the new one fresh.` : ""}`
                       : "Members who may play it see it as soon as it's published (and inside its availability window)."}
                   </p>
+                  <label className="flex min-h-11 items-start gap-3">
+                    <input type="checkbox" name="reviewed" required className="mt-1 size-5 shrink-0" />
+                    <span>
+                      I&apos;ve checked the story, scenes, and pairs against the Scripture references{a.draft.scripture_refs.length ? ` (${a.draft.scripture_refs.join("; ")})` : ""}, and previewed it.
+                    </span>
+                  </label>
                 </ActivityStatusForm>
               ) : (
                 <p className="text-meta text-text-secondary">No unpublished changes. Saving the editor below starts a new draft version; members keep seeing version {a.published?.version} until you publish it.</p>
@@ -169,7 +187,7 @@ export default async function EditActivityPage({ params, searchParams }: PagePro
         {a.assets.length ? (
           <ul className="space-y-3">
             {a.assets.map((x) => (
-              <ActivityArtItem key={x.id} activityId={a.id} asset={x} url={urls.get(x.path) ?? null} locked={x.locked} />
+              <ActivityArtItem key={x.id} activityId={a.id} asset={x} url={urls.get(x.path) ?? null} locked={x.locked} inDraft={x.in_draft} />
             ))}
           </ul>
         ) : null}

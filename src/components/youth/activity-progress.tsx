@@ -35,7 +35,7 @@ export function ActivityProgressControl({
 
   const save = (completed: boolean) =>
     start(async () => {
-      const r = await saveActivityProgress({ activity, child, version, revision: state?.revision ?? 0, completed, data: state?.data ?? {} });
+      const r = await saveActivityProgress({ activity, child, version, revision: state?.revision ?? 0, completed, reset: !completed, data: state?.data ?? {} });
       if (r.ok) {
         setState({ status: r.status, revision: r.revision, data: state?.data ?? {} });
         setMessage({ tone: "success", text: completed ? `Marked finished for ${childName}.` : `Marked not finished for ${childName}.` });

@@ -10,7 +10,9 @@ import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { zonedLocalToUtc } from "@/lib/time";
 import { isActivityKind, isDifficulty, parseScriptureRefs, plainText } from "@/lib/youth/activities";
-import { YOUTH_BUCKET, processActivityArt } from "@/lib/youth/activity-art";
+import { YOUTH_BUCKET, processActivityArt, signActivityArt } from "@/lib/youth/activity-art";
+import { compactConfig, parseGameConfig } from "@/lib/youth/games/config";
+import { DEMO_ACTIVITIES } from "@/lib/youth/games/demos";
 
 /**
  * Learn & Play administration (youth.activities). The database rechecks the
@@ -61,6 +63,19 @@ async function contentFrom(fd: FormData): Promise<Record<string, unknown> | stri
   const from = when("available_from");
   const until = when("available_until");
   if (!from.ok || !until.ok) return "Enter the availability dates in full.";
+  // The game editor's fields arrive as one value; it is reshaped here and checked again in the database.
+  let config: Record<string, unknown> = {};
+  const rawGame = str(fd, "game_config");
+  if (rawGame) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawGame);
+    } catch {
+      return "The game's scenes or pairs couldn't be read. Reload the page and try again.";
+    }
+    const game = parseGameConfig(kind, parsed);
+    if (game) config = compactConfig(game);
+  }
   return {
     title: plainText(str(fd, "title"), 120),
     summary: plainText(str(fd, "summary"), 300),
@@ -82,6 +97,7 @@ async function contentFrom(fd: FormData): Promise<Record<string, unknown> | stri
     change_note: plainText(str(fd, "change_note"), 300),
     available_from: from.value,
     available_until: until.value,
+    config,
   };
 }
 
@@ -118,10 +134,49 @@ export async function activityStatusAction(_prev: FormState, fd: FormData): Prom
   const activity = id(fd, "id");
   const action = str(fd, "action");
   if (!activity || !(action in STATUS_MESSAGES)) return errorState("That action isn't available.");
+  if (action === "publish" && fd.get("reviewed") !== "on") return errorState("Confirm you've checked the activity against its Scripture references.");
   const { error } = await supabase.rpc("youth_admin_activity_status", { p_id: activity, p_action: action, p_confirm: str(fd, "confirm").trim() || null });
   if (error) return errorState(dbErrorMessage(error, "That couldn't be changed right now. Nothing was changed."));
   refresh(activity);
   return { status: "success", message: STATUS_MESSAGES[action] };
+}
+
+/** Reserve, upload, and finish one artwork from the form's fields; undone if any step fails. */
+async function storeArt(supabase: NonNullable<Awaited<ReturnType<typeof guard>>>, activity: string, fd: FormData) {
+  if (fd.get("rights_confirmed") !== "on") return { ok: false as const, message: "Confirm the church may use this artwork." };
+  const file = fd.get("file");
+  if (!(file instanceof File) || file.size === 0) return { ok: false as const, message: "Choose an image to upload." };
+  const art = await processActivityArt(file);
+  if (!art.ok) return { ok: false as const, message: art.message };
+
+  const { data: begun, error } = await supabase.rpc("youth_admin_activity_asset_begin", {
+    p_activity: activity,
+    p: {
+      alt: plainText(str(fd, "alt"), 300),
+      source_kind: str(fd, "source_kind"),
+      source_credit: plainText(str(fd, "source_credit"), 300),
+      license: plainText(str(fd, "license"), 300),
+      source_url: str(fd, "source_url").trim(),
+      rights_confirmed: true,
+    },
+  });
+  if (error) return { ok: false as const, message: dbErrorMessage(error, "The artwork couldn't be saved. Nothing was changed.") };
+  const reserved = begun as { id: string; path: string };
+  const up = await supabase.storage.from(YOUTH_BUCKET).upload(reserved.path, art.bytes, { contentType: "image/webp", upsert: false, cacheControl: "300" });
+  if (up.error) {
+    await supabase.rpc("youth_admin_activity_asset_cancel", { p_asset: reserved.id });
+    return { ok: false as const, message: "The upload didn't finish. Please try again." };
+  }
+  const { error: finishError } = await supabase.rpc("youth_admin_activity_asset_finish", {
+    p_asset: reserved.id,
+    p: { width: art.width, height: art.height, bytes: art.bytes.byteLength },
+  });
+  if (finishError) {
+    await supabase.storage.from(YOUTH_BUCKET).remove([reserved.path]);
+    await supabase.rpc("youth_admin_activity_asset_cancel", { p_asset: reserved.id });
+    return { ok: false as const, message: dbErrorMessage(finishError, "The artwork couldn't be saved. Nothing was changed.") };
+  }
+  return { ok: true as const, ...reserved };
 }
 
 /**
@@ -137,39 +192,9 @@ export async function uploadActivityArtAction(_prev: FormState, fd: FormData): P
   const values = formValues(fd);
   const activity = id(fd, "activity");
   if (!activity) return errorState("That activity wasn't found.");
-  if (fd.get("rights_confirmed") !== "on") return errorState("Confirm the church may use this artwork.", { values });
-  const file = fd.get("file");
-  if (!(file instanceof File) || file.size === 0) return errorState("Choose an image to upload.", { values });
-  const art = await processActivityArt(file);
-  if (!art.ok) return errorState(art.message, { values });
-
-  const { data: begun, error } = await supabase.rpc("youth_admin_activity_asset_begin", {
-    p_activity: activity,
-    p: {
-      alt: plainText(str(fd, "alt"), 300),
-      source_kind: str(fd, "source_kind"),
-      source_credit: plainText(str(fd, "source_credit"), 300),
-      license: plainText(str(fd, "license"), 300),
-      source_url: str(fd, "source_url").trim(),
-      rights_confirmed: true,
-    },
-  });
-  if (error) return errorState(dbErrorMessage(error, "The artwork couldn't be saved. Nothing was changed."), { values });
-  const reserved = begun as { id: string; path: string };
-  const up = await supabase.storage.from(YOUTH_BUCKET).upload(reserved.path, art.bytes, { contentType: "image/webp", upsert: false, cacheControl: "300" });
-  if (up.error) {
-    await supabase.rpc("youth_admin_activity_asset_cancel", { p_asset: reserved.id });
-    return errorState("The upload didn't finish. Please try again.", { values });
-  }
-  const { error: finishError } = await supabase.rpc("youth_admin_activity_asset_finish", {
-    p_asset: reserved.id,
-    p: { width: art.width, height: art.height, bytes: art.bytes.byteLength },
-  });
-  if (finishError) {
-    await supabase.storage.from(YOUTH_BUCKET).remove([reserved.path]);
-    await supabase.rpc("youth_admin_activity_asset_cancel", { p_asset: reserved.id });
-    return errorState(dbErrorMessage(finishError, "The artwork couldn't be saved. Nothing was changed."), { values });
-  }
+  const stored = await storeArt(supabase, activity, fd);
+  if (!stored.ok) return errorState(stored.message, { values });
+  const reserved = stored;
 
   if (fd.get("use_as_cover") === "on") {
     const { data: current } = await supabase.rpc("youth_admin_activity", { p_id: activity });
@@ -214,4 +239,47 @@ export async function removeActivityArtAction(_prev: FormState, fd: FormData): P
   if (path) await supabase.storage.from(YOUTH_BUCKET).remove([path]);
   refresh(id(fd, "activity"));
   return { status: "success", message: "Artwork removed." };
+}
+
+export type GameArtUpload = { ok: true; asset: { id: string; url: string | null; alt: string; source: string } } | { ok: false; message: string };
+
+/**
+ * Upload a picture from a scene or pair in the game editor (same pipeline,
+ * rights record, and checks as the artwork form). It isn't used anywhere
+ * until the draft is saved with it.
+ */
+export async function uploadGameArtAction(fd: FormData): Promise<GameArtUpload> {
+  const supabase = await guard();
+  if (!supabase) return { ok: false, message: "Uploads are unavailable right now. Nothing was changed." };
+  const activity = id(fd, "activity");
+  if (!activity) return { ok: false, message: "Save the draft first, then add pictures." };
+  const stored = await storeArt(supabase, activity, fd);
+  if (!stored.ok) return stored;
+  const url = (await signActivityArt(supabase, [stored.path])).get(stored.path) ?? null;
+  refresh(activity);
+  return { ok: true, asset: { id: stored.id, url, alt: plainText(str(fd, "alt"), 300), source: str(fd, "source_kind") } };
+}
+
+/**
+ * Adds the demonstration activities (src/lib/youth/games/demos.ts) as private
+ * drafts, skipping any whose title is already in the list. Nothing is
+ * published: an editor reviews each against its Scripture references first.
+ */
+export async function createDemoActivitiesAction(): Promise<FormState> {
+  const supabase = await guard();
+  if (!supabase) return errorState("Activities are unavailable right now. Nothing was changed.");
+  const { data: list, error: listError } = await supabase.rpc("youth_admin_activities", { p_status: null });
+  if (listError) return errorState(dbErrorMessage(listError, "Activities couldn't be loaded right now. Nothing was changed."));
+  const existing = new Set(((list ?? []) as Array<{ title: string }>).map((a) => a.title));
+  let made = 0;
+  for (const d of DEMO_ACTIVITIES) {
+    if (existing.has(d.title)) continue;
+    const content = Object.fromEntries(Object.entries(d).filter(([k]) => k !== "key" && k !== "config"));
+    const { error } = await supabase.rpc("youth_admin_activity_save", { p_id: null, p: { ...content, config: compactConfig(d.config) } });
+    if (error) return errorState(dbErrorMessage(error, `"${d.title}" couldn't be created.${made ? ` ${made} other demonstration drafts were.` : ""}`));
+    made++;
+  }
+  refresh();
+  if (!made) return { status: "success", message: "The demonstration drafts are already in the list." };
+  return { status: "success", message: `${made} demonstration ${made === 1 ? "draft" : "drafts"} added. Check each against its Scripture references before publishing.` };
 }

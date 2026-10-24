@@ -154,7 +154,12 @@ export type ActivityCard = {
 };
 
 /** One version's full content (the activity page and the editor preview). */
-export type ActivityDetail = Omit<ActivityCard, "players" | "progress"> & { description: string; config: Record<string, unknown> };
+export type ActivityDetail = Omit<ActivityCard, "players" | "progress"> & {
+  description: string;
+  config: Record<string, unknown>;
+  /** Uploaded pictures the version's game uses: asset id → storage path and description. */
+  media?: Record<string, { path: string; alt: string }>;
+};
 
 export type Player = { id: string; display_name: string };
 

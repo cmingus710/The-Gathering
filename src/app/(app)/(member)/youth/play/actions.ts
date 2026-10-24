@@ -18,6 +18,10 @@ const input = z.object({
   version: z.uuid(),
   revision: z.number().int().min(0).max(1_000_000),
   completed: z.boolean(),
+  // Only "Mark not finished" sets this: otherwise a finished version stays finished when replayed.
+  reset: z.boolean().default(false),
+  // Games save often; they ask for the pages to refresh only when the status may change.
+  revalidate: z.boolean().default(true),
   data: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -32,14 +36,14 @@ export async function saveActivityProgress(raw: unknown): Promise<ProgressResult
   await requireYouthArea("/youth/play");
   const parsed = input.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "That couldn't be saved." };
-  const { activity, child, version, revision, completed, data } = parsed.data;
+  const { activity, child, version, revision, completed, reset, revalidate, data } = parsed.data;
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Learn & Play is unavailable right now. Nothing was changed." };
   const { data: saved, error } = await supabase.rpc("youth_activity_progress_save", {
     p_activity: activity,
     p_child: child,
     p_version: version,
-    p: { data, completed, revision },
+    p: { data, completed, revision, reset },
   });
   if (error) return { ok: false, message: dbErrorMessage(error, "That couldn't be saved right now. Nothing was changed.") };
   const r = saved as { conflict?: "version" | "revision"; status?: "started" | "completed"; revision?: number };
@@ -49,6 +53,6 @@ export async function saveActivityProgress(raw: unknown): Promise<ProgressResult
   if (r?.conflict === "revision") {
     return { ok: false, conflict: "revision", message: "This was saved meanwhile on another device or tab. Reload to see the latest." };
   }
-  revalidatePath("/youth", "layout");
+  if (revalidate) revalidatePath("/youth", "layout");
   return { ok: true, status: r.status ?? "started", revision: r.revision ?? revision + 1 };
 }

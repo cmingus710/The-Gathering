@@ -4,6 +4,7 @@
 import { useActionState, useEffect, useId, useState, type ReactNode } from "react";
 import {
   activityStatusAction,
+  createDemoActivitiesAction,
   removeActivityArtAction,
   saveActivityAction,
   updateActivityArtAction,
@@ -16,7 +17,8 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState, type FormState } from "@/lib/forms";
 import { ACCEPT } from "@/lib/media/files";
-import { ACTIVITY_KINDS, ART_SOURCES, CONTENT_SOURCES, DIFFICULTIES } from "@/lib/youth/activities";
+import { ACTIVITY_KINDS, ART_SOURCES, CONTENT_SOURCES, DIFFICULTIES, isDifficulty } from "@/lib/youth/activities";
+import { GameConfigEditor } from "./games/game-editor";
 
 type Action = (prev: FormState, fd: FormData) => Promise<FormState>;
 
@@ -71,6 +73,8 @@ export type EditorDefaults = {
   /** datetime-local values in the church time zone. */
   available_from: string;
   available_until: string;
+  /** The version's game, if any (edited with the game editor, never as text). */
+  config?: Record<string, unknown>;
 };
 
 export type ArtChoice = { id: string; url: string | null; alt: string; source: string };
@@ -98,6 +102,8 @@ export function ActivityEditorForm({
   const v = (k: keyof EditorDefaults) => state.values?.[k] ?? (Array.isArray(defaults[k]) ? (defaults[k] as string[]).join("\n") : String(defaults[k] ?? ""));
   const [cover, setCover] = useState(defaults.cover_asset_id ?? "");
   const [source, setSource] = useState(defaults.content_source || "original");
+  const [kind, setKind] = useState(v("kind") || "story");
+  const [difficulty, setDifficulty] = useState(v("difficulty") || "beginner");
   const fieldset = "space-y-4 rounded-card border border-border p-4 sm:p-5";
   const legend = "px-1 font-semibold";
   return (
@@ -110,14 +116,14 @@ export function ActivityEditorForm({
         <TextField label="Title" name="title" defaultValue={v("title")} maxLength={120} required />
         <TextField label="Card text" name="summary" hint="One or two sentences shown on the activity card." defaultValue={v("summary")} maxLength={300} optional />
         <div className="grid gap-4 sm:grid-cols-2">
-          <SelectField label="Type" name="kind" defaultValue={v("kind") || "story"}>
+          <SelectField label="Type" name="kind" value={kind} onChange={(e) => setKind(e.target.value)} hint="Puzzle can be Put the Story in Order; Matching can be Bible Match.">
             {ACTIVITY_KINDS.map((k) => (
               <option key={k.key} value={k.key}>
                 {k.label}
               </option>
             ))}
           </SelectField>
-          <SelectField label="Difficulty" name="difficulty" defaultValue={v("difficulty") || "beginner"} hint="Beginner, Growing, or Challenge.">
+          <SelectField label="Difficulty" name="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} hint="Beginner, Growing, or Challenge.">
             {DIFFICULTIES.map((d) => (
               <option key={d.key} value={d.key}>
                 {d.label}: {d.hint}
@@ -143,6 +149,14 @@ export function ActivityEditorForm({
           hint="Markdown: **bold**, *italic*, lists, and links. HTML isn't allowed and is never shown as HTML."
         />
       </fieldset>
+
+      <GameConfigEditor
+        kind={kind}
+        difficulty={isDifficulty(difficulty) ? difficulty : "beginner"}
+        initial={defaults.config ?? {}}
+        art={art}
+        activityId={activityId}
+      />
 
       <fieldset className={fieldset}>
         <legend className={legend}>Bible connection</legend>
@@ -327,11 +341,14 @@ export function ActivityArtItem({
   asset,
   url,
   locked,
+  inDraft,
 }: {
   activityId: string;
   asset: { id: string; alt: string; source_kind: string; source_credit: string; license: string; source_url: string | null; rights_confirmed_by: string | null; rights_confirmed_at: string };
   url: string | null;
   locked: boolean;
+  /** Used by a scene or card in the draft's game. */
+  inDraft?: boolean;
 }) {
   const fid = useId();
   const label = ART_SOURCES.find(([k]) => k === asset.source_kind)?.[1] ?? asset.source_kind;
@@ -351,10 +368,17 @@ export function ActivityArtItem({
         </ActionForm>
         {locked ? (
           <p className="text-meta text-text-secondary">Part of a published version, so it&apos;s kept.</p>
+        ) : inDraft ? (
+          <p className="text-meta text-text-secondary">Used in the draft&apos;s game. Choose another picture there before removing it.</p>
         ) : (
           <ActionForm action={removeActivityArtAction} hidden={{ asset: asset.id, activity: activityId }} submit="Remove artwork" pendingText="Removing…" variant="danger-outline" />
         )}
       </div>
     </li>
   );
+}
+
+/** Add the demonstration games as private drafts. */
+export function DemoActivitiesForm() {
+  return <ActionForm action={createDemoActivitiesAction} submit="Add demonstration drafts" pendingText="Adding…" variant="secondary" className="space-y-3" />;
 }
