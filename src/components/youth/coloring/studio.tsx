@@ -201,14 +201,14 @@ export function ColoringStudio(props: StudioProps) {
   }, [accountId, initial.revision, initialBody, key, live, t]);
 
   // Every change (fills, strokes, undo, redo, start over) is autosaved.
+  const docBody = useMemo(() => serializeDoc(doc), [doc]);
   useEffect(() => {
     if (!live) return;
-    const body = serializeDoc(doc);
-    if (body === lastBody.current) return;
-    lastBody.current = body;
-    controller.edit({ title: "", body });
-    keep(body, controller.current.version);
-  }, [doc, controller, keep, live]);
+    if (docBody === lastBody.current) return;
+    lastBody.current = docBody;
+    controller.edit({ title: "", body: docBody });
+    keep(docBody, controller.current.version);
+  }, [docBody, controller, keep, live]);
 
   // Keep (or drop) the device copy as the saved state changes.
   useEffect(() => {
@@ -568,7 +568,8 @@ export function ColoringStudio(props: StudioProps) {
   // Render
   // ---------------------------------------------------------------------
   const s = saveState ?? controller.current;
-  const status = !live ? "preview" : s.status;
+  // A change on screen that the controller hasn't been handed yet (the render before the effect) is never "Saved".
+  const status = !live ? "preview" : s.status === "saved" && docBody !== controller.text.body ? "unsaved" : s.status;
   const statusIcon =
     status === "preview" ? null
     : status === "saved" ? <CheckCircle2 className="size-4 text-success" aria-hidden="true" />
