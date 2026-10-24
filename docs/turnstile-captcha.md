@@ -1,6 +1,17 @@
 # Cloudflare Turnstile (CAPTCHA) for sign-up and sign-in
 
-Status: **app changes ready; hosted enforcement OFF.** Do not turn on Supabase CAPTCHA enforcement until steps 1–3 of the [rollout](#rollout) are done, because Preview and Production share one Supabase project.
+Status: **live in production since 2026-10-24.** Supabase CAPTCHA enforcement is on, and sign-in on `https://www.gathering.church` works with the widget (owner check). See [Current state](#current-state) for what that means for previews.
+
+## Current state
+
+| Item | State (2026-10-24) |
+| --- | --- |
+| Code | Merged in [#79](https://github.com/cmingus710/The-Gathering/pull/79) |
+| Supabase CAPTCHA enforcement | **On** (Cloudflare Turnstile) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in Vercel | **Production only**. Not set for Preview |
+| Production | Widget appears and sign-in works on `www.gathering.church` |
+| Per-deployment URLs (`the-gathering-<hash>-paint-by-number.vercel.app`) | Widget shows "isn't set up for this web address" (Cloudflare `110200`), so email sign-in fails there. Use `www.gathering.church` |
+| Previews | Built without the site key, so no widget and no token: **email sign-up, sign-in, resend, and forgot password fail on previews**. Google/Apple still work. To test email auth on a preview, add the site key for Preview (or for one branch), add that branch URL to the widget's hostnames, and redeploy |
 
 ## What is protected, and how
 
@@ -78,6 +89,8 @@ This applies immediately to **every** client of the project: Production, all Pre
 
 ## Rollout
 
+Done on 2026-10-24. The steps below are kept as the record and for a repeat (for example a new widget or a key rotation).
+
 Because Preview and Production share one Supabase project, enforcement can't be tried on Preview alone. Enforcement must wait until Production already sends tokens.
 
 1. **Preview, enforcement off (UI check).**
@@ -108,7 +121,7 @@ Because Preview and Production share one Supabase project, enforcement can't be 
 
 After step 3, previews built without the site key, or on hostnames not on the widget, can't use email sign-in or sign-up. Google/Apple still work there.
 
-## Verification done before asking for enforcement (local)
+## Verification done before enforcement (local)
 
 Run on 2026-10-24 against Supabase Auth built from source (`supabase/auth` at `c3348e8`) on PostgreSQL 16, with Turnstile enforcement configured, and a production build of this branch (`NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA`), Chromium. The sandbox's network policy blocked `challenges.cloudflare.com`, so neither Supabase nor the browser could reach Cloudflare. Where a token was needed, the browser loaded a small stand-in for Cloudflare's script, which only exercises the app's widget handling. Real Cloudflare verification happens at rollout step 1 (widget) and step 3 (enforcement).
 
