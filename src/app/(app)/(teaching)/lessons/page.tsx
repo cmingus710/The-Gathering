@@ -7,7 +7,8 @@ import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
 import { coverPaths, isUuid, isYmd } from "@/lib/media/format";
-import { listItems } from "@/lib/media/pages";
+import { featuredLabel } from "@/lib/media/lessons";
+import { listLessons } from "@/lib/media/pages";
 import { BOOKS, bookOf } from "@/lib/media/scripture";
 import { signPaths } from "@/lib/media/storage";
 import { teachingViewer } from "@/lib/media/viewer";
@@ -34,15 +35,18 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
   const filtered = Object.values(filters).some(Boolean);
   const page = Math.max(0, Number(str("page")) || 0);
   const [viewer, supabase] = await Promise.all([teachingViewer(), requireClient()]);
-  const [list, latest, facetsRes] = await Promise.all([
-    listItems(supabase, "lesson", filters, PAGE, page * PAGE),
-    filtered || page ? Promise.resolve(null) : listItems(supabase, "lesson", {}, 1),
+  // The database picks the featured lesson by lesson date in the church's
+  // time zone on every request (this page is never cached) and leaves it out
+  // of every unfiltered page of the list, which runs oldest date first.
+  const [list, facetsRes] = await Promise.all([
+    listLessons(supabase, filters, PAGE, page * PAGE),
     supabase.rpc("media_facets", { p_kind: "lesson" }),
   ]);
   const facets = (facetsRes.data ?? { series: [], people: [], topics: [], refs: [] }) as Facets;
   const books = BOOKS.filter((b) => facets.refs.some((r) => bookOf(r) === b));
-  const top = latest?.items[0] ?? null;
-  const rest = list.items.filter((i) => i.id !== top?.id);
+  const top = filtered || page ? null : list.featured;
+  const topLabel = featuredLabel(list.featured_state);
+  const rest = list.items;
   const urls = await signPaths(supabase, [...coverPaths(top ? [top] : [], "large"), ...coverPaths(rest)]);
   const query = (p: number) => ({ query: { ...Object.fromEntries(Object.entries({ q: filters.q, series: filters.series_id, speaker: filters.person_id, topic: filters.topic_id, book: filters.book, from: filters.from, to: filters.to }).filter(([, v]) => v)), page: p } });
   const select = "min-h-11 w-full rounded-control border border-border-strong bg-surface px-3";
@@ -57,13 +61,13 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/lessons" /></div> : null}
       {!list.ok ? <Alert tone="error" title="Lessons couldn't be loaded right now." className="mb-6" /> : null}
       {top ? (
-        <section aria-label="Latest lesson" className="mb-10">
-          <FeaturedItem item={top} urls={urls} eyebrow="Latest lesson" />
+        <section aria-label={topLabel} className="mb-10">
+          <FeaturedItem item={top} urls={urls} eyebrow={topLabel} fullDate />
         </section>
       ) : null}
 
       <section aria-labelledby="lesson-archive">
-        <SectionHeading id="lesson-archive">{filtered ? "Matching lessons" : "Archive"}</SectionHeading>
+        <SectionHeading id="lesson-archive">{filtered ? "Matching lessons" : "All lessons"}</SectionHeading>
         <form role="search" aria-label="Search lessons" className="mb-5 grid gap-3 rounded-card border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1 sm:col-span-2 lg:col-span-3">
             <label htmlFor="lq" className="block text-meta font-semibold">
@@ -158,11 +162,11 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
           <ul className="space-y-3">
             {rest.map((i) => (
               <li key={i.id}>
-                <ItemCard item={i} urls={urls} />
+                <ItemCard item={i} urls={urls} showDate />
               </li>
             ))}
           </ul>
-        ) : list.ok && !top ? (
+        ) : list.ok && !list.featured ? (
           <EmptyState glyph="lessons" title={filtered ? "No lessons match" : "No lessons yet"}>
             {filtered ? "Try fewer filters." : "Lessons will appear here after they're published."}
           </EmptyState>
@@ -171,14 +175,14 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
           <nav aria-label="Pages" className="mt-4 flex justify-between">
             {page > 0 ? (
               <Link href={query(page - 1)} className="min-h-11 px-2 font-semibold text-primary">
-                Newer
+                Earlier lessons
               </Link>
             ) : (
               <span />
             )}
             {list.total > (page + 1) * PAGE ? (
               <Link href={query(page + 1)} className="min-h-11 px-2 font-semibold text-primary">
-                Older
+                Later lessons
               </Link>
             ) : null}
           </nav>

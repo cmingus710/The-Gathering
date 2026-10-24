@@ -7,8 +7,11 @@ import type { ItemCard } from "@/lib/media/types";
 import { FramedImage } from "./framed-image";
 import { itemCover } from "./item-card";
 
-/** A larger card for "Latest lesson" and similar single highlights. */
-export function FeaturedItem({ item, urls, eyebrow }: { item: ItemCard; urls: Map<string, string>; eyebrow: string }) {
+/**
+ * A larger card for the featured lesson and similar single highlights.
+ * `fullDate` shows the date with its weekday and year.
+ */
+export function FeaturedItem({ item, urls, eyebrow, fullDate = false }: { item: ItemCard; urls: Map<string, string>; eyebrow: string; fullDate?: boolean }) {
   const cover = itemCover(item, urls, "large");
   const day = itemDate(item);
   const who = speakers(item);
@@ -30,7 +33,7 @@ export function FeaturedItem({ item, urls, eyebrow }: { item: ItemCard; urls: Ma
       <div className="space-y-1.5 p-5">
         <p className="text-meta font-semibold text-primary">{eyebrow}</p>
         <h2 className="font-display text-2xl font-semibold leading-snug text-text">{item.title}</h2>
-        <p className="text-meta text-text-secondary">{[day ? formatDay(day) : null, who || null, item.series?.title].filter(Boolean).join(" · ")}</p>
+        <p className="text-meta text-text-secondary">{[day ? formatDay(day, fullDate ? "full" : "long") : null, who || null, item.series?.title].filter(Boolean).join(" · ")}</p>
         {item.summary ? <p className="text-text-secondary line-clamp-3">{item.summary}</p> : null}
         <p className="flex flex-wrap gap-3 pt-1 text-meta font-semibold text-text">
           {item.media?.video ? (

@@ -87,7 +87,7 @@ export function durationLabel(seconds: number | null | undefined): string | null
 }
 
 /** Formats a calendar date (YYYY-MM-DD) without shifting it across time zones. */
-export function formatDay(ymd: string | null | undefined, style: "long" | "short" | "weekday" = "long"): string {
+export function formatDay(ymd: string | null | undefined, style: "long" | "short" | "weekday" | "full" = "long"): string {
   if (!ymd) return "";
   const [y, m, d] = ymd.slice(0, 10).split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d, 12));
@@ -96,7 +96,9 @@ export function formatDay(ymd: string | null | undefined, style: "long" | "short
       ? { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }
       : style === "weekday"
         ? { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }
-        : { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" };
+        : style === "full"
+          ? { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }
+          : { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" };
   return new Intl.DateTimeFormat("en-US", opts).format(date);
 }
 

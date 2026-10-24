@@ -468,3 +468,22 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`question_length`, `question-length`).
+
+## Sunday lessons: featured lesson by lesson date (2026-11-19)
+
+- **New (additive; no applied migration was edited):** `20261119000100_lesson_featured_order`:
+  - `public.media_lessons(jsonb, integer, integer)` (anon and authenticated, like `media_items`) backs the Sunday lessons page. It features the nearest visible lesson whose lesson date (`delivered_on`) is the church's today or later (`featured_state` `today` or `upcoming`), else the most recent past one (`latest`); undated lessons are never featured; ties go by `sort_order`, then `id`. The other visible lessons matching the filters are listed oldest date first (undated last, same tie-break) without the featured one, so pages never repeat or skip a lesson. With search or filters nothing is featured and every match is listed.
+  - "Today" is `media.church_today()` (church_settings.timezone), evaluated on every call, so the featured lesson moves on at the church's local midnight with no edit or republish. Visibility is `media.item_visible` as before (status, publish time, expiry, audience, group).
+  - `media.church_date_at(timestamptz)` and `media.lessons_page(uuid, date, jsonb, integer, integer)` are internal (no API role can call them); `media.church_today()` is redefined through `church_date_at` with the same result. `media_items` and every table, policy, and existing signature are unchanged.
+- **Operator script:** `supabase/manual/2026-11-19-apply-lesson-featured-order.sql`, one transaction. The preflight requires `20261029000100` and refuses a second run. It post-checks that `church_today` keeps its meaning, the grants (anon/authenticated on `media_lessons` only; nobody on `lessons_page`), and that `media_lessons` returns a page. History row `created_by = lesson-featured-order`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261119000100`. A rerun stopped at the preflight.
+- **Order: apply before deploying the app change.** The lessons page now calls `media_lessons`; until the migration is applied it would show "Lessons couldn't be loaded right now." Nothing else depends on it.
+- **Hosted:** **Not applied.** Waiting for the owner's approval. The read-only check afterwards:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261119000100';
+  select to_regprocedure('public.media_lessons(jsonb, integer, integer)') is not null as lessons_fn,
+         has_function_privilege('anon', 'public.media_lessons(jsonb, integer, integer)', 'execute') as anon_can_call;
+  ```
+
+  Expected: one row (`lesson_featured_order`, `lesson-featured-order`); `lessons_fn = true`, `anon_can_call = true`.
