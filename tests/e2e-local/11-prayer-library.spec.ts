@@ -206,10 +206,10 @@ test("prayer requests still load, the tabs scroll on a phone, and both themes pa
     await page.goto("/prayer/library");
     await noHorizontalScroll(page);
     const tabs = page.getByRole("navigation", { name: "Prayer views" });
-    if (test.info().project.name === "mobile") {
-      // The row scrolls instead of wrapping, and the current tab is in view.
-      expect(await tabs.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
-      await expect(tabs.getByRole("link", { name: "Prayer Library" })).toBeInViewport();
+    // Every view is visible without sideways scrolling, on a phone too.
+    expect(await tabs.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    for (const name of ["Requests", "My Requests", "Following", "Answered", "Prayer Library"]) {
+      await expect(tabs.getByRole("link", { name, exact: true })).toBeInViewport();
     }
     const axe = await new AxeBuilder({ page }).include("main").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect(axe.violations, JSON.stringify(axe.violations.map((v) => [v.id, v.nodes.map((n) => n.target)]))).toEqual([]);

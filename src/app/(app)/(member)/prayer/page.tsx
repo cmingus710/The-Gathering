@@ -17,7 +17,7 @@ import type { PrayerGuidance, PrayerPage } from "@/lib/prayer/types";
 
 export const metadata: Metadata = { title: "Prayer" };
 
-const VIEW_LABEL: Record<View, string> = { feed: "Requests", mine: "My requests", following: "Following", answered: "Answered" };
+const VIEW_LABEL: Record<View, string> = { feed: "Requests", mine: "My Requests", following: "Following", answered: "Answered" };
 
 const EMPTY: Record<View, { title: string; body: string }> = {
   feed: { title: "No prayer requests yet", body: "When members share requests with you, they'll appear here." },
