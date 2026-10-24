@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { MyPhotos } from "@/components/media/my-photos";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { EmptyState, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { signPaths, UPLOAD_BUCKET } from "@/lib/media/storage";
 import type { Photo } from "@/lib/media/types";
@@ -21,7 +22,7 @@ export default async function MyPhotosPage() {
   return (
     <>
       <BackLink route="/gallery/mine" />
-      <PageHeader title="My photos" description="Photos you've added, and where each one stands. Removing a photo deletes it." />
+      <SectionHeader section="gallery" size="compact" title="My photos" description="Photos you've added, and where each one stands. Removing a photo deletes it." />
       {error ? <Alert tone="error" title="Your photos couldn't be loaded right now." className="mb-6" /> : null}
       {!error && !photos.length ? <EmptyState glyph="gallery" title="You haven't added any photos" /> : null}
       <MyPhotos photos={photos} urls={new Map([...live, ...review])} />

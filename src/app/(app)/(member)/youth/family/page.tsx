@@ -3,7 +3,8 @@ import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { Card, EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { StateBadge } from "@/components/youth/state-badge";
 import { YouthForm } from "@/components/youth/youth-form";
 import { requireApprovedMember } from "@/lib/auth/viewer";
@@ -26,7 +27,7 @@ export default async function FamilyPage({ searchParams }: PageProps<"/youth/fam
   return (
     <>
       <BackLink route="/youth/family" />
-      <PageHeader
+      <SectionHeader section="youth" size="compact"
         title="Family dashboard"
         description="Children you're a verified guardian for, what's coming up, and anything waiting on you."
         actions={<ButtonLink href="/youth/family/request" variant="secondary">Link a child</ButtonLink>}

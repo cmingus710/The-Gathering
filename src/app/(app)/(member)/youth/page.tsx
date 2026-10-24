@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TileIcon } from "@/components/icons/icon";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState, ListRow, PageHeader, SectionHeading, SectionLink, rowListClass } from "@/components/ui/card";
+import { Card, EmptyState, ListRow, SectionHeading, SectionLink, rowListClass } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { ActivityCard, ActivityGrid, NoActivities } from "@/components/youth/learn-play";
 import { AnnouncementList, EventList, LearningList } from "@/components/youth/sections";
 import { YouthForm } from "@/components/youth/youth-form";
-import { menuArtSource } from "@/lib/home/launcher";
 import { requireYouthArea } from "@/lib/auth/viewer";
 import { sortForHome } from "@/lib/youth/activities";
 import { loadLearnHome, type LearnHome } from "@/lib/youth/learn";
@@ -25,22 +24,9 @@ type Home = {
   discussions_enabled: boolean;
 };
 
-function Hero({ title, children }: { title: string; children: React.ReactNode }) {
-  const art = menuArtSource("youth");
-  return (
-    <div className="mb-8 flex items-center gap-4 rounded-card border border-border bg-surface p-5 shadow-(--elev-card) sm:gap-6 sm:p-6">
-      {art ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={art.src} srcSet={art.srcSet} sizes="96px" alt="" className="size-20 shrink-0 rounded-tile sm:size-24" />
-      ) : (
-        <TileIcon name="youth" className="size-20" />
-      )}
-      <div className="min-w-0">
-        <h1 className="font-display text-display font-semibold text-text sm:text-[2.125rem]">{title}</h1>
-        <div className="mt-1 text-text-secondary">{children}</div>
-      </div>
-    </div>
-  );
+/** The Youth & Families section header; a youth account is greeted by name instead. */
+function Hero({ title, children }: { title?: string; children: React.ReactNode }) {
+  return <SectionHeader section="youth" title={title} description={children} className="mb-8" />;
 }
 
 /** How many cards the home shows before "Browse all". */
@@ -126,7 +112,7 @@ export default async function YouthPage() {
     if (!me || me.kind !== "youth") {
       return (
         <>
-          <PageHeader title="Youth" />
+          <SectionHeader section="youth" title="Youth" />
           <Alert tone="info" title="Your youth account isn't active right now.">
             Please talk with your parent or guardian or the church office. Nothing you saved has been lost.
           </Alert>
@@ -196,7 +182,7 @@ export default async function YouthPage() {
   const isAdmin = (adult?.caps.length ?? 0) > 0;
   return (
     <>
-      <Hero title="Youth & Families">Activities to enjoy together, this week&apos;s lesson, and everything for parents and guardians.</Hero>
+      <Hero>Activities to enjoy together, this week&apos;s lesson, and everything for parents and guardians.</Hero>
       <div className="space-y-10">
         <LearnAndPlay learn={learn} covers={covers} mature={false} />
         <ThisWeek learn={learn} />

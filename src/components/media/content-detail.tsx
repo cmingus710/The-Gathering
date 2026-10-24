@@ -65,6 +65,7 @@ export function ContentDetail({
   member,
   preview = false,
   book,
+  headingLevel = 1,
 }: {
   item: ItemDetail;
   urls: Map<string, string>;
@@ -75,6 +76,8 @@ export function ContentDetail({
   preview?: boolean;
   /** Phase 13 book extras (Kindle link and the member's reading panel), rendered after "Read or listen". */
   book?: { kindleUrl: string | null; panel?: ReactNode };
+  /** 2 where the page already has its own h1 (the Devotionals day view). */
+  headingLevel?: 1 | 2;
 }) {
   const day = itemDate(item);
   const byline = speakers(item);
@@ -84,6 +87,7 @@ export function ContentDetail({
   const files = item.attachments.filter((a) => a.role !== "audio" && a.role !== "video");
   const cover = itemCover(item, urls, "large");
   const withTranscript = item.attachments.filter((a) => a.has_transcript && transcripts[a.asset_id]);
+  const Title = headingLevel === 2 ? "h2" : "h1";
   const contributors = item.people.filter((p) => p.role === "contributor").map((p) => p.name);
 
   return (
@@ -99,7 +103,7 @@ export function ContentDetail({
           ) : null}
           {item.kind === "assignment" && item.ends_on ? ` – ${formatDay(item.ends_on, "short")}` : ""}
         </p>
-        <h1 className="font-display text-display font-semibold leading-tight text-text sm:text-[2.125rem]">{item.title}</h1>
+        <Title className="font-display text-display font-semibold leading-tight text-text sm:text-[2.125rem]">{item.title}</Title>
         {byline || item.book_author ? <p className="text-text-secondary">{item.kind === "book" ? `by ${item.book_author}` : byline}</p> : null}
         <div className="flex flex-wrap items-center gap-2">
           {item.series ? (

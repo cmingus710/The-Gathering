@@ -5,7 +5,8 @@ import { CommunityText } from "@/components/community/community-text";
 import { AckGuidelinesForm } from "@/components/community/ack-guidelines-form";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
-import { Card, PageHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
 
@@ -28,7 +29,7 @@ export default async function GuidelinesPage({ searchParams }: PageProps<"/commu
   return (
     <>
       <BackLink route="/community/guidelines" />
-      <PageHeader title="Community guidelines" description="How we care for one another in discussions, groups, and messages." />
+      <SectionHeader section="community" size="compact" title="Community guidelines" description="How we care for one another in discussions, groups, and messages." />
       {!g ? (
         <Alert tone="error" title="The guidelines couldn't be loaded right now." />
       ) : (

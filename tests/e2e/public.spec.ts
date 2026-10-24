@@ -343,7 +343,8 @@ test("the service worker handles push without caching private pages", async ({ r
 
 test("guest giving page is public and honest when giving isn't configured", async ({ page }) => {
   await page.goto("/give");
-  await expect(page.getByRole("heading", { name: "Thank you for giving" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Give" })).toBeVisible();
+  await expect(page.getByText(/^Thank you for giving\./)).toBeVisible();
   await expect(page.getByText("Online giving isn't available yet.")).toBeVisible();
   await expect(page.getByRole("button", { name: /checkout/i })).toHaveCount(0);
 });

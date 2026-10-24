@@ -1,0 +1,20 @@
+[
+  { "name": "events", "section": "Events", "dark": "assets/brand/source/Faint Gold Calendar on Charcoal-1.png", "light": "assets/brand/source/Elegant ivory calendar banner-18.png" },
+  { "name": "prayer", "section": "Prayer", "dark": "assets/brand/source/Quiet charcoal with golden rays-2.png", "light": "assets/brand/source/Soft Ivory Rays and Gold Curves-16.png" },
+  { "name": "devotionals", "section": "Devotionals", "dark": "assets/brand/source/Open Book in Golden Dawn-3.png", "light": "assets/brand/source/Ivory sunrise over an open book-17.png" },
+  { "name": "lessons", "section": "Sunday lessons", "dark": "assets/brand/source/Closed Bible with Gentle Gold Illumination-2.png", "light": "assets/brand/source/Closed Bible in Ivory and Gold-19.png" },
+  { "name": "reading", "section": "Books", "dark": "assets/brand/source/Antique Gold Books in Shadow-1.png", "light": "assets/brand/source/Ivory bookscape with golden accents-21.png" },
+  { "name": "music", "section": "Music", "dark": "assets/brand/source/Quiet golden musical curves on charcoal-3.png", "light": "assets/brand/source/Ivory harmony with golden curves-20.png" },
+  { "name": "podcasts", "section": "Podcasts", "dark": "assets/brand/source/Antique microphone over golden waveforms-4.png", "light": "assets/brand/source/Elegant Ivory Microphone Waveform-22.png" },
+  { "name": "videos", "section": "Videos", "dark": "assets/brand/source/Golden cinema frames on charcoal-6.png", "light": "assets/brand/source/Ivory Cinema Frames with Champagne Accents-24.png" },
+  { "name": "gallery", "section": "Media gallery", "dark": "assets/brand/source/Charcoal Gallery with Golden Mountain Frames-5.png", "light": "assets/brand/source/Ivory mountain frames on gold-23.png" },
+  { "name": "journal", "section": "My Journal", "dark": "assets/brand/source/Open Notebook in Warm Gold-7.png", "light": "assets/brand/source/Ivory journal and fountain pen-26.png" },
+  { "name": "youth", "section": "Youth & Families", "dark": "assets/brand/source/Playful golden stars and tree-8.png", "light": "assets/brand/source/Ivory Gathering with Golden Tree-25.png" },
+  { "name": "community", "section": "Community", "dark": "assets/brand/source/Golden conversation curves on charcoal-9.png", "light": "assets/brand/source/Ivory and Gold Conversation Flow-27.png" },
+  { "name": "messages", "section": "Messages", "dark": "assets/brand/source/Quiet Gold Message Bubbles-10.png", "light": "assets/brand/source/Ivory message bubbles in champagne gold-29.png" },
+  { "name": "announcements", "section": "Announcements", "dark": "assets/brand/source/Quiet Gold Megaphone on Charcoal-11.png", "light": "assets/brand/source/Elegant Megaphone Announcement Banner-28.png" },
+  { "name": "give", "section": "Give", "dark": "assets/brand/source/Cupped Hands and Golden Heart-12.png", "light": "assets/brand/source/Champagne hands cradling a heart-30.png" },
+  { "name": "directory", "section": "Directory", "dark": "assets/brand/source/Connected silhouettes in antique gold-14.png", "light": "assets/brand/source/Warm ivory header with connected gold silhouettes-32.png" },
+  { "name": "bible", "section": "Bible reading", "dark": "assets/brand/source/Open Bible in gilded shadows-15.png", "light": "assets/brand/source/Ivory Banner with Golden Open Bible-31.png" },
+  { "name": "memory", "section": "Memory verses", "dark": "assets/brand/source/Quiet Charcoal Banner with Golden Verse Cards-13.png", "light": "assets/brand/source/Ivory gold verse card backdrop-33.png" }
+]

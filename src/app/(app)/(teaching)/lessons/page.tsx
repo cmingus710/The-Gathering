@@ -5,7 +5,8 @@ import { ItemCard } from "@/components/media/item-card";
 import { VisitorNote } from "@/components/media/visitor-note";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, PageHeader, SectionHeading } from "@/components/ui/card";
+import { EmptyState, SectionHeading } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
 import { coverPaths, isUuid, isYmd } from "@/lib/media/format";
 import { featuredLabel } from "@/lib/media/lessons";
 import { listLessons } from "@/lib/media/pages";
@@ -53,8 +54,8 @@ export default async function LessonsPage({ searchParams }: PageProps<"/lessons"
 
   return (
     <>
-      <PageHeader
-        title="Sunday lessons"
+      <SectionHeader
+        section="lessons"
         description="Watch, listen, and read lessons from Sunday gatherings."
         actions={viewer.member ? <ButtonLink href="/journal" variant="secondary" size="sm">My Journal</ButtonLink> : null}
       />
