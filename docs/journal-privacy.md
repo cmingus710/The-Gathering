@@ -28,6 +28,7 @@
 - **Caching:** `/journal`, `/bible`, and `/api/journal/*` are `private, no-store`; the service worker caches no pages; page titles are generic ("Journal entry"), never an entry title.
 - **Browser storage:** journal text is held in memory only. No local storage, no on-device recovery (so nothing lingers on shared devices). Sign-out clears the site cache as before.
 - **Notes on discussion questions:** devotionals, lessons, and church reading assignments show a "Your notes" box under each question. Notes are held in memory only (the page warns before leaving with unsent notes) and are saved only when the member presses **Send to my journal**, which creates one private entry (through `/api/journal/entries`) linked to that item, with each question quoted and the member's note under it. Visitors and admin previews see the questions without note boxes.
+- **Reflections on collection readings** (Morning & Evening): "Reflect in My Journal" links an entry to the reading and the calendar date read (`collection_reading_id`, `reading_date`). One reflection per reading and date (unique index; a second "Reflect" opens the first). Administrators see no counts or content of reflections; hiding or removing the collection keeps the entry text. See [morning-evening.md](morning-evening.md).
 
 ## Export
 

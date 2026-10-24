@@ -10,7 +10,17 @@ export type ExportedEntry = {
   status: "active" | "archived";
   created_at: string;
   updated_at: string;
-  link: { kind: string; label?: string | null; plan_title?: string | null; title?: string | null; question?: string | null; translation_code?: string | null; available?: boolean } | null;
+  link: {
+    kind: string;
+    label?: string | null;
+    plan_title?: string | null;
+    title?: string | null;
+    question?: string | null;
+    translation_code?: string | null;
+    available?: boolean;
+    reading_date?: string | null;
+    scripture_ref?: string | null;
+  } | null;
 };
 
 function linkLine(link: ExportedEntry["link"]): string | null {
@@ -27,6 +37,10 @@ function linkLine(link: ExportedEntry["link"]): string | null {
       return link.available && link.title ? `Book: ${link.title}` : "A book that is no longer available";
     case "book_assignment":
       return link.available && link.title ? `Reading assignment: ${link.title}` : "A reading assignment that is no longer available";
+    case "collection_reading":
+      return link.available && link.title
+        ? `${link.title}: ${link.label}${link.scripture_ref ? ` (${link.scripture_ref})` : ""}, read ${link.reading_date}`
+        : `A devotional reading that is no longer available, read ${link.reading_date}`;
     default:
       return null;
   }

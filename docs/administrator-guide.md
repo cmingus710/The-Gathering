@@ -49,6 +49,7 @@ The short version of every administrative job, with links to the detailed guides
 ## Publishing reading plans, devotionals, lessons, podcasts, and playlists
 
 - **Teaching content** holds devotionals, lessons (with handouts, slides, audio, or video attached), book recommendations, and music playlists. Editors draft; publishers publish or schedule.
+- **Devotional collections** (Teaching content → Devotional collections) holds imported, read-only collections such as Charles Spurgeon's *Morning & Evening*: a dry run, an all-or-nothing import into a hidden draft, review and corrections, then publish or hide. See [morning-evening.md](morning-evening.md).
 - **Media library** holds uploaded audio and video (MP4, up to 50 MB) and external videos (YouTube, Vimeo).
 - **Podcasts:** add a feed address; the app checks it and refreshes it on the scheduler.
 - **Playlists:** paste a Spotify link. Spotify may play 30-second previews to people who aren't signed in to Spotify.

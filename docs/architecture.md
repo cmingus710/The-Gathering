@@ -409,6 +409,10 @@ External feeds are fetched by `/api/jobs/events` (`refreshDueFeeds`) after `comm
 
 Devotionals, lessons, podcasts, and the hub (`/media`) live in the `(teaching)` route group: visitors see only public content with a sign-in note, members get the app shell. Reading, music, gallery, and saved are members-only (`(member)`). All of them, and `/api/media`, are `private, no-store` (proxy and `next.config.ts`); the service worker caches none of them. `media_search` searches teaching, shows, external episodes, and (members) album titles only.
 
+### Imported devotional collections
+
+See [morning-evening.md](morning-evening.md). `media.collections` / `media.collection_readings` (month, day, morning/evening, no year; stable ids and source keys, unique per day and slot) sit beside `media.items`, so church devotionals, search, and notices are unaffected. `media.collection_visible` (enabled, published, audience; never public) is applied by every member function, cover image, and journal link. Content is brought in only by the admin import (staging, then one all-or-nothing apply that never overwrites an editor's correction), never by a migration. Journal entries link with kind `collection_reading` plus the date read.
+
 ## Bible reading plans, scripture reader, and journals (Phase 8)
 
 Guides: [bible-sources.md](bible-sources.md) (translations, sources, imports, PDFs), [reading-plan-guide.md](reading-plan-guide.md) (administration, CSV import, versioning policy), [bible-reading-guide.md](bible-reading-guide.md) (members), [journal-privacy.md](journal-privacy.md) (privacy, export, retention).
