@@ -55,7 +55,10 @@ export async function saveLibraryPrayerAction(_prev: FormState, formData: FormDa
     sourceUrl: String(formData.get("sourceUrl") ?? ""),
     scripture: String(formData.get("scripture") ?? ""),
     categories: categories.join(","),
+    collection: String(formData.get("collection") ?? ""),
   };
+  const publish = formData.get("intent") === "publish";
+  const collection = uuid.safeParse(values.collection).data ?? null;
   const fieldErrors: Record<string, string[]> = {};
   const parsed = prayerSchema.safeParse(values);
   if (!parsed.success) for (const i of parsed.error.issues) (fieldErrors[String(i.path[0])] ??= []).push(i.message);
@@ -69,9 +72,10 @@ export async function saveLibraryPrayerAction(_prev: FormState, formData: FormDa
   }
   const { refs, invalid } = parseReferenceList(values.scripture);
   if (invalid.length) fieldErrors.scripture = [`Not recognized: ${invalid.slice(0, 3).join("; ")}. Use references such as “Psalm 23” or “John 3:16–18”, one per line.`];
+  // Drafts may stay unassigned; publishing files the prayer in one collection.
+  if (publish && !collection) fieldErrors.collection = ["Choose a collection before publishing. Pick General prayers if none fits."];
   if (!parsed.success || Object.keys(fieldErrors).length) return errorState("Please correct the highlighted fields.", { fieldErrors, values });
 
-  const publish = formData.get("intent") === "publish";
   const supabase = await createClient();
   if (!supabase) return errorState(UNAVAILABLE, { values });
   const { data, error } = await supabase.rpc("prayer_library_save", {
@@ -85,6 +89,7 @@ export async function saveLibraryPrayerAction(_prev: FormState, formData: FormDa
     p_categories: categories,
     p_publish: publish,
     p_client_key: uuid.safeParse(formData.get("clientKey")).data ?? null,
+    p_collection: collection,
   });
   if (error) return errorState(dbErrorMessage(error, "The prayer couldn't be saved. Your text is still here; please try again."), { values });
   refresh(String(data));
@@ -142,13 +147,15 @@ export type LibraryFilters = { topic: string | null; purpose: string | null; use
 /**
  * Search runs as a POST, like prayer request search, so search words never
  * appear in URLs, history, or request logs. It goes through the same
- * access-checked list function, combined with the current filters.
+ * access-checked list function, combined with the current filters and, on a
+ * collection page, that collection (null searches every prayer).
  */
 export async function librarySearchAction(
   query: string,
   view: string,
   filters: LibraryFilters,
   cursor: { before: string; beforeId: string } | null,
+  collection: string | null = null,
 ): Promise<LibraryPage | { error: string }> {
   await requireApprovedMember("/prayer/library");
   const q = query.trim().slice(0, 100);
@@ -164,6 +171,7 @@ export async function librarySearchAction(
     p_before: cursor?.before ?? null,
     p_before_id: cursor?.beforeId ?? null,
     p_limit: 20,
+    p_collection: id(collection),
   });
   if (error) return { error: dbErrorMessage(error, "Search isn't available right now.") };
   return data as LibraryPage;

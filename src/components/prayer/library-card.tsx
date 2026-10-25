@@ -1,11 +1,11 @@
 "use client";
 
-import { Archive, Bookmark, BookmarkCheck, EyeOff, FilePen } from "lucide-react";
+import { Archive, Bookmark, BookmarkCheck, EyeOff, FilePen, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { libraryBookmarkAction } from "@/app/(app)/(member)/prayer/library/actions";
 import { cn } from "@/components/ui/cn";
-import type { Category, LibraryCard as Card } from "@/lib/prayer/library";
+import { libraryExcerpt, prayerHref, type Category, type LibraryCard as Card } from "@/lib/prayer/library";
 import { formatDate } from "@/lib/time";
 
 /** Private save/bookmark toggle. Only the member who saves a prayer ever sees that they did. */
@@ -67,8 +67,12 @@ export function CategoryLabels({ categories, kinds = ["topic", "purpose"], class
   );
 }
 
-/** One library prayer in a list: title, excerpt, labels, who shared it and when, and a private save. */
-export function LibraryCard({ card, tz }: { card: Card; tz: string }) {
+/**
+ * One library prayer in a list: title, a plain-text excerpt, labels, its
+ * collection, who shared it and when, and a private save. Opened from a
+ * collection page (`fromCollection`), the prayer's back link returns there.
+ */
+export function LibraryCard({ card, tz, fromCollection }: { card: Card; tz: string; fromCollection?: string | null }) {
   const visible = card.status === "published" && !card.hidden;
   const when = card.published_at ?? card.updated_at;
   return (
@@ -94,12 +98,21 @@ export function LibraryCard({ card, tz }: { card: Card; tz: string }) {
       ) : null}
       <h3 id={`lib-${card.id}`} className="font-display text-[1.1875rem] font-semibold leading-snug text-text">
         {/* The whole card opens the prayer; the save button sits above the link. */}
-        <Link href={`/prayer/library/${card.id}`} className="outline-none after:absolute after:inset-0 after:rounded-card focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-primary">
+        <Link href={prayerHref(card.id, fromCollection)} className="outline-none after:absolute after:inset-0 after:rounded-card focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-primary">
           {card.title}
         </Link>
       </h3>
-      <p className="line-clamp-3 text-meta text-text-secondary">{card.excerpt}</p>
+      <p className="line-clamp-3 text-meta text-text-secondary">{libraryExcerpt(card.excerpt)}</p>
       <CategoryLabels categories={card.categories} />
+      {card.collection && !fromCollection ? (
+        <p className="flex min-w-0 items-center gap-1.5 text-meta text-text-secondary">
+          <FolderOpen className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span className="min-w-0 truncate">
+            <span className="sr-only">Collection: </span>
+            {card.collection.name}
+          </span>
+        </p>
+      ) : null}
       <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
         <p className="min-w-0 text-meta text-text-secondary">
           <span className="block">

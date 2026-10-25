@@ -55,6 +55,8 @@ test("a member drafts, previews, and publishes a prayer from the Prayer page", a
   await tabs.getByRole("link", { name: "Prayer Library" }).click();
   await expect(page).toHaveURL(/\/prayer\/library$/);
   await expect(tabs.getByRole("link", { name: "Prayer Library" })).toHaveAttribute("aria-current", "page");
+  // Collections is the library's first view.
+  await expect(page.getByRole("navigation", { name: "Library views" }).getByRole("link", { name: "Collections" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("searchbox", { name: "Search the Prayer Library" })).toBeVisible();
   await shot(page, "library-empty-or-list");
 
@@ -82,6 +84,10 @@ test("a member drafts, previews, and publishes a prayer from the Prayer page", a
 
   await page.getByRole("link", { name: "Edit" }).click();
   await page.getByRole("textbox", { name: "Prayer" }).fill("Bless this food, **Lord**, and the hands that made it. Amen.");
+  // Publishing needs a collection (a draft didn't).
+  await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByText(/Choose a collection before publishing/)).toBeVisible();
+  await page.getByRole("radio", { name: /^General prayers/ }).check();
   await page.getByRole("button", { name: "Publish" }).click();
   await expect(page.getByText("Your prayer is published in the library.")).toBeVisible();
   await expect(page.getByText("By Traditional table grace")).toBeVisible();
@@ -91,7 +97,7 @@ test("a member drafts, previews, and publishes a prayer from the Prayer page", a
 
 test("another member finds it by search and combined filters, saves it privately, and copies it with attribution", async ({ browser }) => {
   const page = await as(browser, READER);
-  await page.goto("/prayer/library");
+  await page.goto("/prayer/library?view=library");
   const card = page.getByRole("article", { name: TITLE });
   await expect(card).toBeVisible();
 
@@ -110,7 +116,7 @@ test("another member finds it by search and combined filters, saves it privately
   await expect(page.getByRole("article", { name: TITLE })).toHaveCount(0);
   await expect(page.locator("#main").getByText("No prayers match these filters")).toBeVisible();
   await page.locator("#main").getByRole("link", { name: "Reset filters" }).first().click();
-  await expect(page).toHaveURL(/\/prayer\/library$/);
+  await expect(page).toHaveURL(/\/prayer\/library\?view=library$/);
 
   // Keyboard-only search (POST: the words stay out of the address bar).
   const search = page.getByRole("searchbox", { name: "Search the Prayer Library" });

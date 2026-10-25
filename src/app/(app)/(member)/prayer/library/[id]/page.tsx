@@ -1,5 +1,6 @@
-import { Archive, BookOpen, ExternalLink, EyeOff, FilePen, Pencil, UserRound } from "lucide-react";
+import { Archive, BookOpen, ExternalLink, EyeOff, FilePen, FolderOpen, Pencil, UserRound } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommunityText } from "@/components/community/community-text";
 import { BookmarkButton, CategoryLabels } from "@/components/prayer/library-card";
@@ -12,7 +13,7 @@ import { requireApprovedMember } from "@/lib/auth/viewer";
 import { exactTime } from "@/lib/community/format";
 import { tryCommunityRpc } from "@/lib/community/queries";
 import { classifyHref } from "@/lib/links/policy";
-import { copyText, KIND_PLURAL, type LibraryPrayer } from "@/lib/prayer/library";
+import { collectionHref, copyText, KIND_PLURAL, returnCollection, type LibraryPrayer } from "@/lib/prayer/library";
 import { getChurchSettings } from "@/lib/settings/queries";
 import { formatDate } from "@/lib/time";
 
@@ -39,14 +40,32 @@ export default async function LibraryPrayerPage({ params, searchParams }: PagePr
   const saved = typeof sp.saved === "string" ? SAVED[sp.saved] : undefined;
   const visible = p.status === "published" && !p.hidden;
   const sourceLink = p.source_url && classifyHref(p.source_url)?.kind === "web" ? p.source_url : null;
+  // Opened from its collection: "Back to <collection>"; otherwise back to the Prayer Library.
+  const from = visible ? returnCollection(sp.from, p.collection) : null;
 
   return (
     <>
-      <BackLink route="/prayer/library/[id]" />
+      <BackLink route="/prayer/library/[id]" params={{ collection: from?.id }} label={from?.name} />
       {saved ? <Alert tone="success" title={saved} className="mb-4" /> : null}
 
       <article aria-labelledby="prayer-title" className="max-w-3xl space-y-5">
         <header className="space-y-2">
+          {p.collection ? (
+            <p className="flex min-w-0 items-center gap-1.5 text-meta font-semibold text-text-secondary">
+              <FolderOpen className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="sr-only">Collection: </span>
+              {/* A published prayer's collection is always one members can open. */}
+              {visible ? (
+                <Link href={collectionHref(p.collection.id)} className="min-w-0 truncate text-primary hover:underline">
+                  {p.collection.name}
+                </Link>
+              ) : (
+                <span className="min-w-0 truncate">{p.collection.name}</span>
+              )}
+            </p>
+          ) : p.mine && p.status === "draft" ? (
+            <p className="text-meta text-text-secondary">No collection chosen yet. Choose one when you edit it to publish.</p>
+          ) : null}
           <CategoryLabels categories={p.categories} />
           <h1 id="prayer-title" className="font-display text-[1.75rem] font-semibold leading-tight sm:text-[2rem]">
             {p.title}
