@@ -47,9 +47,10 @@ export function Alert({
   const t = tones[tone];
   const role = live ? (tone === "error" ? "alert" : "status") : undefined;
   return (
-    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex gap-3 rounded-tile border px-4 py-3", t.box, className)}>
+    <div id={id} tabIndex={tabIndex} role={role} className={cn("flex flex-wrap gap-3 rounded-tile border px-4 py-3", t.box, className)}>
       <span className="mt-0.5 shrink-0">{t.icon}</span>
-      <div className="min-w-0 space-y-1">
+      {/* Drops below the icon only when there's no room beside it (large text on a narrow phone). */}
+      <div className="min-w-[min(100%,9rem)] flex-1 space-y-1">
         {title ? (
           <p className="font-semibold">
             <span className="sr-only">{t.label}: </span>

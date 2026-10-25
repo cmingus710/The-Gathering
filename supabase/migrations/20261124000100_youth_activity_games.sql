@@ -1,46 +1,3 @@
--- Learn & Play games · Apply migration 20261123000100_youth_activity_games
--- to the hosted project.
---
--- Run once in the SQL editor of The Gathering project, ONLY after the owner
--- approves applying it (docs/migration-history.md, "Learn & Play games"):
---   https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
---
--- Adds the Put the Story in Order and Bible Match players' database side:
--- new internal helpers in the private youth schema (executable by no API
--- role), and same-signature replacements of youth.activity_content,
--- youth.activity_detail, youth.version_json, youth.activity_object_readable,
--- public.youth_admin_activity, public.youth_admin_activity_status,
--- public.youth_admin_activity_asset_remove, and
--- public.youth_activity_progress_save (grants on replaced functions are
--- unchanged). No table, row, storage policy, or grant is added or changed.
---
--- It copies supabase/migrations/20261123000100_youth_activity_games.sql
--- verbatim and records it under its repository version (created_by =
--- youth-activity-games). All or nothing: one transaction; out of order or a
--- second run stops at the preflight with "Nothing was changed".
--- It needs the Learn & Play activities step (20261118000200).
-begin;
-
-do $preflight$
-begin
-  if to_regclass('youth.activities') is null or to_regclass('youth.activity_versions') is null
-     or to_regprocedure('youth.activity_content(uuid, jsonb)') is null
-     or to_regprocedure('public.youth_activity_progress_save(uuid, uuid, uuid, jsonb)') is null then
-    raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
-  end if;
-  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261118000200') then
-    raise exception 'Nothing was changed: the Learn & Play activities step (20261118000200) is not recorded. Run the steps in order.';
-  end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261123000100')
-     or to_regprocedure('youth.game_config_issues(youth.activity_versions)') is not null then
-    raise exception 'Nothing was changed: 20261123000100 is already applied.';
-  end if;
-end
-$preflight$;
-
--- =========================================================================
--- 20261123000100_youth_activity_games.sql
--- =========================================================================
 -- Youth & Families · Learn & Play: the first two activity players.
 --
 -- What this adds
@@ -81,6 +38,13 @@ $preflight$;
 --   for its cover); artwork used by a published or retired version is kept;
 --   artwork used by the draft can't be removed until the draft stops using it.
 --
+-- Builds on the Bible Coloring Studio (20261123000100): the functions it
+-- replaced and this migration replaces again (activity_content,
+-- youth_admin_activity, youth_admin_activity_asset_remove,
+-- activity_object_readable) keep its coloring rules, its 256 KB config
+-- limit, and its line-art handling. A coloring picture's line art counts as
+-- a picture the version uses (config_asset_ids), like a game's.
+--
 -- Progress
 --   Unchanged table and checks. One change to saving: once a child has
 --   completed a version it stays completed when they replay it, unless the
@@ -112,7 +76,8 @@ as $$
               when jsonb_typeof(p) = 'object' and jsonb_typeof(p -> 'art') = 'string' then 'art:' || (p ->> 'art') end;
 $$;
 
--- Every uploaded asset a game configuration refers to.
+-- Every uploaded asset a version's configuration refers to: a game's
+-- pictures and a freehand coloring picture's line art (20261123000100).
 create function youth.config_asset_ids(p jsonb)
 returns uuid[]
 language sql
@@ -127,7 +92,9 @@ as $$
             from jsonb_array_elements(case when jsonb_typeof(p -> 'pairs') = 'array' then p -> 'pairs' else '[]'::jsonb end) q
           union all
           select q #>> '{b,image,asset}'
-            from jsonb_array_elements(case when jsonb_typeof(p -> 'pairs') = 'array' then p -> 'pairs' else '[]'::jsonb end) q) t
+            from jsonb_array_elements(case when jsonb_typeof(p -> 'pairs') = 'array' then p -> 'pairs' else '[]'::jsonb end) q
+          union all
+          select p #>> '{coloring,line_art_asset_id}') t
    where t.x ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 $$;
 
@@ -426,7 +393,7 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Content: game configurations are checked when the draft is saved
--- (otherwise as in 20261118000200)
+-- (otherwise as in 20261123000100, which added the coloring picture rules)
 -- ---------------------------------------------------------------------------
 create or replace function youth.activity_content(p_activity uuid, p jsonb)
 returns jsonb
@@ -498,12 +465,22 @@ begin
   if v_cover is not null and not exists (select 1 from youth.activity_assets x where x.id = v_cover and x.activity_id = p_activity and x.status = 'active') then
     raise exception 'Choose artwork uploaded for this activity.' using errcode = '22023';
   end if;
-  if jsonb_typeof(v_config) <> 'object' or pg_column_size(v_config) > 65536 then
+  if jsonb_typeof(v_config) <> 'object' or pg_column_size(v_config) > 262144 then
     raise exception 'The activity settings are too large.' using errcode = '22023';
   end if;
-  v_problem := youth.activity_json_problem(v_config);
+  -- The coloring picture has its own, stricter rules; every other key is data-only.
+  v_problem := youth.activity_json_problem(v_config - 'coloring');
   if v_problem is not null then
     raise exception 'The activity settings %.', v_problem using errcode = '22023';
+  end if;
+  if v_config ? 'coloring' then
+    if v_out ->> 'kind' <> 'drawing' then
+      raise exception 'This activity has a coloring picture, so its type must stay Drawing & coloring. Remove the picture first to change the type.' using errcode = '22023';
+    end if;
+    v_problem := youth.coloring_template_problem(v_config -> 'coloring', p_activity);
+    if v_problem is not null then
+      raise exception 'The coloring picture %.', v_problem using errcode = '22023';
+    end if;
   end if;
   v_problem := youth.game_config_problem(p_activity, v_out ->> 'kind', v_config);
   if v_problem is not null then
@@ -546,7 +523,8 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- Administration: locked artwork includes game pictures (otherwise as before)
+-- Administration: locked artwork includes game pictures and coloring line art
+-- (config_asset_ids; otherwise as before)
 -- ---------------------------------------------------------------------------
 create or replace function public.youth_admin_activity(p_id uuid)
 returns jsonb
@@ -606,6 +584,11 @@ begin
   end if;
   if youth.asset_locked(x.id) then
     raise exception 'This artwork is part of a published version, so it''s kept.' using errcode = '22023';
+  end if;
+  if exists (select 1 from youth.activity_versions v
+              where v.activity_id = x.activity_id and v.state in ('draft', 'preview')
+                and (v.config -> 'coloring' ->> 'line_art_asset_id') = x.id::text) then
+    raise exception 'The draft''s coloring picture uses this artwork. Remove the coloring picture first.' using errcode = '22023';
   end if;
   if exists (select 1 from youth.activity_versions v
               where v.activity_id = x.activity_id and v.state in ('draft', 'preview') and x.id = any (youth.config_asset_ids(v.config))) then
@@ -793,6 +776,7 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Storage: members read the pictures of the published version's game too
+-- (and its coloring line art, through config_asset_ids, as in 20261123000100)
 -- ---------------------------------------------------------------------------
 create or replace function youth.activity_object_readable(p_name text, p_profile uuid)
 returns boolean
@@ -820,33 +804,3 @@ revoke execute on function
   youth.game_text_problem(jsonb, integer, text), youth.game_image_problem(uuid, jsonb, text), youth.game_id_problem(jsonb, text[], text),
   youth.game_card_problem(uuid, jsonb, text), youth.game_config_problem(uuid, text, jsonb), youth.game_config_issues(youth.activity_versions)
   from public, anon, authenticated, service_role;
-
--- Expected afterwards: the helpers exist and no API role can run them; the
--- member and editor functions are still granted to authenticated only.
-do $check$
-begin
-  if to_regprocedure('youth.game_config_problem(uuid, text, jsonb)') is null
-     or to_regprocedure('youth.game_config_issues(youth.activity_versions)') is null
-     or to_regprocedure('youth.config_asset_ids(jsonb)') is null then
-    raise exception 'Nothing was changed: the game helpers are missing. Send this message to the developer.';
-  end if;
-  if has_function_privilege('authenticated', 'youth.game_config_problem(uuid, text, jsonb)', 'execute')
-     or has_function_privilege('authenticated', 'youth.game_config_issues(youth.activity_versions)', 'execute')
-     or has_function_privilege('service_role', 'youth.asset_locked(uuid)', 'execute')
-     or has_function_privilege('anon', 'public.youth_activity_progress_save(uuid, uuid, uuid, jsonb)', 'execute')
-     or not has_function_privilege('authenticated', 'public.youth_activity_progress_save(uuid, uuid, uuid, jsonb)', 'execute')
-     or not has_function_privilege('authenticated', 'public.youth_admin_activity_status(uuid, text, text)', 'execute')
-     or not has_function_privilege('authenticated', 'public.youth_admin_activity(uuid)', 'execute') then
-    raise exception 'Nothing was changed: function grants are not as expected. Send this message to the developer.';
-  end if;
-  -- Every activity saved so far has no game, so nothing published changes meaning.
-  if exists (select 1 from youth.activity_versions v where v.config ? 'player') then
-    raise notice 'Note: % version(s) already carry config.player.', (select count(*) from youth.activity_versions v where v.config ? 'player');
-  end if;
-end
-$check$;
-
-insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261123000100', 'youth_activity_games', 'youth-activity-games');
-
-commit;

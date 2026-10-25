@@ -64,7 +64,10 @@ async function contentFrom(fd: FormData): Promise<Record<string, unknown> | stri
   const until = when("available_until");
   if (!from.ok || !until.ok) return "Enter the availability dates in full.";
   // The game editor's fields arrive as one value; it is reshaped here and checked again in the database.
+  // Without the game editor (any other type), config isn't sent, so the database keeps the stored one
+  // (for example a coloring picture, set from its own section).
   let config: Record<string, unknown> = {};
+  const hasGameField = fd.has("game_config");
   const rawGame = str(fd, "game_config");
   if (rawGame) {
     let parsed: unknown;
@@ -97,7 +100,7 @@ async function contentFrom(fd: FormData): Promise<Record<string, unknown> | stri
     change_note: plainText(str(fd, "change_note"), 300),
     available_from: from.value,
     available_until: until.value,
-    config,
+    ...(hasGameField ? { config } : {}),
   };
 }
 

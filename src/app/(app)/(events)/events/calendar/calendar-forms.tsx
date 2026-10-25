@@ -52,10 +52,10 @@ export function FeedControls({ active, siteUrl }: { active: boolean; siteUrl: st
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <form action={formAction}>
+        <form action={formAction} className="min-w-0 max-w-full">
           <input type="hidden" name="op" value="rotate" />
           <SubmitButton variant={active ? "secondary" : "primary"} pendingText="Creating…" icon={active ? <RefreshCw className="size-4" aria-hidden="true" /> : <KeyRound className="size-4" aria-hidden="true" />}>
-            {active ? "Create a new link" : "Create my calendar link"}
+            <span className="min-w-0">{active ? "Create a new link" : "Create my calendar link"}</span>
           </SubmitButton>
         </form>
         {active || token ? (

@@ -7,7 +7,7 @@ export type { MenuArtName };
 /**
  * The home launcher: one entry per member section, shown as a dimensional
  * tile. Adding a module means adding an entry here; the layout (grid,
- * scrolling, columns) adapts on its own.
+ * columns, collapsing past three rows) adapts on its own.
  *
  * - `art` names the supplied artwork (assets/menu/icon-manifest.json); when
  *   a file is missing the tile falls back to the original `glyph`.

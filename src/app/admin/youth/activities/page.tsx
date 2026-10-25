@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { DemoActivitiesForm } from "@/components/youth/activity-editor";
 import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
+import { DemoDraftsButton } from "@/components/youth/coloring/editor";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
 import { requireCapability } from "@/lib/auth/viewer";
 import { ACTIVITY_STATUS, difficultyLabel, kindLabel } from "@/lib/youth/activities";
@@ -108,6 +109,14 @@ export default async function ActivitiesAdminPage({ searchParams }: PageProps<"/
             skipped.
           </p>
           <DemoActivitiesForm />
+        </section>
+      )}
+      {failed ? null : (
+        <section aria-labelledby="coloring-demos" className="mt-4 max-w-2xl space-y-2 rounded-card border border-border p-4 sm:p-5">
+          <h2 id="coloring-demos" className="font-semibold">
+            Demonstration coloring pictures
+          </h2>
+          <DemoDraftsButton />
         </section>
       )}
     </>

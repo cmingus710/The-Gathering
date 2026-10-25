@@ -307,7 +307,7 @@ export function MentionNotifyForm({ groupId, value }: { groupId: string; value: 
         {MENTION_OPTIONS.map((o) => (
           <label key={o.value} className="flex cursor-pointer items-start gap-3 rounded-tile border border-border bg-surface px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
             <input type="radio" name="mentionNotify" value={o.value} defaultChecked={value === o.value} className="mt-1 size-5 shrink-0 accent-primary" />
-            <span>
+            <span className="min-w-0">
               <span className="block font-semibold">{o.label}</span>
               <span className="block text-meta text-text-secondary">{o.hint}</span>
             </span>

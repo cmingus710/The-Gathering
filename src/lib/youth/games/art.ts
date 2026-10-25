@@ -2,7 +2,7 @@
  * The built-in illustration library for Learn & Play games: original line
  * drawings shipped with the app (src/components/youth/games/game-art.tsx), so
  * staff can build a game without uploading anything. The keys are checked in
- * the database too (youth.game_art_keys(), 20261123000100); a unit test
+ * the database too (youth.game_art_keys(), 20261124000100); a unit test
  * keeps the two lists the same.
  */
 export const GAME_ART = [

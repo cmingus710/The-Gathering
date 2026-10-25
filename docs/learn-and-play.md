@@ -1,8 +1,8 @@
 # Learn & Play (Youth & Families)
 
-The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. Two interactive games are built on it: **Put the Story in Order** and **Bible Match** (see "Games" below). Other activity types still use "Mark finished".
+The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. Three interactive players are built on it: **Put the Story in Order** and **Bible Match** (see "Games" below), and the **Bible Coloring Studio** for *Drawing & coloring* activities ([bible-coloring-studio.md](bible-coloring-studio.md)). Other activity types still use "Mark finished".
 
-Games: migration `20261123000100_youth_activity_games` (operator script `supabase/manual/2026-11-23-apply-youth-activity-games.sql`, **not applied to hosted**). Tests: `tests/db/youth-activity-games.test.ts`, `src/lib/youth/games/games.test.ts`.
+Games: migration `20261124000100_youth_activity_games` (operator script `supabase/manual/2026-11-24-apply-youth-activity-games.sql`, **not applied to hosted**). Tests: `tests/db/youth-activity-games.test.ts`, `src/lib/youth/games/games.test.ts`.
 
 Foundation: migration `20261118000200_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, objects applied to hosted 2026-10-24; history row recorded 2026-10-24 by `supabase/manual/2026-11-18-record-youth-activities.sql`). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
 
@@ -21,7 +21,7 @@ Independent youth accounts see Learn & Play and This Week's Lesson first, then t
 - Ages are shown as guidance only ("Suggested for ages 4–7 (a suggestion, not a rule)"); nobody is refused because of age.
 - Older-youth activities (suggested from age 11) and everything a youth account sees use a calmer style: a charcoal band with gold line art, the serif title, square-ish corners, and no playful lift.
 - Without an uploaded cover, a card shows an original line illustration for its type (drawn in `src/components/youth/activity-art.tsx`, decorative, hidden from screen readers).
-- Activities with a game (below) show it on the page; the rest offer **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown.
+- Activities with a game (below) show it on the page, and *Drawing & coloring* activities with a coloring picture show the Bible Coloring Studio; the rest offer **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown.
 
 Empty states: "Activities will appear here when they're published"; adults with no child they may play for are told why (verification, or the *Practice with the child* permission, or the child has their own account).
 
@@ -165,7 +165,7 @@ No new environment variables, buckets, or scheduled jobs are needed.
 
 ## Limits
 
-- Only Puzzle (Put the Story in Order) and Matching (Bible Match) have players; the other types offer "Mark finished".
-- Members see the cover and the pictures the published version's game uses; other uploaded artwork stays editor-only.
+- Only Puzzle (Put the Story in Order), Matching (Bible Match), and Drawing & coloring (the Bible Coloring Studio, which keeps its picture in `config.coloring` and each child's artwork in its own table) have players; the other types offer "Mark finished".
+- Members see the cover, the pictures the published version's game uses, and a freehand coloring picture's line art; other uploaded artwork stays editor-only.
 - The demonstration drafts' wording was written for the church and cites Scripture, but it has not been reviewed by church staff; review it before publishing.
 - Progress on a retired version is kept but can't be continued.

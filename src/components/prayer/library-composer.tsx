@@ -182,8 +182,8 @@ export function LibraryComposer({ categories, initial, contributor, postingRestr
           <legend className="mb-1 font-semibold">Who wrote it?</legend>
           {(["original", "shared"] as Origin[]).map((o) => (
             <label key={o} className={cn("flex cursor-pointer items-start gap-3 rounded-tile border px-4 py-3", origin === o ? "border-primary bg-primary-soft" : "border-border bg-surface")}>
-              <input type="radio" name="origin" value={o} checked={origin === o} onChange={() => setOrigin(o)} className="mt-1 size-5 accent-primary" />
-              <span>
+              <input type="radio" name="origin" value={o} checked={origin === o} onChange={() => setOrigin(o)} className="mt-1 size-5 shrink-0 accent-primary" />
+              <span className="min-w-0">
                 <span className="block font-semibold">{ORIGIN_LABEL[o]}</span>
                 <span className="block text-meta text-text-secondary">
                   {o === "original" ? "You wrote it. You'll be shown as its author." : "Written by someone else. Name them or the source; you'll be shown as the member who shared it."}

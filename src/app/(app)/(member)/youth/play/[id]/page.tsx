@@ -7,12 +7,15 @@ import { Card, SectionHeading } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { ActivityConnection, ActivityDescription, ActivityHero } from "@/components/youth/activity-detail";
 import { ActivityProgressControl } from "@/components/youth/activity-progress";
+import { ColoringSection } from "@/components/youth/coloring/section";
+import { ColoringStudio } from "@/components/youth/coloring/studio";
 import { GamePlayer } from "@/components/youth/games/game-player";
 import { requireYouthArea } from "@/lib/auth/viewer";
 import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { isOlderYouth, type ActivityDetail, type ActivityProgress, type Player } from "@/lib/youth/activities";
 import { signActivityArt, signGameMedia } from "@/lib/youth/activity-art";
+import { checkDoc, lineArtPath, templateFromConfig } from "@/lib/youth/coloring";
 import { GAME_NAMES, parseGameConfig } from "@/lib/youth/games/config";
 import { freshSeed } from "@/lib/youth/games/random";
 import { youthRead } from "@/lib/youth/queries";
@@ -28,6 +31,8 @@ type Page = ActivityDetail & {
   earlier: ActivityProgress[] | null;
 };
 
+type Artwork = { child_id: string; version_id: string; revision: number; doc: unknown; updated_at: string | null; earlier: boolean };
+
 export default async function ActivityPage({ params, searchParams }: PageProps<"/youth/play/[id]">) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
@@ -40,11 +45,17 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
   const { data: a } = await youthRead<Page>("youth_activity", { p_id: id, p_child: child });
   if (!a) return <Alert tone="error" title="This activity couldn't be loaded right now." />;
   const supabase = await requireClient();
-  const cover = a.cover_path ? (await signActivityArt(supabase, [a.cover_path])).get(a.cover_path) : null;
+  const coloring = a.kind === "drawing" ? templateFromConfig(a.config) : null;
+  const linePath = coloring ? lineArtPath(a.id, coloring) : null;
+  const signed = await signActivityArt(supabase, [a.cover_path, linePath]);
+  const cover = a.cover_path ? (signed.get(a.cover_path) ?? null) : null;
   const mature = youth || isOlderYouth(a.age_min);
   const player = a.child;
   const game = parseGameConfig(a.kind, a.config);
   const media = game ? await signGameMedia(supabase, a.media) : {};
+  // The chosen child's artwork, read through the same who-may-play checks as progress.
+  const artwork = coloring && player ? (await youthRead<Artwork>("youth_coloring_artwork", { p_activity: a.id, p_child: youth ? null : player.id })).data : null;
+  const artworkDoc = artwork ? checkDoc(artwork.doc, coloring) : null;
 
   return (
     <article className="layout-wide mx-auto max-w-5xl">
@@ -128,11 +139,48 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
           ) : (
             <Alert tone="info" title="Choose who's playing to save progress." />
           )}
-          {game ? null : (
+          {game || coloring ? null : (
             <p className="text-meta text-text-secondary">Do this activity together, then mark it finished.</p>
           )}
         </aside>
       </div>
+
+      {coloring ? (
+        <div className="mt-8">
+          <ColoringSection t={coloring} scriptureRefs={a.scripture_refs} bibleStory={a.bible_story}>
+            {player && artwork && (artwork.version_id !== a.version_id || !artworkDoc?.ok) ? (
+              // Published again between the two reads, or a picture this page can't show: never a blank studio that could save over it.
+              <Alert tone="error" title={artwork.version_id !== a.version_id ? "This activity was just updated. Reload the page to continue." : "This picture couldn't be opened. Nothing was changed."} />
+            ) : player && artwork && artworkDoc?.ok ? (
+              <>
+                <p className="text-meta text-text-secondary">
+                  {youth
+                    ? "Your picture is private to you and saves as you color. It isn't shared or posted anywhere."
+                    : `Coloring as ${player.display_name}. The picture is private to ${player.display_name} and their verified guardians, saves as you color, and isn't shared or posted anywhere.`}
+                  {artwork.earlier ? " A picture from before this activity was updated is kept with the earlier version." : ""}
+                </p>
+                <ColoringStudio
+                  key={`${player.id}:${a.version_id}`}
+                  activityId={a.id}
+                  versionId={a.version_id}
+                  title={a.title}
+                  template={coloring}
+                  accountId={viewer.id}
+                  child={youth ? null : player.id}
+                  childId={player.id}
+                  childName={youth ? "you" : player.display_name}
+                  initial={{ doc: artworkDoc.value, revision: artwork.revision, updatedAt: artwork.updated_at }}
+                  lineArtUrl={linePath ? (signed.get(linePath) ?? null) : null}
+                />
+              </>
+            ) : player ? (
+              <Alert tone="error" title="This picture couldn't be loaded right now." />
+            ) : (
+              <Alert tone="info" title="Choose who's coloring (under Who's playing) to start. Each child's picture is saved to them." />
+            )}
+          </ColoringSection>
+        </div>
+      ) : null}
     </article>
   );
 }

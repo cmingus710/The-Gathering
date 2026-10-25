@@ -215,8 +215,8 @@ export function RequestComposer({ action, groups, initial }: { action: Action; g
             const disabled = a === "group" && groups.length === 0;
             return (
               <label key={a} className={`flex cursor-pointer items-start gap-3 rounded-tile border px-4 py-3 ${audience === a ? "border-primary bg-primary-soft" : "border-border bg-surface"} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}>
-                <input type="radio" name="audience" value={a} checked={audience === a} disabled={disabled} onChange={() => setAudience(a)} className="mt-1 size-5 accent-primary" />
-                <span>
+                <input type="radio" name="audience" value={a} checked={audience === a} disabled={disabled} onChange={() => setAudience(a)} className="mt-1 size-5 shrink-0 accent-primary" />
+                <span className="min-w-0">
                   <span className="flex items-center gap-1.5 font-semibold">
                     {AUDIENCE_ICON[a]} {AUDIENCE_LABEL[a]}
                   </span>

@@ -77,12 +77,13 @@ export default async function MediaHubPage({ searchParams }: PageProps<"/media">
       {!viewer.member ? <div className="mb-6"><VisitorNote next="/media" /></div> : null}
 
       <nav aria-label="Sections" className="mb-8">
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,8.5rem),1fr))] gap-3 sm:grid-cols-3">
           {SECTIONS.filter((s) => viewer.member || !s.members).map((s) => (
             <li key={s.href}>
-              <Link href={s.href} className="interactive flex min-h-16 items-center gap-3 rounded-card border border-border bg-surface p-3 font-semibold hover:bg-surface-muted/60">
+              <Link href={s.href} className="interactive flex min-h-16 flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-3 font-semibold hover:bg-surface-muted/60">
                 <TileIcon name={s.glyph} className="size-10" />
-                {s.label}
+                {/* Moves below the icon only when it can't fit beside it (large text). */}
+                <span className="min-w-0 flex-1 basis-14">{s.label}</span>
               </Link>
             </li>
           ))}

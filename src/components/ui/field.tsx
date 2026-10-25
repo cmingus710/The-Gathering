@@ -37,7 +37,7 @@ function Chrome({
     <div className={cn("space-y-1.5", className)}>
       <label htmlFor={id} className="block font-semibold text-text">
         {label}
-        {optional ? <span className="ml-1.5 font-normal text-text-secondary">(optional)</span> : null}
+        {optional ? <><wbr /><span className="ml-1.5 font-normal text-text-secondary">(optional)</span></> : null}
       </label>
       {hint ? (
         <p id={`${id}-hint`} className="text-meta text-text-secondary">
@@ -183,7 +183,7 @@ export function CheckboxField({
         className="mt-1 size-5 shrink-0 cursor-pointer rounded border-border-strong accent-primary"
         {...input}
       />
-      <div>
+      <div className="min-w-0">
         <label htmlFor={fieldId} className="cursor-pointer font-semibold">
           {label}
         </label>

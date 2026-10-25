@@ -29,11 +29,13 @@ export default async function MessageSettingsPage() {
             <Card>
               <p className="flex items-start gap-2">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-                {settings.dm_eligible
-                  ? "Direct messaging is on for your account."
-                  : settings.messaging_restricted
-                    ? "A moderator has paused your direct messaging."
-                    : "Direct messaging isn't on for your account yet. A membership administrator turns it on for adult members."}
+                <span className="min-w-0">
+                  {settings.dm_eligible
+                    ? "Direct messaging is on for your account."
+                    : settings.messaging_restricted
+                      ? "A moderator has paused your direct messaging."
+                      : "Direct messaging isn't on for your account yet. A membership administrator turns it on for adult members."}
+                </span>
               </p>
             </Card>
           </section>

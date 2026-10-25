@@ -285,7 +285,7 @@ describe("game configuration", () => {
   });
 
   it("keeps the built-in pictures in step with the database", () => {
-    const sql = readFileSync(path.resolve(__dirname, "../../../../supabase/migrations/20261123000100_youth_activity_games.sql"), "utf8");
+    const sql = readFileSync(path.resolve(__dirname, "../../../../supabase/migrations/20261124000100_youth_activity_games.sql"), "utf8");
     const list = sql.match(/create function youth\.game_art_keys\(\)[\s\S]*?array\[([\s\S]*?)\]::text\[\]/)![1];
     expect([...list.matchAll(/'([a-z_]+)'/g)].map((m) => m[1])).toEqual(GAME_ART.map((a) => a.key));
   });

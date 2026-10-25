@@ -6,7 +6,7 @@ import { TEST_DATABASE_URL, TestDb, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Learn & Play games (20261123000100) against a real database: game
+ * Learn & Play games (20261124000100) against a real database: game
  * configuration checked on save (shape, identifiers, type, pictures from this
  * activity only, no markup) and on publish (complete content for the
  * difficulty), the demonstration drafts, game pictures readable only by

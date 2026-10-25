@@ -569,21 +569,41 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 
     Expected: one row (`journal_lesson_workbooks`, `journal-lesson-workbooks`); `not_imported = 0`, `association_mismatch = 0`, `duplicate_answers = 0`, `duplicate_notes = 0`, and `source_answers` / `source_notes` equal to the counts noted before running. Right after applying, `unchanged` equals their sum; later, `changed_since_import` and `deleted_since_import` grow as members edit and delete.
 
-## Learn & Play games (2026-11-23)
+## Bible Coloring Studio (2026-11-23)
 
-- **New (additive; no applied migration was edited):** `20261123000100_youth_activity_games`. The database side of the first two Learn & Play players, **Put the Story in Order** (type `puzzle`) and **Bible Match** (type `matching`), chosen per version by `config.player`. See `docs/learn-and-play.md`, "Games".
+- **New (additive; no applied migration was edited):** `20261123000100_youth_coloring`:
+  - new table `youth.coloring_artwork` (closed schema: RLS on, no policies, no client privileges): one row per child profile and activity version, with a revision for stale-save detection;
+  - new internal `youth.coloring_palette`, `youth.coloring_num`, `youth.coloring_int`, `youth.coloring_template_problem`, `youth.coloring_doc_problem`, `youth.coloring_child` (no API role can call them);
+  - new `public.youth_coloring_artwork(uuid, uuid)`, `public.youth_coloring_save(uuid, uuid, uuid, integer, jsonb)`, `public.youth_admin_activity_coloring_set(uuid, jsonb)` (authenticated only);
+  - the `activity_versions_config_check` limit rises from 64 KB to 256 KB (stored size);
+  - replaced with the same signatures and grants: `youth.activity_content` (coloring picture rules), `public.youth_admin_activity_save` (keeps config when the form sends none), `youth.activity_object_readable` (members may read published freehand line art), `public.youth_admin_activity_asset_remove` and `public.youth_admin_activity` (line art is locked like a cover).
+- **Operator script:** `supabase/manual/2026-11-23-apply-youth-coloring.sql`, one transaction. The preflight requires Learn & Play and `20261122000100` (My Journal lesson answers) and refuses a second run. It post-checks the grants (new entry points for authenticated only, no anon; internal helpers closed; replaced functions keep their grants; the table closed). History row `created_by = youth-coloring`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261123000100`. A rerun stopped at the preflight ("Nothing was changed: 20261123000100 is already applied.").
+- **Order: migration first, then the app.** Before the migration, `/youth/play/<id>` for a coloring activity can't load the artwork, and the editor's coloring section fails to save. (In practice the app merged first, cmingus710/The-Gathering#81; no hosted activity had a coloring picture, so nothing was affected in between.)
+- **Hosted:** **Applied and recorded (2026-10-25).** The owner ran `supabase/manual/2026-11-23-apply-youth-coloring.sql` in the SQL editor. That script is one transaction that records the version only after its post-checks pass (the grants, the closed table), so the row means the change is in place. **Checked (owner's SQL editor screenshot):** `20261123000100` recorded as `youth_coloring` (`created_by = youth-coloring`). Nothing left to do on hosted.
+    - The read-only check used:
+
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261123000100';
+      ```
+
+      Expected: one row (`youth_coloring`, `youth-coloring`).
+
+## Learn & Play games (2026-11-24)
+
+- **New (additive; no applied migration was edited):** `20261124000100_youth_activity_games` (first written as `20261123000100`; renumbered when the Bible Coloring Studio took that version on hosted). It replaces four functions the coloring migration also replaced (`youth.activity_content`, `public.youth_admin_activity`, `public.youth_admin_activity_asset_remove`, `youth.activity_object_readable`); each keeps the coloring rules (picture checks, the 256 KB config limit, line art locked, used-by-draft, and readable by members), and `youth.config_asset_ids` also returns a coloring picture's line art. The database side of the first two Learn & Play players, **Put the Story in Order** (type `puzzle`) and **Bible Match** (type `matching`), chosen per version by `config.player`. See `docs/learn-and-play.md`, "Games".
   - New internal helpers in `youth`, executable by no API role: `game_art_keys`, `game_image_key`, `config_asset_ids`, `asset_locked`, `game_text_problem`, `game_image_problem`, `game_id_problem`, `game_card_problem`, `game_config_problem` (shape, identifiers, type, pictures from this activity only; raised on save), `game_config_issues` (completeness for the difficulty; refused on publish and listed in the editor).
   - Same-signature replacements (grants unchanged): `youth.activity_content` (also runs `game_config_problem`), `youth.activity_detail` (adds `media`: the uploaded pictures a game uses), `youth.version_json` (adds `issues`), `youth.activity_object_readable` (members also read pictures the published version's game uses), `youth_admin_activity` (assets get `in_draft`; `locked` counts game pictures), `youth_admin_activity_asset_remove` (keeps game pictures of published versions and of the draft), `youth_admin_activity_status` (publish needs no issues), `youth_activity_progress_save` (a completed version stays completed on replay unless the save sends `reset: true`).
   - **Behavior change to note:** before, saving with `completed: false` always un-finished a version. Now only `reset: true` does; the app's "Mark not finished" sends it, so that control behaves as before.
   - No table, column, row, storage policy, or grant is added or changed. No existing version has `config.player`, so nothing already published changes.
-- **Operator script:** `supabase/manual/2026-11-23-apply-youth-activity-games.sql`, one transaction. The preflight requires `20261118000200` and refuses a second run. It copies the migration verbatim, checks the helpers and grants, and records the version (`created_by = youth-activity-games`).
+- **Operator script:** `supabase/manual/2026-11-24-apply-youth-activity-games.sql`, one transaction. The preflight requires `20261118000200` and the coloring step `20261123000100`, and refuses a second run. A post-check confirms `youth.activity_content` still runs both the coloring and game checks. It copies the migration verbatim, checks the helpers and grants, and records the version (`created_by = youth-activity-games`).
 - **Tests:** `tests/db/youth-activity-games.test.ts` (13 tests); `tests/db/youth-activities.test.ts` passes unchanged.
-- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for each, the script applied and recorded `20261123000100`; a rerun stopped at the preflight ("already applied").
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for each, the script applied and recorded `20261124000100`; a rerun stopped at the preflight ("already applied").
 - **Order: apply before deploying the app change.** If the app went out first, drafts with games would save (the old checks only see data-only JSON), but nothing would stop an incomplete game from being published, and members couldn't see uploaded game pictures (no `media`, and storage would refuse them); built-in pictures would still show. If the step is applied first, the currently deployed app keeps working: it never sends `config.player`. The one visible difference until the app deploys: its "Mark not finished" sends `completed: false` without `reset`, which now leaves a finished version finished.
 - **Hosted:** **Not applied.** Waiting for owner approval. After applying, check (read-only):
 
   ```sql
-  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261123000100';
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261124000100';
   select to_regprocedure('youth.game_config_issues(youth.activity_versions)') is not null as helpers,
          has_function_privilege('authenticated', 'youth.game_config_problem(uuid, text, jsonb)', 'execute') as client_can_run_helper;
   ```

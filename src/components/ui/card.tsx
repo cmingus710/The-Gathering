@@ -144,13 +144,14 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-4 rounded-card border border-dashed border-border px-4 py-4 sm:px-5", className)}>
+    // Wraps so the text drops below the illustration when there's no room beside it (large text on a narrow phone).
+    <div className={cn("flex flex-wrap items-center gap-4 rounded-card border border-dashed border-border px-4 py-4 sm:px-5", className)}>
       {glyph ? (
         <SpotIcon name={glyph} className="size-12" />
       ) : icon ? (
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text-secondary">{icon}</span>
       ) : null}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[min(100%,9rem)] flex-1">
         <p className="font-semibold text-text">{title}</p>
         {children ? <div className="text-meta text-text-secondary">{children}</div> : null}
         {action ? <div className="mt-2.5 flex flex-wrap gap-2">{action}</div> : null}
