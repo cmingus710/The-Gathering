@@ -9,8 +9,10 @@ import type { LibraryMeta } from "@/lib/prayer/library";
 
 export const metadata: Metadata = { title: "Add a prayer" };
 
-export default async function NewLibraryPrayerPage() {
+export default async function NewLibraryPrayerPage({ searchParams }: PageProps<"/prayer/library/new">) {
   const viewer = await requireApprovedMember("/prayer/library/new");
+  // Added from a collection page: that collection starts chosen (if it is still active).
+  const from = (await searchParams).collection;
   const meta = await tryCommunityRpc<LibraryMeta>("prayer_library_meta");
   return (
     <>
@@ -19,7 +21,13 @@ export default async function NewLibraryPrayerPage() {
       {!meta ? (
         <Alert tone="error" title="The Prayer Library is unavailable right now." />
       ) : (
-        <LibraryComposer categories={meta.categories} contributor={displayName(viewer)} postingRestricted={meta.posting_restricted} />
+        <LibraryComposer
+          categories={meta.categories}
+          collections={meta.collections}
+          defaultCollection={typeof from === "string" ? from : null}
+          contributor={displayName(viewer)}
+          postingRestricted={meta.posting_restricted}
+        />
       )}
     </>
   );

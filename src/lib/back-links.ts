@@ -34,7 +34,9 @@ export const BACK_ROUTES = {
   "/prayer/team": { parent: "/prayer", label: "Prayer" },
   "/prayer/team/care/[id]": { parent: "/prayer/team", label: "the workspace" },
   "/prayer/library/new": { parent: "/prayer/library", label: "Prayer Library" },
-  "/prayer/library/[id]": { parent: "/prayer/library", label: "Prayer Library" },
+  // A prayer opened from a collection (?from=) goes back to that collection; otherwise to the Prayer Library.
+  "/prayer/library/[id]": { parent: "/prayer/library/collections/[collection]", label: "the collection", orphan: { parent: "/prayer/library", label: "Prayer Library" } },
+  "/prayer/library/collections/[id]": { parent: "/prayer/library", label: "Prayer Library" },
   "/prayer/library/[id]/edit": { parent: "/prayer/library/[id]", label: "the prayer" },
 
   // Connect
@@ -194,7 +196,11 @@ export const RETURN_VIEWS: Array<{ path: RegExp; params: Record<string, Check> }
   },
   {
     path: /^\/prayer\/library$/,
-    params: { view: oneOf("library", "mine", "saved"), topic: re(UUID), purpose: re(UUID), use: re(UUID) },
+    params: { view: oneOf("collections", "library", "mine", "saved"), topic: re(UUID), purpose: re(UUID), use: re(UUID) },
+  },
+  {
+    path: /^\/prayer\/library\/collections\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    params: { topic: re(UUID), purpose: re(UUID), use: re(UUID) },
   },
   {
     path: /^\/youth\/play$/,

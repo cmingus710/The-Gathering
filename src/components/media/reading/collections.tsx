@@ -1,5 +1,6 @@
 import { Library, Search } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { TileIcon } from "@/components/icons/icon";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -14,6 +15,51 @@ const coverUrl = (c: CollectionCover, urls: Map<string, string>) => urls.get(c.v
 
 // The fanned covers inside a folder: left, centre (front), right.
 const FAN = ["-rotate-6 -mr-5 translate-y-1.5 group-hover:-rotate-9", "z-10 group-hover:-translate-y-1", "rotate-6 -ml-5 translate-y-1.5 group-hover:rotate-9"];
+
+/**
+ * The folder shape shared by collection cards (Books, Prayer Library): a tab,
+ * a pocket holding `art`, and a label strip with the name, an optional short
+ * description, and a count. The whole folder is one link.
+ */
+export function FolderCard({
+  href,
+  name,
+  description,
+  countLabel,
+  art,
+  accent = false,
+}: {
+  href: string;
+  name: string;
+  description?: string | null;
+  countLabel: string;
+  /** What sits in the pocket: covers, an image, or a fallback icon (decorative). */
+  art: ReactNode;
+  /** The primary-colored tab (All Books). */
+  accent?: boolean;
+}) {
+  return (
+    <Link href={href} className="group block h-full rounded-card pt-3 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary">
+      <span className="relative flex h-full flex-col">
+        {/* Folder tab; the covers tuck behind the label strip like papers in a pocket. */}
+        <span
+          aria-hidden="true"
+          className={cn("absolute -top-3 left-0 h-4 w-2/5 max-w-28 rounded-t-tile border border-b-0 border-border", accent ? "bg-primary" : "bg-accent/40")}
+        />
+        <span className="relative flex flex-1 flex-col overflow-hidden rounded-card rounded-tl-none border border-border bg-primary-soft shadow-(--elev-card) transition-shadow duration-200 group-hover:shadow-(--elev-lift)">
+          <span className="relative flex h-28 items-end justify-center px-3 pt-3 sm:h-32" aria-hidden="true">
+            {art}
+          </span>
+          <span className="relative z-20 block flex-1 border-t border-border bg-surface px-3.5 py-3">
+            <span className="block font-semibold leading-snug text-text line-clamp-2 [overflow-wrap:anywhere]">{name}</span>
+            {description ? <span className="mt-0.5 block text-meta text-text-secondary line-clamp-2 [overflow-wrap:anywhere]">{description}</span> : null}
+            <span className="mt-0.5 block text-meta text-text-secondary">{countLabel}</span>
+          </span>
+        </span>
+      </span>
+    </Link>
+  );
+}
 
 /**
  * A collection as a folder: a tab, a pocket holding up to three of its covers
@@ -42,44 +88,32 @@ export function CollectionFolder({
   // One cover sits in the middle; two use the outer slots.
   const slots = shown.length === 1 ? [FAN[1]] : shown.length === 2 ? [FAN[0], FAN[2]] : FAN;
   return (
-    <Link href={href} className="group block rounded-card pt-3 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary">
-      <span className="relative block">
-        {/* Folder tab; the covers tuck behind the label strip like papers in a pocket. */}
-        <span
-          aria-hidden="true"
-          className={cn(
-            "absolute -top-3 left-0 h-4 w-2/5 max-w-28 rounded-t-tile border border-b-0 border-border",
-            all ? "bg-primary" : "bg-accent/40",
-          )}
-        />
-        <span className="relative block overflow-hidden rounded-card rounded-tl-none border border-border bg-primary-soft shadow-(--elev-card) transition-shadow duration-200 group-hover:shadow-(--elev-lift)">
-          <span className="flex h-28 items-end justify-center px-3 pt-3 sm:h-32" aria-hidden="true">
-            {shown.length ? (
-              shown.map((c, i) => (
-                <FramedImage
-                  key={i}
-                  src={c.src}
-                  alt=""
-                  framing={parseFraming(c.framing)}
-                  className={cn(
-                    "-mb-3 h-24 w-16 shrink-0 rounded-md border border-border bg-surface-muted shadow-(--elev-lift) transition-transform duration-200 sm:h-28 sm:w-[4.5rem]",
-                    slots[i],
-                  )}
-                />
-              ))
-            ) : all ? (
-              <Library className="mb-4 size-12 text-primary" strokeWidth={1.5} />
-            ) : (
-              <TileIcon name="reading" className="mb-3 size-14" />
-            )}
-          </span>
-          <span className="relative z-20 block border-t border-border bg-surface px-3.5 py-3">
-            <span className="block font-semibold leading-snug text-text line-clamp-2 [overflow-wrap:anywhere]">{name}</span>
-            <span className="mt-0.5 block text-meta text-text-secondary">{bookCount(count)}</span>
-          </span>
-        </span>
-      </span>
-    </Link>
+    <FolderCard
+      href={href}
+      name={name}
+      countLabel={bookCount(count)}
+      accent={all}
+      art={
+        shown.length ? (
+          shown.map((c, i) => (
+            <FramedImage
+              key={i}
+              src={c.src}
+              alt=""
+              framing={parseFraming(c.framing)}
+              className={cn(
+                "-mb-3 h-24 w-16 shrink-0 rounded-md border border-border bg-surface-muted shadow-(--elev-lift) transition-transform duration-200 sm:h-28 sm:w-[4.5rem]",
+                slots[i],
+              )}
+            />
+          ))
+        ) : all ? (
+          <Library className="mb-4 size-12 text-primary" strokeWidth={1.5} />
+        ) : (
+          <TileIcon name="reading" className="mb-3 size-14" />
+        )
+      }
+    />
   );
 }
 

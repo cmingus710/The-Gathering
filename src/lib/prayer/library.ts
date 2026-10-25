@@ -1,3 +1,5 @@
+import { markdownExcerpt } from "@/lib/announcements/markdown";
+
 /**
  * Prayer Library: shapes returned by the prayer_library_* functions, and
  * the wording and small helpers its pages share. The database is the
@@ -23,6 +25,8 @@ export type LibraryCard = {
   origin: Origin;
   source_name: string | null;
   categories: Category[];
+  /** The collection it's filed in (null only for an unassigned draft). */
+  collection: CollectionRef | null;
   saved: boolean;
   published_at: string | null;
   updated_at: string;
@@ -47,7 +51,29 @@ export type LibraryPrayer = LibraryCard & {
   posting_restricted: boolean;
 };
 
-export type LibraryMeta = { categories: Category[]; can_moderate: boolean; can_manage: boolean; posting_restricted: boolean };
+export type LibraryMeta = { categories: Category[]; collections: CollectionOption[]; can_moderate: boolean; can_manage: boolean; posting_restricted: boolean };
+
+/**
+ * Collections (20261124000100): every published prayer is filed in one.
+ * Members see a collection only while it is active and holds a published,
+ * unhidden prayer; its count and cover come from those prayers alone.
+ */
+export type CollectionRef = { id: string; name: string };
+export type CollectionOption = CollectionRef & { description: string; is_general: boolean };
+export type CollectionCover = { path: string; alt: string };
+export type CollectionShelf = CollectionOption & { count: number; cover: CollectionCover | null };
+export type CollectionShelves = { total: number; collections: CollectionShelf[] };
+
+export type AdminCollection = CollectionShelf & {
+  sort_order: number;
+  archived: boolean;
+  archived_at: string | null;
+  updated_at: string;
+  counts: { published: number; hidden: number; archived: number; private: number };
+};
+
+export type AdminCollectionPrayer = { id: string; title: string; contributor: string; status: LibraryStatus; hidden: boolean; published_at: string | null };
+export type AdminCollectionPrayers = { items: AdminCollectionPrayer[]; has_more: boolean };
 
 export type AdminCategory = Category & { sort_order: number; archived: boolean; published_count: number };
 
@@ -84,6 +110,60 @@ export const LIBRARY_VIEWS = ["library", "mine", "saved"] as const;
 export type LibraryView = (typeof LIBRARY_VIEWS)[number];
 
 export const LIBRARY_VIEW_LABEL: Record<LibraryView, string> = { library: "All prayers", mine: "My prayers", saved: "Saved prayers" };
+
+/** The Prayer Library page's views: Collections (the default) and the three prayer lists. */
+export const PAGE_VIEWS = ["collections", ...LIBRARY_VIEWS] as const;
+export type PageView = (typeof PAGE_VIEWS)[number];
+export const PAGE_VIEW_LABEL: Record<PageView, string> = { collections: "Collections", library: "All prayers", mine: "My prayers", saved: "Saved" };
+
+export function prayerCount(n: number): string {
+  return `${n.toLocaleString("en-US")} ${n === 1 ? "prayer" : "prayers"}`;
+}
+
+export function collectionHref(id: string): string {
+  return `/prayer/library/collections/${encodeURIComponent(id)}`;
+}
+
+/** A prayer opened from a collection page: its back link returns to that collection. */
+export function prayerHref(id: string, fromCollection?: string | null): string {
+  return fromCollection ? `/prayer/library/${id}?${new URLSearchParams({ from: fromCollection })}` : `/prayer/library/${id}`;
+}
+
+/**
+ * The collection a prayer page was opened from, for its back link: only the
+ * prayer's own collection (so the link never names one it isn't in, or one
+ * the reader can't see). Otherwise null, and the page goes back to the
+ * Prayer Library.
+ */
+export function returnCollection(from: unknown, collection: CollectionRef | null): CollectionRef | null {
+  return typeof from === "string" && collection && from.toLowerCase() === collection.id.toLowerCase() ? collection : null;
+}
+
+/** Collections whose name or description contains every typed word (for the editor's Collection field). */
+export function filterCollections<T extends CollectionOption>(collections: T[], query: string): T[] {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return collections;
+  return collections.filter((c) => {
+    const text = `${c.name} ${c.description}`.toLowerCase();
+    return words.every((w) => text.includes(w));
+  });
+}
+
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'" };
+
+/**
+ * A card's excerpt as clean plain text: HTML tags, entities, and Markdown
+ * markers never show literally (some prayers were pasted with HTML). The
+ * full prayer page still renders the text with its formatting.
+ */
+export function libraryExcerpt(text: string, maxLength = 240): string {
+  // markdownExcerpt treats "-" as a list marker; keep hyphens inside words ("God-given").
+  const decoded = (text ?? "").replace(/&(amp|lt|gt|quot|apos|nbsp|#39);/g, (_, name: string) => ENTITIES[name]);
+  return markdownExcerpt(decoded.replace(/(\w)-(?=\w)/g, "$1\u2011"), maxLength)
+    .replace(/\u2011/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export const KIND_LABEL: Record<CategoryKind, string> = { topic: "Topic", purpose: "Purpose", use: "Intended use" };
 export const KIND_PLURAL: Record<CategoryKind, string> = { topic: "Topics", purpose: "Purposes", use: "Intended uses" };

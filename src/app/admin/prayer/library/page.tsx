@@ -1,4 +1,4 @@
-import { ArrowLeft, Flag, Tags } from "lucide-react";
+import { ArrowLeft, Flag, FolderOpen, Tags } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryModeration } from "@/components/prayer/library-controls";
@@ -37,9 +37,14 @@ export default async function LibraryModerationPage({ searchParams }: PageProps<
         description="Reported library prayers, and prayers a moderator hid or archived. Every action needs a reason and is recorded. Contributions publish without approval."
         actions={
           viewer.capabilities.has(CAPABILITIES.settingsManage) ? (
-            <ButtonLink href="/admin/prayer/library/categories" variant="secondary" size="sm" icon={<Tags className="size-4" aria-hidden="true" />}>
-              Topics, purposes, and uses
-            </ButtonLink>
+            <>
+              <ButtonLink href="/admin/prayer/library/collections" variant="secondary" size="sm" icon={<FolderOpen className="size-4" aria-hidden="true" />}>
+                Collections
+              </ButtonLink>
+              <ButtonLink href="/admin/prayer/library/categories" variant="secondary" size="sm" icon={<Tags className="size-4" aria-hidden="true" />}>
+                Topics, purposes, and uses
+              </ButtonLink>
+            </>
           ) : null
         }
       />

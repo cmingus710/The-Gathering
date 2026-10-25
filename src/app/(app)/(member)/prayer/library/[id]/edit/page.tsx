@@ -30,6 +30,7 @@ export default async function EditLibraryPrayerPage({ params }: PageProps<"/pray
       ) : (
         <LibraryComposer
           categories={meta.categories}
+          collections={meta.collections}
           contributor={displayName(viewer)}
           postingRestricted={meta.posting_restricted}
           initial={{
@@ -42,6 +43,7 @@ export default async function EditLibraryPrayerPage({ params }: PageProps<"/pray
             sourceUrl: p.source_url ?? "",
             scripture: p.scripture_refs,
             categories: p.categories.map((c) => c.id),
+            collection: p.collection,
           }}
         />
       )}

@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { copyText, decodeLibraryCursor, encodeLibraryCursor, markdownToPlain, pickCategory, type Category } from "./library";
+import {
+  copyText,
+  decodeLibraryCursor,
+  encodeLibraryCursor,
+  filterCollections,
+  libraryExcerpt,
+  markdownToPlain,
+  pickCategory,
+  prayerHref,
+  returnCollection,
+  type Category,
+} from "./library";
 
 const ID = "6f1c0a4e-2b3d-4c5e-8f90-1a2b3c4d5e6f";
 
@@ -55,5 +66,40 @@ describe("copyText", () => {
   });
   it("never drops attribution when a shared prayer has no named source", () => {
     expect(copyText({ ...base, origin: "shared", source_name: "  " }, "Grace Church")).toContain("— Another author or source");
+  });
+});
+
+describe("libraryExcerpt", () => {
+  it("never shows HTML tags, entities, or Markdown markers", () => {
+    expect(libraryExcerpt("<p>Lord, <strong>hear</strong> us &amp; keep us.</p><br/>**Amen**")).toBe("Lord, hear us & keep us. Amen");
+    expect(libraryExcerpt('<div class="x">Peace</div>&nbsp;&quot;be&quot; &#39;still&#39;')).toBe(`Peace "be" 'still'`);
+    expect(libraryExcerpt("_Grace_ before [meals](https://example.org) &lt;b&gt;")).toBe("Grace before meals");
+  });
+  it("keeps hyphens inside words and plain text as it is", () => {
+    expect(libraryExcerpt("A God-given day, well-loved.")).toBe("A God-given day, well-loved.");
+    expect(libraryExcerpt("x".repeat(400)).length).toBeLessThanOrEqual(240);
+  });
+});
+
+describe("collection helpers", () => {
+  const collections = [
+    { id: ID, name: "Morning Prayers", description: "To begin the day.", is_general: false },
+    { id: "0f1c0a4e-2b3d-4c5e-8f90-1a2b3c4d5e6f", name: "General prayers", description: "Prayers that don't fit another collection yet.", is_general: true },
+  ];
+  it("finds collections by every typed word in their name or description", () => {
+    expect(filterCollections(collections, "").map((c) => c.name)).toEqual(["Morning Prayers", "General prayers"]);
+    expect(filterCollections(collections, "morn").map((c) => c.name)).toEqual(["Morning Prayers"]);
+    expect(filterCollections(collections, "begin day").map((c) => c.name)).toEqual(["Morning Prayers"]);
+    expect(filterCollections(collections, "fit  PRAYERS").map((c) => c.name)).toEqual(["General prayers"]);
+    expect(filterCollections(collections, "evening")).toEqual([]);
+  });
+  it("returns to a collection only when the prayer is in it", () => {
+    expect(returnCollection(ID, { id: ID, name: "Morning Prayers" })).toEqual({ id: ID, name: "Morning Prayers" });
+    expect(returnCollection(ID.toUpperCase(), { id: ID, name: "Morning Prayers" })).toEqual({ id: ID, name: "Morning Prayers" });
+    expect(returnCollection("0f1c0a4e-2b3d-4c5e-8f90-1a2b3c4d5e6f", { id: ID, name: "Morning Prayers" })).toBeNull();
+    expect(returnCollection(ID, null)).toBeNull();
+    expect(returnCollection(["x"], { id: ID, name: "Morning Prayers" })).toBeNull();
+    expect(prayerHref(ID, ID)).toBe(`/prayer/library/${ID}?from=${ID}`);
+    expect(prayerHref(ID)).toBe(`/prayer/library/${ID}`);
   });
 });

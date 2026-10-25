@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, CircleAlert, Eye, FilePen, Info, Send } from "lucide-react";
+import { BookOpen, CircleAlert, Eye, FilePen, FolderOpen, Info, Send } from "lucide-react";
 import { useActionState, useMemo, useRef, useState } from "react";
 import { saveLibraryPrayerAction } from "@/app/(app)/(member)/prayer/library/actions";
 import { CommunityText } from "@/components/community/community-text";
@@ -12,7 +12,20 @@ import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialFormState } from "@/lib/forms";
 import { parseReferenceList } from "@/lib/media/scripture";
-import { KIND_PLURAL, KINDS, LIBRARY_LIMITS, ORIGIN_LABEL, SHARING_REMINDER, type Category, type CategoryKind, type LibraryStatus, type Origin } from "@/lib/prayer/library";
+import {
+  KIND_PLURAL,
+  KINDS,
+  LIBRARY_LIMITS,
+  ORIGIN_LABEL,
+  SHARING_REMINDER,
+  type Category,
+  type CategoryKind,
+  type CollectionOption,
+  type CollectionRef,
+  type LibraryStatus,
+  type Origin,
+} from "@/lib/prayer/library";
+import { CollectionPicker } from "./collection-picker";
 import { CategoryLabels } from "./library-card";
 
 const FORMAT_HINT = "You can use **bold**, _italic_, and lists. Add a link with the Link button, or paste an address over selected words.";
@@ -35,6 +48,8 @@ export type LibraryComposerInitial = {
   sourceUrl: string;
   scripture: string[];
   categories: string[];
+  /** Its collection (null for an unassigned draft). */
+  collection: CollectionRef | null;
 };
 
 /**
@@ -44,7 +59,23 @@ export type LibraryComposerInitial = {
  * private; "Publish" shares it with church members at once (no approval
  * step). The server checks everything again.
  */
-export function LibraryComposer({ categories, initial, contributor, postingRestricted }: { categories: Category[]; initial?: LibraryComposerInitial; contributor: string; postingRestricted: boolean }) {
+export function LibraryComposer({
+  categories,
+  collections,
+  initial,
+  defaultCollection,
+  contributor,
+  postingRestricted,
+}: {
+  categories: Category[];
+  /** Active collections to choose from. */
+  collections: CollectionOption[];
+  initial?: LibraryComposerInitial;
+  /** Preselected for a new prayer (added from a collection page). */
+  defaultCollection?: string | null;
+  contributor: string;
+  postingRestricted: boolean;
+}) {
   const [state, formAction] = useActionState(saveLibraryPrayerAction, initialFormState);
   const v = state.values;
   const [title, setTitle] = useState(v?.title ?? initial?.title ?? "");
@@ -54,6 +85,10 @@ export function LibraryComposer({ categories, initial, contributor, postingRestr
   const [sourceUrl, setSourceUrl] = useState(v?.sourceUrl ?? initial?.sourceUrl ?? "");
   const [scripture, setScripture] = useState(v?.scripture ?? initial?.scripture.join("\n") ?? "");
   const [chosen, setChosen] = useState<string[]>(() => (v?.categories ? v.categories.split(",").filter(Boolean) : (initial?.categories ?? [])));
+  const [collection, setCollection] = useState<string | null>(() => {
+    const id = v ? v.collection || null : (initial ? initial.collection?.id : defaultCollection) ?? null;
+    return id && collections.some((c) => c.id === id) ? id : null;
+  });
   const [clientKey] = useState(() => crypto.randomUUID());
   const previewRef = useRef<HTMLElement>(null);
   const fe = state.fieldErrors ?? {};
@@ -66,6 +101,7 @@ export function LibraryComposer({ categories, initial, contributor, postingRestr
   }, [categories, initial]);
   const refs = useMemo(() => parseReferenceList(scripture), [scripture]);
   const chosenCats = categories.filter((c) => chosen.includes(c.id));
+  const chosenCollection = collections.find((c) => c.id === collection) ?? null;
 
   const toggle = (id: string, on: boolean) => setChosen((list) => (on ? [...list, id] : list.filter((x) => x !== id)));
 
@@ -101,6 +137,8 @@ export function LibraryComposer({ categories, initial, contributor, postingRestr
           hint={FORMAT_HINT}
           toolbarLabel="Prayer formatting"
         />
+
+        <CollectionPicker collections={collections} value={collection} onChange={setCollection} error={fe.collection} />
 
         {KINDS.map((kind) => {
           const options = categories.filter((c) => c.kind === kind);
@@ -252,6 +290,12 @@ export function LibraryComposer({ categories, initial, contributor, postingRestr
       <aside ref={previewRef} tabIndex={-1} aria-label="Preview" className="space-y-2 outline-none lg:sticky lg:top-6 lg:self-start">
         <p className="text-meta font-semibold uppercase tracking-wide text-text-secondary">Preview: how members will see it</p>
         <div className="space-y-3 rounded-card border border-border bg-surface p-5 shadow-(--elev-card)">
+          {chosenCollection ? (
+            <p className="flex items-center gap-1.5 text-meta font-semibold text-text-secondary">
+              <FolderOpen className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              {chosenCollection.name}
+            </p>
+          ) : null}
           <h2 className="font-display text-xl font-semibold leading-snug">{title.trim() || "Your title"}</h2>
           <CategoryLabels categories={chosenCats} kinds={["topic", "purpose", "use"]} />
           {body.trim() ? <CommunityText source={body} /> : <p className="text-text-secondary">Your prayer will appear here.</p>}

@@ -28,6 +28,7 @@ describeDb("prayer library", () => {
   let suspended: string;
   let kid: string; // youth account
   let cats: Record<string, string>; // "<kind>:<name>" → id
+  let general: string; // the General prayers collection (20261124000100)
 
   const rpc = async <T = Json>(actor: Actor, fn: string, args: unknown[] = []): Promise<T> => {
     const placeholders = args.map((_, i) => `$${i + 1}`).join(", ");
@@ -52,6 +53,7 @@ describeDb("prayer library", () => {
       categories?: string[];
       publish?: boolean;
       key?: string | null;
+      collection?: string | null;
     } = {},
   ) =>
     rpc<string>(as(who), "prayer_library_save", [
@@ -65,6 +67,7 @@ describeDb("prayer library", () => {
       opts.categories ?? [],
       opts.publish ?? true,
       opts.key ?? null,
+      opts.collection === undefined ? general : opts.collection,
     ]);
   const list = (
     who: string,
@@ -112,8 +115,9 @@ describeDb("prayer library", () => {
     await db.raw("select set_config('youth.context', '', false)");
     await db.grantRole(admin, "super_admin");
     await db.grantRole(mod, "prayer_moderator");
-    const meta = await rpc<{ categories: Array<{ id: string; kind: string; name: string }> }>(as(bob), "prayer_library_meta");
+    const meta = await rpc<{ categories: Array<{ id: string; kind: string; name: string }>; collections: Array<{ id: string; is_general: boolean }> }>(as(bob), "prayer_library_meta");
     cats = Object.fromEntries(meta.categories.map((c) => [`${c.kind}:${c.name}`, c.id]));
+    general = meta.collections.find((c) => c.is_general)!.id;
   });
 
   afterAll(async () => {
