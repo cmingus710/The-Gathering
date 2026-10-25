@@ -20,16 +20,11 @@ export type LauncherTile = {
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
- * Rows shown before the menu scrolls: three on phones, two on short screens
- * and on desktop, and never more than about 60% of the screen (fewer with
- * enlarged text), so "Coming up" stays close.
+ * Rows shown before the menu scrolls. Always at least three, whatever the
+ * screen height or text size, so the menu never collapses into a hard-to-use
+ * strip as more tiles are added.
  */
-function rowsToShow(row: number, gap: number): number {
-  const desktop = window.matchMedia("(min-width: 1024px)").matches;
-  const target = desktop || window.innerHeight < 700 ? 2 : 3;
-  const fit = Math.floor((window.innerHeight * 0.62 - row * 0.4) / (row + gap));
-  return Math.max(1, Math.min(target, fit));
-}
+const MIN_ROWS = 3;
 
 /**
  * The home launcher: dimensional tiles in a responsive grid (two to six
@@ -66,7 +61,7 @@ export function Launcher({ tiles, labelledBy }: { tiles: LauncherTile[]; labelle
     const rows = Math.ceil(ul.children.length / columns);
     const gap = parseFloat(style.rowGap) || 0;
     const row = first.getBoundingClientRect().height;
-    const show = rowsToShow(row, gap);
+    const show = MIN_ROWS;
     // Whole rows plus 40% of the next one, so it's clear there is more.
     setBounded(rows <= show ? null : Math.round(show * (row + gap) + row * 0.4));
     requestAnimationFrame(updateEdges);
