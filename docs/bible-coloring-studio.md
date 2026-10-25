@@ -2,7 +2,7 @@
 
 The first Learn & Play player, built on the activity foundation ([learn-and-play.md](learn-and-play.md)). A *Drawing & coloring* activity can carry a coloring picture; children color it with a guardian (or on their own youth account), and each child's picture is saved privately to that child.
 
-Migration: `20261123000100_youth_coloring` (operator script `supabase/manual/2026-11-23-apply-youth-coloring.sql`, **not applied to hosted**). Tests: `tests/db/youth-coloring.test.ts`, `src/lib/youth/coloring.test.ts`, `src/lib/youth/coloring-svg.test.ts`, `tests/unit/coloring-route.test.ts`, `tests/e2e-local/13-coloring-studio.spec.ts`.
+Migration: `20261123000100_youth_coloring` (operator script `supabase/manual/2026-11-23-apply-youth-coloring.sql`, applied and recorded on hosted 2026-10-25). Tests: `tests/db/youth-coloring.test.ts`, `src/lib/youth/coloring.test.ts`, `src/lib/youth/coloring-svg.test.ts`, `tests/unit/coloring-route.test.ts`, `tests/e2e-local/13-coloring-studio.spec.ts`.
 
 ## Member experience
 
@@ -106,7 +106,7 @@ They are reviewable drafts: check the artwork, story summaries, and references, 
 
 ## Release steps
 
-1. Owner approval, then run `supabase/manual/2026-11-23-apply-youth-coloring.sql` once in the SQL editor (one transaction; refuses out-of-order or repeat runs). Rehearsed locally on PostgreSQL 16 (see [migration-history.md](migration-history.md)).
+1. Owner approval, then run `supabase/manual/2026-11-23-apply-youth-coloring.sql` once in the SQL editor (one transaction; refuses out-of-order or repeat runs). Rehearsed locally on PostgreSQL 16. **Done on hosted 2026-10-25** (see [migration-history.md](migration-history.md)).
 2. Deploy the app **after** the migration.
 3. In Admin → Learn & Play activities, add the demonstration drafts (optional), review them, and publish the ones you want.
 

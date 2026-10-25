@@ -579,11 +579,12 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - replaced with the same signatures and grants: `youth.activity_content` (coloring picture rules), `public.youth_admin_activity_save` (keeps config when the form sends none), `youth.activity_object_readable` (members may read published freehand line art), `public.youth_admin_activity_asset_remove` and `public.youth_admin_activity` (line art is locked like a cover).
 - **Operator script:** `supabase/manual/2026-11-23-apply-youth-coloring.sql`, one transaction. The preflight requires Learn & Play and `20261122000100` (My Journal lesson answers) and refuses a second run. It post-checks the grants (new entry points for authenticated only, no anon; internal helpers closed; replaced functions keep their grants; the table closed). History row `created_by = youth-coloring`.
 - **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with history rows for each, the script applied and recorded `20261123000100`. A rerun stopped at the preflight ("Nothing was changed: 20261123000100 is already applied.").
-- **Order: migration first, then the app.** Before the migration, `/youth/play/<id>` for a coloring activity can't load the artwork, and the editor's coloring section fails to save.
-- **Hosted: not applied.** Needs owner approval. Read-only check afterwards:
+- **Order: migration first, then the app.** Before the migration, `/youth/play/<id>` for a coloring activity can't load the artwork, and the editor's coloring section fails to save. (In practice the app merged first, cmingus710/The-Gathering#81; no hosted activity had a coloring picture, so nothing was affected in between.)
+- **Hosted:** **Applied and recorded (2026-10-25).** The owner ran `supabase/manual/2026-11-23-apply-youth-coloring.sql` in the SQL editor. That script is one transaction that records the version only after its post-checks pass (the grants, the closed table), so the row means the change is in place. **Checked (owner's SQL editor screenshot):** `20261123000100` recorded as `youth_coloring` (`created_by = youth-coloring`). Nothing left to do on hosted.
+    - The read-only check used:
 
-  ```sql
-  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261123000100';
-  ```
+      ```sql
+      select version, name, created_by from supabase_migrations.schema_migrations where version = '20261123000100';
+      ```
 
-  Expected: one row (`youth_coloring`, `youth-coloring`).
+      Expected: one row (`youth_coloring`, `youth-coloring`).
