@@ -113,7 +113,7 @@ async function ensureNoah(browser: Browser) {
     await signIn(page, EDITOR);
     await page.goto("/admin/youth/activities");
     await page.getByRole("button", { name: "Add demonstration coloring drafts" }).click();
-    await expect(page.getByText(/demonstration drafts/i).first()).toBeVisible();
+    await expect(page.getByText(/^Added \d+ demonstration drafts?\.|The demonstration drafts are already here\./)).toBeVisible({ timeout: 30_000 });
     await page.close();
   }
   const [a] = await find();
