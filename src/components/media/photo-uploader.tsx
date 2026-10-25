@@ -270,7 +270,7 @@ export function PhotoUploader({ albumId, fileMb, batchMax }: { albumId: string; 
         <div className="space-y-3 rounded-tile bg-surface-muted p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input type="checkbox" checked={permission} onChange={(e) => setPermission(e.target.checked)} className="mt-1 size-5 shrink-0 accent-primary" />
-            <span>
+            <span className="min-w-0">
               I took these photos or have permission to share them, and the people in them (and a parent, for any children) are okay with them being shared
               with this album&apos;s members.
             </span>

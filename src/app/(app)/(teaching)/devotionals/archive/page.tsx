@@ -27,7 +27,7 @@ export default async function DevotionalArchivePage({ searchParams }: PageProps<
     <>
       <BackLink route="/devotionals/archive" />
       <SectionHeader section="devotionals" size="compact" title="Devotional archive" />
-      <nav aria-label="Months" className="mb-4 flex items-center justify-between">
+      <nav aria-label="Months" className="mb-4 flex flex-wrap items-center justify-between gap-x-2">
         <Link href={`?month=${m.prev}`} className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 font-semibold text-primary hover:bg-primary-soft">
           <ChevronLeft className="size-4" aria-hidden="true" /> Earlier
         </Link>

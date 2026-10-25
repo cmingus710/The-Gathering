@@ -4,7 +4,8 @@ import { cn } from "./cn";
 /** Track for a small set of mutually exclusive views (links or radios). */
 export function SegmentedTrack({ children, className, label }: { children: ReactNode; className?: string; label: string }) {
   return (
-    <nav aria-label={label} className={cn("inline-flex rounded-full border border-border bg-surface-muted p-1", className)}>
+    // Fully rounded on one row; wraps onto a second row (instead of overflowing) with large text on a narrow phone.
+    <nav aria-label={label} className={cn("inline-flex max-w-full flex-wrap rounded-[1.6875rem] border border-border bg-surface-muted p-1", className)}>
       {children}
     </nav>
   );

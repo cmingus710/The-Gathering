@@ -44,7 +44,7 @@ export default async function CollectionSearchPage({ params, searchParams }: Pag
     <>
       <BackLink route="/devotionals/collections/[key]/search" params={{ key }} label={collection.title} />
       <PageHeader eyebrow={collection.title} title="Search readings" />
-      <form action={`${collectionHref(key)}/search`} method="get" role="search" className="mb-6 flex gap-2">
+      <form action={`${collectionHref(key)}/search`} method="get" role="search" className="mb-6 flex flex-wrap gap-2">
         <label htmlFor="collection-q" className="sr-only">
           Search {collection.title}
         </label>
@@ -57,7 +57,7 @@ export default async function CollectionSearchPage({ params, searchParams }: Pag
           maxLength={100}
           required
           placeholder="A word, phrase, or reference (Psalm 23)"
-          className={cn(fieldControlClass, "min-w-0 flex-1 border-border-strong")}
+          className={cn(fieldControlClass, "min-w-[min(100%,8rem)] flex-1 border-border-strong")}
         />
         <Button type="submit" variant="secondary" icon={<Search className="size-4" aria-hidden="true" />}>
           Search

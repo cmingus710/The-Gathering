@@ -14,10 +14,10 @@ export function EventListItem({ o, showDate = true, now }: { o: EventOccurrence;
     <li>
       <Link
         href={`/events/${o.id}`}
-        className="interactive flex gap-3.5 rounded-card border border-border bg-surface p-3 pr-4 shadow-(--elev-card) hover:bg-surface-muted/50 sm:gap-4"
+        className="interactive flex flex-wrap gap-3.5 rounded-card border border-border bg-surface p-3 pr-4 shadow-(--elev-card) hover:bg-surface-muted/50 sm:gap-4"
       >
         <DateBlock ymd={o.local_date} canceled={canceled} className="self-start" />
-        <div className="min-w-0 flex-1 py-0.5">
+        <div className="min-w-[min(100%,9rem)] flex-1 py-0.5">
           <p className={`text-title font-semibold ${canceled ? "text-text-secondary line-through" : "text-text"}`}>
             {canceled ? <span className="sr-only">Canceled: </span> : null}
             {o.title}

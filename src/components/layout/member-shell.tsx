@@ -77,9 +77,11 @@ export async function MemberShell({
             {/*
               The church name is never truncated: the wordmark scales with the
               viewport (full size from 400px up) and, only if it still can't
-              fit (very large text), wraps onto a second line.
+              fit (very large text), wraps onto a second line. With greatly
+              enlarged text on a narrow phone, where the logo, bell, and avatar
+              leave no room, it's left out (see .header-row in globals.css).
             */}
-            <div className="flex min-h-16 items-center justify-between gap-2 px-3 sm:px-5">
+            <div className="header-row flex min-h-16 items-center justify-between gap-2 px-3 sm:px-5">
               <Link
                 href="/home"
                 className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full pr-1 min-[375px]:gap-2.5"

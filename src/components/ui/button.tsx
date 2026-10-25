@@ -11,7 +11,7 @@ const base =
   "transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary " +
   "disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55 " +
-  "select-none text-center";
+  "select-none text-center max-w-full";
 
 const variants: Record<ButtonVariant, string> = {
   primary: "bg-cta text-on-cta hover:bg-cta-hover active:bg-cta-hover disabled:hover:bg-cta",
@@ -61,7 +61,7 @@ export function Button({
       {...rest}
     >
       {loading ? <Spinner /> : icon}
-      <span className="inline-flex items-center gap-2">{loading && loadingText ? loadingText : children}</span>
+      <span className="inline-flex min-w-0 items-center gap-2">{loading && loadingText ? loadingText : children}</span>
     </button>
   );
 }
@@ -72,7 +72,7 @@ export function ButtonLink({ variant = "primary", size = "md", icon, className, 
   return (
     <Link className={buttonClasses(variant, size, className)} {...rest}>
       {icon}
-      <span className="inline-flex items-center gap-2">{children}</span>
+      <span className="inline-flex min-w-0 items-center gap-2">{children}</span>
     </Link>
   );
 }
