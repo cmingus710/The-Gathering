@@ -1,8 +1,10 @@
 # Learn & Play (Youth & Families)
 
-The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. Each activity type gets its player on top of this; the first is the **Bible Coloring Studio** for *Drawing & coloring* activities ([bible-coloring-studio.md](bible-coloring-studio.md)). The other types don't have players yet.
+The foundation for activities in the Youth & Families area: versioned activity content, illustrated browsing, an editor for authorized youth content staff, and private progress stored on the right child. Three interactive players are built on it: **Put the Story in Order** and **Bible Match** (see "Games" below), and the **Bible Coloring Studio** for *Drawing & coloring* activities ([bible-coloring-studio.md](bible-coloring-studio.md)). Other activity types still use "Mark finished".
 
-Migration: `20261118000200_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, objects applied to hosted 2026-10-24; history row recorded 2026-10-24 by `supabase/manual/2026-11-18-record-youth-activities.sql`). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
+Games: migration `20261124000100_youth_activity_games` (operator script `supabase/manual/2026-11-24-apply-youth-activity-games.sql`, **not applied to hosted**). Tests: `tests/db/youth-activity-games.test.ts`, `src/lib/youth/games/games.test.ts`.
+
+Foundation: migration `20261118000200_youth_activities` (operator script `supabase/manual/2026-11-18-apply-youth-activities.sql`, objects applied to hosted 2026-10-24; history row recorded 2026-10-24 by `supabase/manual/2026-11-18-record-youth-activities.sql`). Tests: `tests/db/youth-activities.test.ts`, `src/lib/youth/activities.test.ts`.
 
 ## Member experience
 
@@ -19,9 +21,58 @@ Independent youth accounts see Learn & Play and This Week's Lesson first, then t
 - Ages are shown as guidance only ("Suggested for ages 4–7 (a suggestion, not a rule)"); nobody is refused because of age.
 - Older-youth activities (suggested from age 11) and everything a youth account sees use a calmer style: a charcoal band with gold line art, the serif title, square-ish corners, and no playful lift.
 - Without an uploaded cover, a card shows an original line illustration for its type (drawn in `src/components/youth/activity-art.tsx`, decorative, hidden from screen readers).
-- Until a type's player exists, the only control is **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown. *Drawing & coloring* activities with a coloring picture also show the Bible Coloring Studio.
+- Activities with a game (below) show it on the page, and *Drawing & coloring* activities with a coloring picture show the Bible Coloring Studio; the rest offer **Mark finished / Mark not finished**, which really saves progress for the chosen child. No placeholder buttons are shown.
 
 Empty states: "Activities will appear here when they're published"; adults with no child they may play for are told why (verification, or the *Practice with the child* permission, or the child has their own account).
+
+## Games
+
+Both games are players shipped with the app. A version opts in with `config.player`: `story_order` on a **Puzzle** activity, `bible_match` on a **Matching** activity. The configuration is data only (validated in the app and again in the database); staff never type it. Puzzle and Matching activities without a game keep "Mark finished".
+
+### Put the Story in Order
+
+- Staff add illustrated scenes **in the correct order**: a picture, a short caption, and optionally a picture description (for people who can't see it), a hint clue, and "what happened" (shown at the end, with the verse). An optional closing explanation follows the story.
+- Children see the scenes shuffled (never already in order) and arrange them three equal ways: **drag** a scene by its handle (mouse, touch, or pen; pointer events, so it works on phones), **tap** a scene then tap the place it goes, or the **Move earlier / Move later** buttons (keyboard and switch access). Every move is announced to screen readers.
+- **Check my order** says how many are in the right place and marks them; nothing is taken away. **Try again** clears the message. **Hint** puts the first misplaced scene in its place, pins it, and shows its clue. **Start over** reshuffles.
+- Difficulty sets the scenes and hints: **Beginner** 3–4 scenes and 3 hints per try; **Growing** 4–6 and 2; **Challenge** 5–8 and 1.
+- When the order is right: the story in order with each scene's explanation and the closing text, focus moves to the "You put the story in order!" heading, and **Play again** reshuffles.
+
+### Bible Match
+
+- Staff choose **identical pairs** (two cards with the same picture) or **related pairs** (two different cards, like a person and an object from their story, each with a picture, a name, or both, and a required short explanation shown when matched). Identical pairs may have an optional note too.
+- Staff choose the **board sizes** children can pick (3, 4, 6, 8, 10, or 12 pairs; the smallest is the starting board) and whether to show a **turn counter**. The counter is only a count: no timer, score, or ranking.
+- Cards are buttons in a grid. Tap or click to turn one over; **arrow keys** (and Home/End) move between cards and **Enter or Space** turns one over.
+- A miss stays face up until the next tap ("Fish and Dove aren't a pair this time"), or **Turn them back**; nothing is timed.
+- Every tap is applied one at a time to the latest board (`matchReducer`), so rapid tapping can't turn a third card, match a pair twice, or count a turn twice.
+- The board (which pairs, in which places) comes from a seed saved with progress, so it stays the same through the session, a reload, or a resume on another device.
+
+### Pictures
+
+Each scene or card picture is one of:
+
+- a **built-in illustration**: 20 original line drawings shipped with the app (`src/components/youth/games/game-art.tsx`; ark, animals, rain, dove, rainbow, crowd, loaves and fish, bread lifted in thanks, baskets, fish, bread, star, sling, stone tablets, big fish, person, lamb, crown, oil lamp, sheep), checked against `youth.game_art_keys()`;
+- **artwork uploaded for the activity**, chosen in the editor; or
+- a **new upload made right in the scene or card** (same pipeline, rights confirmation, and source record as the artwork form).
+
+Members can read an uploaded game picture only when the published version's game uses it and the activity is open to them. Pictures used by a published version are kept; pictures used by the draft's game can't be removed until the draft stops using them.
+
+### Administration
+
+- In the editor, choosing **Puzzle** or **Matching** shows the game form: add, reorder (Up/Down), and remove scenes or pairs, pick pictures, and fill in the text. "No game" keeps the activity as "Mark finished".
+- While editing, **Before this can be published** lists what's missing: scene counts for the difficulty, scenes without a picture or caption, fewer than 3 pairs, cards without a picture (identical) or without a picture or name (related), related pairs without an explanation, cards in different pairs that look the same, board sizes larger than the pairs. The database checks the same rules (`youth.game_config_issues`) and refuses to publish until they're met; the Publishing panel lists them too. A draft can be saved incomplete.
+- On save the database refuses malformed games: the wrong activity type, missing or duplicate identifiers, unknown built-in pictures, pictures from another activity, too many scenes (8) or pairs (12), unsupported board sizes, text that's too long, and anything that looks like markup.
+- **Preview** shows the game playable, exactly as members get it, without saving.
+- **Publishing** now also asks the editor to confirm they've checked the story, scenes, and pairs against the Scripture references and previewed it.
+- **Demonstration games:** "Add demonstration drafts" on the activities page creates four original examples as private drafts (skipping any already in the list): *Noah and the Rainbow Promise* (story, Growing, Genesis 6–9), *Jesus Feeds a Big Crowd* (story, Beginner, John 6:1-13), *Bible Picture Pairs* (identical, Beginner), and *Who Had What?* (related, Growing: Noah/ark, Moses/tablets, David/sling, Jonah/big fish, the wise men/star, the boy/loaves and fish). Every scene and pair names its Scripture; the change note asks for review before publishing. Nothing is published automatically.
+
+### Progress
+
+- Saved privately through `youth_activity_progress_save`, on the chosen child and the exact version, with the same checks as before. Saved data: Story `{game, seed, order, pinned, hints_used, checks, solved, completions}`; Match `{game, size, seed, matched, moves, solved, completions}`.
+- Moves are saved shortly after they happen (one save at a time, always the latest), checks and finishing at once, and anything waiting when the page is hidden. Pages are refreshed only when the status can change (first save, finishing), so cards stay right without a reload on every move.
+- **Resume:** opening the activity again restores the board, the pinned scenes, hints used, and pairs found. Saved data that doesn't fit the version (or was tampered with) starts a fresh board.
+- **Replay:** once a version is finished it stays finished; **Play again** starts a new board without erasing it (the database keeps the completion unless "Mark not finished" sends `reset`). The page says "finished this. Play again any time; it stays finished."
+- **New versions:** a page still showing the old version gets a conflict ("This activity was updated…") and nothing is written; earlier progress stays with its version and the child starts the new one fresh. A save from another tab or device asks to reload rather than overwrite.
+- No scores, rankings, or comparisons are stored or shown; the optional turn count is the child's own and only visible to them and their guardians.
 
 ## Who can do what
 
@@ -106,9 +157,15 @@ No new environment variables, buckets, or scheduled jobs are needed.
 - `npm run lint`, `npm run typecheck`, `npm test` (unit), and the full DB suite with `TEST_DATABASE_URL` (`--no-file-parallelism`), all passing.
 - `tests/db/youth-activities.test.ts` (17 tests): closed schema, no implicit super administrator access, draft/preview invisibility, sanitization and data-only config, artwork rights and storage paths, immutability, group and window access, explicit child selection, isolation between siblings, families, guardians, and youth accounts, stale-save and version-change behavior, summary-only guardians, immediate loss of access, and no leader or staff access to individual progress.
 - Cards, filters, empty state, and the activity page were checked in a temporary local preview at 390 px and 1280 px, light and dark: no horizontal scrolling, the card's title link is reached with Tab and shows a visible focus ring, and axe reported no violations in either theme. Signed-in pages need a Supabase stack, so they weren't exercised end to end here.
+- **Games (20261123000100):** `npm run lint`, `npm run typecheck`, `npm run build`, and the full Vitest suite with `TEST_DATABASE_URL` (`--no-file-parallelism`): 126 files, 1490 tests, all passing.
+  - `src/lib/youth/games/games.test.ts` (unit): seeded shuffles (stable per seed, never already solved), correct and incorrect checks, hints up to the difficulty limit with pinning, drag/step moves and pinned slots, start over and replay keeping completions, resume (exact, after content changes, and tampered data), match/miss/turn-back, rapid repeated taps (no third card, no double match, no extra turns), board sizes, keyboard grid movement, configuration parsing and issues, the built-in picture list matching the database, and the demonstration drafts being complete.
+  - `tests/db/youth-activity-games.test.ts` (13): refusals on save, issues listed and enforced on publish by difficulty, pairs and board sizes, activities without games unaffected, demonstration drafts complete and unpublished, game pictures readable only by members the published version is open to, pictures in use kept, game progress saved and resumed per child, sibling and other-family isolation, no access for strangers, leaders, or editors, stale-tab and new-version conflicts, completion kept through replay and cleared only by reset, and immediate loss of access when the practice permission is removed.
+  - In Chromium (a temporary local page rendering the players and the editor, removed afterwards; signed-in pages need a Supabase stack): the story was shuffled and stable per seed, checked gently, moved by keyboard (Enter on Move later), tap-to-move, and pointer drag, hinted, solved with the explanation shown and focus on the result, and replayed; Bible Match turned cards by tap and keyboard (arrows, Home/End, Enter, Space), survived rapid repeated taps with exactly one pair matched, explained related pairs, finished, replayed, and changed board size; the editor showed live issues as difficulty, scenes, and pairs changed, picked built-in pictures, reordered, and never submitted the inline upload. axe reported no violations (phone and desktop widths, light and dark), no horizontal scrolling at 390 px, and no console or hydration errors.
+
 
 ## Limits
 
-- Only *Drawing & coloring* has a player (the Bible Coloring Studio, which keeps its picture in `config.coloring` and each child's artwork in its own table); every other type offers only "Mark finished".
-- Only the cover image is shown to members; additional artwork can be uploaded and kept for future players.
+- Only Puzzle (Put the Story in Order), Matching (Bible Match), and Drawing & coloring (the Bible Coloring Studio, which keeps its picture in `config.coloring` and each child's artwork in its own table) have players; the other types offer "Mark finished".
+- Members see the cover, the pictures the published version's game uses, and a freehand coloring picture's line art; other uploaded artwork stays editor-only.
+- The demonstration drafts' wording was written for the church and cites Scripture, but it has not been reviewed by church staff; review it before publishing.
 - Progress on a retired version is kept but can't be continued.

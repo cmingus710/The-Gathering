@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
+import { DemoActivitiesForm } from "@/components/youth/activity-editor";
+import { EmptyState, ListRow, PageHeader, rowListClass } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { DemoDraftsButton } from "@/components/youth/coloring/editor";
 import { CAPABILITIES } from "@/lib/auth/capabilities";
@@ -69,7 +70,7 @@ export default async function ActivitiesAdminPage({ searchParams }: PageProps<"/
         <Alert tone="error" title="Activities couldn't be loaded right now." />
       ) : data.length === 0 ? (
         <EmptyState glyph="youth" title={status ? "Nothing here" : "No activities yet"}>
-          {status ? "No activities have this status." : "Create the first one. Members see it only once it's published."}
+          {status ? "No activities have this status." : "Create the first one, or add the demonstration drafts below. Members see an activity only once it's published."}
         </EmptyState>
       ) : (
         <div className={rowListClass}>
@@ -97,10 +98,27 @@ export default async function ActivitiesAdminPage({ searchParams }: PageProps<"/
           })}
         </div>
       )}
-      <Card className="mt-8 max-w-2xl">
-        <h2 className="mb-2 font-semibold">Bible Coloring Studio</h2>
-        <DemoDraftsButton />
-      </Card>
+      {failed ? null : (
+        <section aria-labelledby="demos" className="mt-8 max-w-2xl space-y-2 rounded-card border border-border p-4 sm:p-5">
+          <h2 id="demos" className="font-semibold">
+            Demonstration games
+          </h2>
+          <p className="text-meta text-text-secondary">
+            Adds four original examples as private drafts: two Put the Story in Order (Noah, and Jesus feeding the crowd) and two Bible Match (picture pairs, and Bible people with
+            things from their stories). Each lists its Scripture references. Check the content, preview it, and publish only when it&apos;s right. Drafts already in the list are
+            skipped.
+          </p>
+          <DemoActivitiesForm />
+        </section>
+      )}
+      {failed ? null : (
+        <section aria-labelledby="coloring-demos" className="mt-4 max-w-2xl space-y-2 rounded-card border border-border p-4 sm:p-5">
+          <h2 id="coloring-demos" className="font-semibold">
+            Demonstration coloring pictures
+          </h2>
+          <DemoDraftsButton />
+        </section>
+      )}
     </>
   );
 }

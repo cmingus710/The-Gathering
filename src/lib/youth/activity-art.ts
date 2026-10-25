@@ -47,3 +47,16 @@ export async function signActivityArt(supabase: SupabaseClient, paths: Array<str
   for (const item of data ?? []) if (item.path && item.signedUrl && !item.error) out.set(item.path, item.signedUrl);
   return out;
 }
+
+/**
+ * Signed URLs for the uploaded pictures a game uses (the detail's `media`:
+ * asset id → path and description), keyed by asset id for the players.
+ */
+export async function signGameMedia(
+  supabase: SupabaseClient,
+  media: Record<string, { path: string; alt: string }> | null | undefined,
+): Promise<Record<string, { url: string | null; alt: string }>> {
+  const entries = Object.entries(media ?? {});
+  const urls = await signActivityArt(supabase, entries.map(([, m]) => m.path));
+  return Object.fromEntries(entries.map(([id, m]) => [id, { url: urls.get(m.path) ?? null, alt: m.alt }]));
+}

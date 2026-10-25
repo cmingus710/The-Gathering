@@ -113,7 +113,7 @@ async function ensureNoah(browser: Browser) {
     await signIn(page, EDITOR);
     await page.goto("/admin/youth/activities");
     await page.getByRole("button", { name: "Add demonstration coloring drafts" }).click();
-    await expect(page.getByText(/demonstration drafts/i).first()).toBeVisible();
+    await expect(page.getByText(/^Added \d+ demonstration drafts?\.|The demonstration drafts are already here\./)).toBeVisible({ timeout: 30_000 });
     await page.close();
   }
   const [a] = await find();
@@ -213,6 +213,11 @@ test("editor: demonstration drafts, refused and accepted SVGs, and a preview tha
   await expect(section.getByText(/Checked: 2 fillable parts/)).toBeVisible();
   await section.getByRole("button", { name: /Replace the draft's picture with this one/ }).click();
   await expect(page.getByText(/Coloring picture saved to draft version/)).toBeVisible();
+  await expect(section.getByText("Tap-to-fill · 2 parts").first()).toBeVisible();
+  // An ordinary save of the activity's content keeps the picture (the form doesn't send config for this type).
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByText(/Draft version \d+ saved/)).toBeVisible();
+  await page.reload();
   await expect(section.getByText("Tap-to-fill · 2 parts").first()).toBeVisible();
   await page.screenshot({ path: "test-results/local/coloring-editor-desktop.png", fullPage: true });
 
