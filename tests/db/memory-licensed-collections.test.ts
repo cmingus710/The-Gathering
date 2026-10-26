@@ -182,8 +182,8 @@ describeDb("Licensed versions in memory collections", () => {
       const detail = await rpc<Json>(as(publisher), "memory_admin_collection", [fixed]);
       const i = (detail.items as Json[])[0];
       expect(i.suitability).toEqual(expect.arrayContaining([expect.stringMatching(/flashcards and self-check/)]));
-      // Activity previews need stored text; the collection page shows the fetched text instead.
-      await fails(as(publisher), "memory_admin_preview", [john, "missing_words", "guided", 0, false], /flashcards and self-check/);
+      // Only the activities the version permits can be previewed (unchanged text only here).
+      await fails(as(publisher), "memory_admin_preview", [john, "missing_words", "guided", 0, false], /isn't permitted for this version/);
       // Verse counts and length limits still apply.
       await fails(as(publisher), "memory_admin_item_add", [fixed, j({ ...P("JHN", 3, 16), provider: { ...provider(NIV_TEXT), words: 901 } })], /too long/);
     });
