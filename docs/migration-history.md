@@ -588,3 +588,17 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`youth_coloring`, `youth-coloring`).
+
+## All six memory exercises for licensed versions (2026-11-25)
+
+- **New (additive; no applied migration was edited):** `20261125000100_memory_provider_exercises`:
+  - **New columns:** `memory.provider_permissions` gains `exercise_modes` (default false), its note, `exercise_confirmed_by` / `exercise_confirmed_at`, `publisher_approval_required` (default false), its note, and `publisher_approval_confirmed_by` / `publisher_approval_confirmed_at`. Check `provider_permissions_exercises`: exercises need unchanged-text practice, a note, and the publisher approval where required. Two indexes.
+  - **One data update:** `publisher_approval_required = true` on NIV's existing row (Biblica's direct agreement). It's a restriction only; nothing is enabled.
+  - **New private helpers:** `memory.provider_exercises`, `memory.provider_text` (checks the app's fetch against the fingerprint, raises `P0010` on changed wording), `memory.session_json_with`, `memory.provider_session_start_text`, `memory.provider_result`.
+  - **New member functions** (granted to `authenticated` only): `public.memory_session_source`, `public.memory_card_parts`, `public.memory_admin_preview(uuid, text, text, integer, boolean, jsonb)` (the 5-argument signature delegates to it), and `public.memory_admin_provider_exercises_save`.
+  - **Replaced, same signatures:** `memory.translation_modes`, `memory.suitability`, `public.memory_session_start` (licensed text path), `memory_session_hint`, `memory_session_submit` (licensed results keep scores only), `memory_admin_provider_permissions`, and `memory_admin_provider_permission_save`.
+  - Existing rows are unchanged. Anon baseline unchanged. See [memory-provider-practice.md](memory-provider-practice.md#the-six-exercises-and-the-authorization).
+- **Operator script:** `supabase/manual/2026-11-25-apply-memory-provider-exercises.sql`, one transaction. The preflight requires `20261106000100` and `20261111000100` (its dependencies) and refuses a second run. It post-checks grants, that helpers stay private, and that no exercise permission is on. History row `created_by = memory-provider-exercises`.
+- **Order:** apply the migration before deploying the app. The practice routes pass `source` and call `memory_session_source` and `memory_card_parts`.
+- **Hosted:** not applied. Needs the owner's approval.
+

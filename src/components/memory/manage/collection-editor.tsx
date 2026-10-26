@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { BOOK_LIST } from "@/lib/bible/books";
 import { unavailableNote, versionChoices } from "@/lib/memory/eligibility";
 import { addItemAction, collectionStatusAction, coverAction, itemOpAction, saveItemAction, sequenceAction } from "@/lib/memory/manage-actions";
-import { audienceLabel, collectionStatus, formatDay } from "@/lib/memory/format";
+import { audienceLabel, collectionStatus, formatDay, licensedPracticeNote } from "@/lib/memory/format";
 import { utcToZonedLocal } from "@/lib/time";
 import { ActionForm } from "./action-form";
 import { CollectionForm } from "./collection-form";
@@ -55,8 +55,8 @@ export function CollectionEditor({ c, home, base, coverUrl, preview }: { c: Admi
       ) : licensed ? (
         <Alert tone="info" live={false} title={`${c.translation.code} is a licensed version.`}>
           <p>
-            Its text is fetched from API.Bible whenever it&apos;s shown, with its copyright and usage reporting, and is never stored here. Members practice it with
-            flashcards and self-check only; activities that hide or rearrange words aren&apos;t offered.
+            Its text is fetched from API.Bible whenever it&apos;s shown, with its copyright and usage reporting, and is never stored here.{" "}
+            {licensedPracticeNote(c.translation.code, c.translation.memory_modes)}
           </p>
         </Alert>
       ) : null}

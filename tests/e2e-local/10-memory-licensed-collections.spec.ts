@@ -153,7 +153,7 @@ test("members practice an assigned licensed verse only in its permitted modes, a
   await sql("delete from memory.cards where item_id = $1 and profile_id = (select id from public.profiles where email = $2)", [nivItem, MEMBER]).catch(() => {});
   const page = await as(browser, MEMBER);
   await page.goto(`/memory/collections/${nivCollection}`);
-  await expect(page.getByText(/New International Version \(NIV\) is licensed: each verse is shown exactly as published/)).toBeVisible();
+  await expect(page.getByText(/NIV is licensed: it.s shown exactly as published and practiced with flashcards and self-check/).first()).toBeVisible();
   await expect(page.getByText(/NIV is temporarily unavailable for memory practice/)).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Add to My Verses" }).click();
   // The page refreshes with the new card in place of the button.
@@ -185,7 +185,7 @@ test("withdrawing the permission pauses practice, keeps progress, and says why",
   try {
     const page = await as(browser, MEMBER);
     await page.goto(`/memory/collections/${nivCollection}`);
-    await expect(page.getByText("Memory practice in NIV isn't available right now.")).toBeVisible();
+    await expect(page.getByText("Memory practice in NIV isn't available right now.").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Practice paused/ })).toBeVisible();
     await shot(page, "member-collection-withdrawn");
     await page.close();

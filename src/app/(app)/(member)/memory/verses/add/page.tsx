@@ -11,6 +11,7 @@ import { requireLearner } from "@/lib/auth/viewer";
 import { BOOK_LIST, chapterCount, isBookCode } from "@/lib/bible/books";
 import type { Translation, Verse } from "@/lib/bible/types";
 import type { Item } from "@/lib/memory/types";
+import { licensedPracticeNote } from "@/lib/memory/format";
 import { fetchMemoryText } from "@/lib/memory/provider";
 import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
@@ -160,7 +161,7 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
               {preview.fumsId ? <FumsTracker ids={[preview.fumsId]} /> : null}
               <p className="mt-3 text-meta text-text-secondary">
                 {preview.translation.source_kind === "api"
-                  ? `${preview.translation.code} is licensed: it's shown exactly as published and isn't stored here. You'll practice it with flashcards and self-check.`
+                  ? `${licensedPracticeNote(preview.translation.code, stored.find((x) => x.id === version)?.memory_modes)} It isn't stored here.`
                   : `You'll practice and be checked against exactly this wording in ${preview.translation.code}.`}
               </p>
               <div className="mt-4">

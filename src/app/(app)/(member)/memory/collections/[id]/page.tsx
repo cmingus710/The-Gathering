@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
 import { loadMemoryOptions, unavailableNote } from "@/lib/memory/eligibility";
-import { formatDay } from "@/lib/memory/format";
+import { formatDay, licensedPracticeNote } from "@/lib/memory/format";
 import { signMemoryPaths } from "@/lib/memory/storage";
 import type { Collection, Item } from "@/lib/memory/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -61,9 +61,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           </p>
         </Alert>
       ) : licensed ? (
-        <p className="mb-6 text-meta text-text-secondary">
-          {c.translation.name} ({c.translation.code}) is licensed: each verse is shown exactly as published, and you practice it with flashcards and self-check.
-        </p>
+        <p className="mb-6 text-meta text-text-secondary">{licensedPracticeNote(c.translation.code, c.translation.memory_modes)}</p>
       ) : null}
       {c.goal_note || c.goal_sessions_per_week ? (
         <p className="mb-6 text-text-secondary">

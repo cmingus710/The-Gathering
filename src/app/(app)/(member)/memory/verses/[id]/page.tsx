@@ -13,7 +13,7 @@ import { Card, PageHeader, SectionHeading } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
-import { ACTIVITIES, STAGES, activityLabel, confidenceLabel, difficultyLabel, formatDay, percent, QUALITY, reviewDate } from "@/lib/memory/format";
+import { ACTIVITIES, licensedPracticeNote, STAGES, activityLabel, confidenceLabel, difficultyLabel, formatDay, percent, QUALITY, reviewDate } from "@/lib/memory/format";
 import type { CardDetail, Collection } from "@/lib/memory/types";
 import { fetchMemoryText, type MemoryText } from "@/lib/memory/provider";
 import { requireClient } from "@/lib/supabase/server";
@@ -132,10 +132,7 @@ export default async function VersePage({ params, searchParams }: PageProps<"/me
             <section aria-labelledby="practice">
               <SectionHeading id="practice">Practice</SectionHeading>
               {c.provider ? (
-                <p className="mb-3 text-meta text-text-secondary">
-                  For {p.translation.code}, practice shows the verse exactly as published: flashcards and self-check. Activities that hide or rearrange words aren&apos;t
-                  available for this version.
-                </p>
+                <p className="mb-3 text-meta text-text-secondary">{licensedPracticeNote(p.translation.code, c.modes)}</p>
               ) : null}
               <ul className="grid gap-2 sm:grid-cols-2">
                 {modes.map((a) => (

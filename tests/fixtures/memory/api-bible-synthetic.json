@@ -1,0 +1,17 @@
+{
+  "synthetic-nasb/JHN.3.16-JHN.3.17": {
+    "content": "[16] Synthetic fixture wording for verse sixteen, written only for tests: the learners remember every word. [17] Synthetic fixture wording for verse seventeen, kept verbatim.",
+    "copyright": "Synthetic fixture notice for NASB-shaped tests. Not scripture; no licensed text.",
+    "fumsToken": "synthetic-fums-nasb"
+  },
+  "synthetic-amp/JHN.3.16-JHN.3.17": {
+    "content": "[16] Synthetic fixture text for verse sixteen [amplified], with brackets kept as given. [17] Synthetic fixture text for verse seventeen.",
+    "copyright": "Synthetic fixture notice for AMP-shaped tests. Not scripture; no licensed text.",
+    "fumsToken": "synthetic-fums-amp"
+  },
+  "synthetic-niv/JHN.3.16-JHN.3.17": {
+    "content": "[16] Synthetic fixture standing in for verse sixteen. [17] Synthetic fixture standing in for verse seventeen.",
+    "copyright": "Synthetic fixture notice for NIV-shaped tests. Not scripture; no licensed text.",
+    "fumsToken": "synthetic-fums-niv"
+  }
+}

@@ -292,7 +292,9 @@ as $$
 declare
   v_uid uuid := memory.require_member();
   pa memory.passages;
+  v_activity memory.activity;
 begin
+  select x.activity into v_activity from memory.sessions x where x.id = p_session and x.profile_id = v_uid;
   select p.* into pa from memory.sessions x join memory.passages p on p.id = x.passage_id where x.id = p_session and x.profile_id = v_uid;
   if pa.id is null then
     raise exception 'That practice activity wasn''t found.' using errcode = 'P0002';
@@ -300,7 +302,7 @@ begin
   if pa.source_kind <> 'api' then
     return null;
   end if;
-  return jsonb_build_object('translation_id', pa.translation_id, 'book', pa.book_code, 'sc', pa.start_chapter, 'sv', pa.start_verse,
+  return jsonb_build_object('activity', v_activity, 'translation_id', pa.translation_id, 'book', pa.book_code, 'sc', pa.start_chapter, 'sv', pa.start_verse,
                             'ec', pa.end_chapter, 'ev', pa.end_verse);
 end;
 $$;
@@ -848,8 +850,12 @@ begin
     end if;
   end if;
   x.setup := memory.build_setup(v_id, p, x.activity, x.difficulty, x.token_from, x.token_to, 0, memory.settings_of(v_uid), '{}'::jsonb);
-  return memory.session_json(x) || jsonb_build_object('preview', true,
-    'answer_text', memory.range_text(p.tokens, x.token_from, x.token_to), 'hidden', x.setup);
+  -- The passage as held (a licensed version's text is in memory only), with its parts.
+  return memory.session_json_with(x, p) || jsonb_build_object('preview', true,
+    'answer_text', memory.range_text(p.tokens, x.token_from, x.token_to), 'hidden', x.setup,
+    'parts', jsonb_build_object(
+      'segments', (select jsonb_agg(s - 'from' - 'to' || jsonb_build_object('words', (s ->> 'to')::integer - (s ->> 'from')::integer + 1)) from jsonb_array_elements(p.segments) s),
+      'short_segments', (select jsonb_agg(s - 'from' - 'to' || jsonb_build_object('words', (s ->> 'to')::integer - (s ->> 'from')::integer + 1)) from jsonb_array_elements(p.short_segments) s)));
 end;
 $$;
 

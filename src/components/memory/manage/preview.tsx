@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { FumsReport } from "@/components/bible/fums";
 import { LicensedPassageText } from "@/components/memory/licensed-passage";
 import { cn } from "@/components/ui/cn";
 import { Card, SectionHeading } from "@/components/ui/card";
 import { ACTIVITIES, DIFFICULTIES } from "@/lib/memory/format";
-import type { Activity, Difficulty, Session } from "@/lib/memory/types";
+import type { Activity, Difficulty, Segment, Session } from "@/lib/memory/types";
 import type { AdminItem, ManageBase } from "./types";
 
 /**
@@ -21,6 +22,9 @@ export function ActivityPreview({
   segment,
   short,
   preview,
+  activities,
+  parts: licensedParts,
+  licensed,
 }: {
   base: ManageBase;
   collectionId: string;
@@ -31,6 +35,12 @@ export function ActivityPreview({
   segment: number;
   short: boolean;
   preview: (Session & { hidden: { blanks?: number[]; chips?: Array<{ id: string; from: number; to: number }> } }) | null;
+  /** The activities the version permits (default: all six). */
+  activities?: Activity[];
+  /** A licensed passage's parts (it keeps none). */
+  parts?: { segments: Segment[] | null; short_segments: Segment[] | null };
+  /** A licensed version: its copyright notice and the FUMS token of this display. */
+  licensed?: { copyright: string | null; fumsId: string | null };
 }) {
   const href = (p: Partial<{ item: string; activity: string; difficulty: string; segment: number; short: boolean }>) => {
     const q = new URLSearchParams({ item: p.item ?? item.id, activity: p.activity ?? activity, difficulty: p.difficulty ?? difficulty, segment: String(p.segment ?? segment), short: (p.short ?? short) ? "1" : "0" });
@@ -38,7 +48,7 @@ export function ActivityPreview({
   };
   const chip = (active: boolean) =>
     cn("inline-flex min-h-11 items-center rounded-full border px-4 text-meta font-semibold", active ? "border-primary bg-primary-soft" : "border-border bg-surface hover:bg-surface-muted");
-  const parts = short ? item.passage.short_segments : item.passage.segments;
+  const parts = (short ? (licensedParts?.short_segments ?? item.passage.short_segments) : (licensedParts?.segments ?? item.passage.segments)) ?? [];
   return (
     <div className="space-y-6">
       <nav aria-label="Verse" className="flex flex-wrap gap-2">
@@ -49,7 +59,7 @@ export function ActivityPreview({
         ))}
       </nav>
       <nav aria-label="Activity" className="flex flex-wrap gap-2">
-        {ACTIVITIES.map((a) => (
+        {ACTIVITIES.filter((a) => !activities || activities.includes(a.key)).map((a) => (
           <Link key={a.key} href={href({ activity: a.key })} className={chip(a.key === activity)} aria-current={a.key === activity ? "true" : undefined}>
             {a.label}
           </Link>
@@ -89,6 +99,15 @@ export function ActivityPreview({
               <summary className="min-h-11 cursor-pointer py-2 font-semibold text-primary">Answer text</summary>
               <p className="memory-text">{preview.answer_text}</p>
             </details>
+            {licensed ? (
+              <>
+                <p className="text-meta text-text-secondary">
+                  {preview.translation.code} · {preview.translation.name}
+                  {licensed.copyright ? ` · ${licensed.copyright}` : ""}
+                </p>
+                <FumsReport id={licensed.fumsId} />
+              </>
+            ) : null}
           </div>
         )}
       </Card>

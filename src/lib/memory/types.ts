@@ -113,7 +113,7 @@ export type Card = {
   /** Set for verses from a church or group collection. */
   assignment: { translation: TranslationBrief; choice: boolean; own_translation: boolean } | null;
   can_change_translation: boolean;
-  /** Practice modes the verse's version allows now (licensed: flashcards and self-check only). */
+  /** Practice modes the verse's version allows now (licensed: flashcards and self-check, or all six once permitted). */
   modes: Activity[];
   provider: boolean;
 };
@@ -268,6 +268,10 @@ export type Session = {
   result: SubmitResult | null;
   preview?: boolean;
   answer_text?: string;
+  /** A licensed version's activity (its text is never stored). */
+  provider?: boolean;
+  /** Added by the app's server for a licensed version: the provider's copyright notice and the FUMS token of the passage shown. */
+  licensed?: { copyright: string | null; fums_id: string | null };
 };
 
 export type TypedOp =

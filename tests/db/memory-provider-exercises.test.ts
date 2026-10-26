@@ -299,7 +299,7 @@ describeDb("All six memory exercises for licensed versions", () => {
   describe("helpers for the app", () => {
     it("names the source of a licensed session only to its owner", async () => {
       const s = await start(m1, cards.NASB, "self_check", { source: src("NASB") });
-      expect(await rpc<Json>(as(m1), "memory_session_source", [s.id])).toEqual({ translation_id: ids.NASB, book: "JHN", sc: 3, sv: 16, ec: 3, ev: 17 });
+      expect(await rpc<Json>(as(m1), "memory_session_source", [s.id])).toEqual({ activity: "self_check", translation_id: ids.NASB, book: "JHN", sc: 3, sv: 16, ec: 3, ev: 17 });
       await fails(as(m2), "memory_session_source", [s.id], /wasn't found/);
     });
 
@@ -318,6 +318,8 @@ describeDb("All six memory exercises for licensed versions", () => {
       const pv = await rpc<Json>(as(publisher), "memory_admin_preview", [item.id, "missing_words", "guided", 0, false, j(src("NASB"))]);
       expect(pv).toMatchObject({ activity: "missing_words", preview: true });
       expect(pv.answer_text).toMatch(MARKER);
+      expect(JSON.stringify((pv.setup as Json).tokens)).toMatch(/"t":"Synthetic"/);
+      expect(((pv.parts as Json).segments as Json[]).length).toBeGreaterThan(0);
       expect((await db.raw<{ n: number }>("select count(*)::int n from memory.sessions"))[0].n).toBe(before);
       await fails(as(publisher), "memory_admin_preview", [item.id, "missing_words", "guided", 0, false], /temporarily unavailable/);
     });
