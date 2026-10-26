@@ -605,5 +605,5 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - AMP and NASB have `exercise_modes = false`;
   - AMP, NASB, and NIV still have only flashcards and self-check;
   - 86 versions in history, without `20261125000100`.
-- **Recorded (2026-10-26):** the owner then ran `supabase/manual/2026-11-25-record-memory-provider-exercises.sql`, reported as completed. It's all-or-nothing, and its preflight requires the schema, no exercise permission on, and NIV marked `publisher_approval_required`; only then does it record `20261125000100` (`created_by = memory-provider-exercises`). I didn't confirm the result independently: database access from this session was refused.
+- **Recorded (2026-10-26):** the owner then ran `supabase/manual/2026-11-25-record-memory-provider-exercises.sql`, It's all-or-nothing, and its preflight requires the schema, no exercise permission on, and NIV marked `publisher_approval_required`; only then does it record `20261125000100`. Checked afterwards in the owner's SQL editor: `20261125000100` is recorded with `created_by = memory-provider-exercises`, and AMP and NASB show `exercise_modes = false`. NIV's flag is confirmed by the preflight having passed.
 
