@@ -1,6 +1,6 @@
 # Section headers
 
-Each member section's landing page opens with the same header: the section's dimensional menu artwork, the page title (its one `h1`), a short description, the section's actions, and a decorative banner in charcoal and gold (dark) or ivory and gold (light) with a fine gold rule.
+Each member section's landing page opens with the same header: the section's dimensional menu artwork, the page title (its one `h1`), and a short description on a decorative banner in charcoal and gold (dark) or ivory and gold (light) with a fine gold rule. The section's actions (for example **Open the Bible** and **My Journal**) are the first row of controls directly below the banner, never on it, so the artwork stays unobstructed; on phones each fills the row.
 
 - Component: `src/components/ui/section-header.tsx` (`<SectionHeader section="events" … />`)
 - Section list (label, icon): `src/lib/section-headers/sections.ts`

@@ -1508,11 +1508,6 @@ html[data-player] {
     background: linear-gradient(90deg, var(--sh-edge) calc(100% - 5rem), color-mix(in srgb, var(--sh-edge) 70%, transparent) calc(100% - 2.5rem), transparent);
     pointer-events: none;
   }
-  /* A phone-only shortcut beside the title sits on its own patch of banner colour. */
-  .section-header-aside {
-    border-radius: var(--radius-control);
-    background-color: var(--sh-edge);
-  }
   .section-header-title {
     font-size: 1.625rem;
     line-height: 1.15;
@@ -1526,27 +1521,24 @@ html[data-player] {
     font-size: var(--text-meta);
     line-height: var(--text-meta--line-height);
   }
-  .section-header-actions {
+  /* The page's first controls, in their own row directly below the banner
+     (never on it, so the artwork stays unobstructed). On phones each control
+     fills the row; with very large text a label wraps rather than being cut
+     off. */
+  .section-actions {
     display: flex;
-    max-width: 100%;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-top: -0.25rem;
+    margin-bottom: 1.25rem;
   }
-  /* With very large text a control's label wraps rather than being cut off. */
-  .section-header-actions > *,
-  .section-header-aside,
-  .section-header-aside > * {
+  .section-actions > *,
+  .section-actions-aside > * {
     max-width: 100%;
-  }
-  .section-header-aside {
-    min-width: 0;
-  }
-  /* Phones: a single primary action fills the row beneath the title. */
-  .section-header-actions--stretch {
-    width: 100%;
-  }
-  .section-header-actions--stretch > * {
     flex: 1 1 auto;
+  }
+  .section-actions-aside {
+    display: flex;
   }
   @media (min-width: 40rem) {
     .section-header {
@@ -1579,10 +1571,8 @@ html[data-player] {
       font-size: 1.0625rem;
       line-height: 1.5;
     }
-    .section-header-actions--stretch {
-      width: auto;
-    }
-    .section-header-actions--stretch > * {
+    .section-actions > *,
+    .section-actions-aside > * {
       flex: 0 0 auto;
     }
   }
