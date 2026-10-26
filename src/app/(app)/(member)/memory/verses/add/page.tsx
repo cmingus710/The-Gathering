@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { FumsTracker } from "@/components/bible/fums";
 import { Attribution, ScriptureText } from "@/components/bible/scripture";
 import { UNAVAILABLE_NOTE, UnavailableVersionOptions, versionLabel } from "@/components/memory/unavailable-versions";
 import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireLearner } from "@/lib/auth/viewer";
 import { BOOK_LIST, chapterCount, isBookCode } from "@/lib/bible/books";
 import type { Translation, Verse } from "@/lib/bible/types";
-import type { Item } from "@/lib/memory/types";
+import { ineligibleNote } from "@/lib/memory/eligibility";
 import { licensedPracticeNote } from "@/lib/memory/format";
+import type { Card as MemoryCard, Item } from "@/lib/memory/types";
 import { fetchMemoryText } from "@/lib/memory/provider";
 import { loadMemoryVersions } from "@/lib/memory/versions";
 import { requireClient } from "@/lib/supabase/server";
@@ -35,6 +38,13 @@ type Preview = { ok: boolean; problem?: string; label?: string; translation?: Tr
  * With ?item=&collection= (an assigned verse whose collection lets members
  * choose), the reference is fixed and only the version is chosen; the shared
  * assignment itself never changes.
+ *
+ * From a Scripture highlight (?source=highlight, from the Bible reader or My
+ * Journal) the passage and its translation arrive preselected. A requested
+ * version that can't be memorized is explained, never swapped for another.
+ * A passage already in My Verses is offered to open instead of being added
+ * again. Adding never changes the highlight, and removing the highlight
+ * later never removes the verse.
  */
 export default async function AddVersePage({ searchParams }: PageProps<"/memory/verses/add">) {
   await requireLearner("/memory/verses/add");
@@ -53,6 +63,12 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
   const choiceAllowed = Boolean(item?.translation_choice);
 
   const requested = one(sp.t);
+  const fromHighlight = one(sp.source) === "highlight";
+  // A specific version was asked for (a highlight's translation) but can't
+  // be memorized: say why, and don't preview another version in its place.
+  const blocked = !item && requested && !stored.some((x) => x.id === requested)
+    ? (versions.unavailable.find((x) => x.id === requested) ?? { id: requested, code: "That version", memory_reason: "not_published" as const })
+    : null;
   const t = (stored.some((x) => x.id === requested) ? requested : "") || versions.effective_id || stored[0]?.id || "";
   const book = item ? item.passage.book : one(sp.book);
   const chapter = item ? item.passage.start_chapter : int(one(sp.c));
@@ -63,7 +79,7 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
   const version = item && !choiceAllowed && assignedIn ? assignedIn.id : t;
   const asked = item ? Boolean(requested) || !choiceAllowed : true;
   let preview: Preview | null = null;
-  if (asked && version && isBookCode(book) && chapter && from && to && endChapter) {
+  if (asked && !blocked && version && isBookCode(book) && chapter && from && to && endChapter) {
     const { data, error } = await supabase.rpc("memory_passage_preview", { p_translation: version, p: { book, sc: chapter, sv: from, ec: endChapter, ev: to } });
     preview = error ? { ok: false, problem: error.code === "22023" ? error.message : "That passage couldn't be checked right now." } : (data as Preview);
     // A licensed version: its text is fetched here and shown unchanged; the
@@ -75,6 +91,24 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
           ? { ...preview, verses: text.verses, copyright: text.copyright, fumsId: text.fumsId }
           : { ok: false, problem: text.status === "stored" ? "That passage couldn't be checked right now." : text.message };
     }
+  }
+  // The same passage, in the same version, already in My Verses.
+  let existing: { active: MemoryCard | null; removed: MemoryCard | null; overlapping: MemoryCard[] } = { active: null, removed: null, overlapping: [] };
+  if (!item && preview?.ok && isBookCode(book) && chapter && from && to) {
+    const { data } = await supabase.rpc("memory_cards");
+    const cards = (data as { active: MemoryCard[]; removed: MemoryCard[] } | null) ?? { active: [], removed: [] };
+    const same = (k: MemoryCard) =>
+      k.passage.translation.id === version && k.passage.book === book && k.passage.start_chapter === chapter && k.passage.start_verse === from && k.passage.end_chapter === endChapter && k.passage.end_verse === to;
+    const overlaps = (k: MemoryCard) =>
+      k.passage.book === book &&
+      k.passage.translation.id === version &&
+      k.passage.start_chapter * 1000 + k.passage.start_verse <= endChapter! * 1000 + to &&
+      k.passage.end_chapter * 1000 + k.passage.end_verse >= chapter * 1000 + from;
+    existing = {
+      active: cards.active.find(same) ?? null,
+      removed: cards.removed.find((k) => k.status === "removed" && same(k)) ?? null,
+      overlapping: cards.active.filter((k) => !same(k) && overlaps(k)),
+    };
   }
   return (
     <>
@@ -146,6 +180,43 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
               </form>
             </Card>
           ) : null}
+          {fromHighlight && !item ? (
+            <Alert tone="info" live={false} title="From your highlight">
+              The passage and its translation are filled in. Review the text, then add it. Your highlight stays as it is, and removing it later won&apos;t remove
+              the memory verse.
+            </Alert>
+          ) : null}
+          {blocked ? (
+            <Alert tone="warning" title={ineligibleNote(blocked.code, blocked.memory_reason)}>
+              Nothing was added, and no other version was chosen instead. You can pick a version that&apos;s available for memory practice above.
+            </Alert>
+          ) : null}
+          {existing.active ? (
+            <Alert tone="info" title={`${existing.active.passage.label} (${existing.active.passage.translation.code}) is already in My Verses.`}>
+              <p>Open it to keep practicing; your progress is kept. It isn&apos;t added a second time.</p>
+              <ButtonLink href={`/memory/verses/${existing.active.id}`} size="sm" variant="secondary" className="mt-2">
+                Open in My Verses
+              </ButtonLink>
+            </Alert>
+          ) : existing.removed ? (
+            <Alert tone="info" live={false} title="You removed this verse earlier.">
+              Adding it again brings it back with its earlier progress.
+            </Alert>
+          ) : null}
+          {existing.overlapping.length ? (
+            <Alert tone="info" live={false} title="Overlapping verses in My Verses">
+              <ul className="list-disc pl-5">
+                {existing.overlapping.map((k) => (
+                  <li key={k.id}>
+                    <Link href={`/memory/verses/${k.id}`} className="underline">
+                      {k.passage.label} ({k.passage.translation.code})
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              You can still add this passage as its own verse.
+            </Alert>
+          ) : null}
           {preview && !preview.ok ? (
             <Alert tone="error" title={preview.problem ?? "That passage can't be used."}>
               Nothing was added, and no other version was used instead. Choose another version or passage.
@@ -165,7 +236,7 @@ export default async function AddVersePage({ searchParams }: PageProps<"/memory/
                   : `You'll practice and be checked against exactly this wording in ${preview.translation.code}.`}
               </p>
               <div className="mt-4">
-                {item ? (
+                {existing.active ? null : item ? (
                   <AddPassageForm itemId={item.id} translation={version} book={book} chapter={chapter!} from={from!} endChapter={endChapter!} to={to!} />
                 ) : (
                   <AddPassageForm translation={version} book={book} chapter={chapter!} from={from!} to={to!} />

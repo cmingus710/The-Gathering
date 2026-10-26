@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { requireLearner } from "@/lib/auth/viewer";
+import type { HighlightRow } from "@/lib/bible/highlights";
 import { resolveText } from "@/lib/bible/source";
 import type { ChapterPayload, Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -99,7 +100,7 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
           bookName={payload.book.name}
           chapter={ch}
           verses={text.verses}
-          initialHighlights={(highlights.data as Array<{ verse: number; color: string }> | null) ?? []}
+          initialHighlights={(highlights.data as HighlightRow[] | null) ?? []}
           prefs={p}
         />
       ) : null}

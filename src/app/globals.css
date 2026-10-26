@@ -1099,12 +1099,16 @@ html[data-player] {
   --hl-green: #dcecd5;
   --hl-blue: #d9e6f3;
   --hl-pink: #f5dde2;
+  --hl-purple: #e5cff3;
+  --hl-orange: #f9cfa6;
 }
 [data-theme="dark"] {
   --hl-yellow: #4a3f17;
   --hl-green: #243b27;
   --hl-blue: #213547;
   --hl-pink: #47262f;
+  --hl-purple: #3b2852;
+  --hl-orange: #5c2f12;
 }
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
@@ -1112,6 +1116,8 @@ html[data-player] {
     --hl-green: #243b27;
     --hl-blue: #213547;
     --hl-pink: #47262f;
+    --hl-purple: #3b2852;
+    --hl-orange: #5c2f12;
   }
 }
 .scripture {
@@ -1151,6 +1157,17 @@ html[data-player] {
 .scripture mark[data-color="green"] { background: var(--hl-green); }
 .scripture mark[data-color="blue"] { background: var(--hl-blue); }
 .scripture mark[data-color="pink"] { background: var(--hl-pink); }
+.scripture mark[data-color="purple"] { background: var(--hl-purple); }
+.scripture mark[data-color="orange"] { background: var(--hl-orange); }
+/* Verse-selection mode (phones especially): a tap anywhere on a verse
+   selects it, so ordinary text selection pauses while the mode is on.
+   Scrolling is untouched (taps are clicks, never touch handlers). */
+.scripture[data-select-mode="on"] [data-verse] {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
 .scripture [data-selected="true"] {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

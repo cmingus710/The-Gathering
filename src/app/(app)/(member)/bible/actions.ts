@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireLearner } from "@/lib/auth/viewer";
 import { isValidTimeZone, isValidYmd } from "@/lib/bible/dates";
+import { isHighlightColor, type ApplyResult, type HighlightRow } from "@/lib/bible/highlights";
 import { errorState, type FormState } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -119,25 +120,46 @@ export async function removeBookmarkAction(formData: FormData) {
   revalidatePath("/bible/bookmarks");
 }
 
-export async function highlightAction(input: {
+/**
+ * Colors (or with a null color, removes) one verse or a contiguous range in
+ * one chapter. `expected` is the revision of each verse as the member saw it
+ * (0 = not highlighted): a verse changed elsewhere since then comes back as
+ * a "conflict" with the current highlights, and nothing is overwritten.
+ * Errors never claim the change was saved.
+ */
+export async function applyHighlightAction(input: {
   translationId: string;
   book: string;
   chapter: number;
   verses: number[];
   color: string | null;
-}): Promise<{ ok: true; highlights: Array<{ verse: number; color: string }> } | { ok: false; message: string }> {
+  expected: Record<string, number>;
+}): Promise<ApplyResult> {
   await requireLearner("/bible");
-  if (!uuid.safeParse(input.translationId).success || !/^[1-3A-Z][A-Z0-9]{2}$/.test(input.book)) return { ok: false, message: "Choose verses first." };
-  if (input.color !== null && !["yellow", "green", "blue", "pink"].includes(input.color)) return { ok: false, message: "Choose a highlight color." };
-  const { data, error } = await rpc("bible_highlight_set", {
-    p_translation: input.translationId,
-    p_book: input.book,
-    p_chapter: input.chapter,
-    p_verses: input.verses.slice(0, 200),
-    p_color: input.color,
+  const verses = [...new Set(input.verses)].filter((v) => Number.isInteger(v) && v > 0 && v <= 200).sort((a, b) => a - b);
+  if (!uuid.safeParse(input.translationId).success || !/^[1-3A-Z][A-Z0-9]{2}$/.test(input.book) || !Number.isInteger(input.chapter) || !verses.length) {
+    return { ok: false, message: "Choose verses first.", retryable: false };
+  }
+  if (input.color !== null && !isHighlightColor(input.color)) return { ok: false, message: "Choose a highlight color.", retryable: false };
+  const expected = Object.fromEntries(verses.map((v) => [String(v), Math.max(0, Math.trunc(Number(input.expected?.[String(v)] ?? 0)) || 0)]));
+  const { data, error } = await rpc("bible_highlight_apply", {
+    p: { translation_id: input.translationId, book: input.book, chapter: input.chapter, verses, color: input.color, expected },
   });
-  if (error) return { ok: false, message: dbErrorMessage(error, "The highlight couldn't be saved.") };
-  return { ok: true, highlights: (data as Array<{ verse: number; color: string }>) ?? [] };
+  if (error) {
+    const known = ["22023", "P0002", "42501"].includes(error.code ?? "");
+    return { ok: false, message: dbErrorMessage(error, "The highlight couldn't be saved."), retryable: !known };
+  }
+  const r = data as { status: "saved" | "conflict"; highlights: HighlightRow[] };
+  return { ok: true, status: r.status, highlights: r.highlights ?? [] };
+}
+
+/** One chapter's highlights now (the reader re-reads them when it comes back into view, so other devices' changes appear). */
+export async function chapterHighlightsAction(input: { translationId: string; book: string; chapter: number }): Promise<{ ok: true; highlights: HighlightRow[] } | { ok: false }> {
+  await requireLearner("/bible");
+  if (!uuid.safeParse(input.translationId).success || !/^[1-3A-Z][A-Z0-9]{2}$/.test(input.book) || !Number.isInteger(input.chapter)) return { ok: false };
+  const { data, error } = await rpc("bible_highlights", { p_translation: input.translationId, p_book: input.book, p_chapter: input.chapter });
+  if (error) return { ok: false };
+  return { ok: true, highlights: (data as HighlightRow[]) ?? [] };
 }
 
 export async function readerPrefsAction(input: { text_size?: number; line_spacing?: number; verse_numbers?: boolean; translation_id?: string }) {
