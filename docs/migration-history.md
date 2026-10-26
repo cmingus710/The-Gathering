@@ -633,23 +633,16 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
 - **Order: migration first, then the app.**
   - The new reader and My Journal call `bible_highlight_apply` and `bible_highlight_passages`. Before the migration, saving a highlight shows "wasn't saved" and Scripture Highlights shows a load error; nothing is lost.
   - The currently deployed app keeps working after the migration: `bible_highlight_set` and `bible_highlights` keep their signatures, and the extra keys are ignored.
-- **Hosted:** not yet confirmed.
-  - On 2026-10-26, under the old number, the owner ran the version check for `20261125000100`. It returned `memory_provider_exercises`, not this migration.
-  - So the earlier apply script would have stopped at its preflight and changed nothing; but if the migration's SQL was pasted directly, the functions exist without a history row.
-  - Check first (read-only), then run the apply script or the record script accordingly:
-
-    ```sql
-    select to_regprocedure('public.bible_highlight_apply(jsonb)') is not null as highlight_functions_present,
-           exists (select 1 from supabase_migrations.schema_migrations where version = '20261126000100') as recorded;
-    ```
-
-    - `false, false`: run the apply script.
-    - `true, false`: run the record script.
-    - `true, true`: done.
-
-    Afterwards, the check below should return one row (`scripture_highlights`, `scripture-highlights`):
+- **Hosted: applied and recorded (2026-10-26).**
+  - The owner's first run used the old number. The version check for `20261125000100` returned `memory_provider_exercises`, which showed the version collision.
+  - A read-only check after the renumbering returned `highlight_functions_present = true`, `recorded = false`: the migration's SQL had been pasted and run on its own.
+  - The owner then ran `supabase/manual/2026-11-26-record-scripture-highlights.sql`. It is all-or-nothing, and its preflight and post-checks require the new functions and helpers, the grants (authenticated only; not anon or service_role; helpers closed), both new colors, the closed table, and `updated_at` plus a revision on every highlight before it records the version.
+  - **Checked (owner's SQL editor screenshot):** `20261126000100` is recorded as `scripture_highlights`, `created_by = scripture-highlights`.
+  - Nothing is left to do on hosted. The app change can deploy.
+  - The read-only check used:
 
     ```sql
     select version, name, created_by from supabase_migrations.schema_migrations where version = '20261126000100';
     ```
 
+    Expected: one row (`scripture_highlights`, `scripture-highlights`).
