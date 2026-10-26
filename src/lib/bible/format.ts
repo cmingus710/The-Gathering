@@ -41,10 +41,13 @@ export function formatTime(hhmm: string): string {
   return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(d);
 }
 
+/** Highlight colors, in toolbar order (bible.highlight_color; purple and orange since 20261125000100). */
 export const HIGHLIGHT_COLORS = [
   { value: "yellow", label: "Yellow" },
   { value: "green", label: "Green" },
   { value: "blue", label: "Blue" },
   { value: "pink", label: "Pink" },
+  { value: "purple", label: "Purple" },
+  { value: "orange", label: "Orange" },
 ] as const;
 export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number]["value"];

@@ -588,3 +588,23 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
       ```
 
       Expected: one row (`youth_coloring`, `youth-coloring`).
+
+## Scripture highlights (2026-11-25)
+
+- **New (additive; no applied migration was edited):** `20261125000100_scripture_highlights`:
+  - `bible.highlight_color` gains `purple` and `orange`;
+  - `bible.highlights` gains `updated_at` (backfilled from `created_at`) and `revision` (new sequence `bible.highlight_revisions`, owned by the column), plus the index `highlights_profile_recent_idx`;
+  - new internal `bible.highlight_color_ok(text)` and `bible.highlight_rows(uuid, uuid, text, integer)` (no API role can call them);
+  - new `public.bible_highlight_apply(jsonb)` and `public.bible_highlight_passages(jsonb)` (authenticated only);
+  - replaced with the same signatures and grants: `public.bible_highlights` (each verse also returns `revision` and `updated_at`) and `public.bible_highlight_set` (same result; a recolor keeps `created_at`).
+- **Operator script:** `supabase/manual/2026-11-25-apply-scripture-highlights.sql`, one transaction. The preflight requires the Phase 8 highlight functions and `20261123000100` (Bible Coloring Studio) and refuses a second run. It doesn't depend on `20261124000100` (Prayer collections), whose hosted status isn't recorded here, so either order works. It post-checks the grants, the closed table, and that every existing highlight has `updated_at` and a revision. History row `created_by = scripture-highlights`.
+- **Rehearsal (local, PostgreSQL 16):** on a database built from every earlier migration with a history row for each and two existing highlights, the script applied and recorded `20261125000100`; the existing rows kept their color and got revisions with `updated_at = created_at`. A rerun stopped at the preflight ("Nothing was changed: 20261125000100 is already applied.").
+- **Order: migration first, then the app.** The new reader and My Journal call `bible_highlight_apply` and `bible_highlight_passages`; before the migration, saving a highlight shows "wasn't saved" and Scripture Highlights shows a load error (nothing is lost). The currently deployed app keeps working after the migration (`bible_highlight_set` and `bible_highlights` keep their signatures; the extra keys are ignored).
+- **Hosted:** not applied. Waiting for the owner's approval.
+  - The read-only check afterwards:
+
+    ```sql
+    select version, name, created_by from supabase_migrations.schema_migrations where version = '20261125000100';
+    ```
+
+    Expected: one row (`scripture_highlights`, `scripture-highlights`).
