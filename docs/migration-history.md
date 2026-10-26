@@ -600,5 +600,10 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   - Existing rows are unchanged. Anon baseline unchanged. See [memory-provider-practice.md](memory-provider-practice.md#the-six-exercises-and-the-authorization).
 - **Operator script:** `supabase/manual/2026-11-25-apply-memory-provider-exercises.sql`, one transaction. The preflight requires `20261106000100` and `20261111000100` (its dependencies) and refuses a second run. It post-checks grants, that helpers stay private, and that no exercise permission is on. History row `created_by = memory-provider-exercises`.
 - **Order:** apply the migration before deploying the app. The practice routes pass `source` and call `memory_session_source` and `memory_card_parts`.
-- **Hosted:** not applied. Needs the owner's approval.
+- **Hosted (2026-10-26):** the owner ran the migration in the SQL editor, without its history row. A read-only check in the owner's SQL editor showed:
+  - `memory_card_parts` is executable by `authenticated` and not by `anon`, and `memory.provider_text` isn't executable by clients;
+  - AMP and NASB have `exercise_modes = false`;
+  - AMP, NASB, and NIV still have only flashcards and self-check;
+  - 86 versions in history, without `20261125000100`.
+- **Recorded (2026-10-26):** the owner then ran `supabase/manual/2026-11-25-record-memory-provider-exercises.sql`, reported as completed. It's all-or-nothing, and its preflight requires the schema, no exercise permission on, and NIV marked `publisher_approval_required`; only then does it record `20261125000100` (`created_by = memory-provider-exercises`). I didn't confirm the result independently: database access from this session was refused.
 
