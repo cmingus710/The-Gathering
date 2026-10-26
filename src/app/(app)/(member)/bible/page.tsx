@@ -170,7 +170,7 @@ export default async function BiblePage() {
         <SectionHeading id="bible-yours">Yours</SectionHeading>
         <ul className={rowListClass}>
           <li>
-            <ListRow plain href="/bible/bookmarks" icon={<Bookmark className="size-5" aria-hidden="true" />} label="Bookmarks and highlights" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
+            <ListRow plain href="/bible/bookmarks" icon={<Bookmark className="size-5" aria-hidden="true" />} label="Bookmarks" trailing={<ChevronRight className="size-5" aria-hidden="true" />} />
           </li>
         </ul>
       </section>

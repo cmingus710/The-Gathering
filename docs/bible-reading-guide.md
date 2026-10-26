@@ -18,7 +18,7 @@ Open **Bible Reading** from the home menu (the Bible tile), or **My Journal** fr
 **Open the Bible** (`/bible/read`) goes to your preferred version (or the church's, if you haven't chosen one). Choose a book and chapter, or use the previous/next links.
 
 - **Reading settings**: text size, line spacing, and verse numbers; saved to your account.
-- **Select verse numbers** (one verse, or a second verse number for the range between; Shift-click or Shift+arrow keys extend it) to highlight in six colors (yellow, green, blue, pink, purple, orange), **Add to Memory Verses**, bookmark, or **Write privately** about them. On a phone, **Select verses** lets you tap anywhere on a verse instead. Highlights appear in **My Journal → Scripture Highlights**; see [scripture-highlights.md](scripture-highlights.md).
+- **Select verse numbers** (one verse, or more verse numbers to build a range; tap the first or last again to remove it; Shift-click or Shift+arrow keys extend it) to highlight in six colors (yellow, green, blue, pink, purple, orange), **Add to Memory Verses**, bookmark, or **Write privately** about them. On a phone, **Select verses** lets you tap anywhere on a verse instead. Highlights appear in **My Journal → Scripture Highlights**. Bookmarks appear in **Bible reading → Bookmarks** (also linked at the top of each chapter), where **Continue reading** opens the reader at the bookmarked verse with the passage outlined. See [scripture-highlights.md](scripture-highlights.md).
 - The translation's name and required notices appear under the text. Some translations don't allow copying or printing; the reader respects that.
 - If a translation's source is unavailable, the page says so. It never shows another translation or made-up text instead.
 

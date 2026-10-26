@@ -56,7 +56,7 @@ async function select(page: Page, a: number, b: number) {
       await page.touchscreen.tap(point.x, point.y);
     }
   } else {
-    await page.getByRole("button", { name: `Verse ${a}`, exact: true }).click();
+    await page.getByRole("button", { name: new RegExp(`^Verse ${a}\\b`) }).click();
     if (b !== a) await page.getByRole("button", { name: new RegExp(`^Verse ${b}\\b`) }).click();
   }
   await expect(toolbar(page)).toBeVisible();
@@ -91,6 +91,7 @@ test.beforeAll(async () => {
   );
   // Each project starts clean for the member.
   await sql("delete from bible.highlights where profile_id = $1", [await memberId()]);
+  await sql("delete from bible.bookmarks where profile_id = $1", [await memberId()]);
   await sql(
     `delete from memory.cards k using memory.passages p, bible.translations t
       where k.passage_id = p.id and p.translation_id = t.id and t.code = 'SYH' and k.profile_id = $1`,
@@ -228,4 +229,40 @@ test("adding a highlight in a version not permitted for memory explains why and 
   await expect(page.getByText(/no other version was chosen instead/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Add to My Verses" })).toHaveCount(0);
   await expect(page.locator(".scripture")).toHaveCount(0);
+});
+
+test("tapping successive verses builds a range; Bookmark marks it and the Bookmarks page brings the member back to it", async ({ browser }) => {
+  const page = await as(browser, MEMBER);
+  await page.goto("/bible/read/SYH/JHN/3");
+  // One verse at a time: 6, 7, 8 make 6–8; tapping 8 again trims it.
+  await select(page, 6, 6);
+  await select(page, 7, 7);
+  await select(page, 8, 8);
+  await expect(toolbar(page)).toContainText("John 3:6–8");
+  await select(page, 8, 8);
+  await expect(toolbar(page)).toContainText("John 3:6–7");
+  await select(page, 8, 8);
+  await toolbar(page).getByRole("button", { name: "Bookmark", exact: true }).click();
+  // Feedback where the member is looking, and a marker in the text.
+  await expect(page.locator(".fixed", { hasText: "Bookmarked John 3:6–8." })).toBeVisible();
+  await expect(page.locator('[data-verse="6"]:visible .verse-bookmark')).toHaveCount(1);
+  // Selecting the same passage shows it's bookmarked.
+  await select(page, 6, 8);
+  await expect(toolbar(page).getByRole("button", { name: "Bookmarked" })).toHaveAttribute("aria-pressed", "true");
+  await toolbar(page).getByRole("button", { name: "Cancel" }).click();
+  await shot(page, "bookmarked");
+  // The Bookmarks page (linked from the reader) continues at the passage.
+  await page.getByRole("link", { name: "Bookmarks" }).first().click();
+  await expect(page).toHaveURL(/\/bible\/bookmarks$/);
+  const row = page.getByRole("listitem").filter({ hasText: "John 3:6–8 (SYH)" });
+  await expect(row).toContainText("Added");
+  await shot(page, "bookmarks");
+  await row.getByRole("link", { name: /Continue reading/ }).click();
+  await expect(page).toHaveURL(/\/bible\/read\/SYH\/JHN\/3\?focus=6-8#v6$/);
+  await expect(page.getByText(/Picking up at your bookmark: John 3:6–8/).filter({ visible: true })).toBeVisible();
+  for (const v of [6, 7, 8]) await expect(page.locator(`[data-verse="${v}"]:visible`)).toHaveAttribute("data-focus", "true");
+  await expect(page.locator('[data-verse="6"]:visible')).toBeInViewport();
+  await shot(page, "continue");
+  const n = await sql<{ n: string }>("select count(*) n from bible.bookmarks where profile_id = $1 and start_verse = 6 and end_verse = 8", [await memberId()]);
+  expect(Number(n[0].n)).toBe(1);
 });

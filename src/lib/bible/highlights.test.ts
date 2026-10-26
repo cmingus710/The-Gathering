@@ -1,23 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { colorPressed, expectedRevisions, memoryAddHref, nextSelection, rangeLabel, readerHref, refFilter, selectionColors, textKey, versesOf } from "./highlights";
+import { colorPressed, expectedRevisions, memoryAddHref, nextSelection, parseFocus, rangeLabel, readerHref, refFilter, selectionColors, textKey, versesOf } from "./highlights";
 
 describe("verse selection", () => {
-  it("selects one verse, extends to a contiguous range, and clears", () => {
+  it("builds a contiguous range a verse at a time, and trims it from either end", () => {
     let s = nextSelection(null, null, 16, false);
     expect(s).toEqual({ range: { start: 16, end: 16 }, anchor: 16 });
-    // A second verse selects the range between them, in either direction.
+    // Tapping the next verses grows the range.
+    s = nextSelection(s.range, s.anchor, 17, false);
+    expect(s.range).toEqual({ start: 16, end: 17 });
     s = nextSelection(s.range, s.anchor, 18, false);
-    expect(s).toEqual({ range: { start: 16, end: 18 }, anchor: 16 });
-    expect(nextSelection({ start: 16, end: 16 }, 16, 12, false).range).toEqual({ start: 12, end: 16 });
-    // Shift extends from the anchor even when a range is already selected.
+    expect(s.range).toEqual({ start: 16, end: 18 });
+    // A verse further away (or earlier) fills in the verses between.
+    expect(nextSelection(s.range, s.anchor, 22, false).range).toEqual({ start: 16, end: 22 });
+    expect(nextSelection(s.range, s.anchor, 12, false).range).toEqual({ start: 12, end: 18 });
+    // Tapping an end removes it; tapping inside ends the range there.
+    expect(nextSelection(s.range, s.anchor, 18, false).range).toEqual({ start: 16, end: 17 });
+    expect(nextSelection(s.range, s.anchor, 16, false).range).toEqual({ start: 17, end: 18 });
+    expect(nextSelection({ start: 16, end: 20 }, 16, 18, false).range).toEqual({ start: 16, end: 18 });
+    // Shift extends from the anchor.
     expect(nextSelection(s.range, s.anchor, 20, true).range).toEqual({ start: 16, end: 20 });
     expect(nextSelection(s.range, s.anchor, 14, true).range).toEqual({ start: 14, end: 16 });
-    // Without Shift, a verse in a range starts over from that verse.
-    expect(nextSelection(s.range, s.anchor, 17, false)).toEqual({ range: { start: 17, end: 17 }, anchor: 17 });
     // The single selected verse again clears the selection.
     expect(nextSelection({ start: 16, end: 16 }, 16, 16, false)).toEqual({ range: null, anchor: null });
     expect(versesOf({ start: 3, end: 6 })).toEqual([3, 4, 5, 6]);
     expect(versesOf(null)).toEqual([]);
+  });
+
+  it("reads a bookmark's focus range from the URL", () => {
+    expect(parseFocus("16")).toEqual({ start: 16, end: 16 });
+    expect(parseFocus("16-18")).toEqual({ start: 16, end: 18 });
+    expect(parseFocus("18-16")).toBeNull();
+    expect(parseFocus("0")).toBeNull();
+    expect(parseFocus("abc")).toBeNull();
+    expect(parseFocus(undefined)).toBeNull();
   });
 
   it("describes the colors in a selection, including mixed and partly highlighted", () => {
@@ -57,6 +72,9 @@ describe("links and labels", () => {
   it("opens the reader at the passage", () => {
     expect(readerHref({ code: "WEB", book: "JHN", chapter: 3, start: 16 })).toBe("/bible/read/WEB/JHN/3#v16");
     expect(readerHref({ code: "WEB", book: "PSA", chapter: 23 })).toBe("/bible/read/WEB/PSA/23");
+    // A bookmark: scrolled to its first verse, with the passage outlined.
+    expect(readerHref({ code: "WEB", book: "JHN", chapter: 3, start: 16, end: 18 })).toBe("/bible/read/WEB/JHN/3?focus=16-18#v16");
+    expect(readerHref({ code: "WEB", book: "JHN", chapter: 3, start: 16, end: 16 })).toBe("/bible/read/WEB/JHN/3?focus=16#v16");
   });
 
   it("keys passage text without the color, so recoloring keeps the text shown", () => {

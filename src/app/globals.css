@@ -1168,6 +1168,16 @@ html[data-player] {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+.scripture .verse-bookmark {
+  color: var(--color-primary);
+  margin-inline-start: 0.1em;
+}
+/* The passage a member came back to from a bookmark. */
+.scripture [data-focus="true"]:not([data-selected="true"]) {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.2em;
+}
 .scripture [data-selected="true"] {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
