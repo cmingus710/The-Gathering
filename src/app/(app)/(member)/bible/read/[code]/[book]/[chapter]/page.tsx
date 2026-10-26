@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { readerPrefsAction } from "@/app/(app)/(member)/bible/actions";
@@ -9,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { BackLink } from "@/components/ui/back-link";
 import { ButtonLink } from "@/components/ui/button";
 import { requireLearner } from "@/lib/auth/viewer";
-import type { HighlightRow } from "@/lib/bible/highlights";
+import { parseFocus, type HighlightRow } from "@/lib/bible/highlights";
 import { resolveText } from "@/lib/bible/source";
 import type { ChapterPayload, Translation } from "@/lib/bible/types";
 import { requireClient } from "@/lib/supabase/server";
@@ -17,8 +18,12 @@ import { ChapterPicker } from "./picker";
 
 export const metadata: Metadata = { title: "Bible" };
 
-export default async function ChapterPage({ params }: PageProps<"/bible/read/[code]/[book]/[chapter]">) {
+type ChapterBookmark = { kind: string; translation_id: string | null; book: string | null; chapter: number | null; start_verse: number | null; end_verse: number | null };
+
+export default async function ChapterPage({ params, searchParams }: PageProps<"/bible/read/[code]/[book]/[chapter]">) {
   const { code, book, chapter } = await params;
+  const focusParam = (await searchParams).focus;
+  const focus = parseFocus(typeof focusParam === "string" ? focusParam : null);
   const ch = Number(chapter);
   if (!/^[A-Z0-9-]{2,16}$/.test(code) || !/^[1-3A-Z][A-Z0-9]{2}$/.test(book) || !Number.isInteger(ch) || ch < 1 || ch > 150) notFound();
   await requireLearner(`/bible/read/${code}/${book}/${ch}`);
@@ -28,12 +33,17 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
   const translation = translations.find((t) => t.code === code);
   if (!translation) notFound();
 
-  const [{ data, error }, books, highlights, prefs] = await Promise.all([
+  const [{ data, error }, books, highlights, prefs, bookmarkList] = await Promise.all([
     supabase.rpc("bible_chapter", { p_translation: translation.id, p_book: book, p_chapter: ch }),
     supabase.rpc("bible_books", { p_translation: translation.id }),
     supabase.rpc("bible_highlights", { p_translation: translation.id, p_book: book, p_chapter: ch }),
     supabase.rpc("bible_reader_prefs"),
+    supabase.rpc("bible_bookmarks"),
   ]);
+  // This chapter's passage bookmarks in this translation (a whole-chapter bookmark has no verses to mark).
+  const bookmarks = ((bookmarkList.data as ChapterBookmark[] | null) ?? [])
+    .filter((b) => b.kind === "passage" && b.translation_id === translation.id && b.book === book && b.chapter === ch && b.start_verse)
+    .map((b) => ({ start: b.start_verse!, end: b.end_verse ?? b.start_verse! }));
   if (error?.code === "P0002") notFound();
   const payload = data as ChapterPayload | null;
   const text = payload ? await resolveText(payload.translation, payload.verses, payload.provider, { book, sc: ch, sv: null, ec: ch, ev: null }) : null;
@@ -52,7 +62,12 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
   return (
     <>
       <div className="-mt-1 mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:mb-4">
-        <BackLink route="/bible/read/[code]/[book]/[chapter]" inRow />
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <BackLink route="/bible/read/[code]/[book]/[chapter]" inRow />
+          <Link href="/bible/bookmarks" className="inline-flex min-h-11 items-center gap-1.5 text-meta font-semibold text-primary hover:underline print:hidden">
+            <Bookmark className="size-4" aria-hidden="true" /> Bookmarks
+          </Link>
+        </span>
         {translations.length > 1 ? (
           <form action={switchTo} className="flex items-center gap-2">
             <label htmlFor="translation" className="text-meta text-text-secondary">
@@ -94,13 +109,15 @@ export default async function ChapterPage({ params }: PageProps<"/bible/read/[co
         </Alert>
       ) : text?.status === "ok" ? (
         <ChapterReader
-          key={`${translation.id}:${book}:${ch}`}
+          key={`${translation.id}:${book}:${ch}:${focus ? `${focus.start}-${focus.end}` : ""}`}
           translation={payload.translation}
           book={book}
           bookName={payload.book.name}
           chapter={ch}
           verses={text.verses}
           initialHighlights={(highlights.data as HighlightRow[] | null) ?? []}
+          initialBookmarks={bookmarks}
+          focus={focus && text.verses.some((v) => v.v === focus.start) ? focus : null}
           prefs={p}
         />
       ) : null}

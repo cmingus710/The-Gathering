@@ -1,3 +1,4 @@
+import { Bookmark } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
 import type { Translation, Verse } from "@/lib/bible/types";
@@ -27,11 +28,15 @@ export type ScriptureProps = {
   selectMode?: boolean;
   /** Give each verse an id ("v16") so a link can open the page at it (one passage per page only). */
   anchors?: boolean;
+  /** Bookmarked passages, by first verse ("John 3:16–18"): a small marker before that verse. */
+  bookmarks?: ReadonlyMap<number, string>;
+  /** Verses outlined as the place the member came back to (a bookmark). */
+  focused?: ReadonlySet<number>;
   label: string;
   className?: string;
 };
 
-export function ScriptureText({ verses, translation, highlights, selected, verseNumbers = true, showChapters, onVerseToggle, selectMode, anchors, label, className }: ScriptureProps) {
+export function ScriptureText({ verses, translation, highlights, selected, verseNumbers = true, showChapters, onVerseToggle, selectMode, anchors, bookmarks, focused, label, className }: ScriptureProps) {
   const blocks: Array<{ key: string; heading: string | null; chapter: number | null; poetry: boolean; verses: Verse[] }> = [];
   let lastChapter: number | null = null;
   for (const v of verses) {
@@ -70,6 +75,8 @@ export function ScriptureText({ verses, translation, highlights, selected, verse
                   onToggle={onVerseToggle}
                   selectMode={selectMode}
                   anchor={anchors && !showChapters}
+                  bookmark={showChapters ? undefined : bookmarks?.get(v.v)}
+                  focused={!showChapters && focused?.has(v.v)}
                 />
               ))}
             </p>
@@ -101,6 +108,8 @@ function VerseSpan({
   onToggle,
   selectMode,
   anchor,
+  bookmark,
+  focused,
 }: {
   v: Verse;
   color?: string;
@@ -108,6 +117,8 @@ function VerseSpan({
   onToggle?: (verse: number, extend: boolean) => void;
   selectMode?: boolean;
   anchor?: boolean;
+  bookmark?: string;
+  focused?: boolean;
 }) {
   const num: ReactNode = onToggle ? (
     <button
@@ -143,10 +154,17 @@ function VerseSpan({
       id={anchor ? `v${v.v}` : undefined}
       data-verse={v.v}
       data-selected={selected ? "true" : undefined}
+      data-focus={focused ? "true" : undefined}
       // Selection mode only: a pointer tap on the verse text (keyboard users have the verse-number buttons).
       onClick={selectMode && onToggle ? (e) => onToggle(v.v, e.shiftKey) : undefined}
       className={anchor ? "scroll-mt-24" : undefined}
     >
+      {bookmark ? (
+        <span className="verse-bookmark" title={`Bookmarked: ${bookmark}`}>
+          <Bookmark className="inline size-[0.75em] fill-current align-baseline" aria-hidden="true" />
+          <span className="sr-only">Bookmarked: {bookmark}. </span>
+        </span>
+      ) : null}
       {num}
       {color ? <mark data-color={color}>{text}</mark> : text}{" "}
     </span>

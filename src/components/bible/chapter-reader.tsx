@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Bookmark, Check, ListPlus, Minus, MousePointerClick, NotebookPen, Plus, RotateCw, Type, X } from "lucide-react";
+import { AlertCircle, Bookmark, BookmarkCheck, Check, ListPlus, Minus, MousePointerClick, NotebookPen, Plus, RotateCw, Type, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { applyHighlightAction, chapterHighlightsAction, readerPrefsAction, toggleBookmarkAction } from "@/app/(app)/(member)/bible/actions";
@@ -58,6 +58,8 @@ export function ChapterReader({
   chapter,
   verses,
   initialHighlights,
+  initialBookmarks = [],
+  focus = null,
   prefs,
 }: {
   translation: Translation;
@@ -66,11 +68,23 @@ export function ChapterReader({
   chapter: number;
   verses: Verse[];
   initialHighlights: HighlightRow[];
+  /** The member's bookmarks in this chapter and translation. */
+  initialBookmarks?: Range[];
+  /** A bookmarked passage the member came back to (?focus=16-18). */
+  focus?: Range | null;
   prefs: ReaderPrefs;
 }) {
   const [rows, setRows] = useState(initialHighlights);
   const highlights = useMemo(() => new Map(rows.map((h) => [h.verse, h.color as string])), [rows]);
   const revisions = useMemo(() => new Map(rows.map((h) => [h.verse, h.revision])), [rows]);
+  const [marks, setMarks] = useState(initialBookmarks);
+  const bookmarkLabels = useMemo(
+    () => new Map(marks.map((m) => [m.start, rangeLabel(book, bookName, chapter, m)])),
+    [marks, book, bookName, chapter],
+  );
+  const [focused, setFocused] = useState(() => new Set(versesOf(focus)));
+  const [notice, setNotice] = useState<{ text: string; link?: { href: string; label: string } } | null>(null);
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [range, setRange] = useState<Range | null>(null);
   const [anchor, setAnchor] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -104,10 +118,29 @@ export function ChapterReader({
   };
   const toggle = (v: number, extend: boolean) => {
     const next = nextSelection(range, anchor, v, extend);
+    if (focused.size) setFocused(new Set());
+    setMessage(null);
     setRange(next.range);
     setAnchor(next.anchor);
     if (save.status !== "saving") setSave({ status: "idle" });
   };
+
+  // A short confirmation where the member is looking (above the dock),
+  // since the end of a chapter is often off-screen.
+  const show = (text: string, link?: { href: string; label: string }) => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    setNotice({ text, link });
+    noticeTimer.current = setTimeout(() => setNotice(null), 6000);
+  };
+  useEffect(() => () => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+  }, []);
+
+  // Back from a bookmark: start at its first verse.
+  useEffect(() => {
+    if (!focus) return;
+    document.getElementById(`v${focus.start}`)?.scrollIntoView({ block: "start" });
+  }, [focus]);
 
   // Escape cancels the selection.
   useEffect(() => {
@@ -160,6 +193,7 @@ export function ChapterReader({
       return;
     }
     setSave({ status: "saved", message: `${what} saved.` });
+    show(`${what} saved.`);
     clear();
   };
   const highlight = (color: HighlightColor | null) => {
@@ -167,11 +201,25 @@ export function ChapterReader({
     const req = { translationId: translation.id, book, chapter, verses: sorted, color, expected: expectedRevisions(sorted, revisions) };
     void send(req, color ? `${colorLabel(color)} highlight on ${label}` : `Removing the highlight from ${label}`);
   };
+  const isBookmarked = !!range && marks.some((m) => m.start === range.start && m.end === range.end);
   const bookmark = () =>
     start(async () => {
       if (!range) return;
-      const r = await toggleBookmarkAction({ kind: "passage", translation_id: translation.id, book, chapter, start_verse: range.start, end_verse: range.end });
-      setMessage(r.ok ? (r.bookmarked ? `Bookmarked ${label}.` : `Removed the bookmark for ${label}.`) : r.message);
+      const r = await toggleBookmarkAction({ kind: "passage", translation_id: translation.id, book, chapter, start_verse: range.start, end_verse: range.end }).catch(() => ({
+        ok: false as const,
+        message: "The connection was interrupted.",
+      }));
+      if (!r.ok) {
+        setMessage(`The bookmark wasn't saved. ${r.message}`);
+        show(`The bookmark for ${label} wasn't saved. ${r.message}`);
+        return;
+      }
+      const here = range;
+      setMarks((list) => (r.bookmarked ? [...list.filter((m) => !(m.start === here.start && m.end === here.end)), here] : list.filter((m) => !(m.start === here.start && m.end === here.end))));
+      const text = r.bookmarked ? `Bookmarked ${label}.` : `Removed the bookmark for ${label}.`;
+      setMessage(text);
+      show(text, r.bookmarked ? { href: "/bible/bookmarks", label: "View bookmarks" } : undefined);
+      clear();
     });
   const noteHref = range
     ? `/journal/new?${new URLSearchParams({ t: translation.id, b: book, c: String(chapter), sv: String(range.start), ev: String(range.end) })}`
@@ -253,9 +301,9 @@ export function ChapterReader({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <p id="reader-select-hint" className="text-meta text-text-secondary">
           {selectMode
-            ? "Tap a verse to select it, then another to select the verses between. Selections stay within this chapter."
+            ? "Tap a verse to select it, then tap more verses to select a range (tap the first or last again to remove it). Selections stay within this chapter."
             : numbers
-              ? "Select a verse number, then another for a range (or Shift-click), to highlight, add to Memory Verses, bookmark, or write about it."
+              ? "Select a verse number, then more verse numbers for a range (or Shift-click), to highlight, bookmark, add to Memory Verses, or write about it."
               : "Turn on Select verses (or show verse numbers) to highlight verses."}
         </p>
         <Button
@@ -269,6 +317,13 @@ export function ChapterReader({
         </Button>
       </div>
 
+      {focus && focused.size ? (
+        <p className="mb-3 flex items-center gap-2 text-meta text-text-secondary print:hidden">
+          <BookmarkCheck className="size-4 text-primary" aria-hidden="true" />
+          Picking up at your bookmark: {rangeLabel(book, bookName, chapter, focus)} (outlined).
+        </p>
+      ) : null}
+
       <div style={{ ["--reader-size" as string]: size / 100, ["--reader-leading" as string]: leading }}>
         <ScriptureText
           verses={verses}
@@ -279,6 +334,8 @@ export function ChapterReader({
           onVerseToggle={toggle}
           selectMode={selectMode}
           anchors
+          bookmarks={bookmarkLabels}
+          focused={focused}
           label={`${bookName} ${chapter}, ${translation.code}`}
         />
       </div>
@@ -286,11 +343,20 @@ export function ChapterReader({
       <p role="status" className="sr-only">
         {save.status === "saving" ? "Saving…" : save.status === "idle" ? (message ?? (range ? `${label} selected.` : "")) : save.message}
       </p>
-      {message ? <p className="mt-2 text-meta text-text-secondary">{message}</p> : null}
-      {save.status === "saved" && !range ? (
-        <p className="mt-2 flex items-center gap-1.5 text-meta text-text-secondary">
-          <Check className="size-4 text-success" aria-hidden="true" /> {save.message}
-        </p>
+      {notice && !range ? (
+        <div
+          aria-hidden="true"
+          // Doesn't block taps on the verses beneath it (only its link takes them).
+          className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--dock-clearance,5rem)+0.5rem)] z-30 mx-auto flex max-w-xl flex-wrap items-center gap-x-3 gap-y-1 rounded-card border border-border bg-surface px-4 py-3 text-meta shadow-(--elev-lift) lg:bottom-4 print:hidden"
+        >
+          <Check className="size-4 shrink-0 text-success" />
+          <span className="min-w-0 flex-1">{notice.text}</span>
+          {notice.link ? (
+            <Link href={notice.link.href} className="pointer-events-auto font-semibold text-primary underline" tabIndex={-1}>
+              {notice.link.label}
+            </Link>
+          ) : null}
+        </div>
       ) : null}
 
       {range ? (
@@ -313,6 +379,16 @@ export function ChapterReader({
           <HighlightColorButtons pressed={(c) => colorPressed(c, sorted, highlights)} onPick={highlight} disabled={busy} label={`Highlight color for ${label}`} />
           {/* One scrolling row on phones keeps the toolbar short, so it covers less of the chapter. */}
           <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible [&>*]:shrink-0">
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-pressed={isBookmarked}
+              disabled={busy}
+              onClick={bookmark}
+              icon={isBookmarked ? <BookmarkCheck className="size-4 text-primary" aria-hidden="true" /> : <Bookmark className="size-4" aria-hidden="true" />}
+            >
+              {isBookmarked ? "Bookmarked" : "Bookmark"}
+            </Button>
             {state.anyHighlighted ? (
               <Button size="sm" variant="secondary" disabled={busy} onClick={() => highlight(null)} icon={<Minus className="size-4" aria-hidden="true" />}>
                 Remove highlight
@@ -321,14 +397,12 @@ export function ChapterReader({
             <ButtonLink href={memoryHref} size="sm" variant="secondary" icon={<ListPlus className="size-4" aria-hidden="true" />}>
               Add to Memory Verses
             </ButtonLink>
-            <Button size="sm" variant="secondary" disabled={busy} onClick={bookmark} icon={<Bookmark className="size-4" aria-hidden="true" />}>
-              Bookmark
-            </Button>
             <ButtonLink href={noteHref} size="sm" variant="secondary" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
               Write privately
             </ButtonLink>
           </div>
           <SaveLine save={save} />
+          {message?.startsWith("The bookmark wasn't saved") ? <p className="text-meta text-danger">{message}</p> : null}
         </div>
       ) : save.status === "failed" || save.status === "conflict" ? (
         <div className="mt-4 rounded-card border border-border bg-surface p-3 print:hidden">

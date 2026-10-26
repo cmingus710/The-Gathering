@@ -28,18 +28,36 @@ export function colorLabel(value: string): string {
 export type Range = { start: number; end: number };
 
 /**
- * The next selection after activating a verse.
+ * The next selection after activating a verse. Selections are always one
+ * contiguous range, built up a verse at a time:
  *   - nothing selected: that verse (it becomes the anchor);
- *   - `extend` (Shift, or a tap in selection mode while one verse is
- *     selected): the range from the anchor to that verse;
- *   - the only selected verse again: nothing;
- *   - otherwise: that verse alone, as a new anchor.
+ *   - a verse outside the range: the range grows to include it (so tapping
+ *     16, then 17, then 18 selects 16–18, and tapping 20 after 16 selects
+ *     16–20);
+ *   - `extend` (Shift): the range from the anchor to that verse;
+ *   - the first or last verse of a range: that end is removed (the only
+ *     selected verse again clears the selection);
+ *   - a verse inside the range: the range ends at that verse.
  */
 export function nextSelection(current: Range | null, anchor: number | null, verse: number, extend: boolean): { range: Range | null; anchor: number | null } {
   if (!current || anchor === null) return { range: { start: verse, end: verse }, anchor: verse };
-  if (current.start === current.end && current.start === verse) return { range: null, anchor: null };
-  if (extend || current.start === current.end) return { range: { start: Math.min(anchor, verse), end: Math.max(anchor, verse) }, anchor };
-  return { range: { start: verse, end: verse }, anchor: verse };
+  if (extend) return { range: { start: Math.min(anchor, verse), end: Math.max(anchor, verse) }, anchor };
+  if (verse < current.start || verse > current.end) {
+    return { range: { start: Math.min(current.start, verse), end: Math.max(current.end, verse) }, anchor };
+  }
+  if (current.start === current.end) return { range: null, anchor: null };
+  if (verse === current.end) return { range: { start: current.start, end: verse - 1 }, anchor: current.start };
+  if (verse === current.start) return { range: { start: verse + 1, end: current.end }, anchor: current.end };
+  return { range: { start: current.start, end: verse }, anchor: current.start };
+}
+
+/** "16–18" from a ?focus= value; null when it isn't one. */
+export function parseFocus(value: string | undefined | null): Range | null {
+  const m = /^(\d{1,3})(?:-(\d{1,3}))?$/.exec(value ?? "");
+  if (!m) return null;
+  const start = Number(m[1]);
+  const end = m[2] ? Number(m[2]) : start;
+  return start >= 1 && end >= start && end <= 200 ? { start, end } : null;
 }
 
 export function versesOf(range: Range | null): number[] {
@@ -89,9 +107,16 @@ export function memoryAddHref(p: { translationId: string; book: string; chapter:
   return `/memory/verses/add?${q}`;
 }
 
-/** The reader at a passage, scrolled to its first verse. */
-export function readerHref(p: { code: string; book: string; chapter: number; start?: number }): string {
-  return `/bible/read/${encodeURIComponent(p.code)}/${p.book}/${p.chapter}${p.start ? `#v${p.start}` : ""}`;
+/**
+ * The reader at a passage, scrolled to its first verse. With `end` (a
+ * bookmark), the passage is also outlined so the member sees where to pick
+ * up.
+ */
+export function readerHref(p: { code: string; book: string; chapter: number; start?: number | null; end?: number | null }): string {
+  const base = `/bible/read/${encodeURIComponent(p.code)}/${p.book}/${p.chapter}`;
+  if (!p.start) return base;
+  const focus = p.end != null ? `?focus=${p.start}${p.end > p.start ? `-${p.end}` : ""}` : "";
+  return `${base}${focus}#v${p.start}`;
 }
 
 export type PassageRef = { translation_id: string; book: string; chapter: number; start_verse: number; end_verse: number };
