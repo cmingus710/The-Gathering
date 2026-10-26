@@ -40,18 +40,18 @@ The **current memory verse** (Memory home, the home card, reminders) is any vers
 
 ### Licensed versions (API.Bible)
 
-Bible source managers decide, per licensed version, whether members may memorize it: **Administration → Bible sources → (version) → Memory verses**. Record what you checked (dashboard, license, publisher terms) and tick *Offer … for memory verses, shown unchanged*. Only unchanged-text practice can be enabled: the verse page, flashcards, and self-check. The text is never stored. Details, the per-mode assessment, and the open questions for API.Bible: [memory-provider-practice.md](memory-provider-practice.md).
+Bible source managers decide, per licensed version, whether members may memorize it: **Administration → Bible sources → (version) → Memory verses**. Record what you checked (dashboard, license, publisher terms) and tick *Offer … for memory verses, shown unchanged*. This enables unchanged-text practice: the verse page, flashcards, and self-check. A second step on the same page, **All six exercises**, turns on read & repeat, missing words, word order, typed recall, reference flashcards, and self-check hints. Record the written permission relied on (API.Bible support's clarification of 2026-10-26). A version with a direct publisher agreement (NIV: Biblica's feature-approval clause) also needs that approval recorded first. The text is never stored, and nothing altered or typed is kept. Details, the per-mode assessment, and the open questions for API.Bible: [memory-provider-practice.md](memory-provider-practice.md).
 
 **In collections.** The *Bible version* selector on a new collection lists every published version:
 
-- Stored-text versions, and licensed versions that are confirmed and connected, can be chosen. Licensed ones are marked *licensed, flashcards and self-check only*.
+- Stored-text versions, and licensed versions that are confirmed and connected, can be chosen. Licensed ones are marked *licensed, flashcards and self-check only*, or *licensed, all six activities* once that second step is recorded.
 - Other published licensed versions are listed disabled under *Not available for memory verses*, each with the reason below the selector: *not confirmed for memory verses* (no permission recorded) or *not connected on this server* (the API key setting is missing). Being published doesn't make a version eligible.
 
 With a licensed version:
 
 - **Adding a verse** fetches the passage from API.Bible to check it. Only its reference, API.Bible passage ID, verse numbers, word count, and a one-way fingerprint are kept.
 - **Show the text** fetches it again, shown unchanged with its copyright and usage reporting. If the publisher has revised the wording, it says so; **Use the current wording** (publishers) points the verse at it with an explanation for members, who each choose when to switch.
-- **Preview activities** shows the fetched text and the activities members get (flashcards and self-check). Read & repeat, missing words, word order, typed recall, hints from the text, and reference practice aren't offered, whatever collection the verse is in.
+- **Preview activities** shows the activities members get, built from the fetched text: every activity once all six are permitted, otherwise the text and what flashcards and self-check show. Nothing beyond the version's permission is offered, whatever collection the verse is in.
 - **Duplicate** copies licensed verses with the wording they were added with.
 - **Members may practice in their own Bible version** works as for stored text: off, everyone practices in the collection's version; on, each member may choose another eligible version for themselves.
 - **Youth:** licensed collections aren't shown to youth accounts and can't be assigned to youth groups.

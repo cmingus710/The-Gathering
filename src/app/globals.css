@@ -898,6 +898,14 @@ dialog.sheet[open] {
 html:has(.youth-shell) {
   scroll-padding-top: calc(7.75rem + env(safe-area-inset-top, 0px));
 }
+/*
+ * During a licensed version's exercise, its abbreviation and copyright strip
+ * sticks below the header; focus scrolling (the typing box with the keyboard
+ * open, for example) stops below both. The strip sets the measured height.
+ */
+html:has([data-exercise-attribution]) {
+  scroll-padding-top: var(--exercise-scroll-top, calc(8.5rem + env(safe-area-inset-top, 0px)));
+}
 .dock {
   padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--dock-solid);

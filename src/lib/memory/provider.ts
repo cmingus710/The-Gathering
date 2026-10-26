@@ -46,6 +46,18 @@ export function fingerprintVerses(verses: Verse[]): string {
   return createHash("sha256").update(lines, "utf8").digest("hex");
 }
 
+/** One verse of a licensed passage as passed to the database for a single practice call (verbatim; never stored). */
+export type SourceVerse = { c: number; v: number; t: string; q: boolean };
+
+/**
+ * The verses the fingerprint covers, verbatim, for the database to check
+ * and practice on in memory (migration 20261125000100). Sent only from this
+ * server, only for the call that needs them; never logged or stored.
+ */
+export function sourceVerses(verses: Verse[]): SourceVerse[] {
+  return verses.filter((v) => !v.o && v.t.trim()).map((v) => ({ c: v.c, v: v.v, t: v.t, q: v.q }));
+}
+
 export function providerPayload(verses: Verse[], ref: Ref): ProviderPayload {
   const present = verses.filter((v) => !v.o && v.t.trim());
   return {

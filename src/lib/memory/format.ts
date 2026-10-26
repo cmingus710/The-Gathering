@@ -142,3 +142,13 @@ export function collectionStatus(c: { status: string; scheduled: boolean }): { l
   if (c.status === "draft") return { label: "Draft", tone: "info" };
   return c.scheduled ? { label: "Scheduled", tone: "warning" } : { label: "Published", tone: "success" };
 }
+
+/** Whether a licensed version's permission covers all six activities (else unchanged-text practice only). */
+export const allExercises = (modes: readonly string[] | null | undefined) => !!modes && modes.includes("missing_words");
+
+/** How a licensed version is practiced, for members and staff. */
+export function licensedPracticeNote(code: string, modes: readonly string[] | null | undefined): string {
+  return allExercises(modes)
+    ? `${code} is licensed: all six activities are available. They hide, reveal, or rearrange its words on screen only; the verse itself is never changed or stored, and its copyright stays on screen.`
+    : `${code} is licensed: it's shown exactly as published and practiced with flashcards and self-check. Activities that hide or rearrange words aren't available for this version.`;
+}

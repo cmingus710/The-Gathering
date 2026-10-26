@@ -73,7 +73,7 @@ export async function MemberShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-md lg:hidden">
+          <header data-app-header className="sticky top-0 z-30 bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-md lg:hidden">
             {/*
               The church name is never truncated: the wordmark scales with the
               viewport (full size from 400px up) and, only if it still can't
@@ -101,7 +101,7 @@ export async function MemberShell({
             </div>
           </header>
           {/* Desktop: the bell sits top right, above the page, with its panel anchored beneath it. */}
-          <div className="sticky top-0 z-30 hidden h-16 items-center justify-end bg-(--header-bg) px-6 backdrop-blur-md lg:flex">
+          <div data-app-header className="sticky top-0 z-30 hidden h-16 items-center justify-end bg-(--header-bg) px-6 backdrop-blur-md lg:flex">
             <NotificationBell />
           </div>
           <main

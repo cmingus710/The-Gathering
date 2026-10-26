@@ -27,7 +27,7 @@ export function SelfCheck({
   kids: boolean;
   busy: boolean;
   hint: string | null;
-  /** A licensed version: no "how it begins" hints (they'd show part of the text). */
+  /** No "how it begins" hints: a licensed version permitted for unchanged-text practice only. */
   provider?: boolean;
   onSubmit: (p: Record<string, unknown>) => void;
 }) {

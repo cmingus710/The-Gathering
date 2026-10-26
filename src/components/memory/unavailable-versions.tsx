@@ -1,8 +1,9 @@
 import type { Translation } from "@/lib/bible/types";
 
 /** A version in a memory selector; licensed ones say which practice they allow. */
-export function versionLabel(t: Pick<Translation, "source_kind" | "name" | "code">) {
-  return t.source_kind === "api" ? `${t.name} (${t.code}): licensed, flashcards and self-check only` : `${t.name} (${t.code})`;
+export function versionLabel(t: Pick<Translation, "source_kind" | "name" | "code"> & { memory_modes?: readonly string[] }) {
+  if (t.source_kind !== "api") return `${t.name} (${t.code})`;
+  return t.memory_modes?.includes("missing_words") ? `${t.name} (${t.code}): licensed, all six activities` : `${t.name} (${t.code}): licensed, flashcards and self-check only`;
 }
 
 export const UNAVAILABLE_NOTE =

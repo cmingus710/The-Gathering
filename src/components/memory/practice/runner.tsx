@@ -7,9 +7,11 @@ import { Alert } from "@/components/ui/alert";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { ACTIVITIES, DIFFICULTIES } from "@/lib/memory/format";
+import { textVisibleAtStart } from "@/lib/memory/fums-events";
 import { SubmissionQueue, type SubmitState } from "@/lib/memory/submit";
 import type { Activity, Difficulty, PracticeSettings, Segment, Session, SubmitResult } from "@/lib/memory/types";
-import { failureMessage, sessionSubmit, startSession } from "./api";
+import { displayEvents, failureMessage, sessionSubmit, startSession } from "./api";
+import { ExerciseAttribution } from "./attribution";
 import { Flashcards } from "./flashcards";
 import { MissingWords } from "./missing-words";
 import { ReadRepeat } from "./read-repeat";
@@ -26,9 +28,9 @@ export type RunnerCard = {
   segments: Segment[];
   shortSegments: Segment[];
   hint: string | null;
-  /** Activities the verse's version allows (a licensed version: flashcards and self-check). */
+  /** Activities the verse's version allows (a licensed version: flashcards and self-check, or all six once permitted). */
   modes: Activity[];
-  /** A licensed version: its text is shown only unchanged, never stored. */
+  /** A licensed version: its text is fetched when shown and never stored. */
   provider: boolean;
 };
 
@@ -61,7 +63,10 @@ export function PracticeRunner({
   const wholeAllowed = !scored || card.wordCount <= SCORED_WHOLE_LIMIT;
   // Kids presentation starts with the first short part; others with the whole passage when allowed.
   const [segment, setSegment] = useState<number>(initial.segment || (wholeAllowed && !(kids && card.shortSegments.length > 1) ? 0 : 1));
-  const [direction, setDirection] = useState(card.provider ? "ref_to_text" : initial.direction);
+  // A licensed version with only unchanged-text practice: no hints from the
+  // text and no reference practice (its permission covers the full passage only).
+  const exercises = !card.provider || card.modes.includes("missing_words");
+  const [direction, setDirection] = useState(exercises ? initial.direction : "ref_to_text");
   const [ignoreCase, setIgnoreCase] = useState(settings.ignore_case);
   const [ignorePunct, setIgnorePunct] = useState(settings.ignore_punctuation);
   const [session, setSession] = useState<Session | null>(null);
@@ -90,6 +95,10 @@ export function PracticeRunner({
     });
     setStarting(false);
     if (r.kind !== "ok") return setStartError(failureMessage(r));
+    // Licensed text: one FUMS display event for this activity, reported when
+    // its text is first on screen (now, for activities that open on the text).
+    displayEvents.register(r.data.id, r.data.licensed?.fums_id);
+    if (textVisibleAtStart(r.data.activity, r.data.setup.direction)) displayEvents.shown(r.data.id);
     setSession(r.data);
     requestAnimationFrame(() => activityHeading.current?.focus());
   }, [card.id, activity, difficulty, segmentValue, direction, ignoreCase, ignorePunct, short]);
@@ -152,7 +161,9 @@ export function PracticeRunner({
             </div>
             {card.provider ? (
               <p className="mt-2 text-meta text-text-secondary">
-                For {card.code}, practice shows the verse exactly as published: flashcards and self-check. Activities that hide or rearrange words aren&apos;t available for this version.
+                {exercises
+                  ? `${card.code} is licensed: activities hide, reveal, or rearrange its words on your screen only. The verse itself is never changed or stored.`
+                  : `For ${card.code}, practice shows the verse exactly as published: flashcards and self-check. Activities that hide or rearrange words aren't available for this version.`}
               </p>
             ) : null}
           </fieldset>
@@ -206,7 +217,7 @@ export function PracticeRunner({
               </label>
             </div>
           ) : null}
-          {activity === "flashcards" && !card.provider ? (
+          {activity === "flashcards" && exercises ? (
             <fieldset>
               <legend className="mb-2 font-semibold">Card front</legend>
               <div className="flex flex-wrap gap-2">
@@ -239,6 +250,7 @@ export function PracticeRunner({
         </section>
       ) : (
         <section aria-labelledby="activity-heading" className="space-y-5">
+          {session.provider ? <ExerciseAttribution session={session} /> : null}
           <header className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 id="activity-heading" ref={activityHeading} tabIndex={-1} className="text-[1.25rem] font-semibold outline-none">
               {info.label} · {session.label}
@@ -254,7 +266,7 @@ export function PracticeRunner({
               {session.activity === "missing_words" ? <MissingWords session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
               {session.activity === "word_order" ? <WordOrder session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
               {session.activity === "type_verse" ? <TypeVerse session={session} kids={kids} busy={busy} onSubmit={send} /> : null}
-              {session.activity === "self_check" ? <SelfCheck session={session} kids={kids} busy={busy} hint={card.hint} provider={card.provider} onSubmit={send} /> : null}
+              {session.activity === "self_check" ? <SelfCheck session={session} kids={kids} busy={busy} hint={card.hint} provider={!exercises} onSubmit={send} /> : null}
             </>
           ) : null}
           {submit ? (
@@ -354,7 +366,7 @@ function SaveHelp({ state, retry, restart }: { state: SubmitState<SubmitResult>;
   if (state.status === "expired") return <Alert tone="error" title="This activity was open too long and expired. Nothing was recorded. Start it again when you're ready." />;
   if (state.status === "conflict") {
     return (
-      <Alert tone="error" title="This verse was removed or replaced (perhaps in another tab) after you started, so nothing was recorded.">
+      <Alert tone="error" title={state.message ?? "This verse was removed or replaced (perhaps in another tab) after you started, so nothing was recorded."}>
         <Button size="sm" variant="secondary" onClick={restart}>
           Start again
         </Button>
