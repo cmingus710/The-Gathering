@@ -18,9 +18,11 @@ import { cn } from "./cn";
  * - Text sits on the artwork's quiet left side over a fade in the artwork's
  *   own edge colour; on phones the artwork recedes further rather than the
  *   banner growing. Long titles, translations, and enlarged text wrap and the
- *   banner grows to fit; actions wrap beneath only when they don't fit.
- * - `aside` sits at the end of the title row on phones only (for example a
- *   jump to tools that are in a side panel on wider screens).
+ *   banner grows to fit.
+ * - Nothing is placed on the banner itself, so the artwork stays
+ *   unobstructed: `actions` are the first row of controls directly below it
+ *   (filling the width on phones), and `aside` joins that row on phones only
+ *   (for example a jump to tools that are in a side panel on wider screens).
  */
 export function SectionHeader({
   section,
@@ -30,7 +32,6 @@ export function SectionHeader({
   actions,
   aside,
   size = "full",
-  stretchActions = false,
   className,
 }: {
   section: SectionKey;
@@ -41,43 +42,45 @@ export function SectionHeader({
   actions?: ReactNode;
   aside?: ReactNode;
   size?: "full" | "compact";
-  /** On phones, actions fill the width beneath the title (a single primary action). */
-  stretchActions?: boolean;
   className?: string;
 }) {
   const config = SECTIONS[section];
   const art = sectionIcon(section);
   const compact = size === "compact";
   return (
-    <header className={cn("section-header", compact && "section-header--compact", className)} style={sectionBackgroundStyle(section)} data-section={section}>
-      <span aria-hidden="true" className="section-header-art" />
-      <div className="section-header-main">
-        {art ? (
-          // Decorative: the section's dimensional menu artwork (the heading names the section).
-          // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP copies with srcset (scripts/generate-menu-icons.mjs)
-          <img
-            src={art.src}
-            srcSet={art.srcSet}
-            sizes={compact ? "40px" : "(min-width: 640px) 64px, 46px"}
-            alt=""
-            width={64}
-            height={64}
-            decoding="async"
-            className="section-header-icon"
-          />
-        ) : (
-          <TileIcon name={config.glyph} className="section-header-icon" />
-        )}
-        <div className="section-header-text">
-          {eyebrow ? <p className="section-header-description font-semibold">{eyebrow}</p> : null}
-          <div className="flex flex-wrap items-center gap-x-3">
-            <h1 className="section-header-title min-w-0 flex-1 font-display font-semibold text-text [overflow-wrap:anywhere]">{title ?? config.label}</h1>
-            {aside ? <div className="section-header-aside shrink-0 lg:hidden">{aside}</div> : null}
+    <>
+      <header className={cn("section-header", compact && "section-header--compact", className)} style={sectionBackgroundStyle(section)} data-section={section}>
+        <span aria-hidden="true" className="section-header-art" />
+        <div className="section-header-main">
+          {art ? (
+            // Decorative: the section's dimensional menu artwork (the heading names the section).
+            // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP copies with srcset (scripts/generate-menu-icons.mjs)
+            <img
+              src={art.src}
+              srcSet={art.srcSet}
+              sizes={compact ? "40px" : "(min-width: 640px) 64px, 46px"}
+              alt=""
+              width={64}
+              height={64}
+              decoding="async"
+              className="section-header-icon"
+            />
+          ) : (
+            <TileIcon name={config.glyph} className="section-header-icon" />
+          )}
+          <div className="section-header-text">
+            {eyebrow ? <p className="section-header-description font-semibold">{eyebrow}</p> : null}
+            <h1 className="section-header-title font-display font-semibold text-text [overflow-wrap:anywhere]">{title ?? config.label}</h1>
+            {description ? <p className="section-header-description [overflow-wrap:anywhere]">{description}</p> : null}
           </div>
-          {description ? <p className="section-header-description [overflow-wrap:anywhere]">{description}</p> : null}
         </div>
-      </div>
-      {actions ? <div className={cn("section-header-actions", stretchActions && "section-header-actions--stretch")}>{actions}</div> : null}
-    </header>
+      </header>
+      {actions || aside ? (
+        <div className="section-actions">
+          {actions}
+          {aside ? <div className="section-actions-aside lg:hidden">{aside}</div> : null}
+        </div>
+      ) : null}
+    </>
   );
 }
