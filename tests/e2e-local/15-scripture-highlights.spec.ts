@@ -3,7 +3,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import { ADMIN, MEMBER, noHorizontalScroll, signIn, sql } from "./helpers";
 
 /**
- * Scripture highlights (local stack only, migration 20261125000100): the
+ * Scripture highlights (local stack only, migration 20261126000100): the
  * reader's verse selection (mouse, keyboard, and the phone's verse-selection
  * mode), all six colors, saving feedback, persistence across reloads and a
  * second signed-in session, partial recolor and removal, My Journal's

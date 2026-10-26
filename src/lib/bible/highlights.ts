@@ -2,7 +2,7 @@ import { findBookCode, parsePassages } from "./reference";
 import { HIGHLIGHT_COLORS, type HighlightColor } from "./format";
 
 /**
- * Scripture highlights (migration 20261125000100): pure helpers shared by the
+ * Scripture highlights (migration 20261126000100): pure helpers shared by the
  * reader and My Journal. A highlight is one row per verse (translation,
  * book, chapter, verse) with a color and a revision; nothing here holds
  * scripture text.

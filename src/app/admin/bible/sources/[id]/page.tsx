@@ -11,7 +11,7 @@ import { isUuid } from "@/lib/media/format";
 import { requireClient } from "@/lib/supabase/server";
 import { TranslationForm, TranslationStatus, type AdminTranslation } from "../translation-form";
 import { TextImportPanel } from "../upload-panels";
-import { MemoryPermissionForm, type MemoryPermission } from "./memory-permission";
+import { MemoryExercisesForm, MemoryPermissionForm, type MemoryPermission } from "./memory-permission";
 
 export const metadata: Metadata = { title: "Translation" };
 // Staging a whole Bible runs in this page's server actions.
@@ -76,6 +76,10 @@ export default async function TranslationPage({ params }: PageProps<"/admin/bibl
                 Memory verses
               </SectionHeading>
               <MemoryPermissionForm translationId={t.id} code={t.code} permission={permission} />
+              <div className="mt-6 border-t border-border pt-4">
+                <h3 className="mb-2 font-semibold">All six exercises</h3>
+                <MemoryExercisesForm translationId={t.id} code={t.code} permission={permission} />
+              </div>
             </Card>
           ) : null}
           {t.source_kind === "database" ? (

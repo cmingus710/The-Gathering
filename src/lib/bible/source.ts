@@ -1,6 +1,7 @@
 import "server-only";
 import { safeFetch } from "@/lib/media/safe-fetch";
 import { apiBibleBase, apiBibleListUrl, apiBiblePassageId, apiBiblePassageUrl, parseApiBibleList, parseApiBiblePassage, type ApiBibleSummary } from "./api-bible";
+import { localFixtureFetcher } from "./local-fixture";
 import type { ProviderConfig, Translation, Verse } from "./types";
 
 /**
@@ -34,7 +35,7 @@ export async function resolveText(
   verses: Verse[] | null,
   provider: ProviderConfig | null,
   range: Range,
-  fetcher: Fetcher = safeFetch,
+  fetcher: Fetcher = localFixtureFetcher() ?? safeFetch,
 ): Promise<TextResult> {
   if (verses) return { status: "ok", verses, fumsId: null, copyright: null };
   if (!provider || provider.provider !== "api_bible") return { status: "unavailable", reason: "not_configured" };

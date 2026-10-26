@@ -81,13 +81,15 @@ export function CollectionForm({
               onChange={(e) => setVersion(e.target.value)}
               hint={
                 chosen?.licensed && chosen.eligible
-                  ? `${chosen.code} is licensed: its text is fetched from API.Bible when shown and never stored here. Members practice it with flashcards and self-check only. Every verse uses this version; it's never switched silently.`
+                  ? `${chosen.code} is licensed: its text is fetched from API.Bible when shown and never stored here. ${
+                      chosen.modes.includes("missing_words") ? "Members can use all six activities, on screen only." : "Members practice it with flashcards and self-check only."
+                    } Every verse uses this version; it's never switched silently.`
                   : "Every verse in the collection uses this version. It's never switched silently."
               }
             >
               {eligible.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} ({t.code}){t.licensed ? ": licensed, flashcards and self-check only" : ""}
+                  {t.name} ({t.code}){t.licensed ? (t.modes.includes("missing_words") ? ": licensed, all six activities" : ": licensed, flashcards and self-check only") : ""}
                 </option>
               ))}
               {collection && !translations.some((t) => t.id === collection.translation.id) ? (

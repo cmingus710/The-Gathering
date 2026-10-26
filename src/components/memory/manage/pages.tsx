@@ -7,7 +7,10 @@ import { requireApprovedMember } from "@/lib/auth/viewer";
 import { todayIn } from "@/lib/bible/dates";
 import { versionChoices } from "@/lib/memory/eligibility";
 import { signMemoryPaths } from "@/lib/memory/storage";
-import type { Activity, Challenge, Difficulty, Session } from "@/lib/memory/types";
+import { allExercises } from "@/lib/memory/format";
+import { sourceVerses } from "@/lib/memory/provider";
+import type { Activity, Challenge, Difficulty, Segment, Session } from "@/lib/memory/types";
+import { fetchPassageText } from "@/components/memory/licensed-passage";
 import { requireClient } from "@/lib/supabase/server";
 import { ChallengeForm } from "./challenge-form";
 import { CollectionEditor } from "./collection-editor";
@@ -103,9 +106,10 @@ export async function PreviewPage({ base, id, searchParams }: { base: ManageBase
   const items = c.items.filter((i) => !i.retired);
   const item = items.find((i) => i.id === one(searchParams.item)) ?? items[0];
   if (!item) return <Alert tone="info" title="Add a verse to preview activities." />;
-  // Licensed versions: no stored text to build activities from. The preview
-  // shows the fetched text and only the activities that version permits.
-  if (item.passage.source_kind === "api") {
+  const licensed = item.passage.source_kind === "api";
+  // A licensed version with unchanged-text practice only: the fetched text
+  // and what members can do with it.
+  if (licensed && !allExercises(c.translation.memory_modes)) {
     return (
       <>
         <BackLink route={`${base}/collections/[id]/preview`} params={{ id: c.id }} label={c.title} />
@@ -119,16 +123,48 @@ export async function PreviewPage({ base, id, searchParams }: { base: ManageBase
   const short = one(searchParams.short) === "1";
   const segment = Math.max(0, Number(one(searchParams.segment)) || 0);
   const tooLong = segment === 0 && item.passage.word_count > 80 && ["missing_words", "word_order", "type_verse"].includes(activity);
+  // A licensed version with all six activities: the same preview, built from
+  // the server's fetch (held in memory only; the display is reported to FUMS).
+  const text = licensed ? await fetchPassageText(item.passage) : null;
+  if (text && text.status !== "ok") {
+    return (
+      <>
+        <BackLink route={`${base}/collections/[id]/preview`} params={{ id: c.id }} label={c.title} />
+        <PageHeader title="Preview activities" />
+        <Alert tone="info" title={text.status === "stored" ? "This verse can't be previewed right now." : text.message} />
+      </>
+    );
+  }
   const preview = tooLong
     ? null
     : await supabase
-        .rpc("memory_admin_preview", { p_item: item.id, p_activity: activity, p_difficulty: difficulty, p_segment: segment, p_short: short })
-        .then(({ data: d, error: e }) => (e ? null : (d as Session & { hidden: { blanks?: number[] } })));
+        .rpc("memory_admin_preview", {
+          p_item: item.id,
+          p_activity: activity,
+          p_difficulty: difficulty,
+          p_segment: segment,
+          p_short: short,
+          ...(text?.status === "ok" ? { p_source: sourceVerses(text.verses) } : {}),
+        })
+        .then(({ data: d, error: e }) => (e ? null : (d as Session & { hidden: { blanks?: number[] }; parts?: { segments: Segment[] | null; short_segments: Segment[] | null } })));
   return (
     <>
       <BackLink route={`${base}/collections/[id]/preview`} params={{ id: c.id }} label={c.title} />
       <PageHeader title="Preview activities" description="Exactly what members will see (choices and shuffles change each time). Nothing here is recorded." />
-      <ActivityPreview base={base} collectionId={c.id} items={items} item={item} activity={activity} difficulty={difficulty} segment={segment} short={short} preview={preview} />
+      <ActivityPreview
+        base={base}
+        collectionId={c.id}
+        items={items}
+        item={item}
+        activity={activity}
+        difficulty={difficulty}
+        segment={segment}
+        short={short}
+        preview={preview}
+        activities={licensed ? c.translation.memory_modes : undefined}
+        parts={preview?.parts}
+        licensed={text?.status === "ok" ? { copyright: text.copyright, fumsId: text.fumsId } : undefined}
+      />
     </>
   );
 }

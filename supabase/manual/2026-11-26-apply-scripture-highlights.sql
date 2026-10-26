@@ -1,9 +1,14 @@
--- Scripture highlights · Apply migration 20261125000100_scripture_highlights
+-- Scripture highlights · Apply migration 20261126000100_scripture_highlights
 -- to the hosted project.
 --
 -- Run once in the SQL editor of The Gathering project, ONLY after the owner
 -- approves applying it (docs/migration-history.md, "Scripture highlights"):
 --   https://supabase.com/dashboard/project/ymuiutwdnhxdqsetnwkt/sql/new
+--
+-- If the migration's SQL was already pasted and run on its own (the
+-- functions exist but the version isn't recorded), use
+-- 2026-11-26-record-scripture-highlights.sql instead; this script stops at
+-- its preflight in that case.
 --
 -- Additive: two colors added to bible.highlight_color, two columns
 -- (updated_at, revision) and a sequence on bible.highlights (existing rows
@@ -12,14 +17,12 @@
 -- and bible_highlights / bible_highlight_set replaced with the same
 -- signatures and grants.
 --
--- It copies supabase/migrations/20261125000100_scripture_highlights.sql
+-- It copies supabase/migrations/20261126000100_scripture_highlights.sql
 -- verbatim and records it under its repository version
 -- (created_by = scripture-highlights). All or nothing: one transaction; out
 -- of order or a second run stops at the preflight with "Nothing was
--- changed". It needs the Phase 8 Bible member functions (20261026000400)
--- and the Bible Coloring Studio step (20261123000100, the latest recorded on
--- hosted when this was written). It doesn't depend on Prayer collections
--- (20261124000100), so it can run before or after that step.
+-- changed". It needs the Phase 8 Bible highlights (20261026000400) and runs
+-- after the memory exercises step (20261125000100).
 begin;
 
 do $preflight$
@@ -27,18 +30,20 @@ begin
   if to_regclass('bible.highlights') is null or to_regprocedure('public.bible_highlight_set(uuid, text, integer, integer[], text)') is null then
     raise exception 'Nothing was changed: the Phase 8 Bible highlights (20261026000400) are not in this database.';
   end if;
-  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261123000100') then
-    raise exception 'Nothing was changed: the Bible Coloring Studio step (20261123000100) is not recorded. Run the steps in order.';
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261125000100') then
+    raise exception 'Nothing was changed: the memory exercises step (20261125000100) is not recorded. Run the steps in order.';
   end if;
-  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261125000100')
-     or to_regprocedure('public.bible_highlight_apply(jsonb)') is not null then
-    raise exception 'Nothing was changed: 20261125000100 is already applied.';
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261126000100') then
+    raise exception 'Nothing was changed: 20261126000100 is already applied.';
+  end if;
+  if to_regprocedure('public.bible_highlight_apply(jsonb)') is not null then
+    raise exception 'Nothing was changed: the highlight functions are already in this database but 20261126000100 isn''t recorded. Run 2026-11-26-record-scripture-highlights.sql instead.';
   end if;
 end
 $preflight$;
 
 -- =========================================================================
--- 20261125000100_scripture_highlights.sql
+-- 20261126000100_scripture_highlights.sql
 -- =========================================================================
 -- Scripture highlights: six colors, conflict-safe saves, and the
 -- "Scripture Highlights" collection in My Journal (additive).
@@ -402,8 +407,8 @@ grant execute on function public.bible_highlight_apply(jsonb), public.bible_high
 -- =========================================================================
 -- Expected afterwards: members call the new entry points, visitors and
 -- service_role don't; nobody calls the internal helpers; the table stays
--- closed; the replaced functions keep their grants; every existing
--- highlight has updated_at and a revision.
+-- closed; the replaced functions keep their grants; both new colors exist;
+-- every existing highlight has updated_at and a revision.
 do $check$
 begin
   if has_function_privilege('anon', 'public.bible_highlight_apply(jsonb)', 'execute')
@@ -419,13 +424,17 @@ begin
      or has_function_privilege('authenticated', 'bible.highlight_color_ok(text)', 'execute')
      or has_table_privilege('authenticated', 'bible.highlights', 'select')
      or has_table_privilege('anon', 'bible.highlights', 'select')
+     or not exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid join pg_namespace n on n.oid = t.typnamespace
+                     where n.nspname = 'bible' and t.typname = 'highlight_color' and e.enumlabel = 'purple')
+     or not exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid join pg_namespace n on n.oid = t.typnamespace
+                     where n.nspname = 'bible' and t.typname = 'highlight_color' and e.enumlabel = 'orange')
      or exists (select 1 from bible.highlights where updated_at is null or revision is null) then
-    raise exception 'Nothing was changed: the highlight grants or columns are not as expected. Send this message to the developer.';
+    raise exception 'Nothing was changed: the highlight grants, colors, or columns are not as expected. Send this message to the developer.';
   end if;
 end
 $check$;
 
 insert into supabase_migrations.schema_migrations (version, name, created_by)
-values ('20261125000100', 'scripture_highlights', 'scripture-highlights');
+values ('20261126000100', 'scripture_highlights', 'scripture-highlights');
 
 commit;

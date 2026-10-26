@@ -27,6 +27,8 @@ export async function signedInClient(): Promise<{ supabase: SupabaseClient } | R
 export function dbError(error: { code?: string; message?: string }): Response {
   if (error.code === "42501") return json(403, { error: "Your account can't use memory practice right now." });
   if (error.code === "P0002") return json(404, { error: error.message ?? "That wasn't found." });
+  // A licensed version's published wording no longer matches the verse (20261125000100).
+  if (error.code === "P0010") return json(409, { error: error.message ?? "The wording of this passage has changed. Open the verse to start the new wording." });
   if (error.code === "22023") {
     const tooOften = /too often/i.test(error.message ?? "");
     return json(tooOften ? 429 : 400, { error: error.message ?? "That couldn't be saved." });

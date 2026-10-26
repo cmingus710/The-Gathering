@@ -19,7 +19,7 @@ export type SendResponse<T> =
   | { kind: "ok"; data: T }
   | { kind: "signed_out" }
   | { kind: "expired" }
-  | { kind: "conflict" }
+  | { kind: "conflict"; message?: string }
   | { kind: "error"; retryable: boolean; message: string };
 
 export type SubmitState<T> = { status: SubmitStatus; attempt: number; message: string | null; data: T | null };
@@ -122,7 +122,7 @@ export class SubmissionQueue<T> {
         this.set({ status: "expired", message: null });
         return;
       case "conflict":
-        this.set({ status: "conflict", message: null });
+        this.set({ status: "conflict", message: r.message ?? null });
         return;
       case "error":
         if (!r.retryable || attempt >= this.o.maxAttempts) {
@@ -150,6 +150,6 @@ export async function toSendResponse<T>(res: Response): Promise<SendResponse<T>>
   if (res.ok) return { kind: "ok", data: body as T };
   if (res.status === 401) return { kind: "signed_out" };
   if (res.status === 410) return { kind: "expired" };
-  if (res.status === 409) return { kind: "conflict" };
+  if (res.status === 409) return (body as { error?: string } | null)?.error ? { kind: "conflict", message } : { kind: "conflict" };
   return { kind: "error", retryable: res.status >= 500 || res.status === 429 || res.status === 408, message };
 }

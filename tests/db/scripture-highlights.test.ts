@@ -5,7 +5,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Scripture highlights (20261125000100) against a real database: all six
+ * Scripture highlights (20261126000100) against a real database: all six
  * colors, single verses and ranges, overlaps, recoloring and removing part
  * of a range, repeated saves without duplicates, stale saves refused
  * instead of overwriting, translation-specific versification, the grouped

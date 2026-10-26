@@ -7,7 +7,7 @@ import type { PassagePayload, Translation, Verse } from "./types";
 
 /**
  * My Journal · Scripture Highlights: the member's highlights grouped into
- * passages (public.bible_highlight_passages, 20261125000100), and each
+ * passages (public.bible_highlight_passages, 20261126000100), and each
  * passage's text as available now.
  *
  * Only references and colors are stored. Text comes, when shown, from the

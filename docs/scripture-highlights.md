@@ -1,6 +1,6 @@
 # Scripture highlights
 
-Members highlight verses in the Bible reader in six colors. Highlights are private, saved to the member's account (so every signed-in device shows them), and appear automatically in **My Journal → Scripture Highlights**. Migration `20261125000100_scripture_highlights`.
+Members highlight verses in the Bible reader in six colors. Highlights are private, saved to the member's account (so every signed-in device shows them), and appear automatically in **My Journal → Scripture Highlights**. Migration `20261126000100_scripture_highlights`.
 
 ## For members
 

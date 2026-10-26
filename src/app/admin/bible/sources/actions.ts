@@ -101,6 +101,29 @@ export async function memoryPermissionAction(_prev: FormState, formData: FormDat
   return { status: "success", message: "Saved." };
 }
 
+/**
+ * All six memory exercises for a licensed version (on screen only), after
+ * its unchanged-text permission, with the written permission relied on and,
+ * where the version's publisher agreement requires it, the publisher's
+ * feature approval. Every rule is rechecked in the database.
+ */
+export async function memoryExercisesAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = uuid.safeParse(formData.get("translation_id")).data;
+  await requireCapability(CAPABILITIES.bibleManage, id ? `/admin/bible/sources/${id}` : "/admin/bible/sources");
+  if (!id) return errorState("That translation wasn't found.");
+  const p: Record<string, unknown> = { exercise_modes: formData.get("exercise_modes") === "on", exercise_note: str(formData, "exercise_note") };
+  if (formData.has("publisher_field")) {
+    p.publisher_approval_confirmed = formData.get("publisher_approval_confirmed") === "on";
+    p.publisher_approval_note = str(formData, "publisher_approval_note");
+  }
+  const { error } = await rpc("memory_admin_provider_exercises_save", { p_translation: id, p });
+  if (error) return errorState(dbErrorMessage(error), { values: { exercise_note: String(p.exercise_note), publisher_approval_note: String(p.publisher_approval_note ?? "") } });
+  revalidatePath(`/admin/bible/sources/${id}`);
+  revalidatePath("/memory", "layout");
+  revalidatePath("/admin/memory", "layout");
+  return { status: "success", message: p.exercise_modes ? "Saved. All six exercises are offered for this version." : "Saved." };
+}
+
 export async function listApiBiblesAction(credentialEnv: string): Promise<BibleListResult> {
   await requireCapability(CAPABILITIES.bibleManage, "/admin/bible/sources");
   return listApiBibles(String(credentialEnv ?? "").trim());
