@@ -195,7 +195,11 @@ export function FeedPostCard({
         />
       </header>
 
-      <div className="px-4 pt-3 sm:px-5">
+      {/* `relative` anchors the screen-reader-only labels inside links and
+          photos here, and the horizontal clip keeps anything in the text or
+          photos from widening the page (iOS Safari then zooms the whole
+          feed out to fit it). */}
+      <div className="relative min-w-0 overflow-x-clip px-4 pt-3 sm:px-5">
         {post.status === "hidden" ? (
           <p className="mb-2 rounded-control border border-dashed border-danger/60 bg-danger-soft/40 px-3 py-2 text-meta font-semibold text-danger">
             Hidden by a moderator. Members can&apos;t see this post; you can because you moderate it.
@@ -330,7 +334,7 @@ function ExpandableBody({ html }: { html: string }) {
       <div
         ref={ref}
         id={id}
-        className={cn("prose-gathering break-words text-[0.9875rem]", !expanded && "max-h-[11.5rem] overflow-hidden", !expanded && long && "[mask-image:linear-gradient(to_bottom,black_70%,transparent)]")}
+        className={cn("prose-gathering relative min-w-0 break-words text-[0.9875rem]", !expanded && "max-h-[11.5rem] overflow-hidden", !expanded && long && "[mask-image:linear-gradient(to_bottom,black_70%,transparent)]")}
         dangerouslySetInnerHTML={{ __html: html }}
       />
       {long ? (
