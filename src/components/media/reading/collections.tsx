@@ -26,6 +26,7 @@ export function FolderCard({
   name,
   description,
   countLabel,
+  note,
   art,
   accent = false,
 }: {
@@ -33,6 +34,8 @@ export function FolderCard({
   name: string;
   description?: string | null;
   countLabel: string;
+  /** A short line under the count, e.g. that only this reader can see it yet. */
+  note?: string | null;
   /** What sits in the pocket: covers, an image, or a fallback icon (decorative). */
   art: ReactNode;
   /** The primary-colored tab (All Books). */
@@ -54,6 +57,7 @@ export function FolderCard({
             <span className="block font-semibold leading-snug text-text line-clamp-2 [overflow-wrap:anywhere]">{name}</span>
             {description ? <span className="mt-0.5 block text-meta text-text-secondary line-clamp-2 [overflow-wrap:anywhere]">{description}</span> : null}
             <span className="mt-0.5 block text-meta text-text-secondary">{countLabel}</span>
+            {note ? <span className="mt-0.5 block text-meta font-semibold text-primary [overflow-wrap:anywhere]">{note}</span> : null}
           </span>
         </span>
       </span>

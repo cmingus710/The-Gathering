@@ -85,6 +85,9 @@ export function LibraryComposer({
   const [sourceUrl, setSourceUrl] = useState(v?.sourceUrl ?? initial?.sourceUrl ?? "");
   const [scripture, setScripture] = useState(v?.scripture ?? initial?.scripture.join("\n") ?? "");
   const [chosen, setChosen] = useState<string[]>(() => (v?.categories ? v.categories.split(",").filter(Boolean) : (initial?.categories ?? [])));
+  // Collections the picker offers: the active ones, plus any the member
+  // starts here (they're created on their own, without submitting the prayer).
+  const [collectionOptions, setCollectionOptions] = useState(collections);
   const [collection, setCollection] = useState<string | null>(() => {
     const id = v ? v.collection || null : (initial ? initial.collection?.id : defaultCollection) ?? null;
     return id && collections.some((c) => c.id === id) ? id : null;
@@ -101,7 +104,7 @@ export function LibraryComposer({
   }, [categories, initial]);
   const refs = useMemo(() => parseReferenceList(scripture), [scripture]);
   const chosenCats = categories.filter((c) => chosen.includes(c.id));
-  const chosenCollection = collections.find((c) => c.id === collection) ?? null;
+  const chosenCollection = collectionOptions.find((c) => c.id === collection) ?? null;
 
   const toggle = (id: string, on: boolean) => setChosen((list) => (on ? [...list, id] : list.filter((x) => x !== id)));
 
@@ -137,7 +140,16 @@ export function LibraryComposer({
           toolbarLabel="Prayer formatting"
         />
 
-        <CollectionPicker collections={collections} value={collection} onChange={setCollection} error={fe.collection} />
+        <CollectionPicker
+          collections={collectionOptions}
+          value={collection}
+          onChange={setCollection}
+          onCreated={(c) => {
+            setCollectionOptions((list) => [...list, c]);
+            setCollection(c.id);
+          }}
+          error={fe.collection}
+        />
 
         {KINDS.map((kind) => {
           const options = categories.filter((c) => c.kind === kind);

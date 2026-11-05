@@ -12,11 +12,14 @@ export function PrayerCollectionFolder({
   href,
   collection,
   src,
+  note,
   all = false,
 }: {
   href: string;
   collection: Pick<CollectionShelf, "name" | "description" | "count">;
   src?: string | null;
+  /** A short line under the count, e.g. "Only you can see this yet". */
+  note?: string | null;
   /** All prayers: the library icon and the primary-colored tab. */
   all?: boolean;
 }) {
@@ -26,6 +29,7 @@ export function PrayerCollectionFolder({
       name={collection.name}
       description={collection.description}
       countLabel={prayerCount(collection.count)}
+      note={note}
       accent={all}
       art={
         src ? (

@@ -8,7 +8,7 @@ import { errorState, type FormState } from "@/lib/forms";
 import { normalizeLinkInput } from "@/lib/links/policy";
 import { withSafeLinks } from "@/lib/links/validate";
 import { parseReferenceList } from "@/lib/media/scripture";
-import { LIBRARY_LIMITS, LIBRARY_VIEWS, type LibraryPage } from "@/lib/prayer/library";
+import { COLLECTION_LIMITS, LIBRARY_LIMITS, LIBRARY_VIEWS, normalizeCollectionName, type CollectionOption, type LibraryPage } from "@/lib/prayer/library";
 import { dbErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -96,6 +96,58 @@ export async function saveLibraryPrayerAction(_prev: FormState, formData: FormDa
   // Only picks the confirmation wording; the database decided the state.
   const wasPublished = formData.get("wasPublished") === "true";
   redirect(`/prayer/library/${data as string}?saved=${publish ? (wasPublished ? "updated" : "published") : "draft"}`);
+}
+
+const collectionSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Give the collection a name of at least 2 characters.")
+    .max(COLLECTION_LIMITS.name, `Keep the name to ${COLLECTION_LIMITS.name} characters.`),
+  description: z.string().trim().max(COLLECTION_LIMITS.description, `Keep the description to ${COLLECTION_LIMITS.description} characters.`),
+});
+
+/**
+ * Starts a collection for this member (the database checks membership,
+ * posting restrictions, the unique name, how many of theirs are still empty,
+ * and the rate limit). A new collection holds no published prayer yet, so
+ * only its creator sees it until one is published in it.
+ */
+async function addCollection(name: string, description: string): Promise<{ ok: true; collection: CollectionOption } | { ok: false; message: string; field?: "name" | "description" }> {
+  const parsed = collectionSchema.safeParse({ name: normalizeCollectionName(name), description: description.trim() });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, message: issue.message, field: issue.path[0] === "description" ? "description" : "name" };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: UNAVAILABLE };
+  const { data, error } = await supabase.rpc("prayer_library_collection_add", { p_name: parsed.data.name, p_description: parsed.data.description });
+  if (error || !data) return { ok: false, message: dbErrorMessage(error, "The collection couldn't be created. Please try again."), field: "name" };
+  revalidatePath("/prayer/library", "layout");
+  return { ok: true, collection: data as CollectionOption };
+}
+
+/**
+ * Called from the prayer editor's Collection field: returns the new
+ * collection so it can be chosen without leaving the half-written prayer.
+ */
+export async function addLibraryCollectionAction(
+  name: string,
+  description: string,
+): Promise<{ ok: true; collection: CollectionOption } | { ok: false; message: string; field?: "name" | "description" }> {
+  await requireApprovedMember("/prayer/library/new");
+  return addCollection(name, description);
+}
+
+export type CollectionCreatedState = FormState & { created?: CollectionOption };
+
+/** The Prayer Library's Collections view: start a collection, then add prayers to it. */
+export async function startLibraryCollectionAction(_prev: CollectionCreatedState, formData: FormData): Promise<CollectionCreatedState> {
+  await requireApprovedMember("/prayer/library");
+  const values = { name: String(formData.get("name") ?? ""), description: String(formData.get("description") ?? "") };
+  const result = await addCollection(values.name, values.description);
+  if (!result.ok) return errorState(result.message, { values, fieldErrors: result.field ? { [result.field]: [result.message] } : undefined });
+  return { status: "success", message: `“${result.collection.name}” is ready. Add a prayer to it so other members can see it.`, created: result.collection };
 }
 
 /** The contributor's own lifecycle: publish a draft, move back to drafts, archive, restore. */

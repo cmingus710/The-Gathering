@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, FolderOpen, Search } from "lucide-react";
-import { useId, useState } from "react";
+import { Check, FolderOpen, FolderPlus, Search, X } from "lucide-react";
+import { useId, useState, useTransition } from "react";
+import { addLibraryCollectionAction } from "@/app/(app)/(member)/prayer/library/actions";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
-import { filterCollections, type CollectionOption } from "@/lib/prayer/library";
+import { COLLECTION_LIMITS, filterCollections, findCollectionByName, type CollectionOption } from "@/lib/prayer/library";
 
 /**
  * The prayer editor's Collection field: the active collections as a
@@ -11,16 +13,24 @@ import { filterCollections, type CollectionOption } from "@/lib/prayer/library";
  * for anything that doesn't fit elsewhere. Submits the chosen id as
  * `collection`; the database checks it again. Required to publish, optional
  * for a draft.
+ *
+ * When `onCreated` is given, the member can also start a collection here
+ * (20261129000100) and it becomes the chosen one; the half-written prayer
+ * stays as it is, because the new collection is created on its own, without
+ * submitting the editor.
  */
 export function CollectionPicker({
   collections,
   value,
   onChange,
+  onCreated,
   error,
 }: {
   collections: CollectionOption[];
   value: string | null;
   onChange: (id: string | null) => void;
+  /** Lets the member add a collection from here; omit to offer only the existing ones. */
+  onCreated?: (collection: CollectionOption) => void;
   error?: string[];
 }) {
   const [query, setQuery] = useState("");
@@ -100,8 +110,9 @@ export function CollectionPicker({
             </li>
           );
         })}
-        {!shown.length ? <li className="px-1 py-2 text-meta text-text-secondary">No collection matches “{query}”. Try another word, or choose General prayers.</li> : null}
+        {!shown.length ? <li className="px-1 py-2 text-meta text-text-secondary">No collection matches “{query}”. Try another word, choose General prayers, or start a collection below.</li> : null}
       </ul>
+      {onCreated ? <AddCollection collections={collections} onCreated={onCreated} onChoose={(c) => onChange(c.id)} /> : null}
       <input type="hidden" name="collection" value={value ?? ""} />
       {error?.length ? (
         <p id={errorId} className="text-meta font-medium text-danger">
@@ -109,5 +120,133 @@ export function CollectionPicker({
         </p>
       ) : null}
     </fieldset>
+  );
+}
+
+/**
+ * Start a collection from inside the editor. It is created on its own (a
+ * Server Action call, not a submit), so the prayer being written isn't
+ * touched and the new collection becomes the chosen one straight away. These
+ * inputs carry no `name`, so they never travel with the prayer; the database
+ * checks membership, the name, and the limits again.
+ */
+function AddCollection({
+  collections,
+  onCreated,
+  onChoose,
+}: {
+  collections: CollectionOption[];
+  onCreated: (collection: CollectionOption) => void;
+  onChoose: (collection: CollectionOption) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+  const id = useId();
+  // A name that is already on the list: choose that collection instead of making another.
+  const existing = findCollectionByName(collections, name);
+
+  function close() {
+    setOpen(false);
+    setName("");
+    setDescription("");
+    setError("");
+  }
+
+  function create() {
+    if (pending) return;
+    setError("");
+    if (existing) {
+      onChoose(existing);
+      close();
+      return;
+    }
+    start(async () => {
+      const result = await addLibraryCollectionAction(name, description);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      onCreated(result.collection);
+      close();
+    });
+  }
+
+  if (!open) {
+    return (
+      <Button type="button" variant="ghost" size="sm" icon={<FolderPlus className="size-4" aria-hidden="true" />} onClick={() => setOpen(true)}>
+        Start a new collection
+      </Button>
+    );
+  }
+  return (
+    <div className="space-y-3 rounded-tile border border-border-strong bg-surface-muted p-3.5">
+      <p className="font-semibold">Start a new collection</p>
+      <p className="text-meta text-text-secondary">
+        Other members see it once a prayer is published in it, and anyone can add prayers to it afterwards. Give it a name others will recognize, such as “Prayers for our
+        school”.
+      </p>
+      <div className="space-y-1.5">
+        <label htmlFor={`${id}-name`} className="block font-semibold">
+          Name
+        </label>
+        <input
+          id={`${id}-name`}
+          type="text"
+          value={name}
+          maxLength={COLLECTION_LIMITS.name}
+          autoComplete="off"
+          aria-describedby={error ? `${id}-error` : undefined}
+          aria-invalid={error ? true : undefined}
+          // Enter creates the collection instead of submitting the prayer.
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              create();
+            }
+          }}
+          onChange={(e) => setName(e.target.value)}
+          className="block min-h-12 w-full rounded-control border border-border-strong bg-surface px-4 py-2.5 text-base"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor={`${id}-description`} className="block font-semibold">
+          Short description <span className="font-normal text-text-secondary">(optional)</span>
+        </label>
+        <input
+          id={`${id}-description`}
+          type="text"
+          value={description}
+          maxLength={COLLECTION_LIMITS.description}
+          autoComplete="off"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              create();
+            }
+          }}
+          onChange={(e) => setDescription(e.target.value)}
+          className="block min-h-12 w-full rounded-control border border-border-strong bg-surface px-4 py-2.5 text-base"
+        />
+      </div>
+      <p role="status" className={cn("text-meta", existing ? "text-text-secondary" : "sr-only")}>
+        {existing ? `“${existing.name}” already exists. Creating will choose it instead.` : ""}
+      </p>
+      {error ? (
+        <p id={`${id}-error`} className="text-meta font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" loading={pending} loadingText="Creating…" disabled={name.trim().length < 2} onClick={create}>
+          {existing ? "Choose it" : "Create and choose"}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" icon={<X className="size-4" aria-hidden="true" />} onClick={close}>
+          Cancel
+        </Button>
+      </div>
+    </div>
   );
 }
