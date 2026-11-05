@@ -6,7 +6,10 @@ import { ADMIN, MEMBER, noHorizontalScroll, signIn, sql } from "./helpers";
 /**
  * Prayer Library collections (local stack only): a settings manager creates a
  * collection and gives it a cropped cover; a member publishes a prayer into
- * it from the editor; another member browses the collection cards, opens the
+ * it from the editor; a member starts a collection of their own from the
+ * Collections view (only they see it until the first prayer is published in
+ * it) and another starts one from inside the editor without losing the
+ * half-written prayer; another member browses the collection cards, opens the
  * collection (direct link too), searches within it and across all prayers,
  * opens a prayer and comes back to the same collection and search; the
  * administrator moves the prayer out in bulk (the collection then disappears
@@ -19,6 +22,13 @@ const SHOTS = process.env.LIBRARY_SHOTS;
 const stamp = Date.now() % 100000;
 const COLLECTION = `[TEST] Morning Prayers ${stamp}`;
 const TITLE = `[TEST] Dawn offering ${stamp}`;
+// Collections members start themselves, and the prayers that make them public.
+const MEMBER_MADE = `[TEST] Prayers for our school ${stamp}`;
+const MEMBER_MADE_TITLE = `[TEST] For our teachers ${stamp}`;
+const EDITOR_MADE = `[TEST] Prayers at bedtime ${stamp}`;
+const EDITOR_MADE_TITLE = `[TEST] As the light goes ${stamp}`;
+/** Square brackets in the synthetic names, escaped for an accessible-name pattern. */
+const esc = (value: string) => value.replace(/[[\]]/g, "\\$&");
 const READER = "editor@example.test";
 let collectionId = "";
 let prayerId = "";
@@ -93,6 +103,55 @@ test("a member publishes a prayer into the collection without leaving the editor
   await expect(page.getByText("Your prayer is published in the library.")).toBeVisible();
   prayerId = page.url().split("/prayer/library/")[1].split("?")[0];
   await expect(page.getByRole("link", { name: COLLECTION })).toHaveAttribute("href", `/prayer/library/collections/${collectionId}`);
+});
+
+test("a member starts a collection from the Collections view, and only they see it until a prayer is published in it", async ({ browser }) => {
+  const page = await as(browser, READER);
+  await page.goto("/prayer/library");
+  await page.getByRole("button", { name: "Start a collection" }).click();
+  await page.getByLabel("Name").fill(MEMBER_MADE);
+  await page.getByLabel(/Short description/).fill("Prayers for our school, its children and teachers.");
+  await page.getByRole("button", { name: "Create collection" }).click();
+  await expect(page.getByText(`“${MEMBER_MADE}” is ready.`)).toBeVisible();
+  // On the starter's own shelf, marked as theirs alone to see.
+  await expect(page.getByRole("link", { name: new RegExp(`${esc(MEMBER_MADE)}[\\s\\S]*Only you can see this yet`) })).toBeVisible();
+  await shot(page, "member-started");
+
+  // Nobody else has it on the Collections view yet, though the editor offers it.
+  const other = await as(browser, MEMBER);
+  await other.goto("/prayer/library");
+  await expect(other.getByRole("link", { name: new RegExp(esc(MEMBER_MADE)) })).toHaveCount(0);
+
+  // The first published prayer makes it everyone's.
+  await page.getByRole("link", { name: "Add the first prayer" }).click();
+  await expect(page).toHaveURL(/\/prayer\/library\/new\?collection=[0-9a-f-]{36}$/);
+  await page.getByLabel("Title").fill(MEMBER_MADE_TITLE);
+  await page.getByRole("textbox", { name: "Prayer" }).fill("Keep our children and their teachers, Lord.");
+  await expect(page.getByRole("group", { name: /Collection/ }).getByRole("radio", { name: new RegExp(esc(MEMBER_MADE)) })).toBeChecked();
+  await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByText("Your prayer is published in the library.")).toBeVisible();
+  await other.goto("/prayer/library");
+  await expect(other.getByRole("link", { name: new RegExp(`${esc(MEMBER_MADE)}[\\s\\S]*1 prayer`) })).toBeVisible();
+});
+
+test("a member starts a collection inside the editor without losing the prayer they're writing", async ({ browser }) => {
+  const page = await as(browser, MEMBER);
+  await page.goto("/prayer/library/new");
+  await page.getByLabel("Title").fill(EDITOR_MADE_TITLE);
+  await page.getByRole("textbox", { name: "Prayer" }).fill("Settle our hearts for sleep, Lord.");
+  const picker = page.getByRole("group", { name: /Collection/ });
+  await picker.getByRole("button", { name: "Start a new collection" }).click();
+  await picker.getByLabel("Name", { exact: true }).fill(EDITOR_MADE);
+  await picker.getByLabel(/Short description/).fill("Prayers for the end of the day.");
+  await picker.getByRole("button", { name: "Create and choose" }).click();
+  // Chosen at once, with the half-written prayer still there.
+  await expect(picker.getByRole("radio", { name: new RegExp(esc(EDITOR_MADE)) })).toBeChecked();
+  await expect(page.getByLabel("Title")).toHaveValue(EDITOR_MADE_TITLE);
+  await expect(page.getByRole("complementary", { name: "Preview" }).getByText(EDITOR_MADE)).toBeVisible();
+  await shot(page, "editor-started");
+  await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByText("Your prayer is published in the library.")).toBeVisible();
+  await expect(page.getByRole("link", { name: EDITOR_MADE })).toBeVisible();
 });
 
 test("another member browses collections, searches within one, and comes back to it from a prayer", async ({ browser }) => {
