@@ -687,3 +687,22 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   ```
 
   Expected: two rows (`prayer_body_length` / `prayer-body-length`, `prayer_request_body_length` / `prayer-request-body-length`).
+
+## Members start their own Prayer Library collections (2026-11-29)
+
+- **New (additive; no applied migration was edited):** `20261129000100_prayer_member_collections`, from [#94](https://github.com/cmingus710/The-Gathering/pull/94). Until now only settings managers could create a collection (`20261124000100`); a member who found none that fitted could do nothing.
+  - New member function `public.prayer_library_collection_add(text, text)`, granted to `authenticated` only: an approved adult member starts a collection with a name (2–80, unique case- and space-insensitively across active and archived) and an optional description (≤ 300). Paused posting refuses it, at most 5 an hour per member, and at most 3 of a member's own may be waiting without a published prayer. Every creation is audited as `prayer.library_collection_created` with `{"by": "member"}`.
+  - Replaced with the same signatures and grants: `prayer.library_collection_json` (adds `mine`), `prayer.library_visible_collection` and `public.prayer_library_collections` (both also admit the caller's own empty collection, so it doesn't vanish before the first prayer), and `prayer.library_collection_admin_json` (adds `started_by`).
+  - Members gain nothing else: no rename, describe, reorder, cover, archive, restore, or reassign, and no claim over the collection they started. Visibility for everyone else is unchanged — a collection is still public only while active with a published, unhidden prayer, and counts and covers still come from those alone. No table, column, policy, or row changes, and nothing is notified.
+  - Details: [prayer-library.md](prayer-library.md).
+- **Renumbered:** first written as `20261127000100`, which this repository also used for `prayer_body_length` — and that one was already applied and recorded on hosted under that number before #94 merged. Hosted's history is the authority, so `prayer_body_length` kept `20261127000100` and this migration became `20261129000100` in [#95](https://github.com/cmingus710/The-Gathering/pull/95), with its seven references updated. Its SQL is unchanged. The two touch different functions (`prayer_library_save`, `prayer.clean_body`, and `library_reindex` there; the collection functions here), so the order they run in does not matter.
+- **Operator script:** `supabase/manual/2026-11-29-apply-prayer-member-collections.sql`, one transaction. Its preflight requires the collections objects and a recorded `20261124000100`, refuses a second run, and stops with a pointer if the migration's SQL was already pasted and run on its own. Post-checks: the new function exists and only `authenticated` can call it (not `anon`, not `service_role`); the private `prayer` helpers and `prayer.library_collections` stay closed to every client role; and a collection reads back with `mine` and, in the admin view, `started_by`. History row `created_by = prayer-member-collections`.
+- **Rehearsal (local, PostgreSQL 16, every earlier migration with a history row for each):** the script applied and recorded `20261129000100`; a rerun stopped at the preflight; with the migration's SQL pasted first it stopped and pointed to a record-only script; and on a database without `20261124000100`, and on an empty one, it reported the missing collections step.
+- **Order: migration first, then the app — and the app is already deployed.** #94 merged and shipped without this step, so **Start a collection** and **Start a new collection** currently report that the collection couldn't be created (`prayer_library_collection_add` does not exist on hosted). Everything else in the Prayer Library keeps working, and nothing is lost. Applying the migration fixes it with no further deploy.
+- **Hosted: not applied yet.** Run `supabase/manual/2026-11-29-apply-prayer-member-collections.sql` in the SQL editor, then check:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261129000100';
+  ```
+
+  Expected: one row (`prayer_member_collections`, `prayer-member-collections`).
