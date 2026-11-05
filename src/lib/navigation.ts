@@ -222,6 +222,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
     requires: [CAPABILITIES.settingsManage],
   },
   {
+    key: "prayer-link-catalogs",
+    label: "Prayer link catalogues",
+    href: "/admin/prayer/library/catalogs",
+    icon: "settings",
+    requires: [CAPABILITIES.settingsManage],
+  },
+  {
     key: "finance",
     label: "Giving",
     href: "/admin/finance",

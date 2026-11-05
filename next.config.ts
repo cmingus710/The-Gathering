@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
     "/admin/finance/statements/**": ["./public/brand/the-gathering-logo.png", "./assets/fonts/*.ttf"],
     // The Morning & Evening import reads its pinned source file from disk.
     "/admin/content/collections/**": ["./data/devotionals/morning-and-evening/m_e.json"],
+    // The prayer link catalogue's dry run and import read their pinned files.
+    "/admin/prayer/library/catalogs/**": ["./data/prayers/catholic-online/prayers.json", "./data/prayers/catholic-online/coverage.json"],
   },
   // libheif's WebAssembly HEIC decoder is loaded from node_modules at run
   // time rather than bundled (Phase 7 photo uploads).
