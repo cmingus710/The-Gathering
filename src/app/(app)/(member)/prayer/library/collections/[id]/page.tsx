@@ -91,6 +91,10 @@ export default async function PrayerCollectionPage({ params, searchParams }: Pag
           <h1 className="font-display text-[1.75rem] font-semibold leading-tight [overflow-wrap:anywhere] sm:text-[2rem]">{collection.name}</h1>
           {collection.description ? <p className="text-text-secondary">{collection.description}</p> : null}
           <p className="text-meta font-semibold text-text-secondary">{prayerCount(collection.count)}</p>
+          {/* A collection the reader started, still waiting for its first published prayer. */}
+          {collection.mine && collection.count === 0 ? (
+            <p className="text-meta text-text-secondary">You started this collection. Other members will see it once a prayer is published in it.</p>
+          ) : null}
           {meta ? (
             <div className="pt-1">
               <ButtonLink href={`/prayer/library/new?${new URLSearchParams({ collection: collection.id })}`} variant="secondary" size="sm" icon={<PenSquare className="size-4" aria-hidden="true" />}>
@@ -140,16 +144,33 @@ export default async function PrayerCollectionPage({ params, searchParams }: Pag
         ) : (
           <EmptyState
             glyph="prayer"
-            title={cursor ? "No older prayers" : "No prayers in this collection match these filters"}
+            title={cursor ? "No older prayers" : filtered ? "No prayers in this collection match these filters" : "No prayers in this collection yet"}
             action={
               filtered ? (
                 <ButtonLink href={base} variant="ghost" size="sm" icon={<RotateCcw className="size-4" aria-hidden="true" />}>
                   Reset filters
                 </ButtonLink>
+              ) : cursor ? (
+                <ButtonLink href={base} variant="ghost" size="sm">
+                  Back to newest
+                </ButtonLink>
+              ) : meta ? (
+                <ButtonLink
+                  href={`/prayer/library/new?${new URLSearchParams({ collection: collection.id })}`}
+                  variant="secondary"
+                  size="sm"
+                  icon={<PenSquare className="size-4" aria-hidden="true" />}
+                >
+                  Add the first prayer
+                </ButtonLink>
               ) : null
             }
           >
-            Try another combination, or search all prayers.
+            {filtered
+              ? "Try another combination, or search all prayers."
+              : cursor
+                ? "You've reached the end of this collection."
+                : "Add a prayer you wrote, or one you have permission to share, and it will appear here."}
           </EmptyState>
         )}
       </LibraryBrowser>

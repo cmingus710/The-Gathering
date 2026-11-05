@@ -38,7 +38,7 @@ export default async function PrayerCollectionsAdminPage() {
       </Link>
       <PageHeader
         title="Prayer Library collections"
-        description="Collections are the shelves members browse. Every published prayer is filed in one; members choose it when they publish, and you can move prayers here. Collections without a published prayer stay out of members' view."
+        description="Collections are the shelves members browse. Every published prayer is filed in one; members choose it when they publish — or start a collection of their own — and you can rename, reorder, cover, archive, and move prayers here. A collection without a published prayer stays out of members' view (its creator aside)."
       />
       {!list ? (
         <Alert tone="error" title="Collections couldn't be loaded." />
@@ -64,6 +64,7 @@ export default async function PrayerCollectionsAdminPage() {
                       {c.counts.hidden ? ` · ${c.counts.hidden} hidden` : ""}
                       {c.counts.archived ? ` · ${c.counts.archived} archived` : ""}
                       {c.cover ? " · has a cover" : ""}
+                      {c.started_by ? ` · started by ${c.started_by}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">

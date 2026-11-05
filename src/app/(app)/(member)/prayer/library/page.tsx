@@ -2,6 +2,7 @@ import { PenSquare, RotateCcw } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrayerCollectionFolder, collectionGridClass } from "@/components/prayer/collection-folder";
+import { StartCollectionCard } from "@/components/prayer/collection-start-form";
 import { LibraryBrowser } from "@/components/prayer/library-browser";
 import { LibraryCard, libraryGridClass } from "@/components/prayer/library-card";
 import { LibraryFilterPanel } from "@/components/prayer/library-filters";
@@ -123,35 +124,53 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
               <Alert tone="error" title="Collections couldn't be loaded right now.">
                 Please try again in a moment.
               </Alert>
-            ) : shelves.total > 0 ? (
-              <section aria-labelledby="pl-collections" className="space-y-3">
-                <h3 id="pl-collections" className="sr-only">
-                  Collections
-                </h3>
-                <p className="text-meta text-text-secondary">Browse prayers by collection, or search every prayer above.</p>
-                <ul className={collectionGridClass}>
-                  <li>
-                    <PrayerCollectionFolder href={viewHref("library")} collection={{ name: LIBRARY_VIEW_LABEL.library, description: "Every published prayer, newest first.", count: shelves.total }} all />
-                  </li>
-                  {shelves.collections.map((c) => (
-                    <li key={c.id}>
-                      <PrayerCollectionFolder href={collectionHref(c.id)} collection={c} src={c.cover ? covers.get(c.cover.path) : null} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
             ) : (
-              <EmptyState
-                glyph="prayer"
-                title={EMPTY.library.title}
-                action={
-                  <ButtonLink href="/prayer/library/new" variant="secondary" size="sm" icon={<PenSquare className="size-4" aria-hidden="true" />}>
-                    Add a prayer
-                  </ButtonLink>
-                }
-              >
-                {EMPTY.library.body}
-              </EmptyState>
+              <div className="space-y-8">
+                {shelves.total > 0 || shelves.collections.length ? (
+                  <section aria-labelledby="pl-collections" className="space-y-3">
+                    <h3 id="pl-collections" className="sr-only">
+                      Collections
+                    </h3>
+                    <p className="text-meta text-text-secondary">Browse prayers by collection, or search every prayer above.</p>
+                    <ul className={collectionGridClass}>
+                      {shelves.total > 0 ? (
+                        <li>
+                          <PrayerCollectionFolder
+                            href={viewHref("library")}
+                            collection={{ name: LIBRARY_VIEW_LABEL.library, description: "Every published prayer, newest first.", count: shelves.total }}
+                            all
+                          />
+                        </li>
+                      ) : null}
+                      {shelves.collections.map((c) => (
+                        <li key={c.id}>
+                          {/* A collection the reader started is on their list while it waits for its first published prayer; nobody else sees it. */}
+                          <PrayerCollectionFolder
+                            href={collectionHref(c.id)}
+                            collection={c}
+                            src={c.cover ? covers.get(c.cover.path) : null}
+                            note={c.mine && c.count === 0 ? "Only you can see this yet" : null}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : (
+                  <EmptyState
+                    glyph="prayer"
+                    title={EMPTY.library.title}
+                    action={
+                      <ButtonLink href="/prayer/library/new" variant="secondary" size="sm" icon={<PenSquare className="size-4" aria-hidden="true" />}>
+                        Add a prayer
+                      </ButtonLink>
+                    }
+                  >
+                    {EMPTY.library.body}
+                  </EmptyState>
+                )}
+                {/* A member whose posting is paused can't start one (the database refuses too). */}
+                {meta.posting_restricted ? null : <StartCollectionCard collections={shelves.collections} />}
+              </div>
             )}
           </LibraryBrowser>
         ) : (

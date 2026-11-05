@@ -56,15 +56,22 @@ export type LibraryMeta = { categories: Category[]; collections: CollectionOptio
 /**
  * Collections (20261124000100): every published prayer is filed in one.
  * Members see a collection only while it is active and holds a published,
- * unhidden prayer; its count and cover come from those prayers alone.
+ * unhidden prayer; its count and cover come from those prayers alone. The
+ * one exception (20261127000100): the member who started a collection also
+ * sees it, marked `mine`, while it is still empty.
  */
 export type CollectionRef = { id: string; name: string };
 export type CollectionOption = CollectionRef & { description: string; is_general: boolean };
 export type CollectionCover = { path: string; alt: string };
-export type CollectionShelf = CollectionOption & { count: number; cover: CollectionCover | null };
+export type CollectionShelf = CollectionOption & { count: number; mine: boolean; cover: CollectionCover | null };
 export type CollectionShelves = { total: number; collections: CollectionShelf[] };
 
+/** What a member may type when starting a collection (the database checks again). */
+export const COLLECTION_LIMITS = { name: 80, description: 300, waiting: 3 } as const;
+
 export type AdminCollection = CollectionShelf & {
+  /** Who created it, for settings managers; null for the seeded General prayers. */
+  started_by: string | null;
   sort_order: number;
   archived: boolean;
   archived_at: string | null;
@@ -137,6 +144,23 @@ export function prayerHref(id: string, fromCollection?: string | null): string {
  */
 export function returnCollection(from: unknown, collection: CollectionRef | null): CollectionRef | null {
   return typeof from === "string" && collection && from.toLowerCase() === collection.id.toLowerCase() ? collection : null;
+}
+
+/** A collection name as it will be stored: trimmed, with runs of whitespace collapsed. */
+export function normalizeCollectionName(name: string): string {
+  return name.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * The collection a typed name already names, ignoring case and spacing, so
+ * the form can offer it instead of asking for a new one. Collections that are
+ * archived, or empty and someone else's, aren't in the list the member has,
+ * so the database has the last word on duplicate names.
+ */
+export function findCollectionByName<T extends CollectionRef>(collections: T[], name: string): T | null {
+  const wanted = normalizeCollectionName(name).toLowerCase();
+  if (!wanted) return null;
+  return collections.find((c) => normalizeCollectionName(c.name).toLowerCase() === wanted) ?? null;
 }
 
 /** Collections whose name or description contains every typed word (for the editor's Collection field). */

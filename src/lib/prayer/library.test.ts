@@ -4,8 +4,10 @@ import {
   decodeLibraryCursor,
   encodeLibraryCursor,
   filterCollections,
+  findCollectionByName,
   libraryExcerpt,
   markdownToPlain,
+  normalizeCollectionName,
   pickCategory,
   prayerHref,
   returnCollection,
@@ -92,6 +94,16 @@ describe("collection helpers", () => {
     expect(filterCollections(collections, "begin day").map((c) => c.name)).toEqual(["Morning Prayers"]);
     expect(filterCollections(collections, "fit  PRAYERS").map((c) => c.name)).toEqual(["General prayers"]);
     expect(filterCollections(collections, "evening")).toEqual([]);
+  });
+  it("names a collection the way it will be stored", () => {
+    expect(normalizeCollectionName("  Morning   Prayers \n")).toBe("Morning Prayers");
+    expect(normalizeCollectionName("   ")).toBe("");
+  });
+  it("offers the collection a typed name already names, however it's spaced or capitalized", () => {
+    expect(findCollectionByName(collections, "morning prayers")?.id).toBe(ID);
+    expect(findCollectionByName(collections, "  MORNING   prayers ")?.id).toBe(ID);
+    expect(findCollectionByName(collections, "Morning")).toBeNull();
+    expect(findCollectionByName(collections, "   ")).toBeNull();
   });
   it("returns to a collection only when the prayer is in it", () => {
     expect(returnCollection(ID, { id: ID, name: "Morning Prayers" })).toEqual({ id: ID, name: "Morning Prayers" });
