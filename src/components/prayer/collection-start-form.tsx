@@ -13,7 +13,7 @@ import { collectionHref, COLLECTION_LIMITS, findCollectionByName, type Collectio
 
 /**
  * The Prayer Library's Collections view: a member starts a collection when
- * none of the shelves fits (20261127000100). A new collection holds nothing
+ * none of the shelves fits (20261129000100). A new collection holds nothing
  * yet, so only its creator sees it until a prayer is published in it; the
  * next step is offered right away. The database checks membership, the name,
  * how many of the member's collections are still empty, and the rate limit.

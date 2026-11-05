@@ -202,6 +202,16 @@ describeDb("prayer library", () => {
       await rpc(as(alice), "prayer_library_status", [id, "archived"]);
     });
 
+    it("keeps a prayer of any length whole and searchable", async () => {
+      // 20261127000100: no ceiling on the body. Far past the old 6,000.
+      const body = `Longprayerword, hear us.\n\n${"We bless you and we thank you.\n".repeat(1000)}Amen.`;
+      expect(body.length).toBeGreaterThan(30_000);
+      const id = await save(alice, { title: "A very long prayer", body });
+      expect((await read(bob, id)).body).toBe(body);
+      expect(await ids(bob, { q: "longprayerword" })).toContain(id);
+      await rpc(as(alice), "prayer_library_status", [id, "archived"]);
+    });
+
     it("validates text, sources, Scripture, categories, mentions, and repeats", async () => {
       await fails(as(alice), "prayer_library_save", [null, "x", "Body", "original", null, null, [], [], true, null], /title is too short/);
       await fails(as(alice), "prayer_library_save", [null, "Title ok", " ", "original", null, null, [], [], true, null], /prayer is too short/);

@@ -5,7 +5,7 @@ import { TEST_DATABASE_URL, TestDb, anon, as, type Actor } from "./harness";
 const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 /**
- * Members start their own Prayer Library collections (20261127000100)
+ * Members start their own Prayer Library collections (20261129000100)
  * against a real database: an approved adult member creates one and chooses
  * it for a prayer; the new collection is theirs alone to see until a prayer
  * is published in it, then everyone sees it with the published count;

@@ -30,12 +30,12 @@ function refresh(id?: string) {
 
 const prayerSchema = z.object({
   title: z.string().trim().min(3, "Give the prayer a short title (at least 3 characters).").max(LIBRARY_LIMITS.title, `Keep the title to ${LIBRARY_LIMITS.title} characters.`),
+  // No length limit: a prayer may be a single line or a long liturgy.
   body: withSafeLinks(
     z
       .string()
       .trim()
       .min(1, "Write the prayer itself.")
-      .max(LIBRARY_LIMITS.body, `Keep the prayer to ${LIBRARY_LIMITS.body.toLocaleString()} characters.`)
       .refine((v) => !/\]\((mention|group):/i.test(v), "Mentions aren't used in the Prayer Library. Remove the @mention."),
   ),
   origin: z.enum(["original", "shared"], { message: "Say whether this is your own prayer or shared from another source." }),

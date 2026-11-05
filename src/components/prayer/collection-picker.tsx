@@ -15,7 +15,7 @@ import { COLLECTION_LIMITS, filterCollections, findCollectionByName, type Collec
  * for a draft.
  *
  * When `onCreated` is given, the member can also start a collection here
- * (20261127000100) and it becomes the chosen one; the half-written prayer
+ * (20261129000100) and it becomes the chosen one; the half-written prayer
  * stays as it is, because the new collection is created on its own, without
  * submitting the editor.
  */

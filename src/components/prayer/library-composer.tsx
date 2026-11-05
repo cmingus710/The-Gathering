@@ -133,7 +133,6 @@ export function LibraryComposer({
           name="body"
           required
           rows={10}
-          maxLength={LIBRARY_LIMITS.body}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           error={fe.body}

@@ -74,7 +74,7 @@ export default async function PrayerCollectionAdminPage({ params, searchParams }
       />
       {sp.created ? <Alert tone="success" title="Collection created. Add a cover and description, then file prayers in it." className="mb-6" /> : null}
       {collection.archived ? <Alert tone="info" title="Archived: members don't see this collection, and it can't be chosen for prayers." className="mb-6" /> : null}
-      {/* Who created it: members can start a collection too (20261127000100). */}
+      {/* Who created it: members can start a collection too (20261129000100). */}
       {collection.started_by ? <p className="mb-6 text-meta text-text-secondary">Started by {collection.started_by}.</p> : null}
 
       <div className="space-y-10">

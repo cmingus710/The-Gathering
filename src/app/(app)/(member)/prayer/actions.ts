@@ -39,7 +39,8 @@ function refresh(id?: string) {
 
 const requestSchema = z.object({
   title: z.string().trim().min(3, "Give your request a short title (at least 3 characters).").max(PRAYER_LIMITS.title, `Keep the title to ${PRAYER_LIMITS.title} characters.`),
-  body: withSafeLinks(z.string().trim().min(1, "Share what you'd like prayer for.").max(PRAYER_LIMITS.body, `Keep it to ${PRAYER_LIMITS.body.toLocaleString()} characters.`)),
+  // No length limit: a request may be a line or the whole story.
+  body: withSafeLinks(z.string().trim().min(1, "Share what you'd like prayer for.")),
   audience: z.enum(AUDIENCES, { message: "Choose who can see your request." }),
 });
 

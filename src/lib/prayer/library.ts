@@ -5,8 +5,13 @@ import { markdownExcerpt } from "@/lib/announcements/markdown";
  * the wording and small helpers its pages share. The database is the
  * authority for every rule (who can read, edit, save, report, moderate);
  * these only decide what to show.
+ *
+ * LIBRARY_LIMITS is what the composer and the save action hold members to.
+ * The prayer itself is deliberately absent: it has no length limit, in the
+ * form, the action, or the database, so a one-line blessing and a long
+ * liturgy both fit (20261129000100_prayer_body_length).
  */
-export const LIBRARY_LIMITS = { title: 120, body: 6000, source: 200, url: 500, report: 1000, topics: 8, purposes: 4, uses: 7 } as const;
+export const LIBRARY_LIMITS = { title: 120, source: 200, url: 500, report: 1000, topics: 8, purposes: 4, uses: 7 } as const;
 
 export type CategoryKind = "topic" | "purpose" | "use";
 export type Category = { id: string; kind: CategoryKind; name: string };
@@ -57,7 +62,7 @@ export type LibraryMeta = { categories: Category[]; collections: CollectionOptio
  * Collections (20261124000100): every published prayer is filed in one.
  * Members see a collection only while it is active and holds a published,
  * unhidden prayer; its count and cover come from those prayers alone. The
- * one exception (20261127000100): the member who started a collection also
+ * one exception (20261129000100): the member who started a collection also
  * sees it, marked `mine`, while it is still empty.
  */
 export type CollectionRef = { id: string; name: string };

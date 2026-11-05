@@ -184,6 +184,16 @@ describeDb("prayer and care", () => {
       await rpc(as(m1), "prayer_request_delete", [draft]);
     });
 
+    it("keeps a request of any length whole, and still refuses an empty one", async () => {
+      // 20261128000100: no ceiling on the body. Far past the old 4,000.
+      const body = `Please pray with us.\n\n${"There is a great deal to say about this.\n".repeat(600)}Thank you.`;
+      expect(body.length).toBeGreaterThan(20_000);
+      const id = await create(m1, { title: "A long story", body });
+      expect((await detail(m3, id)).body).toBe(body);
+      await fails(as(m1), "prayer_request_save", [null, "Empty", "   ", "church", null, false, true, "church", null], /request is too short/);
+      await rpc(as(m1), "prayer_request_delete", [id]);
+    });
+
     it("is idempotent for retried submissions and refuses edits by anyone but the author", async () => {
       const key = randomUUID();
       const args = [null, "Retry title", "Retry body", "church", null, false, true, "church", key];
