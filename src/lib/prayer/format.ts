@@ -4,8 +4,14 @@ import type { Audience, CareKind, CareStatus, ContactMethod, OpportunityStatus, 
  * Wording and small rules shared by prayer and care pages. The database is
  * the authority for every rule here; these only decide what to show (for
  * example, whether to ask for confirmation before the server would).
+ *
+ * The request itself is deliberately absent from PRAYER_LIMITS: it has no
+ * length limit, in the form, the action, or the database, so a member can
+ * write as much as the situation needs
+ * (20261128000100_prayer_request_body_length). Dated updates, comments, and
+ * reports keep theirs.
  */
-export const PRAYER_LIMITS = { title: 120, body: 4000, update: 2000, comment: 2000, report: 1000 } as const;
+export const PRAYER_LIMITS = { title: 120, update: 2000, comment: 2000, report: 1000 } as const;
 export const CARE_LIMITS = { summary: 120, details: 2000, contactNote: 200, message: 2000, note: 1000, oppTitle: 120, oppDetails: 600, logistics: 1000 } as const;
 
 export const AUDIENCES: Audience[] = ["church", "group", "team", "private"];

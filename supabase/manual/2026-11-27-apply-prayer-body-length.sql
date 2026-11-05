@@ -25,8 +25,10 @@ begin;
 do $preflight$
 begin
   if to_regclass('prayer.library_prayers') is null
-     or to_regprocedure('public.prayer_library_save(uuid, text, text, text, text, text, text[], uuid[], boolean, uuid, uuid)') is null
-     or not exists (select 1 from pg_constraint where conrelid = 'prayer.library_prayers'::regclass and conname = 'library_prayers_body_check') then
+     or to_regprocedure('public.prayer_library_save(uuid, text, text, text, text, text, text[], uuid[], boolean, uuid, uuid)') is null then
+    raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = to_regclass('prayer.library_prayers') and conname = 'library_prayers_body_check') then
     raise exception 'Nothing was changed: this is not The Gathering database at the expected stage.';
   end if;
   if (select count(*) from supabase_migrations.schema_migrations where version in ('20261115000100', '20261124000100')) <> 2 then

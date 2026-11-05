@@ -666,3 +666,23 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
   ```
 
   Expected: one row (`prayer_body_length`, `prayer-body-length`).
+
+## Prayer requests without a length limit (2026-11-28)
+
+- **New (additive; no applied migration was edited):** `20261128000100_prayer_request_body_length`. The companion to `20261127000100`: writing out what you would like prayer for was stopped at 4,000 characters ("Keep it to 4,000 characters."), which is short for a hard season told properly.
+  - New internal helper `prayer.clean_body(text, text)`: the `20261127000100` helper with the caller's own label, so each refusal still reads in the words of the thing being written ("Your request is too short."). No API role can call it.
+  - `prayer.clean_body(text)` is replaced to call it with `The prayer`, so the Prayer Library keeps exactly the wording and behaviour it has.
+  - `prayer.requests.body` check (`requests_body_check`) keeps only its "not empty" half. Every value the old check allowed is still allowed, so no row is rewritten (adding the check re-validates the existing rows).
+  - `public.prayer_request_save` is replaced with the same signature and grants: it cleans the body with the helper instead of `community.clean_text(p_body, 1, 4000, 'Your request')`. Audience and confirmation rules, mention parsing, rate limits, notifications, and the audit log are unchanged.
+  - Prayer requests are not full-text indexed, so there is no search vector to bound here (unlike the Prayer Library). Dated updates (2,000), comments (2,000), reports (1,000), the title (120), and prayer care keep their limits.
+- **Operator script:** `supabase/manual/2026-11-28-apply-prayer-request-body-length.sql`, one transaction. Its preflight requires `20261024000300` and `20261127000100` (checked before the shape of `prayer.clean_body`, so a database merely missing the step before is told which step to run) and refuses a second run. Post-checks: the body check no longer names a ceiling, a 20,000-character request is kept whole, each helper still refuses an empty body in its own words, and `prayer_request_save` was replaced. History row `created_by = prayer-request-body-length`.
+- **Rehearsal (local, PostgreSQL 16, every earlier migration with a history row for each):** `20261127000100` then `20261128000100` both applied and recorded; each rerun stopped at its preflight; the request script run on a database stopped before `20261127000100` reported the missing step; and run on an empty database it reported the wrong stage.
+- **Order: both migrations first, then the app.** The app change removes the limit from the composer and the save action, so without the migration a request over 4,000 characters is refused by the database with "Your request must be 4000 characters or fewer." and nothing is saved. The currently deployed app keeps working after the migration: the signature is unchanged and it simply never sends a body that long.
+- **Hosted: not applied yet.** Run `supabase/manual/2026-11-27-apply-prayer-body-length.sql` first, then `supabase/manual/2026-11-28-apply-prayer-request-body-length.sql`, in the SQL editor, then check:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations
+   where version in ('20261127000100', '20261128000100') order by version;
+  ```
+
+  Expected: two rows (`prayer_body_length` / `prayer-body-length`, `prayer_request_body_length` / `prayer-request-body-length`).

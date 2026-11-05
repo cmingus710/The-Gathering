@@ -148,7 +148,6 @@ export function RequestComposer({ action, groups, initial }: { action: Action; g
             id="field-body"
             name="body"
             required
-            maxLength={PRAYER_LIMITS.body}
             minRows={7}
             value={body}
             onValueChange={setBody}
