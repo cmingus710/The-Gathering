@@ -4,7 +4,7 @@ A searchable collection of reusable prayers contributed by approved members, on 
 
 ## For members
 
-- **Add a prayer** (`/prayer/library/new`): title and prayer text (required; bold, italic, lists, and links with the same safe link editor as announcements), topics, purposes, and intended uses (several of each), optional Scripture references (checked with the same reference parser as lessons; only the reference is stored), and who wrote it: *My own prayer* or *Shared from another author or source*, with an optional author/source name and link.
+- **Add a prayer** (`/prayer/library/new`): title and prayer text (required, and the prayer itself has no length limit — a one-line blessing or a long liturgy both fit; bold, italic, lists, and links with the same safe link editor as announcements), topics, purposes, and intended uses (several of each), optional Scripture references (checked with the same reference parser as lessons; only the reference is stored), and who wrote it: *My own prayer* or *Shared from another author or source*, with an optional author/source name and link.
 - A reminder above the form asks members to share only prayers they wrote or have permission to share, to name the source, and to leave out other people's private information.
 - **Save draft** keeps it private. **Publish** shares it with approved adult members at once; there's no approval step. The live preview shows exactly what readers will see, attribution included.
 - Contributors can edit (the first publication date is kept and the prayer is marked edited), move a prayer back to drafts, archive it, and restore it. A member whose community posting is paused by a moderator can keep drafts but can't publish.
@@ -46,9 +46,9 @@ Migration `20261115000100_prayer_library.sql`. Everything is in the private `pra
 | Bookmarks private | `prayer.library_saves` read only for the caller's own `saved` view and flag; no counts returned |
 | Moderation needs `prayer.moderate` (super administrators get it only from an explicit prayer role), a reason, and is logged | `prayer_library_mod_*` |
 | Categories need `settings.manage` | `prayer_library_category_*`, `prayer_library_admin_categories` |
-| Text limits, safe links, no @mentions, source link `http(s)` only, ≤ 20 Scripture references, category limits, rate limits | the save function (and the server action, which also checks links with the shared link policy) |
+| Text limits (the prayer itself has none; the title, author or source, and link do), safe links, no @mentions, source link `http(s)` only, ≤ 20 Scripture references, category limits, rate limits | the save function (and the server action, which also checks links with the shared link policy) |
 
-Search uses a weighted `tsvector` (title; categories, attribution, Scripture; text) with a GIN index, kept current when a prayer is saved, a category renamed, or a contributor's name changes. Lists are keyset-paged on `(published_at, id)` (`(updated_at, id)` for My prayers) using `library_prayers_feed_idx` / `library_prayers_contributor_idx`.
+Search uses a weighted `tsvector` (title; categories, attribution, Scripture; text) with a GIN index, kept current when a prayer is saved, a category renamed, or a contributor's name changes. The prayer text has no length limit (since `20261127000100`), so only its first 100,000 characters are indexed — far past any prayer, and short of PostgreSQL's 1 MB `tsvector` limit; the whole text is still stored, shown, and copied. Lists are keyset-paged on `(published_at, id)` (`(updated_at, id)` for My prayers) using `library_prayers_feed_idx` / `library_prayers_contributor_idx`.
 
 Library activity sends no emails, push messages, or in-app notifications.
 

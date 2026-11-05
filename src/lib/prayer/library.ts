@@ -5,8 +5,13 @@ import { markdownExcerpt } from "@/lib/announcements/markdown";
  * the wording and small helpers its pages share. The database is the
  * authority for every rule (who can read, edit, save, report, moderate);
  * these only decide what to show.
+ *
+ * LIBRARY_LIMITS is what the composer and the save action hold members to.
+ * The prayer itself is deliberately absent: it has no length limit, in the
+ * form, the action, or the database, so a one-line blessing and a long
+ * liturgy both fit (20261127000100_prayer_body_length).
  */
-export const LIBRARY_LIMITS = { title: 120, body: 6000, source: 200, url: 500, report: 1000, topics: 8, purposes: 4, uses: 7 } as const;
+export const LIBRARY_LIMITS = { title: 120, source: 200, url: 500, report: 1000, topics: 8, purposes: 4, uses: 7 } as const;
 
 export type CategoryKind = "topic" | "purpose" | "use";
 export type Category = { id: string; kind: CategoryKind; name: string };

@@ -646,3 +646,23 @@ The four Phase 2 migrations were applied through the connector's `execute_sql`, 
     ```
 
     Expected: one row (`scripture_highlights`, `scripture-highlights`).
+
+## Prayer Library without a length limit (2026-11-27)
+
+- **New (additive; no applied migration was edited):** `20261127000100_prayer_body_length`. A contributed prayer may now be any length; the 6,000-character ceiling turned away long prayers and liturgies ("Keep the prayer to 6,000 characters.").
+  - New internal helper `prayer.clean_body(text)`: the same trim and control-character strip as `community.clean_text`, the same `The prayer is too short.` refusal for an empty body, no upper bound. No API role can call it.
+  - `prayer.library_prayers.body` check (`library_prayers_body_check`) keeps only its "not empty" half. Every value the old check allowed is still allowed, so no row is rewritten (adding the check re-validates the existing rows).
+  - Replaced with the same signatures and grants:
+    - `public.prayer_library_save`: cleans the body with `prayer.clean_body` instead of `community.clean_text(p_body, 1, 6000, …)`. Every other rule it enforces is unchanged.
+    - `prayer.library_reindex`: the body is indexed up to its first 100,000 characters (everything else is indexed whole, as before), so a long prayer can never push the search vector past PostgreSQL's 1 MB `tsvector` limit. The whole body is still stored, shown, and copied.
+  - The title, author or source, source link, Scripture references, and category counts keep their limits. No table, policy, grant, or signature changes, and nothing here sends notifications.
+- **Operator script:** `supabase/manual/2026-11-27-apply-prayer-body-length.sql`, one transaction. Its preflight requires the Prayer Library steps (`20261115000100` and `20261124000100`) and refuses a second run. Post-checks: the body check no longer names a ceiling, a 20,000-character prayer is kept whole by `prayer.clean_body`, and both functions were replaced. History row `created_by = prayer-body-length`.
+- **Rehearsal (local, PostgreSQL 16, every earlier migration with a history row for each):** the script applied and recorded `20261127000100`, and a rerun stopped at the preflight.
+- **Order: migration first, then the app.** The app change removes the limit from the composer and the save action, so without the migration a prayer over 6,000 characters is refused by the database with "The prayer must be 6000 characters or fewer." and nothing is saved. The currently deployed app keeps working after the migration: the signature is unchanged and it simply never sends a body that long.
+- **Hosted: not applied yet.** Run `supabase/manual/2026-11-27-apply-prayer-body-length.sql` in the SQL editor, then check:
+
+  ```sql
+  select version, name, created_by from supabase_migrations.schema_migrations where version = '20261127000100';
+  ```
+
+  Expected: one row (`prayer_body_length`, `prayer-body-length`).
