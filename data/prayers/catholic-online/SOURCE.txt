@@ -1,0 +1,16 @@
+The Gathering Prayer Link Catalog
+Created November 5, 2026.
+2304 unique prayer links across 111 topic categories checked.
+0 category fetch errors. See coverage.json.
+
+This is a catalog of titles, topic labels, and source links only. Prayer bodies, excerpts, images, and author claims are not included.
+Categories are those listed by the source; this is not a claim that the source taxonomy is complete or that all prayers on the site were found. Categories can overlap. Some source category counts may differ from the links currently listed.
+
+IMPORT
+JSON categories are arrays. CSV categories contain JSON arrays suitable for a PostgreSQL jsonb column. is_published defaults to false for review.
+Use the included SQL to create a separate link-catalog table, then import prayers.csv into that table using Supabase Table Editor. Do not import into an existing table without mapping its fields first.
+Run no SQL against production without reviewing your application's existing schema and access rules.
+The included SQL allows authenticated users to read only published rows; editing is through trusted admin/server access. Mark reviewed rows published before displaying them.
+Display title/category and an Open prayer button linking to source_url. Full texts remain on the original site. No rights to reproduce prayer bodies are asserted.
+Language is not inferred; the source includes categories in several languages.
+source_id is a stable unique key for deduplication and future upserts.

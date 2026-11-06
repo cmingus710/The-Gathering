@@ -29,6 +29,10 @@ Every published prayer is filed in exactly one collection — the shelves member
 
 **Admin → Prayer Library collections** (`/admin/prayer/library/collections`): create, rename, describe, reorder (the order members see), set or remove a 3:2 cover, archive and restore, and move prayers between collections one at a time or in bulk. The list says how many prayers each holds, which ones members don't see yet, and who started each collection, so member-started ones are easy to find; each creation is also in the audit log (`prayer.library_collection_created`, with `{"by": "member"}` for a member's). Moving a prayer keeps its owner, dates, labels, and bookmarks, and nobody is notified. Nobody's private drafts are ever listed or moved. Covers live in the private `prayer-library` bucket, and storage only serves a cover to members who can see its collection.
 
+## Prayer link catalogues
+
+Some prayer categories hold prayers published on another site: the church keeps each prayer's title, the source's topic labels, and a link to the page it is on, and members open the prayer there. The first is **Catholic Online Prayers** (2,304 prayers in 111 of the source's topics, migration `20261130000100`). They are separate from the library's own prayers — no text, no contributor, no collection, no bookmarks, no reports — and have their own pages: a card under **Prayers from other sources** on `/prayer/library`, and `/prayer/library/catalogs/<id>` to browse, search, and filter by the source's topics. Settings managers import, review, and publish them at **Admin → Prayer link catalogues**; imported links start unpublished, so members see nothing until they are published. See [prayer-catalog.md](prayer-catalog.md).
+
 ## For prayer moderators (`prayer.moderate`)
 
 **Admin → Prayer Library** (`/admin/prayer/library`, also linked from Prayer reports):
@@ -42,7 +46,7 @@ Every published prayer is filed in exactly one collection — the shelves member
 
 ## For settings managers (`settings.manage`)
 
-**Admin → Prayer Library categories** (`/admin/prayer/library/categories`): add, rename, reorder, archive, and restore topics, purposes, and intended uses. Archived ones leave the form and filters; prayers that have them keep the label. Changes are audited (`prayer.library_category_*`).
+**Admin → Prayer Library categories** (`/admin/prayer/library/categories`): add, rename, reorder, archive, and restore topics, purposes, and intended uses. (The topics inside a link catalogue are the source's own and are managed on the catalogue's page instead — see [prayer-catalog.md](prayer-catalog.md).) Archived ones leave the form and filters; prayers that have them keep the label. Changes are audited (`prayer.library_category_*`).
 
 Initial categories (no prayers are seeded):
 
@@ -85,4 +89,5 @@ Library activity sends no emails, push messages, or in-app notifications.
 1. Apply `supabase/migrations/20261115000100_prayer_library.sql` to the hosted project **before** deploying the app (without it, the library shows "couldn't be loaded"; prayer requests and care are unaffected). It's additive: new tables, one new nullable column (`prayer.moderation_log.library_report_id`), new functions, seed categories, and one trigger on `public.profiles` name changes. It edits no applied migration and leaves the anon function baseline unchanged.
 2. Record the version: `supabase/manual/2026-11-15-record-prayer-library.sql` checks the objects and adds the history row (done this way because the SQL was first applied before the migration was renumbered). Done on hosted on 2026-10-23; see [migration-history.md](migration-history.md#prayer-library-2026-11-15).
 3. Apply `supabase/migrations/20261124000100_prayer_library_collections.sql` (recorded on hosted) and then the member-collections step, in that order, before deploying the app. Both are additive. For the second one use `supabase/manual/2026-11-29-apply-prayer-member-collections.sql`, which carries the migration's SQL, checks that `20261124000100` is recorded, refuses a second run, and records `20261129000100` only after its post-checks pass (grants, the closed helpers and table, the replaced functions, General prayers). If its SQL was already pasted and run on its own, use `supabase/manual/2026-11-29-record-prayer-member-collections.sql` to add the history row instead. Without this step, **Start a collection** and **Start a new collection** report that the collection couldn't be created; everything else in the library keeps working, and the currently deployed app keeps working after it (no signature changes). See [migration-history.md](migration-history.md#members-start-their-own-prayer-library-collections-2026-11-29).
-4. Optionally assign the **Prayer moderator** (or **Prayer and care lead**) role to whoever should review library reports; super administrators need one of these roles to moderate.
+4. For the **Catholic Online Prayers** category, apply `supabase/manual/2026-11-30-apply-prayer-link-catalog.sql`, deploy, then import and publish it from **Admin → Prayer link catalogues**. Additive and independent of the steps above; see [prayer-catalog.md](prayer-catalog.md).
+5. Optionally assign the **Prayer moderator** (or **Prayer and care lead**) role to whoever should review library reports; super administrators need one of these roles to moderate.

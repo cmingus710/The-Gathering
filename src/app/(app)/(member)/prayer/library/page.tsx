@@ -1,6 +1,7 @@
 import { PenSquare, RotateCcw } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CatalogFolder, CatalogSectionNote } from "@/components/prayer/catalog-rows";
 import { PrayerCollectionFolder, collectionGridClass } from "@/components/prayer/collection-folder";
 import { StartCollectionCard } from "@/components/prayer/collection-start-form";
 import { LibraryBrowser } from "@/components/prayer/library-browser";
@@ -15,6 +16,7 @@ import { cn } from "@/components/ui/cn";
 import { segmentClass } from "@/components/ui/segmented";
 import { requireApprovedMember } from "@/lib/auth/viewer";
 import { tryCommunityRpc } from "@/lib/community/queries";
+import { catalogHref, type CatalogShelf } from "@/lib/prayer/catalog";
 import { signCollectionCovers } from "@/lib/prayer/collection-covers";
 import { pick } from "@/lib/prayer/format";
 import {
@@ -72,6 +74,9 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
       : null,
     meta && pageView === "collections" ? tryCommunityRpc<CollectionShelves>("prayer_library_collections") : null,
   ]);
+  // Prayer categories whose prayers live on another site (20261130000100):
+  // titles and links only, shown beside the church's own collections.
+  const catalogs = meta && pageView === "collections" ? ((await tryCommunityRpc<CatalogShelf[]>("prayer_link_catalogs")) ?? []) : [];
   // Covers are signed with the reader's own client: storage only serves ones they may see.
   const supabase = shelves?.collections.some((c) => c.cover) ? await createClient() : null;
   const covers = supabase ? await signCollectionCovers(supabase, shelves!.collections.map((c) => c.cover?.path)) : new Map<string, string>();
@@ -168,6 +173,23 @@ export default async function PrayerLibraryPage({ searchParams }: PageProps<"/pr
                     {EMPTY.library.body}
                   </EmptyState>
                 )}
+                {catalogs.length ? (
+                  <section aria-labelledby="pl-catalogs" className="space-y-3">
+                    <h3 id="pl-catalogs" className="font-display text-title font-semibold text-text">
+                      Prayers from other sources
+                    </h3>
+                    <CatalogSectionNote>
+                      Collections of prayers published elsewhere. The church keeps the titles and topics; each prayer opens on the source&apos;s own site.
+                    </CatalogSectionNote>
+                    <ul className={collectionGridClass}>
+                      {catalogs.map((c) => (
+                        <li key={c.id}>
+                          <CatalogFolder href={catalogHref(c.id)} catalog={c} />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
                 {/* A member whose posting is paused can't start one (the database refuses too). */}
                 {meta.posting_restricted ? null : <StartCollectionCard collections={shelves.collections} />}
               </div>

@@ -37,6 +37,7 @@ export const BACK_ROUTES = {
   // A prayer opened from a collection (?from=) goes back to that collection; otherwise to the Prayer Library.
   "/prayer/library/[id]": { parent: "/prayer/library/collections/[collection]", label: "the collection", orphan: { parent: "/prayer/library", label: "Prayer Library" } },
   "/prayer/library/collections/[id]": { parent: "/prayer/library", label: "Prayer Library" },
+  "/prayer/library/catalogs/[id]": { parent: "/prayer/library", label: "Prayer Library" },
   "/prayer/library/[id]/edit": { parent: "/prayer/library/[id]", label: "the prayer" },
 
   // Connect

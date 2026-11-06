@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "menu:icons": "node scripts/generate-menu-icons.mjs",
     "section:backgrounds": "node scripts/generate-section-headers.mjs",
-    "devotional:dry-run": "node --no-warnings scripts/morning-evening-dry-run.mjs"
+    "devotional:dry-run": "node --no-warnings scripts/morning-evening-dry-run.mjs",
+    "prayer:catalog-dry-run": "node --no-warnings scripts/prayer-catalog-dry-run.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-sans-3": "^5.3.1",
